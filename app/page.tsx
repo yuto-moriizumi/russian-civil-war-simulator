@@ -3,10 +3,10 @@
 import { useState, useCallback } from 'react';
 import { Screen, Country, GameSpeed, GameState } from './types/game';
 import { initialMissions } from './data/gameData';
-import TitleScreen from './components/TitleScreen';
-import CountrySelectScreen from './components/CountrySelectScreen';
-import MainScreen from './components/MainScreen';
-import MissionScreen from './components/MissionScreen';
+import TitleScreen from './screens/TitleScreen';
+import CountrySelectScreen from './screens/CountrySelectScreen';
+import MainScreen from './screens/MainScreen';
+import MissionScreen from './screens/MissionScreen';
 
 const initialGameState: GameState = {
   currentScreen: 'title',

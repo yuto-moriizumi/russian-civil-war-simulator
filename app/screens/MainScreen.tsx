@@ -96,15 +96,26 @@ export default function MainScreen({
           </div>
         </div>
 
-        {/* Date/Time Controls */}
-        <div className="flex items-center gap-4 rounded-lg border border-stone-600 bg-stone-800/80 px-4 py-2">
-          <div className="text-right">
+        {/* Center Section: Date/Time and Resources */}
+        <div className="flex items-center gap-4">
+          {/* Date/Time */}
+          <div className="rounded-lg border border-stone-600 bg-stone-800/80 px-4 py-2">
             <div className="text-sm font-semibold text-white">{formatDate(dateTime)}</div>
             <div className="text-xs text-stone-400">{formatTime(dateTime)}</div>
           </div>
-          
-          <div className="h-8 w-px bg-stone-600" />
-          
+
+          {/* Resources */}
+          <div className="rounded-lg border border-amber-600/50 bg-stone-800/80 px-4 py-2">
+            <div className="text-xs text-stone-400">Treasury</div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold text-amber-400">${money}</span>
+              <span className="text-sm text-green-400">+${income}/h</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Speed Controls - Right Side */}
+        <div className="flex items-center gap-2 rounded-lg border border-stone-600 bg-stone-800/80 px-3 py-2">
           {/* Play/Pause */}
           <button
             onClick={onTogglePlay}
@@ -117,7 +128,9 @@ export default function MainScreen({
             {isPlaying ? '⏸' : '▶'}
           </button>
 
-          {/* Speed Controls */}
+          <div className="h-8 w-px bg-stone-600" />
+
+          {/* Speed Buttons */}
           <div className="flex gap-1">
             {([1, 2, 3, 4, 5] as GameSpeed[]).map((speed) => (
               <button
@@ -132,17 +145,6 @@ export default function MainScreen({
                 {speed}x
               </button>
             ))}
-          </div>
-        </div>
-
-        {/* Resources */}
-        <div className="flex items-center gap-4">
-          <div className="rounded-lg border border-amber-600/50 bg-stone-800/80 px-4 py-2">
-            <div className="text-xs text-stone-400">Treasury</div>
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-amber-400">${money}</span>
-              <span className="text-sm text-green-400">+${income}/h</span>
-            </div>
           </div>
         </div>
       </div>
