@@ -1,6 +1,7 @@
 'use client';
 
 import { Country, GameSpeed, Mission } from '../types/game';
+import SpeedControl from '../components/SpeedControl';
 
 interface MainScreenProps {
   country: Country;
@@ -82,7 +83,7 @@ export default function MainScreen({
 
       {/* Top Bar */}
       <div className="relative z-10 flex items-center justify-between border-b border-stone-700 bg-stone-900/90 px-4 py-3">
-        {/* Country Info */}
+        {/* Left Side: Country Info and Resources */}
         <div className="flex items-center gap-4">
           <div 
             className="flex h-12 w-12 items-center justify-center rounded-lg border-2 text-2xl"
@@ -93,15 +94,6 @@ export default function MainScreen({
           <div>
             <h1 className="text-lg font-bold text-white">{country.name}</h1>
             <p className="text-xs text-stone-400">The struggle continues...</p>
-          </div>
-        </div>
-
-        {/* Center Section: Date/Time and Resources */}
-        <div className="flex items-center gap-4">
-          {/* Date/Time */}
-          <div className="rounded-lg border border-stone-600 bg-stone-800/80 px-4 py-2">
-            <div className="text-sm font-semibold text-white">{formatDate(dateTime)}</div>
-            <div className="text-xs text-stone-400">{formatTime(dateTime)}</div>
           </div>
 
           {/* Resources */}
@@ -114,38 +106,21 @@ export default function MainScreen({
           </div>
         </div>
 
-        {/* Speed Controls - Right Side */}
-        <div className="flex items-center gap-2 rounded-lg border border-stone-600 bg-stone-800/80 px-3 py-2">
-          {/* Play/Pause */}
-          <button
-            onClick={onTogglePlay}
-            className={`flex h-8 w-8 items-center justify-center rounded transition-colors ${
-              isPlaying 
-                ? 'bg-red-600 hover:bg-red-700' 
-                : 'bg-green-600 hover:bg-green-700'
-            }`}
-          >
-            {isPlaying ? '⏸' : '▶'}
-          </button>
-
-          <div className="h-8 w-px bg-stone-600" />
-
-          {/* Speed Buttons */}
-          <div className="flex gap-1">
-            {([1, 2, 3, 4, 5] as GameSpeed[]).map((speed) => (
-              <button
-                key={speed}
-                onClick={() => onChangeSpeed(speed)}
-                className={`h-8 w-8 rounded text-xs font-bold transition-colors ${
-                  gameSpeed === speed
-                    ? 'bg-amber-600 text-white'
-                    : 'bg-stone-700 text-stone-400 hover:bg-stone-600'
-                }`}
-              >
-                {speed}x
-              </button>
-            ))}
+        {/* Right Side: Date/Time and Speed Controls */}
+        <div className="flex items-stretch gap-4">
+          {/* Date/Time */}
+          <div className="flex flex-col justify-center rounded-lg border border-stone-600 bg-stone-800/80 px-4 py-2">
+            <div className="text-sm font-semibold text-white">{formatDate(dateTime)}</div>
+            <div className="text-xs text-stone-400">{formatTime(dateTime)}</div>
           </div>
+
+          {/* Speed Controls */}
+          <SpeedControl
+            isPlaying={isPlaying}
+            gameSpeed={gameSpeed}
+            onTogglePlay={onTogglePlay}
+            onChangeSpeed={onChangeSpeed}
+          />
         </div>
       </div>
 
