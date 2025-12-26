@@ -1,0 +1,21 @@
+{
+  "countries": [
+    {
+      "iso3": "RUS",
+      "name": "Russia",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "UKR",
+      "name": "Ukraine",
+      "admLevel": "ADM1"
+    }
+  ],
+  "output": {
+    "geojson": "../public/map/regions.geojson",
+    "adjacency": "../public/map/adjacency.json"
+  },
+  "api": {
+    "baseUrl": "https://www.geoboundaries.org/api/current/gbOpen"
+  }
+}

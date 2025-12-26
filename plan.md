@@ -124,31 +124,66 @@ function getAdjacentRegions(regionId: string): string[] {
 ## 必要なツール
 
 ```bash
-# mapshaper - GeoJSON結合とTopoJSON変換
-npm install -g mapshaper
-
-# または
-npm install --save-dev mapshaper topojson-server topojson-client
+# 開発依存としてインストール済み
+npm install --save-dev topojson-server topojson-client tsx @types/topojson-client @types/topojson-server @types/geojson
 ```
 
-## ファイル構成（予定）
+## マップデータの生成方法
+
+### 1. 設定ファイルの編集
+
+`scripts/map-config.json` で対象国を設定:
+
+```json
+{
+  "countries": [
+    { "iso3": "RUS", "name": "Russia", "admLevel": "ADM1" },
+    { "iso3": "UKR", "name": "Ukraine", "admLevel": "ADM1" }
+    // 必要に応じて国を追加
+  ],
+  "output": {
+    "geojson": "../public/map/regions.geojson",
+    "adjacency": "../public/map/adjacency.json"
+  }
+}
+```
+
+### 2. GeoJSONのダウンロード
+
+```bash
+npx tsx scripts/download-geojson.ts
+```
+
+### 3. マップデータの処理
+
+```bash
+npx tsx scripts/process-map.ts
+```
+
+### 出力
+
+- `public/map/regions.geojson` - MapLibre描画用（約8.8MB）
+- `public/map/adjacency.json` - 隣接関係（約20KB）
+
+## ファイル構成
 
 ```
 app/
   components/
-    GameMap.tsx          # MapLibre GLを使ったマップコンポーネント
+    GameMap.tsx          # MapLibre GLを使ったマップコンポーネント（予定）
   types/
-    game.ts              # Region型などを追加
+    game.ts              # Region型などを追加（予定）
   utils/
-    mapUtils.ts          # 隣接判定ヘルパー等
+    mapUtils.ts          # 隣接判定ヘルパー等（予定）
 public/
   map/
-    regions.geojson
-    adjacency.json
+    regions.geojson      # ✅ 生成済み
+    adjacency.json       # ✅ 生成済み
 scripts/
-  download-geojson.ts    # geoBoundariesからDL
-  merge-geojson.ts       # 結合処理
-  extract-adjacency.ts   # 隣接関係抽出
+  map-config.json        # ✅ 対象国の設定ファイル
+  download-geojson.ts    # ✅ geoBoundariesからDL
+  process-map.ts         # ✅ 結合・TopoJSON変換・隣接抽出
+  temp/                  # 一時ファイル（.gitignore対象）
 ```
 
 ## 型定義（予定）
@@ -157,9 +192,9 @@ scripts/
 // app/types/game.ts に追加
 
 export interface Region {
-  id: string;           // "RUS-MOW" など
-  name: string;         // "Moscow"
-  countryCode: string;  // "RUS"
+  id: string;           // "RU-ALT", "UA-74" など（ISO形式）
+  name: string;         // "Altai Krai"
+  countryIso3: string;  // "RUS"
   owner: FactionId;     // どの勢力が支配しているか
   units: Unit[];        // 配置されている軍隊
 }
@@ -169,6 +204,20 @@ export interface Adjacency {
 }
 ```
 
+## 現在のデータ状況
+
+### 生成済みデータ（RUS + UKR）
+
+- リージョン数: 110（ロシア83 + ウクライナ27）
+- 隣接ペア数: 258
+- 国境越え隣接: 5ペア（例: UA-59 ↔ RU-BEL, RU-BRY, RU-KRS, RU-LEN）
+
+### リージョンID形式
+
+geoBoundariesの`shapeISO`プロパティを使用:
+- ロシア: `RU-ALT`, `RU-MOW`, `RU-SPE` など
+- ウクライナ: `UA-74`, `UA-59`, `UA-63` など
+
 ## 注意事項
 
 - geoBoundariesのライセンス: ODbL / CC BY 4.0（出典表示が必要）
@@ -177,11 +226,18 @@ export interface Adjacency {
 
 ## 次のステップ
 
-1. [ ] 対象国リストの最終確定
-2. [ ] geoBoundariesからGeoJSONをダウンロードするスクリプト作成
-3. [ ] GeoJSON結合 → TopoJSON変換 → 隣接抽出のスクリプト作成
+1. [x] 対象国リストの初期設定（RUS, UKR）
+2. [x] geoBoundariesからGeoJSONをダウンロードするスクリプト作成
+3. [x] GeoJSON結合 → TopoJSON変換 → 隣接抽出のスクリプト作成
 4. [ ] MapLibre GLのセットアップ（react-map-gl等）
 5. [ ] GameMapコンポーネントの実装
 6. [ ] MainScreenへの統合
 7. [ ] リージョン選択・ハイライト機能
 8. [ ] 勢力別の色分け表示
+
+### 将来の拡張
+
+対象国を追加する場合:
+1. `scripts/map-config.json` に国を追加
+2. `npx tsx scripts/download-geojson.ts` を実行
+3. `npx tsx scripts/process-map.ts` を実行
