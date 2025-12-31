@@ -229,11 +229,11 @@ geoBoundariesの`shapeISO`プロパティを使用:
 1. [x] 対象国リストの初期設定（RUS, UKR）
 2. [x] geoBoundariesからGeoJSONをダウンロードするスクリプト作成
 3. [x] GeoJSON結合 → TopoJSON変換 → 隣接抽出のスクリプト作成
-4. [ ] MapLibre GLのセットアップ（react-map-gl等）
-5. [ ] GameMapコンポーネントの実装
-6. [ ] MainScreenへの統合
-7. [ ] リージョン選択・ハイライト機能
-8. [ ] 勢力別の色分け表示
+4. [x] MapLibre GLのセットアップ（react-map-gl等）
+5. [x] GameMapコンポーネントの実装
+6. [x] MainScreenへの統合
+7. [x] リージョン選択・ハイライト機能
+8. [x] 勢力別の色分け表示
 
 ### 将来の拡張
 

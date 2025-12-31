@@ -2,11 +2,31 @@ export type Screen = 'title' | 'countrySelect' | 'main' | 'mission';
 
 export type CountryId = 'soviet' | 'russian_republic';
 
+// Faction types for map control
+export type FactionId = 'soviet' | 'white' | 'neutral' | 'foreign';
+
 export interface Country {
   id: CountryId;
   name: string;
   flag: string;
   color: string;
+}
+
+// Map region types
+export interface Region {
+  id: string;           // "RU-ALT", "UA-74" etc. (ISO format)
+  name: string;         // "Altai Krai"
+  countryIso3: string;  // "RUS", "UKR"
+  owner: FactionId;     // Which faction controls this region
+  units: number;        // Number of units stationed
+}
+
+export interface Adjacency {
+  [regionId: string]: string[];
+}
+
+export interface RegionState {
+  [regionId: string]: Region;
 }
 
 export type GameSpeed = 1 | 2 | 3 | 4 | 5;

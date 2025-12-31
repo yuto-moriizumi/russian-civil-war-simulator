@@ -1,7 +1,18 @@
 'use client';
 
-import { Country, GameSpeed, Mission } from '../types/game';
+import dynamic from 'next/dynamic';
+import { Country, GameSpeed, Mission, RegionState, Adjacency } from '../types/game';
 import SpeedControl from '../components/SpeedControl';
+
+// Dynamic import for GameMap to avoid SSR issues with MapLibre
+const GameMap = dynamic(() => import('../components/GameMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center bg-stone-900">
+      <div className="text-stone-400">Loading map...</div>
+    </div>
+  ),
+});
 
 interface MainScreenProps {
   country: Country;
@@ -12,11 +23,16 @@ interface MainScreenProps {
   income: number;
   infantryUnits: number;
   missions: Mission[];
+  regions: RegionState;
+  adjacency: Adjacency;
+  selectedRegion: string | null;
+  mapDataLoaded: boolean;
   onTogglePlay: () => void;
   onChangeSpeed: (speed: GameSpeed) => void;
   onCreateInfantry: () => void;
   onOpenMissions: () => void;
   onClaimMission: (missionId: string) => void;
+  onRegionSelect: (regionId: string | null) => void;
 }
 
 export default function MainScreen({
@@ -28,11 +44,16 @@ export default function MainScreen({
   income,
   infantryUnits,
   missions,
+  regions,
+  adjacency,
+  selectedRegion,
+  mapDataLoaded,
   onTogglePlay,
   onChangeSpeed,
   onCreateInfantry,
   onOpenMissions,
   onClaimMission,
+  onRegionSelect,
 }: MainScreenProps) {
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -54,31 +75,32 @@ export default function MainScreen({
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       {/* Map Background */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundColor: '#2d3a2d',
-          backgroundImage: `
-            radial-gradient(circle at 30% 40%, rgba(60,80,60,0.8) 0%, transparent 50%),
-            radial-gradient(circle at 70% 60%, rgba(80,100,80,0.6) 0%, transparent 40%),
-            radial-gradient(circle at 50% 30%, rgba(40,60,40,0.7) 0%, transparent 60%),
-            linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.5))
-          `,
-        }}
-      >
-        {/* Map grid overlay */}
-        <div className="absolute inset-0 opacity-20" style={{
-          backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
-          `,
-          backgroundSize: '50px 50px'
-        }} />
-        
-        {/* Decorative map elements */}
-        <div className="absolute left-[20%] top-[30%] text-stone-600 text-opacity-50 text-sm">Moscow</div>
-        <div className="absolute left-[60%] top-[20%] text-stone-600 text-opacity-50 text-sm">Petrograd</div>
-        <div className="absolute left-[40%] top-[60%] text-stone-600 text-opacity-50 text-sm">Kiev</div>
+      <div className="absolute inset-0">
+        {mapDataLoaded ? (
+          <GameMap
+            regions={regions}
+            adjacency={adjacency}
+            selectedRegion={selectedRegion}
+            onRegionSelect={onRegionSelect}
+          />
+        ) : (
+          <div 
+            className="h-full w-full bg-cover bg-center"
+            style={{
+              backgroundColor: '#2d3a2d',
+              backgroundImage: `
+                radial-gradient(circle at 30% 40%, rgba(60,80,60,0.8) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(80,100,80,0.6) 0%, transparent 40%),
+                radial-gradient(circle at 50% 30%, rgba(40,60,40,0.7) 0%, transparent 60%),
+                linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.5))
+              `,
+            }}
+          >
+            <div className="flex h-full w-full items-center justify-center">
+              <div className="text-stone-400">Loading map data...</div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Top Bar */}

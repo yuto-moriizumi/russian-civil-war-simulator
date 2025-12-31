@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { Screen, Country, GameSpeed, GameState } from './types/game';
+import { useState, useCallback, useEffect } from 'react';
+import { Screen, Country, GameSpeed, GameState, RegionState, Adjacency } from './types/game';
 import { initialMissions } from './data/gameData';
+import { createInitialOwnership } from './utils/mapUtils';
 import TitleScreen from './screens/TitleScreen';
 import CountrySelectScreen from './screens/CountrySelectScreen';
 import MainScreen from './screens/MainScreen';
@@ -22,6 +23,37 @@ const initialGameState: GameState = {
 
 export default function Home() {
   const [gameState, setGameState] = useState<GameState>(initialGameState);
+  const [regions, setRegions] = useState<RegionState>({});
+  const [adjacency, setAdjacency] = useState<Adjacency>({});
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [mapDataLoaded, setMapDataLoaded] = useState(false);
+
+  // Load map data on mount
+  useEffect(() => {
+    const loadMapData = async () => {
+      try {
+        // Load GeoJSON and adjacency data
+        const [geoResponse, adjResponse] = await Promise.all([
+          fetch('/map/regions.geojson'),
+          fetch('/map/adjacency.json'),
+        ]);
+
+        const geoData = await geoResponse.json();
+        const adjData = await adjResponse.json();
+
+        // Initialize regions with ownership
+        const initialRegions = createInitialOwnership(geoData.features, 'soviet');
+        
+        setRegions(initialRegions);
+        setAdjacency(adjData);
+        setMapDataLoaded(true);
+      } catch (error) {
+        console.error('Failed to load map data:', error);
+      }
+    };
+
+    loadMapData();
+  }, []);
 
   // Screen navigation
   const navigateToScreen = useCallback((screen: Screen) => {
@@ -122,11 +154,16 @@ export default function Home() {
             income={gameState.income}
             infantryUnits={gameState.infantryUnits}
             missions={gameState.missions}
+            regions={regions}
+            adjacency={adjacency}
+            selectedRegion={selectedRegion}
+            mapDataLoaded={mapDataLoaded}
             onTogglePlay={handleTogglePlay}
             onChangeSpeed={handleChangeSpeed}
             onCreateInfantry={handleCreateInfantry}
             onOpenMissions={handleOpenMissions}
             onClaimMission={handleClaimMission}
+            onRegionSelect={setSelectedRegion}
           />
         );
       
