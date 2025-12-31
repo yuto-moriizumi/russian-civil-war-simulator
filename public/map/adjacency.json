@@ -6,7 +6,6 @@
   ],
   "RU-MO": [
     "RU-CU",
-    "RU-KEM",
     "RU-NIZ",
     "RU-PNZ",
     "RU-RYA",
@@ -20,15 +19,12 @@
   ],
   "RU-KGN": [
     "RU-CHE",
-    "RU-MOS",
     "RU-TYU"
   ],
   "RU-IN": [
-    "RU-SE",
-    "RU-SVE"
+    "RU-SE"
   ],
   "RU-KHM": [
-    "RU-CE",
     "RU-KO",
     "RU-KYA",
     "RU-SVE",
@@ -44,8 +40,7 @@
     "RU-PER",
     "RU-TA",
     "RU-UD",
-    "RU-VLG",
-    "RU-YAN"
+    "RU-VLG"
   ],
   "RU-KO": [
     "RU-ARK",
@@ -59,7 +54,6 @@
   "RU-KOS": [
     "RU-IVA",
     "RU-KIR",
-    "RU-NEN",
     "RU-VLG",
     "RU-YAR"
   ],
@@ -68,7 +62,6 @@
     "RU-KEM",
     "RU-KHM",
     "RU-KK",
-    "RU-NIZ",
     "RU-SA",
     "RU-TOM",
     "RU-TY",
@@ -81,8 +74,6 @@
   ],
   "RU-SVE": [
     "RU-BA",
-    "RU-IN",
-    "RU-IRK",
     "RU-KHM",
     "RU-KO",
     "RU-PER",
@@ -90,7 +81,6 @@
   ],
   "RU-VGG": [
     "RU-AST",
-    "RU-CHE",
     "RU-KL",
     "RU-ROS",
     "RU-VOR"
@@ -98,27 +88,22 @@
   "RU-IRK": [
     "RU-BU",
     "RU-KYA",
-    "RU-SAR",
-    "RU-SVE",
     "RU-TY"
   ],
   "RU-PER": [
     "RU-BA",
     "RU-KIR",
     "RU-KO",
-    "RU-SA",
     "RU-SVE",
     "RU-UD"
   ],
   "RU-PSK": [
     "RU-NGR",
     "RU-SMO",
-    "RU-TVE",
-    "RU-UD"
+    "RU-TVE"
   ],
   "RU-ROS": [
     "RU-KDA",
-    "RU-LEN",
     "RU-STA",
     "RU-VGG",
     "RU-VOR",
@@ -126,7 +111,6 @@
     "UA-14"
   ],
   "RU-RYA": [
-    "RU-KL",
     "RU-LIP",
     "RU-MO",
     "RU-MOS",
@@ -136,11 +120,8 @@
     "RU-TUL",
     "RU-VLA"
   ],
-  "RU-AD": [
-    "RU-NIZ"
-  ],
+  "RU-AD": [],
   "RU-SAM": [
-    "RU-KDA",
     "RU-ORE",
     "RU-SAR",
     "RU-TA",
@@ -150,7 +131,6 @@
     "RU-AL",
     "RU-KEM",
     "RU-KYA",
-    "RU-ORE",
     "RU-TY"
   ],
   "RU-TAM": [
@@ -175,16 +155,12 @@
     "RU-KYA",
     "RU-NVS",
     "RU-OMS",
-    "RU-TYU",
-    "RU-UD"
+    "RU-TYU"
   ],
   "RU-NIZ": [
-    "RU-AD",
     "RU-CU",
     "RU-IVA",
-    "RU-KEM",
     "RU-KIR",
-    "RU-KYA",
     "RU-ME",
     "RU-MO",
     "RU-RYA",
@@ -194,7 +170,6 @@
     "RU-ARK",
     "RU-LEN",
     "RU-MUR",
-    "RU-VLA",
     "RU-VLG"
   ],
   "RU-ARK": [
@@ -209,7 +184,6 @@
     "RU-VGG"
   ],
   "RU-BEL": [
-    "RU-KL",
     "RU-VOR",
     "UA-09",
     "UA-59",
@@ -230,15 +204,12 @@
   ],
   "RU-CE": [
     "RU-DA",
-    "RU-KHM",
     "RU-STA"
   ],
   "RU-CHE": [
     "RU-BA",
     "RU-KGN",
-    "RU-ORE",
-    "RU-SE",
-    "RU-VGG"
+    "RU-ORE"
   ],
   "RU-CU": [
     "RU-ME",
@@ -252,14 +223,11 @@
     "RU-KHM",
     "RU-OMS",
     "RU-SVE",
-    "RU-TOM",
-    "RU-ULY"
+    "RU-TOM"
   ],
   "RU-SE": [
-    "RU-CHE",
     "RU-IN",
     "RU-KB",
-    "RU-OMS",
     "RU-STA"
   ],
   "RU-PNZ": [
@@ -270,36 +238,30 @@
   ],
   "RU-AMU": [
     "RU-KHA",
-    "RU-ULY",
     "RU-YEV",
     "RU-ZAB"
   ],
   "RU-KB": [
     "RU-KC",
-    "RU-SA",
     "RU-SE",
     "RU-STA"
   ],
   "RU-KDA": [
     "RU-KC",
     "RU-ROS",
-    "RU-SAM",
     "RU-STA"
   ],
   "RU-KRS": [
     "RU-BRY",
     "RU-LIP",
-    "RU-ORL",
     "RU-VOR",
     "UA-59"
   ],
   "RU-LEN": [
     "RU-KR",
     "RU-NGR",
-    "RU-ROS",
     "RU-SPE",
-    "RU-VLG",
-    "UA-59"
+    "RU-VLG"
   ],
   "RU-ME": [
     "RU-CU",
@@ -312,7 +274,6 @@
     "RU-MOS"
   ],
   "RU-MOS": [
-    "RU-KGN",
     "RU-KLU",
     "RU-MOW",
     "RU-RYA",
@@ -322,13 +283,11 @@
     "RU-YAR"
   ],
   "RU-MUR": [
-    "RU-KLU",
     "RU-KR"
   ],
   "RU-NEN": [
     "RU-ARK",
     "RU-KO",
-    "RU-KOS",
     "RU-YAN"
   ],
   "RU-NGR": [
@@ -340,37 +299,30 @@
     "RU-ALT",
     "RU-KEM",
     "RU-OMS",
-    "RU-TOM",
-    "RU-VLG"
+    "RU-TOM"
   ],
   "RU-OMS": [
     "RU-NVS",
-    "RU-SE",
     "RU-TOM",
     "RU-TYU"
   ],
   "RU-ORL": [
     "RU-BRY",
     "RU-KLU",
-    "RU-KRS",
     "RU-TUL"
   ],
   "RU-SPE": [
-    "RU-LEN",
-    "RU-LIP"
+    "RU-LEN"
   ],
   "RU-SAK": [],
   "RU-SA": [
     "RU-CHU",
-    "RU-KB",
     "RU-KHA",
     "RU-KYA",
     "RU-MAG",
-    "RU-PER",
     "RU-ZAB"
   ],
   "RU-SAR": [
-    "RU-IRK",
     "RU-PNZ",
     "RU-SAM",
     "RU-TAM",
@@ -380,8 +332,7 @@
     "RU-BRY",
     "RU-KLU",
     "RU-MOS",
-    "RU-PSK",
-    "RU-VOR"
+    "RU-PSK"
   ],
   "RU-STA": [
     "RU-CE",
@@ -390,68 +341,54 @@
     "RU-KC",
     "RU-KDA",
     "RU-ROS",
-    "RU-SE",
-    "RU-TVE"
+    "RU-SE"
   ],
   "RU-TY": [
     "RU-AL",
     "RU-BU",
     "RU-IRK",
     "RU-KK",
-    "RU-KL",
     "RU-KYA"
   ],
   "RU-TVE": [
     "RU-MOS",
     "RU-NGR",
     "RU-PSK",
-    "RU-STA",
     "RU-YAR"
   ],
   "RU-UD": [
     "RU-KIR",
     "RU-PER",
-    "RU-PSK",
-    "RU-TA",
-    "RU-TOM",
-    "RU-VLG"
+    "RU-TA"
   ],
   "RU-KLU": [
     "RU-BRY",
     "RU-MOS",
     "RU-MOW",
-    "RU-MUR",
     "RU-ORL",
     "RU-SMO",
     "RU-TUL"
   ],
   "RU-LIP": [
-    "RU-BA",
     "RU-KRS",
     "RU-RYA",
-    "RU-SPE",
     "RU-TAM",
     "RU-TUL"
   ],
   "RU-MAG": [
     "RU-KAM",
     "RU-KHA",
-    "RU-SA",
-    "RU-VOR"
+    "RU-SA"
   ],
   "RU-ULY": [
-    "RU-AMU",
     "RU-CU",
     "RU-MO",
     "RU-SAM",
     "RU-SAR",
-    "RU-TA",
-    "RU-TYU"
+    "RU-TA"
   ],
   "RU-VLA": [
-    "RU-CHU",
     "RU-IVA",
-    "RU-KR",
     "RU-MOS",
     "RU-NIZ",
     "RU-RYA"
@@ -462,8 +399,6 @@
     "RU-KOS",
     "RU-KR",
     "RU-LEN",
-    "RU-NVS",
-    "RU-UD",
     "RU-YAR"
   ],
   "RU-YAR": [
@@ -474,20 +409,15 @@
   ],
   "RU-VOR": [
     "RU-BEL",
-    "RU-IVA",
     "RU-KRS",
-    "RU-MAG",
     "RU-ROS",
-    "RU-SMO",
     "RU-TAM",
     "RU-VGG"
   ],
   "RU-YAN": [
-    "RU-KIR",
     "RU-KO",
     "RU-KYA",
-    "RU-NEN",
-    "UA-09"
+    "RU-NEN"
   ],
   "RU-AL": [
     "RU-ALT",
@@ -497,20 +427,14 @@
   "RU-IVA": [
     "RU-KOS",
     "RU-NIZ",
-    "RU-VLA",
-    "RU-VOR"
+    "RU-VLA"
   ],
   "RU-YEV": [
-    "RU-AMU",
-    "RU-KEM"
+    "RU-AMU"
   ],
   "RU-KL": [
     "RU-AST",
-    "RU-BEL",
     "RU-DA",
-    "RU-KHA",
-    "RU-RYA",
-    "RU-TY",
     "RU-VGG"
   ],
   "RU-KAM": [
@@ -526,22 +450,17 @@
     "RU-ALT",
     "RU-KK",
     "RU-KYA",
-    "RU-MO",
-    "RU-NIZ",
-    "RU-NVS",
-    "RU-YEV"
+    "RU-NVS"
   ],
   "RU-KHA": [
     "RU-AMU",
-    "RU-KL",
     "RU-MAG",
     "RU-PRI",
     "RU-SA"
   ],
   "RU-CHU": [
     "RU-KAM",
-    "RU-SA",
-    "RU-VLA"
+    "RU-SA"
   ],
   "RU-DA": [
     "RU-CE",
@@ -551,19 +470,15 @@
   "RU-KGD": [],
   "RU-ORE": [
     "RU-CHE",
-    "RU-KK",
     "RU-SAM",
     "RU-TA"
   ],
   "RU-PRI": [
-    "RU-BA",
     "RU-KHA"
   ],
   "RU-BA": [
     "RU-CHE",
-    "RU-LIP",
     "RU-PER",
-    "RU-PRI",
     "RU-SVE",
     "RU-TA"
   ],
@@ -573,7 +488,6 @@
     "UA-48"
   ],
   "UA-07": [
-    "UA-43",
     "UA-56"
   ],
   "UA-56": [
@@ -608,7 +522,6 @@
     "RU-BEL",
     "RU-BRY",
     "RU-KRS",
-    "RU-LEN",
     "UA-53",
     "UA-63",
     "UA-74"
@@ -624,7 +537,6 @@
   "UA-09": [
     "RU-BEL",
     "RU-ROS",
-    "RU-YAN",
     "UA-14",
     "UA-63"
   ],
@@ -640,7 +552,6 @@
     "UA-65"
   ],
   "UA-46": [
-    "UA-12",
     "UA-21",
     "UA-26",
     "UA-56"
@@ -680,8 +591,6 @@
     "UA-65"
   ],
   "UA-43": [
-    "UA-07",
-    "UA-35",
     "UA-40"
   ],
   "UA-05": [
@@ -712,15 +621,12 @@
   ],
   "UA-12": [
     "UA-14",
-    "UA-46",
     "UA-48",
     "UA-63",
     "UA-65"
   ],
   "UA-35": [
     "UA-05",
-    "UA-40",
-    "UA-43",
     "UA-51",
     "UA-53",
     "UA-71"
@@ -730,7 +636,6 @@
     "UA-74"
   ],
   "UA-40": [
-    "UA-35",
     "UA-43"
   ]
 }
