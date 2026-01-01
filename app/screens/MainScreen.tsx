@@ -144,6 +144,22 @@ export default function MainScreen({
               <span className="text-sm text-green-400">+${income}/h</span>
             </div>
           </div>
+
+          {/* Unit Production */}
+          <div className="flex items-center gap-2 rounded-lg border border-stone-600 bg-stone-800/80 px-3 py-2">
+            <span className="text-lg">🎖️</span>
+            <div className="flex flex-col">
+              <span className="text-xs text-stone-400">Infantry</span>
+              <span className="text-sm font-bold text-white">{infantryUnits}</span>
+            </div>
+            <button
+              onClick={onCreateInfantry}
+              className="ml-2 rounded bg-green-700 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-green-600"
+              title="Create Infantry Unit ($10)"
+            >
+              + Create
+            </button>
+          </div>
         </div>
 
         {/* Right Side: Date/Time and Speed Controls */}
@@ -162,31 +178,6 @@ export default function MainScreen({
             onChangeSpeed={onChangeSpeed}
           />
         </div>
-      </div>
-
-      {/* Side Panel - Units */}
-      <div className="absolute left-4 top-24 z-10 w-64 rounded-lg border border-stone-600 bg-stone-900/90 p-4">
-        <h2 className="mb-4 border-b border-stone-700 pb-2 text-sm font-bold tracking-wider text-stone-300">
-          MILITARY FORCES
-        </h2>
-        
-        <div className="mb-4 flex items-center justify-between rounded bg-stone-800 p-3">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🎖️</span>
-            <div>
-              <div className="text-sm font-semibold text-white">Infantry</div>
-              <div className="text-xs text-stone-400">Ground forces</div>
-            </div>
-          </div>
-          <div className="text-xl font-bold text-white">{infantryUnits}</div>
-        </div>
-
-        <button
-          onClick={onCreateInfantry}
-          className="w-full rounded border border-stone-500 bg-stone-800 py-3 text-sm font-semibold text-stone-300 transition-colors hover:border-green-500 hover:bg-stone-700 hover:text-white"
-        >
-          + Create Infantry Unit
-        </button>
       </div>
 
       {/* Mission Window */}
