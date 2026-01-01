@@ -33,6 +33,8 @@ interface MainScreenProps {
   onOpenMissions: () => void;
   onClaimMission: (missionId: string) => void;
   onRegionSelect: (regionId: string | null) => void;
+  onDeployUnit: () => void;
+  onMoveUnits: (fromRegion: string, toRegion: string, count: number) => void;
 }
 
 export default function MainScreen({
@@ -54,6 +56,8 @@ export default function MainScreen({
   onOpenMissions,
   onClaimMission,
   onRegionSelect,
+  onDeployUnit,
+  onMoveUnits,
 }: MainScreenProps) {
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -81,7 +85,11 @@ export default function MainScreen({
             regions={regions}
             adjacency={adjacency}
             selectedRegion={selectedRegion}
+            playerFaction={country.id}
+            unitsInReserve={infantryUnits}
             onRegionSelect={onRegionSelect}
+            onDeployUnit={onDeployUnit}
+            onMoveUnits={onMoveUnits}
           />
         ) : (
           <div 

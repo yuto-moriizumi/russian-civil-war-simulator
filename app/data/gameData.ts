@@ -8,8 +8,8 @@ export const countries: Country[] = [
     color: '#CC0000',
   },
   {
-    id: 'russian_republic',
-    name: 'Russian Republic',
+    id: 'white',
+    name: 'White Army',
     flag: '🦅',
     color: '#FFFFFF',
   },

@@ -55,6 +55,33 @@ export default function Home() {
     loadMapData();
   }, []);
 
+  // Game time progression
+  useEffect(() => {
+    if (!gameState.isPlaying) return;
+
+    // Time advances based on game speed
+    // Speed 1 = 1 hour per second, Speed 5 = 5 hours per second
+    const msPerHour = 1000 / gameState.gameSpeed;
+    
+    const interval = setInterval(() => {
+      setGameState(prev => {
+        const newDate = new Date(prev.dateTime);
+        newDate.setHours(newDate.getHours() + 1);
+        
+        // Add income every hour
+        const newMoney = prev.money + prev.income;
+        
+        return {
+          ...prev,
+          dateTime: newDate,
+          money: newMoney,
+        };
+      });
+    }, msPerHour);
+
+    return () => clearInterval(interval);
+  }, [gameState.isPlaying, gameState.gameSpeed]);
+
   // Screen navigation
   const navigateToScreen = useCallback((screen: Screen) => {
     setGameState(prev => ({ ...prev, currentScreen: screen }));
@@ -92,6 +119,87 @@ export default function Home() {
       return prev;
     });
   }, []);
+
+  // Deploy unit to selected region
+  const handleDeployUnit = useCallback(() => {
+    if (!selectedRegion || gameState.infantryUnits <= 0) return;
+    
+    const region = regions[selectedRegion];
+    if (!region) return;
+    
+    // Can only deploy to regions you control
+    if (region.owner !== gameState.selectedCountry?.id) return;
+    
+    setGameState(prev => ({
+      ...prev,
+      infantryUnits: prev.infantryUnits - 1,
+    }));
+    
+    setRegions(prev => ({
+      ...prev,
+      [selectedRegion]: {
+        ...prev[selectedRegion],
+        units: prev[selectedRegion].units + 1,
+      },
+    }));
+  }, [selectedRegion, gameState.infantryUnits, gameState.selectedCountry?.id, regions]);
+
+  // Move units between regions
+  const handleMoveUnits = useCallback((fromRegion: string, toRegion: string, count: number) => {
+    if (!adjacency[fromRegion]?.includes(toRegion)) return;
+    
+    const from = regions[fromRegion];
+    const to = regions[toRegion];
+    if (!from || !to) return;
+    if (from.units < count) return;
+    
+    // Can only move from your own regions
+    if (from.owner !== gameState.selectedCountry?.id) return;
+    
+    setRegions(prev => {
+      const newRegions = { ...prev };
+      newRegions[fromRegion] = {
+        ...prev[fromRegion],
+        units: prev[fromRegion].units - count,
+      };
+      
+      // If target is your territory, add units
+      // If target is enemy territory and we have more units, capture it
+      if (to.owner === gameState.selectedCountry?.id) {
+        newRegions[toRegion] = {
+          ...prev[toRegion],
+          units: prev[toRegion].units + count,
+        };
+      } else {
+        // Combat: attacker vs defender
+        const attackerUnits = count;
+        const defenderUnits = to.units;
+        
+        if (attackerUnits > defenderUnits) {
+          // Attacker wins, capture the region
+          newRegions[toRegion] = {
+            ...prev[toRegion],
+            owner: gameState.selectedCountry!.id as 'soviet' | 'white',
+            units: attackerUnits - defenderUnits, // Remaining attackers
+          };
+        } else if (attackerUnits < defenderUnits) {
+          // Defender wins, reduce defender units
+          newRegions[toRegion] = {
+            ...prev[toRegion],
+            units: defenderUnits - attackerUnits,
+          };
+        } else {
+          // Tie - both sides eliminated
+          newRegions[toRegion] = {
+            ...prev[toRegion],
+            units: 0,
+          };
+        }
+      }
+      
+      return newRegions;
+    });
+  }, [adjacency, regions, gameState.selectedCountry?.id]);
 
   const handleClaimMission = useCallback((missionId: string) => {
     setGameState(prev => {
@@ -164,6 +272,8 @@ export default function Home() {
             onOpenMissions={handleOpenMissions}
             onClaimMission={handleClaimMission}
             onRegionSelect={setSelectedRegion}
+            onDeployUnit={handleDeployUnit}
+            onMoveUnits={handleMoveUnits}
           />
         );
       
