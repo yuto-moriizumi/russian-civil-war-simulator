@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Country, GameSpeed, Mission, RegionState, Adjacency } from '../types/game';
+import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement } from '../types/game';
 import SpeedControl from '../components/SpeedControl';
 
 // Dynamic import for GameMap to avoid SSR issues with MapLibre
@@ -23,9 +23,11 @@ interface MainScreenProps {
   income: number;
   infantryUnits: number;
   missions: Mission[];
+  movingUnits: Movement[];
   regions: RegionState;
   adjacency: Adjacency;
   selectedRegion: string | null;
+  selectedUnitRegion: string | null;
   mapDataLoaded: boolean;
   onTogglePlay: () => void;
   onChangeSpeed: (speed: GameSpeed) => void;
@@ -33,6 +35,7 @@ interface MainScreenProps {
   onOpenMissions: () => void;
   onClaimMission: (missionId: string) => void;
   onRegionSelect: (regionId: string | null) => void;
+  onUnitSelect: (regionId: string | null) => void;
   onDeployUnit: () => void;
   onMoveUnits: (fromRegion: string, toRegion: string, count: number) => void;
 }
@@ -46,9 +49,11 @@ export default function MainScreen({
   income,
   infantryUnits,
   missions,
+  movingUnits,
   regions,
   adjacency,
   selectedRegion,
+  selectedUnitRegion,
   mapDataLoaded,
   onTogglePlay,
   onChangeSpeed,
@@ -56,6 +61,7 @@ export default function MainScreen({
   onOpenMissions,
   onClaimMission,
   onRegionSelect,
+  onUnitSelect,
   onDeployUnit,
   onMoveUnits,
 }: MainScreenProps) {
@@ -85,9 +91,13 @@ export default function MainScreen({
             regions={regions}
             adjacency={adjacency}
             selectedRegion={selectedRegion}
+            selectedUnitRegion={selectedUnitRegion}
+            movingUnits={movingUnits}
+            currentDateTime={dateTime}
             playerFaction={country.id}
             unitsInReserve={infantryUnits}
             onRegionSelect={onRegionSelect}
+            onUnitSelect={onUnitSelect}
             onDeployUnit={onDeployUnit}
             onMoveUnits={onMoveUnits}
           />

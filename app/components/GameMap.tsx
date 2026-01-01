@@ -3,16 +3,20 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { RegionState, Adjacency, FactionId } from '../types/game';
+import { RegionState, Adjacency, FactionId, Movement } from '../types/game';
 import { FACTION_COLORS, getAdjacentRegions } from '../utils/mapUtils';
 
 interface GameMapProps {
   regions: RegionState;
   adjacency: Adjacency;
   selectedRegion: string | null;
+  selectedUnitRegion: string | null;
+  movingUnits: Movement[];
+  currentDateTime: Date;
   playerFaction: FactionId;
   unitsInReserve: number;
   onRegionSelect: (regionId: string | null) => void;
+  onUnitSelect: (regionId: string | null) => void;
   onRegionHover?: (regionId: string | null) => void;
   onDeployUnit: () => void;
   onMoveUnits: (fromRegion: string, toRegion: string, count: number) => void;
@@ -22,20 +26,82 @@ export default function GameMap({
   regions,
   adjacency,
   selectedRegion,
+  selectedUnitRegion,
+  movingUnits,
+  currentDateTime,
   playerFaction,
   unitsInReserve,
   onRegionSelect,
+  onUnitSelect,
   onRegionHover,
   onDeployUnit,
   onMoveUnits,
 }: GameMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
+  const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
+  const movingMarkersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
   const hoveredRegionRef = useRef<string | null>(null);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [moveMode, setMoveMode] = useState(false);
-  const [unitsToMove, setUnitsToMove] = useState(1);
+  const [regionCentroids, setRegionCentroids] = useState<Record<string, [number, number]>>({});
+
+  // Calculate centroid of a polygon
+  const calculateCentroid = (coordinates: number[][][]): [number, number] => {
+    let totalX = 0;
+    let totalY = 0;
+    let totalPoints = 0;
+    
+    // Handle MultiPolygon by iterating all rings
+    for (const ring of coordinates) {
+      for (const coord of ring) {
+        totalX += coord[0];
+        totalY += coord[1];
+        totalPoints++;
+      }
+    }
+    
+    return [totalX / totalPoints, totalY / totalPoints];
+  };
+
+  // Load region centroids from GeoJSON
+  useEffect(() => {
+    const loadCentroids = async () => {
+      try {
+        const response = await fetch('/map/regions.geojson');
+        const data = await response.json();
+        const centroids: Record<string, [number, number]> = {};
+        
+        for (const feature of data.features) {
+          const id = feature.properties?.shapeISO;
+          if (!id) continue;
+          
+          const geometry = feature.geometry;
+          if (geometry.type === 'Polygon') {
+            centroids[id] = calculateCentroid(geometry.coordinates);
+          } else if (geometry.type === 'MultiPolygon') {
+            // For MultiPolygon, use the largest polygon's centroid
+            let largestRing = geometry.coordinates[0];
+            let maxPoints = 0;
+            for (const polygon of geometry.coordinates) {
+              const points = polygon[0]?.length || 0;
+              if (points > maxPoints) {
+                maxPoints = points;
+                largestRing = polygon;
+              }
+            }
+            centroids[id] = calculateCentroid(largestRing);
+          }
+        }
+        
+        setRegionCentroids(centroids);
+      } catch (error) {
+        console.error('Failed to load centroids:', error);
+      }
+    };
+    
+    loadCentroids();
+  }, []);
 
   // Initialize map
   useEffect(() => {
@@ -120,12 +186,45 @@ export default function GameMap({
       setMapLoaded(true);
     });
 
-    // Click handler
+    // Left-click handler - select region or unit
     map.current.on('click', 'regions-fill', (e) => {
       if (e.features && e.features.length > 0) {
         const regionId = e.features[0].properties?.shapeISO;
         if (regionId) {
-          onRegionSelect(regionId === selectedRegion ? null : regionId);
+          // If clicking on same region, deselect
+          if (regionId === selectedRegion) {
+            onRegionSelect(null);
+            onUnitSelect(null);
+          } else {
+            onRegionSelect(regionId);
+            // If this region has units owned by player, also select as unit
+            const region = regions[regionId];
+            if (region && region.owner === playerFaction && region.units > 0) {
+              onUnitSelect(regionId);
+            } else {
+              onUnitSelect(null);
+            }
+          }
+        }
+      }
+    });
+
+    // Right-click handler - move selected unit
+    map.current.on('contextmenu', 'regions-fill', (e) => {
+      e.preventDefault();
+      if (e.features && e.features.length > 0) {
+        const targetRegionId = e.features[0].properties?.shapeISO;
+        // Check if we have a unit selected and this is an adjacent region
+        if (selectedUnitRegion && targetRegionId && targetRegionId !== selectedUnitRegion) {
+          const adjacentRegions = getAdjacentRegions(adjacency, selectedUnitRegion);
+          if (adjacentRegions.includes(targetRegionId)) {
+            const sourceRegion = regions[selectedUnitRegion];
+            if (sourceRegion && sourceRegion.units > 0) {
+              // Move all units (or could use unitsToMove for partial)
+              onMoveUnits(selectedUnitRegion, targetRegionId, sourceRegion.units);
+              onUnitSelect(null);
+            }
+          }
         }
       }
     });
@@ -179,6 +278,7 @@ export default function GameMap({
       map.current?.remove();
       map.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update region colors based on ownership
@@ -203,7 +303,7 @@ export default function GameMap({
     updateRegionColors();
   }, [updateRegionColors]);
 
-  // Update selected region state
+  // Update selected region state and highlight adjacent regions for unit movement
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
@@ -226,7 +326,174 @@ export default function GameMap({
         );
       }
     }
-  }, [selectedRegion, adjacency, mapLoaded]);
+
+    // If a unit is selected, also highlight adjacent regions for movement
+    if (selectedUnitRegion && selectedUnitRegion !== selectedRegion) {
+      const adjacent = getAdjacentRegions(adjacency, selectedUnitRegion);
+      for (const adjId of adjacent) {
+        map.current.setFeatureState(
+          { source: 'regions', id: adjId },
+          { adjacent: true }
+        );
+      }
+    }
+  }, [selectedRegion, selectedUnitRegion, adjacency, mapLoaded]);
+
+  // Update unit markers on the map
+  useEffect(() => {
+    if (!map.current || !mapLoaded || Object.keys(regionCentroids).length === 0) return;
+
+    // Track which markers we need
+    const neededMarkers = new Set<string>();
+    
+    // Create or update markers for regions with units
+    for (const [regionId, region] of Object.entries(regions)) {
+      if (region.units > 0) {
+        neededMarkers.add(regionId);
+        const centroid = regionCentroids[regionId];
+        if (!centroid) continue;
+
+        const isSelected = selectedUnitRegion === regionId;
+        const isPlayerUnit = region.owner === playerFaction;
+        const existingMarker = markersRef.current.get(regionId);
+        
+        if (existingMarker) {
+          // Update existing marker
+          const el = existingMarker.getElement();
+          const unitCountEl = el.querySelector('.unit-count');
+          if (unitCountEl) {
+            unitCountEl.textContent = String(region.units);
+          }
+          // Update color based on owner and selection
+          const bgEl = el.querySelector('.unit-bg') as HTMLElement;
+          if (bgEl) {
+            bgEl.style.backgroundColor = FACTION_COLORS[region.owner];
+            bgEl.style.border = isSelected ? '3px solid #22d3ee' : '2px solid rgba(0,0,0,0.5)';
+            bgEl.style.boxShadow = isSelected ? '0 0 10px #22d3ee' : '0 2px 4px rgba(0,0,0,0.3)';
+          }
+        } else {
+          // Create new marker
+          const el = document.createElement('div');
+          el.className = 'unit-marker';
+          el.innerHTML = `
+            <div class="unit-bg" style="
+              background-color: ${FACTION_COLORS[region.owner]};
+              border: ${isSelected ? '3px solid #22d3ee' : '2px solid rgba(0,0,0,0.5)'};
+              border-radius: 4px;
+              padding: 2px 6px;
+              display: flex;
+              align-items: center;
+              gap: 4px;
+              box-shadow: ${isSelected ? '0 0 10px #22d3ee' : '0 2px 4px rgba(0,0,0,0.3)'};
+              cursor: ${isPlayerUnit ? 'pointer' : 'default'};
+              transition: all 0.2s ease;
+            ">
+              <span style="font-size: 12px;">&#9876;</span>
+              <span class="unit-count" style="
+                font-size: 12px;
+                font-weight: bold;
+                color: ${region.owner === 'white' ? '#000' : '#fff'};
+                text-shadow: ${region.owner === 'white' ? 'none' : '1px 1px 1px rgba(0,0,0,0.5)'};
+              ">${region.units}</span>
+            </div>
+          `;
+          
+          // Make marker clickable to select unit (left-click)
+          el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            onRegionSelect(regionId);
+            if (isPlayerUnit) {
+              onUnitSelect(regionId);
+            }
+          });
+
+          const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+            .setLngLat(centroid)
+            .addTo(map.current!);
+          
+          markersRef.current.set(regionId, marker);
+        }
+      }
+    }
+
+    // Remove markers for regions that no longer have units
+    for (const [regionId, marker] of markersRef.current.entries()) {
+      if (!neededMarkers.has(regionId)) {
+        marker.remove();
+        markersRef.current.delete(regionId);
+      }
+    }
+  }, [regions, regionCentroids, mapLoaded, onRegionSelect, onUnitSelect, selectedUnitRegion, playerFaction]);
+
+  // Update moving unit markers on the map
+  useEffect(() => {
+    if (!map.current || !mapLoaded || Object.keys(regionCentroids).length === 0) return;
+
+    // Track which moving markers we need
+    const neededMovingMarkers = new Set<string>();
+    
+    // Create or update markers for moving units
+    for (const movement of movingUnits) {
+      neededMovingMarkers.add(movement.id);
+      
+      const fromCentroid = regionCentroids[movement.fromRegion];
+      const toCentroid = regionCentroids[movement.toRegion];
+      if (!fromCentroid || !toCentroid) continue;
+
+      // Calculate current position based on progress
+      const totalTime = movement.arrivalTime.getTime() - movement.departureTime.getTime();
+      const elapsed = currentDateTime.getTime() - movement.departureTime.getTime();
+      const progress = Math.min(1, Math.max(0, elapsed / totalTime));
+      
+      const currentLng = fromCentroid[0] + (toCentroid[0] - fromCentroid[0]) * progress;
+      const currentLat = fromCentroid[1] + (toCentroid[1] - fromCentroid[1]) * progress;
+
+      const existingMarker = movingMarkersRef.current.get(movement.id);
+      
+      if (existingMarker) {
+        // Update position
+        existingMarker.setLngLat([currentLng, currentLat]);
+      } else {
+        // Create new moving marker
+        const el = document.createElement('div');
+        el.className = 'moving-unit-marker';
+        el.innerHTML = `
+          <div style="
+            background-color: ${FACTION_COLORS[movement.owner]};
+            border: 2px dashed #22d3ee;
+            border-radius: 50%;
+            padding: 4px 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 0 8px rgba(34, 211, 238, 0.5);
+            animation: pulse 1.5s ease-in-out infinite;
+          ">
+            <span style="font-size: 10px;">&#9876;</span>
+            <span style="
+              font-size: 10px;
+              font-weight: bold;
+              color: ${movement.owner === 'white' ? '#000' : '#fff'};
+            ">${movement.count}</span>
+          </div>
+        `;
+
+        const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+          .setLngLat([currentLng, currentLat])
+          .addTo(map.current!);
+        
+        movingMarkersRef.current.set(movement.id, marker);
+      }
+    }
+
+    // Remove markers for completed movements
+    for (const [movementId, marker] of movingMarkersRef.current.entries()) {
+      if (!neededMovingMarkers.has(movementId)) {
+        marker.remove();
+        movingMarkersRef.current.delete(movementId);
+      }
+    }
+  }, [movingUnits, regionCentroids, mapLoaded, currentDateTime]);
 
   return (
     <div className="relative h-full w-full">
@@ -260,9 +527,16 @@ export default function GameMap({
 
       {/* Selected region info - bottom left */}
       {selectedRegion && regions[selectedRegion] && (
-        <div className="absolute left-4 bottom-16 z-10 rounded-lg border-2 border-amber-500 bg-stone-900/95 p-4 min-w-[280px]">
-          <div className="mb-2 text-lg font-bold text-amber-400">
+        <div className={`absolute left-4 bottom-16 z-10 rounded-lg border-2 bg-stone-900/95 p-4 min-w-[280px] ${
+          selectedUnitRegion === selectedRegion ? 'border-cyan-400' : 'border-amber-500'
+        }`}>
+          <div className={`mb-2 text-lg font-bold ${
+            selectedUnitRegion === selectedRegion ? 'text-cyan-400' : 'text-amber-400'
+          }`}>
             {regions[selectedRegion].name}
+            {selectedUnitRegion === selectedRegion && (
+              <span className="ml-2 text-xs font-normal">(Unit Selected)</span>
+            )}
           </div>
           <div className="space-y-1 text-sm">
             <div className="flex items-center gap-2">
@@ -299,69 +573,47 @@ export default function GameMap({
                 </button>
               )}
               
-              {/* Move mode toggle */}
-              {regions[selectedRegion].units > 0 && (
-                <>
-                  {!moveMode ? (
-                    <button
-                      onClick={() => setMoveMode(true)}
-                      className="w-full rounded bg-blue-700 py-2 text-sm font-semibold text-white hover:bg-blue-600"
-                    >
-                      Move Units ({regions[selectedRegion].units})
-                    </button>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-stone-400">Units to move:</span>
-                        <input
-                          type="range"
-                          min="1"
-                          max={regions[selectedRegion].units}
-                          value={Math.min(unitsToMove, regions[selectedRegion].units)}
-                          onChange={(e) => setUnitsToMove(Number(e.target.value))}
-                          className="flex-1"
-                        />
-                        <span className="text-sm font-bold text-white w-8 text-center">
-                          {Math.min(unitsToMove, regions[selectedRegion].units)}
-                        </span>
-                      </div>
-                      <p className="text-xs text-amber-400">Click an adjacent region to move</p>
-                      <button
-                        onClick={() => setMoveMode(false)}
-                        className="w-full rounded bg-stone-700 py-1 text-xs text-stone-300 hover:bg-stone-600"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
-                </>
+              {/* Unit selection info */}
+              {regions[selectedRegion].units > 0 && selectedUnitRegion === selectedRegion && (
+                <div className="space-y-2 rounded bg-cyan-900/30 p-2">
+                  <p className="text-xs text-cyan-300">
+                    Right-click an adjacent region to move {regions[selectedRegion].units} unit(s)
+                  </p>
+                  <p className="text-xs text-stone-400">
+                    Travel time: ~6 hours
+                  </p>
+                </div>
+              )}
+              
+              {regions[selectedRegion].units > 0 && selectedUnitRegion !== selectedRegion && (
+                <button
+                  onClick={() => onUnitSelect(selectedRegion)}
+                  className="w-full rounded bg-blue-700 py-2 text-sm font-semibold text-white hover:bg-blue-600"
+                >
+                  Select Unit ({regions[selectedRegion].units})
+                </button>
               )}
             </div>
           )}
-          
-          {/* Adjacent regions list for movement */}
-          {moveMode && regions[selectedRegion].owner === playerFaction && (
+
+          {/* Show adjacent regions when unit is selected */}
+          {selectedUnitRegion === selectedRegion && regions[selectedRegion].owner === playerFaction && (
             <div className="mt-3 space-y-1 border-t border-stone-700 pt-3">
-              <p className="text-xs text-stone-400 mb-2">Move to:</p>
+              <p className="text-xs text-stone-400 mb-2">Adjacent regions (right-click to move):</p>
               <div className="max-h-32 overflow-y-auto space-y-1">
                 {getAdjacentRegions(adjacency, selectedRegion).map((adjId) => {
                   const adjRegion = regions[adjId];
                   if (!adjRegion) return null;
                   const isEnemy = adjRegion.owner !== playerFaction && adjRegion.owner !== 'neutral';
                   return (
-                    <button
+                    <div
                       key={adjId}
-                      onClick={() => {
-                        onMoveUnits(selectedRegion, adjId, Math.min(unitsToMove, regions[selectedRegion].units));
-                        setMoveMode(false);
-                        setUnitsToMove(1);
-                      }}
                       className={`w-full rounded px-2 py-1 text-left text-xs flex items-center justify-between ${
                         isEnemy 
-                          ? 'bg-red-900/50 hover:bg-red-800/50 text-red-200' 
+                          ? 'bg-red-900/50 text-red-200' 
                           : adjRegion.owner === playerFaction
-                          ? 'bg-green-900/50 hover:bg-green-800/50 text-green-200'
-                          : 'bg-stone-700 hover:bg-stone-600 text-stone-200'
+                          ? 'bg-green-900/50 text-green-200'
+                          : 'bg-stone-700 text-stone-200'
                       }`}
                     >
                       <span>{adjRegion.name}</span>
@@ -372,7 +624,7 @@ export default function GameMap({
                         />
                         {adjRegion.units > 0 && <span>({adjRegion.units})</span>}
                       </span>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
@@ -382,12 +634,47 @@ export default function GameMap({
           <button
             onClick={() => {
               onRegionSelect(null);
-              setMoveMode(false);
+              onUnitSelect(null);
             }}
             className="mt-3 w-full rounded bg-stone-700 py-1 text-xs text-stone-300 hover:bg-stone-600"
           >
             Deselect
           </button>
+        </div>
+      )}
+
+      {/* Moving units indicator */}
+      {movingUnits.length > 0 && (
+        <div className="absolute right-4 bottom-16 z-10 rounded-lg border border-blue-500 bg-stone-900/95 p-3 min-w-[200px]">
+          <div className="text-sm font-bold text-blue-400 mb-2">
+            Units in Transit ({movingUnits.length})
+          </div>
+          <div className="max-h-40 overflow-y-auto space-y-2">
+            {movingUnits.map((movement) => {
+              const fromRegion = regions[movement.fromRegion];
+              const toRegion = regions[movement.toRegion];
+              const totalTime = movement.arrivalTime.getTime() - movement.departureTime.getTime();
+              const elapsed = currentDateTime.getTime() - movement.departureTime.getTime();
+              const progress = Math.min(100, Math.max(0, (elapsed / totalTime) * 100));
+              
+              return (
+                <div key={movement.id} className="rounded bg-stone-800 p-2">
+                  <div className="text-xs text-stone-300">
+                    {movement.count} unit(s): {fromRegion?.name || movement.fromRegion} → {toRegion?.name || movement.toRegion}
+                  </div>
+                  <div className="mt-1 h-1 bg-stone-700 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-blue-500 transition-all duration-500"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                  <div className="text-xs text-stone-500 mt-1">
+                    Arrives: {movement.arrivalTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

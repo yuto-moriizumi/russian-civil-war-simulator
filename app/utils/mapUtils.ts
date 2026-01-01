@@ -1,4 +1,4 @@
-import { Adjacency, FactionId, Region, RegionState } from '../types/game';
+import { Adjacency, FactionId, RegionState } from '../types/game';
 
 // Faction colors for map display
 export const FACTION_COLORS: Record<FactionId, string> = {
@@ -53,8 +53,7 @@ export function initializeRegionState(
 
 // Create initial ownership based on country selection
 export function createInitialOwnership(
-  features: GeoJSON.Feature[],
-  playerFaction: FactionId
+  features: GeoJSON.Feature[]
 ): RegionState {
   const state: RegionState = {};
   

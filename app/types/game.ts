@@ -45,6 +45,16 @@ export interface Mission {
   position: { x: number; y: number };
 }
 
+export interface Movement {
+  id: string;
+  fromRegion: string;
+  toRegion: string;
+  count: number;
+  departureTime: Date;
+  arrivalTime: Date;
+  owner: FactionId;
+}
+
 export interface GameState {
   currentScreen: Screen;
   selectedCountry: Country | null;
@@ -55,4 +65,5 @@ export interface GameState {
   income: number;
   infantryUnits: number;
   missions: Mission[];
+  movingUnits: Movement[];
 }
