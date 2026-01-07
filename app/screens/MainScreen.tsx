@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement } from '../types/game';
+import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent } from '../types/game';
 import SpeedControl from '../components/SpeedControl';
 
 // Dynamic import for GameMap to avoid SSR issues with MapLibre
@@ -29,10 +29,12 @@ interface MainScreenProps {
   selectedRegion: string | null;
   selectedUnitRegion: string | null;
   mapDataLoaded: boolean;
+  gameEvents: GameEvent[];
   onTogglePlay: () => void;
   onChangeSpeed: (speed: GameSpeed) => void;
   onCreateInfantry: () => void;
   onOpenMissions: () => void;
+  onOpenEvents: () => void;
   onClaimMission: (missionId: string) => void;
   onRegionSelect: (regionId: string | null) => void;
   onUnitSelect: (regionId: string | null) => void;
@@ -55,10 +57,12 @@ export default function MainScreen({
   selectedRegion,
   selectedUnitRegion,
   mapDataLoaded,
+  gameEvents,
   onTogglePlay,
   onChangeSpeed,
   onCreateInfantry,
   onOpenMissions,
+  onOpenEvents,
   onClaimMission,
   onRegionSelect,
   onUnitSelect,
@@ -229,8 +233,21 @@ export default function MainScreen({
       <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-stone-700 bg-stone-900/90 px-4 py-2">
         <div className="flex items-center justify-between text-xs text-stone-400">
           <span>Status: {isPlaying ? 'Time advancing...' : 'Paused'}</span>
-          <span>Infantry Units: {infantryUnits}</span>
-          <span>Active Missions: {missions.filter(m => !m.claimed).length}</span>
+          <div className="flex items-center gap-4">
+            <span>Infantry Units: {infantryUnits}</span>
+            <span>Active Missions: {missions.filter(m => !m.claimed).length}</span>
+            <button
+              onClick={onOpenEvents}
+              className="relative rounded bg-stone-700 px-3 py-1 text-stone-300 transition-colors hover:bg-stone-600"
+            >
+              Events
+              {gameEvents.length > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-black">
+                  {gameEvents.length > 99 ? '99+' : gameEvents.length}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

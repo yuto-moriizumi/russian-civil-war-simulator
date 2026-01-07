@@ -55,6 +55,26 @@ export interface Movement {
   owner: FactionId;
 }
 
+export type GameEventType = 
+  | 'combat_victory'
+  | 'combat_defeat'
+  | 'region_captured'
+  | 'region_lost'
+  | 'unit_created'
+  | 'unit_deployed'
+  | 'mission_completed'
+  | 'mission_claimed';
+
+export interface GameEvent {
+  id: string;
+  type: GameEventType;
+  timestamp: Date;
+  title: string;
+  description: string;
+  faction?: FactionId;
+  regionId?: string;
+}
+
 export interface GameState {
   currentScreen: Screen;
   selectedCountry: Country | null;
@@ -66,6 +86,7 @@ export interface GameState {
   infantryUnits: number;
   missions: Mission[];
   movingUnits: Movement[];
+  gameEvents: GameEvent[];
 }
 
 // AI State for CPU-controlled factions
