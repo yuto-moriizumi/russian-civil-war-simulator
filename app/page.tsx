@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Screen, Country, GameSpeed, GameState, RegionState, Adjacency, Movement, AIState, FactionId } from './types/game';
+import { Screen, Country, GameSpeed, GameState, RegionState, Adjacency, Movement, AIState, FactionId, GameEvent, GameEventType } from './types/game';
 import { initialMissions } from './data/gameData';
 import { createInitialOwnership } from './utils/mapUtils';
 import { createInitialAIState, runAITick } from './ai/cpuPlayer';
@@ -9,6 +9,27 @@ import TitleScreen from './screens/TitleScreen';
 import CountrySelectScreen from './screens/CountrySelectScreen';
 import MainScreen from './screens/MainScreen';
 import MissionScreen from './screens/MissionScreen';
+import EventsModal from './components/EventsModal';
+
+// Helper function to create game events
+function createGameEvent(
+  type: GameEventType,
+  title: string,
+  description: string,
+  timestamp: Date,
+  faction?: FactionId,
+  regionId?: string
+): GameEvent {
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    type,
+    title,
+    description,
+    timestamp: new Date(timestamp),
+    faction,
+    regionId,
+  };
+}
 
 const initialGameState: GameState = {
   currentScreen: 'title',
@@ -21,6 +42,7 @@ const initialGameState: GameState = {
   infantryUnits: 0,
   missions: initialMissions,
   movingUnits: [],
+  gameEvents: [],
 };
 
 export default function Home() {
@@ -31,11 +53,14 @@ export default function Home() {
   const [selectedUnitRegion, setSelectedUnitRegion] = useState<string | null>(null);
   const [mapDataLoaded, setMapDataLoaded] = useState(false);
   const [aiState, setAIState] = useState<AIState | null>(null);
+  const [isEventsModalOpen, setIsEventsModalOpen] = useState(false);
   
   // Ref to store pending region updates from completed movements
   const pendingRegionUpdatesRef = useRef<Movement[]>([]);
   // Track which movement IDs have been queued for processing to prevent double-processing
   const processedMovementIdsRef = useRef<Set<string>>(new Set());
+  // Ref to store pending game events from combat
+  const pendingEventsRef = useRef<GameEvent[]>([]);
 
   // Load map data on mount
   useEffect(() => {
@@ -78,7 +103,7 @@ export default function Home() {
       const newRegions = { ...prev };
       
       movements.forEach(movement => {
-        const { toRegion, count, owner } = movement;
+        const { toRegion, count, owner, fromRegion, arrivalTime } = movement;
         const to = newRegions[toRegion];
         
         if (!to) return;
@@ -93,32 +118,80 @@ export default function Home() {
           // Combat
           const attackerUnits = count;
           const defenderUnits = to.units;
+          const defendingFaction = to.owner;
+          const regionName = to.name;
           
           if (attackerUnits > defenderUnits) {
-            // Attacker wins
+            // Attacker wins - region captured
             newRegions[toRegion] = {
               ...to,
               owner: owner,
               units: attackerUnits - defenderUnits,
             };
+            
+            // Create events for the battle
+            pendingEventsRef.current.push(
+              createGameEvent(
+                'region_captured',
+                `${regionName} Captured!`,
+                `${owner === 'soviet' ? 'Soviet' : 'White'} forces captured ${regionName} from ${defendingFaction === 'soviet' ? 'Soviet' : defendingFaction === 'white' ? 'White' : 'neutral'} forces. ${attackerUnits} attackers defeated ${defenderUnits} defenders.`,
+                arrivalTime,
+                owner,
+                toRegion
+              )
+            );
           } else if (attackerUnits < defenderUnits) {
             // Defender wins
             newRegions[toRegion] = {
               ...to,
               units: defenderUnits - attackerUnits,
             };
+            
+            // Create defeat event
+            pendingEventsRef.current.push(
+              createGameEvent(
+                'combat_defeat',
+                `Attack on ${regionName} Failed`,
+                `${owner === 'soviet' ? 'Soviet' : 'White'} attack on ${regionName} was repelled. ${attackerUnits} attackers lost against ${defenderUnits} defenders.`,
+                arrivalTime,
+                owner,
+                toRegion
+              )
+            );
           } else {
             // Tie - mutually assured destruction
             newRegions[toRegion] = {
               ...to,
               units: 0,
             };
+            
+            pendingEventsRef.current.push(
+              createGameEvent(
+                'combat_defeat',
+                `Pyrrhic Battle at ${regionName}`,
+                `Both attacking and defending forces were destroyed in the battle for ${regionName}. Neither side emerged victorious.`,
+                arrivalTime,
+                owner,
+                toRegion
+              )
+            );
           }
         }
       });
       
       return newRegions;
     });
+    
+    // Process pending events
+    if (pendingEventsRef.current.length > 0) {
+      const newEvents = [...pendingEventsRef.current];
+      pendingEventsRef.current = [];
+      
+      setGameState(prev => ({
+        ...prev,
+        gameEvents: [...prev.gameEvents, ...newEvents],
+      }));
+    }
   }, []);
 
   // Game time progression
@@ -225,10 +298,18 @@ export default function Home() {
     const cost = 10;
     setGameState(prev => {
       if (prev.money >= cost) {
+        const newEvent = createGameEvent(
+          'unit_created',
+          'Infantry Unit Trained',
+          `A new infantry unit has been trained for $${cost}. Ready for deployment.`,
+          prev.dateTime,
+          prev.selectedCountry?.id
+        );
         return {
           ...prev,
           money: prev.money - cost,
           infantryUnits: prev.infantryUnits + 1,
+          gameEvents: [...prev.gameEvents, newEvent],
         };
       }
       return prev;
@@ -245,10 +326,23 @@ export default function Home() {
     // Can only deploy to regions you control
     if (region.owner !== gameState.selectedCountry?.id) return;
     
-    setGameState(prev => ({
-      ...prev,
-      infantryUnits: prev.infantryUnits - 1,
-    }));
+    const regionName = region.name;
+    
+    setGameState(prev => {
+      const newEvent = createGameEvent(
+        'unit_deployed',
+        `Unit Deployed to ${regionName}`,
+        `An infantry unit has been deployed to ${regionName}.`,
+        prev.dateTime,
+        prev.selectedCountry?.id,
+        selectedRegion
+      );
+      return {
+        ...prev,
+        infantryUnits: prev.infantryUnits - 1,
+        gameEvents: [...prev.gameEvents, newEvent],
+      };
+    });
     
     setRegions(prev => ({
       ...prev,
@@ -309,12 +403,20 @@ export default function Home() {
     setGameState(prev => {
       const mission = prev.missions.find(m => m.id === missionId);
       if (mission && mission.completed && !mission.claimed) {
+        const newEvent = createGameEvent(
+          'mission_claimed',
+          `Mission Completed: ${mission.name}`,
+          `Reward of $${mission.rewards.money} claimed for completing "${mission.name}".`,
+          prev.dateTime,
+          prev.selectedCountry?.id
+        );
         return {
           ...prev,
           money: prev.money + mission.rewards.money,
           missions: prev.missions.map(m =>
             m.id === missionId ? { ...m, claimed: true } : m
           ),
+          gameEvents: [...prev.gameEvents, newEvent],
         };
       }
       return prev;
@@ -331,6 +433,15 @@ export default function Home() {
         index === 0 ? { ...m, completed: true } : m
       ),
     }));
+  }, []);
+
+  // Events modal handlers
+  const handleOpenEventsModal = useCallback(() => {
+    setIsEventsModalOpen(true);
+  }, []);
+
+  const handleCloseEventsModal = useCallback(() => {
+    setIsEventsModalOpen(false);
   }, []);
 
   // Render current screen
@@ -372,10 +483,12 @@ export default function Home() {
             selectedRegion={selectedRegion}
             selectedUnitRegion={selectedUnitRegion}
             mapDataLoaded={mapDataLoaded}
+            gameEvents={gameState.gameEvents}
             onTogglePlay={handleTogglePlay}
             onChangeSpeed={handleChangeSpeed}
             onCreateInfantry={handleCreateInfantry}
             onOpenMissions={handleOpenMissions}
+            onOpenEvents={handleOpenEventsModal}
             onClaimMission={handleClaimMission}
             onRegionSelect={setSelectedRegion}
             onUnitSelect={setSelectedUnitRegion}
@@ -401,6 +514,11 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full">
       {renderScreen()}
+      <EventsModal
+        isOpen={isEventsModalOpen}
+        onClose={handleCloseEventsModal}
+        events={gameState.gameEvents}
+      />
     </div>
   );
 }
