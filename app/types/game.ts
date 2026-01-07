@@ -67,3 +67,11 @@ export interface GameState {
   missions: Mission[];
   movingUnits: Movement[];
 }
+
+// AI State for CPU-controlled factions
+export interface AIState {
+  factionId: FactionId;
+  money: number;
+  income: number;
+  infantryUnits: number; // Units in reserve (not deployed)
+}

@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Screen, Country, GameSpeed, GameState, RegionState, Adjacency, Movement } from './types/game';
+import { Screen, Country, GameSpeed, GameState, RegionState, Adjacency, Movement, AIState, FactionId } from './types/game';
 import { initialMissions } from './data/gameData';
 import { createInitialOwnership } from './utils/mapUtils';
+import { createInitialAIState, runAITick } from './ai/cpuPlayer';
 import TitleScreen from './screens/TitleScreen';
 import CountrySelectScreen from './screens/CountrySelectScreen';
 import MainScreen from './screens/MainScreen';
@@ -29,9 +30,12 @@ export default function Home() {
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [selectedUnitRegion, setSelectedUnitRegion] = useState<string | null>(null);
   const [mapDataLoaded, setMapDataLoaded] = useState(false);
+  const [aiState, setAIState] = useState<AIState | null>(null);
   
   // Ref to store pending region updates from completed movements
   const pendingRegionUpdatesRef = useRef<Movement[]>([]);
+  // Track which movement IDs have been queued for processing to prevent double-processing
+  const processedMovementIdsRef = useRef<Set<string>>(new Set());
 
   // Load map data on mount
   useEffect(() => {
@@ -66,6 +70,9 @@ export default function Home() {
     
     const movements = [...pendingRegionUpdatesRef.current];
     pendingRegionUpdatesRef.current = [];
+    
+    // Clean up processed IDs for these movements
+    movements.forEach(m => processedMovementIdsRef.current.delete(m.id));
     
     setRegions(prev => {
       const newRegions = { ...prev };
@@ -135,8 +142,11 @@ export default function Home() {
 
         prev.movingUnits.forEach(movement => {
           if (newDate >= movement.arrivalTime) {
-            // Queue completed movements for region update
-            pendingRegionUpdatesRef.current.push(movement);
+            // Only queue if not already processed (prevents double-processing)
+            if (!processedMovementIdsRef.current.has(movement.id)) {
+              processedMovementIdsRef.current.add(movement.id);
+              pendingRegionUpdatesRef.current.push(movement);
+            }
           } else {
             remainingMovements.push(movement);
           }
@@ -152,10 +162,36 @@ export default function Home() {
       
       // Process any completed movements after state update
       processPendingMovements();
+      
+      // Run AI logic
+      if (aiState) {
+        setRegions(currentRegions => {
+          const aiActions = runAITick(aiState, currentRegions);
+          
+          // Update AI state
+          setAIState(aiActions.updatedAIState);
+          
+          // Apply deployments to regions
+          if (aiActions.deployments.length > 0) {
+            const newRegions = { ...currentRegions };
+            aiActions.deployments.forEach(deployment => {
+              if (newRegions[deployment.regionId]) {
+                newRegions[deployment.regionId] = {
+                  ...newRegions[deployment.regionId],
+                  units: newRegions[deployment.regionId].units + deployment.count,
+                };
+              }
+            });
+            return newRegions;
+          }
+          
+          return currentRegions;
+        });
+      }
     }, msPerHour);
 
     return () => clearInterval(interval);
-  }, [gameState.isPlaying, gameState.gameSpeed, processPendingMovements]);
+  }, [gameState.isPlaying, gameState.gameSpeed, processPendingMovements, aiState]);
 
   // Screen navigation
   const navigateToScreen = useCallback((screen: Screen) => {
@@ -164,6 +200,10 @@ export default function Home() {
 
   // Country selection
   const handleSelectCountry = useCallback((country: Country) => {
+    // Determine the AI faction (opposite of player's choice)
+    const aiFaction: FactionId = country.id === 'soviet' ? 'white' : 'soviet';
+    setAIState(createInitialAIState(aiFaction));
+    
     setGameState(prev => ({
       ...prev,
       selectedCountry: country,
