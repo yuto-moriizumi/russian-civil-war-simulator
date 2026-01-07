@@ -1,4 +1,5 @@
 import { Adjacency, FactionId, RegionState } from '../types/game';
+import { initialRegionOwnership } from '../data/map';
 
 // Faction colors for map display
 export const FACTION_COLORS: Record<FactionId, string> = {
@@ -51,7 +52,7 @@ export function initializeRegionState(
   return state;
 }
 
-// Create initial ownership based on country selection
+// Create initial ownership based on master data
 export function createInitialOwnership(
   features: GeoJSON.Feature[]
 ): RegionState {
@@ -66,26 +67,8 @@ export function createInitialOwnership(
     
     const countryIso3 = props.shapeGroup || 'UNK';
     
-    // Assign initial ownership based on country
-    // Soviet starts with core Russian regions, White starts with periphery
-    let owner: FactionId = 'neutral';
-    
-    if (countryIso3 === 'RUS') {
-      // For now, split Russia between factions
-      // Moscow region and surrounding areas are Soviet core
-      const sovietCoreRegions = [
-        'RU-MOW', 'RU-MOS', 'RU-TVE', 'RU-YAR', 'RU-KOS', 'RU-IVA',
-        'RU-VLA', 'RU-RYA', 'RU-TUL', 'RU-KLU', 'RU-SMO', 'RU-NIZ'
-      ];
-      
-      if (sovietCoreRegions.includes(id)) {
-        owner = 'soviet';
-      } else {
-        owner = 'white';
-      }
-    } else if (countryIso3 === 'UKR') {
-      owner = 'neutral';
-    }
+    // Get ownership from master data, default to neutral if not defined
+    const owner = initialRegionOwnership[id] ?? 'neutral';
     
     state[id] = {
       id,
