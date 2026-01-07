@@ -42,6 +42,11 @@ export default function GameMap({
   const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
   const movingMarkersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
   const hoveredRegionRef = useRef<string | null>(null);
+  const selectedUnitRegionRef = useRef<string | null>(null);
+  const regionsRef = useRef<RegionState>(regions);
+  const adjacencyRef = useRef<Adjacency>(adjacency);
+  const onMoveUnitsRef = useRef(onMoveUnits);
+  const onUnitSelectRef = useRef(onUnitSelect);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [regionCentroids, setRegionCentroids] = useState<Record<string, [number, number]>>({});
@@ -102,6 +107,27 @@ export default function GameMap({
     
     loadCentroids();
   }, []);
+
+  // Keep refs in sync with props for use in event handlers
+  useEffect(() => {
+    selectedUnitRegionRef.current = selectedUnitRegion;
+  }, [selectedUnitRegion]);
+
+  useEffect(() => {
+    regionsRef.current = regions;
+  }, [regions]);
+
+  useEffect(() => {
+    adjacencyRef.current = adjacency;
+  }, [adjacency]);
+
+  useEffect(() => {
+    onMoveUnitsRef.current = onMoveUnits;
+  }, [onMoveUnits]);
+
+  useEffect(() => {
+    onUnitSelectRef.current = onUnitSelect;
+  }, [onUnitSelect]);
 
   // Initialize map
   useEffect(() => {
@@ -214,15 +240,16 @@ export default function GameMap({
       e.preventDefault();
       if (e.features && e.features.length > 0) {
         const targetRegionId = e.features[0].properties?.shapeISO;
+        const currentSelectedUnit = selectedUnitRegionRef.current;
         // Check if we have a unit selected and this is an adjacent region
-        if (selectedUnitRegion && targetRegionId && targetRegionId !== selectedUnitRegion) {
-          const adjacentRegions = getAdjacentRegions(adjacency, selectedUnitRegion);
+        if (currentSelectedUnit && targetRegionId && targetRegionId !== currentSelectedUnit) {
+          const adjacentRegions = getAdjacentRegions(adjacencyRef.current, currentSelectedUnit);
           if (adjacentRegions.includes(targetRegionId)) {
-            const sourceRegion = regions[selectedUnitRegion];
+            const sourceRegion = regionsRef.current[currentSelectedUnit];
             if (sourceRegion && sourceRegion.units > 0) {
               // Move all units (or could use unitsToMove for partial)
-              onMoveUnits(selectedUnitRegion, targetRegionId, sourceRegion.units);
-              onUnitSelect(null);
+              onMoveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.units);
+              onUnitSelectRef.current(null);
             }
           }
         }
