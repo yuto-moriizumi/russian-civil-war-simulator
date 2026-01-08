@@ -1,4 +1,5 @@
 import { AIState, FactionId, RegionState, Region } from '../types/game';
+import { calculateFactionIncome } from '../utils/mapUtils';
 
 // Cost to create one infantry unit
 const UNIT_COST = 10;
@@ -50,9 +51,10 @@ export function runAITick(
   aiState: AIState,
   regions: RegionState
 ): AIActions {
-  let { money, income, infantryUnits, factionId } = aiState;
+  let { money, infantryUnits, factionId } = aiState;
   
-  // 1. Earn income
+  // 1. Calculate income from controlled regions and earn it
+  const income = calculateFactionIncome(regions, factionId);
   money += income;
   
   // 2. Create units if we have enough money

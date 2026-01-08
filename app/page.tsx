@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Screen, Country, GameSpeed, GameState, RegionState, Adjacency, Movement, AIState, FactionId, GameEvent, GameEventType } from './types/game';
 import { initialMissions } from './data/gameData';
-import { createInitialOwnership } from './utils/mapUtils';
+import { createInitialOwnership, calculateFactionIncome } from './utils/mapUtils';
 import { createInitialAIState, runAITick } from './ai/cpuPlayer';
 import TitleScreen from './screens/TitleScreen';
 import CountrySelectScreen from './screens/CountrySelectScreen';
@@ -265,6 +265,17 @@ export default function Home() {
 
     return () => clearInterval(interval);
   }, [gameState.isPlaying, gameState.gameSpeed, processPendingMovements, aiState]);
+
+  // Update income when regions or selected country changes
+  useEffect(() => {
+    if (!gameState.selectedCountry || Object.keys(regions).length === 0) return;
+    
+    const newIncome = calculateFactionIncome(regions, gameState.selectedCountry.id);
+    setGameState(prev => ({
+      ...prev,
+      income: newIncome,
+    }));
+  }, [regions, gameState.selectedCountry]);
 
   // Screen navigation
   const navigateToScreen = useCallback((screen: Screen) => {
