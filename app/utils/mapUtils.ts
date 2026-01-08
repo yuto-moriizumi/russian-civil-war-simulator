@@ -26,6 +26,12 @@ export function getRegionsByFaction(regions: RegionState, faction: FactionId): s
     .map(([id]) => id);
 }
 
+// Calculate income based on controlled states (1 money per state per hour)
+export function calculateFactionIncome(regions: RegionState, faction: FactionId): number {
+  const controlledRegions = getRegionsByFaction(regions, faction);
+  return controlledRegions.length; // 1 money per state per hour
+}
+
 // Initialize region state from GeoJSON features
 export function initializeRegionState(
   features: GeoJSON.Feature[],

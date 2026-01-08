@@ -1,4 +1,5 @@
 import { AIState, FactionId, RegionState, Region } from '../types/game';
+import { calculateFactionIncome } from '../utils/mapUtils';
 
 // Cost to create one infantry unit
 const UNIT_COST = 10;
@@ -10,7 +11,7 @@ export function createInitialAIState(factionId: FactionId): AIState {
   return {
     factionId,
     money: 100,
-    income: 5,
+    income: 0, // Income is now calculated dynamically based on controlled states
     infantryUnits: 0,
   };
 }
@@ -42,7 +43,7 @@ export interface AIActions {
 
 /**
  * Run AI logic for one tick (1 game hour)
- * - Earns income
+ * - Earns income based on controlled states (1 money per state)
  * - Creates units if it has enough money
  * - Deploys reserve units to random owned regions
  */
@@ -50,12 +51,15 @@ export function runAITick(
   aiState: AIState,
   regions: RegionState
 ): AIActions {
-  let { money, income, infantryUnits, factionId } = aiState;
+  let { money, infantryUnits, factionId } = aiState;
   
-  // 1. Earn income
+  // 1. Calculate income based on controlled states (1 money per state per hour)
+  const income = calculateFactionIncome(regions, factionId);
+  
+  // 2. Earn income
   money += income;
   
-  // 2. Create units if we have enough money
+  // 3. Create units if we have enough money
   let unitsCreated = 0;
   while (money >= UNIT_COST) {
     money -= UNIT_COST;
@@ -63,7 +67,7 @@ export function runAITick(
     unitsCreated += 1;
   }
   
-  // 3. Deploy all reserve units to random owned regions
+  // 4. Deploy all reserve units to random owned regions
   const deployments: { regionId: string; count: number }[] = [];
   const ownedRegions = getOwnedRegions(regions, factionId);
   
