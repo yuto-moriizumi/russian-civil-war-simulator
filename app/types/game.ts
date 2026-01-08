@@ -97,3 +97,10 @@ export interface AIState {
   income: number;
   infantryUnits: number; // Units in reserve (not deployed)
 }
+
+// Story/Narrative Event for master data (introduction, victory screens, etc.)
+export interface StoryEvent {
+  id: string;
+  title: string;
+  text: string;
+}
