@@ -271,6 +271,17 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [gameState.isPlaying, gameState.gameSpeed, gameState.selectedCountry, regions, processPendingMovements, aiState]);
 
+  // Update income when regions or selected country changes
+  useEffect(() => {
+    if (!gameState.selectedCountry || Object.keys(regions).length === 0) return;
+    
+    const newIncome = calculateFactionIncome(regions, gameState.selectedCountry.id);
+    setGameState(prev => ({
+      ...prev,
+      income: newIncome,
+    }));
+  }, [regions, gameState.selectedCountry]);
+
   // Screen navigation
   const navigateToScreen = useCallback((screen: Screen) => {
     setGameState(prev => ({ ...prev, currentScreen: screen }));

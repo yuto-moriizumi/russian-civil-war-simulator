@@ -53,7 +53,7 @@ export function runAITick(
 ): AIActions {
   let { money, infantryUnits, factionId } = aiState;
   
-  // 1. Calculate income based on controlled states (1 money per state per hour)
+  // 1. Calculate income from controlled regions (using region values/weights)
   const income = calculateFactionIncome(regions, factionId);
   
   // 2. Earn income

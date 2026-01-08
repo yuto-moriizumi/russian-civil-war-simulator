@@ -20,6 +20,7 @@ export interface Region {
   countryIso3: string;  // "RUS", "UKR"
   owner: FactionId;     // Which faction controls this region
   units: number;        // Number of units stationed
+  value: number;        // Economic value/weight for income (default 1, capitals higher)
 }
 
 export interface Adjacency {

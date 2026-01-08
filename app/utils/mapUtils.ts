@@ -1,5 +1,5 @@
 import { Adjacency, FactionId, RegionState } from '../types/game';
-import { initialRegionOwnership } from '../data/map';
+import { initialRegionOwnership, regionValues } from '../data/map';
 
 // Faction colors for map display
 export const FACTION_COLORS: Record<FactionId, string> = {
@@ -26,10 +26,11 @@ export function getRegionsByFaction(regions: RegionState, faction: FactionId): s
     .map(([id]) => id);
 }
 
-// Calculate income based on controlled states (1 money per state per hour)
+// Calculate total income from regions controlled by a faction (using region values/weights)
 export function calculateFactionIncome(regions: RegionState, faction: FactionId): number {
-  const controlledRegions = getRegionsByFaction(regions, faction);
-  return controlledRegions.length; // 1 money per state per hour
+  return Object.values(regions)
+    .filter(region => region.owner === faction)
+    .reduce((total, region) => total + region.value, 0);
 }
 
 // Initialize region state from GeoJSON features
@@ -52,6 +53,7 @@ export function initializeRegionState(
       countryIso3: props.shapeGroup || 'UNK',
       owner: defaultOwner,
       units: 0,
+      value: regionValues[id] ?? 1,  // Default value of 1 if not specified
     };
   }
   
@@ -82,6 +84,7 @@ export function createInitialOwnership(
       countryIso3,
       owner,
       units: 0,
+      value: regionValues[id] ?? 1,  // Default value of 1 if not specified
     };
   }
   
