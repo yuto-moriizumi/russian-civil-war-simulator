@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Screen, Country, GameSpeed, GameState, RegionState, Adjacency, Movement, AIState, FactionId, GameEvent, GameEventType } from './types/game';
+import { Screen, Country, GameSpeed, GameState, RegionState, Adjacency, Movement, AIState, FactionId, GameEvent, GameEventType, Division } from './types/game';
 import { initialMissions } from './data/gameData';
 import { createInitialOwnership } from './utils/mapUtils';
 import { createInitialAIState, runAITick } from './ai/cpuPlayer';
+import { createDivision, resolveCombat, getDivisionCount } from './utils/combat';
 import TitleScreen from './screens/TitleScreen';
 import CountrySelectScreen from './screens/CountrySelectScreen';
 import MainScreen from './screens/MainScreen';
@@ -39,7 +40,7 @@ const initialGameState: GameState = {
   gameSpeed: 1,
   money: 100,
   income: 5,
-  infantryUnits: 0,
+  reserveDivisions: [],
   missions: initialMissions,
   movingUnits: [],
   gameEvents: [],
@@ -103,30 +104,33 @@ export default function Home() {
       const newRegions = { ...prev };
       
       movements.forEach(movement => {
-        const { toRegion, count, owner, fromRegion, arrivalTime } = movement;
+        const { toRegion, divisions, owner, arrivalTime } = movement;
         const to = newRegions[toRegion];
         
         if (!to) return;
 
         if (to.owner === owner) {
-          // Friendly move
+          // Friendly move - add divisions to region
           newRegions[toRegion] = {
             ...to,
-            units: to.units + count,
+            divisions: [...to.divisions, ...divisions],
           };
         } else {
-          // Combat
-          const attackerUnits = count;
-          const defenderUnits = to.units;
+          // Combat!
+          const attackerDivisions = divisions;
+          const defenderDivisions = to.divisions;
           const defendingFaction = to.owner;
           const regionName = to.name;
           
-          if (attackerUnits > defenderUnits) {
+          // Resolve combat using the combat system
+          const result = resolveCombat(attackerDivisions, defenderDivisions);
+          
+          if (result.regionCaptured) {
             // Attacker wins - region captured
             newRegions[toRegion] = {
               ...to,
               owner: owner,
-              units: attackerUnits - defenderUnits,
+              divisions: result.attackerDivisions,
             };
             
             // Create events for the battle
@@ -134,17 +138,17 @@ export default function Home() {
               createGameEvent(
                 'region_captured',
                 `${regionName} Captured!`,
-                `${owner === 'soviet' ? 'Soviet' : 'White'} forces captured ${regionName} from ${defendingFaction === 'soviet' ? 'Soviet' : defendingFaction === 'white' ? 'White' : 'neutral'} forces. ${attackerUnits} attackers defeated ${defenderUnits} defenders.`,
+                `${owner === 'soviet' ? 'Soviet' : 'White'} forces captured ${regionName} from ${defendingFaction === 'soviet' ? 'Soviet' : defendingFaction === 'white' ? 'White' : 'neutral'} forces. ${attackerDivisions.length} divisions attacked, ${result.attackerCasualties} lost. Defenders lost ${result.defenderCasualties} divisions.`,
                 arrivalTime,
                 owner,
                 toRegion
               )
             );
-          } else if (attackerUnits < defenderUnits) {
-            // Defender wins
+          } else if (result.defenderDivisions.length > 0) {
+            // Defender wins - attacker repelled
             newRegions[toRegion] = {
               ...to,
-              units: defenderUnits - attackerUnits,
+              divisions: result.defenderDivisions,
             };
             
             // Create defeat event
@@ -152,17 +156,17 @@ export default function Home() {
               createGameEvent(
                 'combat_defeat',
                 `Attack on ${regionName} Failed`,
-                `${owner === 'soviet' ? 'Soviet' : 'White'} attack on ${regionName} was repelled. ${attackerUnits} attackers lost against ${defenderUnits} defenders.`,
+                `${owner === 'soviet' ? 'Soviet' : 'White'} attack on ${regionName} was repelled. ${attackerDivisions.length} attacking divisions lost ${result.attackerCasualties}. Defenders lost ${result.defenderCasualties} divisions.`,
                 arrivalTime,
                 owner,
                 toRegion
               )
             );
           } else {
-            // Tie - mutually assured destruction
+            // Both sides destroyed
             newRegions[toRegion] = {
               ...to,
-              units: 0,
+              divisions: [],
             };
             
             pendingEventsRef.current.push(
@@ -251,7 +255,7 @@ export default function Home() {
               if (newRegions[deployment.regionId]) {
                 newRegions[deployment.regionId] = {
                   ...newRegions[deployment.regionId],
-                  units: newRegions[deployment.regionId].units + deployment.count,
+                  divisions: [...newRegions[deployment.regionId].divisions, ...deployment.divisions],
                 };
               }
             });
@@ -293,22 +297,26 @@ export default function Home() {
     setGameState(prev => ({ ...prev, gameSpeed: speed }));
   }, []);
 
-  // Actions
+  // Actions - create a new division
   const handleCreateInfantry = useCallback(() => {
     const cost = 10;
     setGameState(prev => {
-      if (prev.money >= cost) {
+      if (prev.money >= cost && prev.selectedCountry) {
+        const divisionNumber = prev.reserveDivisions.length + 1;
+        const divisionName = `${prev.selectedCountry.id === 'soviet' ? 'Red' : 'White'} Guard ${divisionNumber}${getOrdinalSuffix(divisionNumber)} Division`;
+        const newDivision = createDivision(prev.selectedCountry.id, divisionName);
+        
         const newEvent = createGameEvent(
           'unit_created',
-          'Infantry Unit Trained',
-          `A new infantry unit has been trained for $${cost}. Ready for deployment.`,
+          'Division Trained',
+          `${divisionName} has been trained for $${cost}. HP: ${newDivision.hp}, Attack: ${newDivision.attack}, Defence: ${newDivision.defence}. Ready for deployment.`,
           prev.dateTime,
-          prev.selectedCountry?.id
+          prev.selectedCountry.id
         );
         return {
           ...prev,
           money: prev.money - cost,
-          infantryUnits: prev.infantryUnits + 1,
+          reserveDivisions: [...prev.reserveDivisions, newDivision],
           gameEvents: [...prev.gameEvents, newEvent],
         };
       }
@@ -316,9 +324,9 @@ export default function Home() {
     });
   }, []);
 
-  // Deploy unit to selected region
+  // Deploy division to selected region
   const handleDeployUnit = useCallback(() => {
-    if (!selectedRegion || gameState.infantryUnits <= 0) return;
+    if (!selectedRegion || gameState.reserveDivisions.length <= 0) return;
     
     const region = regions[selectedRegion];
     if (!region) return;
@@ -328,18 +336,21 @@ export default function Home() {
     
     const regionName = region.name;
     
+    // Get the first division from reserve
+    const divisionToDeploy = gameState.reserveDivisions[0];
+    
     setGameState(prev => {
       const newEvent = createGameEvent(
         'unit_deployed',
-        `Unit Deployed to ${regionName}`,
-        `An infantry unit has been deployed to ${regionName}.`,
+        `Division Deployed to ${regionName}`,
+        `${divisionToDeploy.name} has been deployed to ${regionName}.`,
         prev.dateTime,
         prev.selectedCountry?.id,
         selectedRegion
       );
       return {
         ...prev,
-        infantryUnits: prev.infantryUnits - 1,
+        reserveDivisions: prev.reserveDivisions.slice(1),
         gameEvents: [...prev.gameEvents, newEvent],
       };
     });
@@ -348,19 +359,19 @@ export default function Home() {
       ...prev,
       [selectedRegion]: {
         ...prev[selectedRegion],
-        units: prev[selectedRegion].units + 1,
+        divisions: [...prev[selectedRegion].divisions, divisionToDeploy],
       },
     }));
-  }, [selectedRegion, gameState.infantryUnits, gameState.selectedCountry?.id, regions]);
+  }, [selectedRegion, gameState.reserveDivisions, gameState.selectedCountry?.id, regions]);
 
-  // Move units between regions - now creates a movement order with travel time
+  // Move divisions between regions - now creates a movement order with travel time
   const handleMoveUnits = useCallback((fromRegion: string, toRegion: string, count: number) => {
     if (!adjacency[fromRegion]?.includes(toRegion)) return;
     
     const from = regions[fromRegion];
     const to = regions[toRegion];
     if (!from || !to) return;
-    if (from.units < count) return;
+    if (from.divisions.length < count) return;
     
     const selectedCountry = gameState.selectedCountry;
     if (!selectedCountry) return;
@@ -368,16 +379,19 @@ export default function Home() {
     // Can only move from your own regions
     if (from.owner !== selectedCountry.id) return;
     
-    // Remove units from source region immediately
+    // Get divisions to move (take first 'count' divisions)
+    const divisionsToMove = from.divisions.slice(0, count);
+    
+    // Remove divisions from source region immediately
     setRegions(prev => ({
       ...prev,
       [fromRegion]: {
         ...prev[fromRegion],
-        units: prev[fromRegion].units - count,
+        divisions: prev[fromRegion].divisions.slice(count),
       },
     }));
     
-    // Create a movement order - units arrive after travel time (6 hours for now)
+    // Create a movement order - divisions arrive after travel time (6 hours for now)
     const travelTimeHours = 6;
     const departureTime = new Date(gameState.dateTime);
     const arrivalTime = new Date(gameState.dateTime);
@@ -387,7 +401,7 @@ export default function Home() {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       fromRegion,
       toRegion,
-      count,
+      divisions: divisionsToMove,
       departureTime,
       arrivalTime,
       owner: selectedCountry.id,
@@ -475,7 +489,7 @@ export default function Home() {
             gameSpeed={gameState.gameSpeed}
             money={gameState.money}
             income={gameState.income}
-            infantryUnits={gameState.infantryUnits}
+            reserveDivisions={gameState.reserveDivisions}
             missions={gameState.missions}
             movingUnits={gameState.movingUnits}
             regions={regions}
@@ -521,4 +535,11 @@ export default function Home() {
       />
     </div>
   );
+}
+
+// Helper function to get ordinal suffix (1st, 2nd, 3rd, etc.)
+function getOrdinalSuffix(n: number): string {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return s[(v - 20) % 10] || s[v] || s[0];
 }

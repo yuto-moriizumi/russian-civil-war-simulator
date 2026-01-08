@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent } from '../types/game';
+import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, Division } from '../types/game';
 import SpeedControl from '../components/SpeedControl';
 
 // Dynamic import for GameMap to avoid SSR issues with MapLibre
@@ -21,7 +21,7 @@ interface MainScreenProps {
   gameSpeed: GameSpeed;
   money: number;
   income: number;
-  infantryUnits: number;
+  reserveDivisions: Division[];
   missions: Mission[];
   movingUnits: Movement[];
   regions: RegionState;
@@ -49,7 +49,7 @@ export default function MainScreen({
   gameSpeed,
   money,
   income,
-  infantryUnits,
+  reserveDivisions,
   missions,
   movingUnits,
   regions,
@@ -99,7 +99,7 @@ export default function MainScreen({
             movingUnits={movingUnits}
             currentDateTime={dateTime}
             playerFaction={country.id}
-            unitsInReserve={infantryUnits}
+            unitsInReserve={reserveDivisions.length}
             onRegionSelect={onRegionSelect}
             onUnitSelect={onUnitSelect}
             onDeployUnit={onDeployUnit}
@@ -154,7 +154,7 @@ export default function MainScreen({
             <span className="text-lg">🎖️</span>
             <div className="flex flex-col">
               <span className="text-xs text-stone-400">Infantry</span>
-              <span className="text-sm font-bold text-white">{infantryUnits}</span>
+              <span className="text-sm font-bold text-white">{reserveDivisions.length}</span>
             </div>
             <button
               onClick={onCreateInfantry}
@@ -234,7 +234,7 @@ export default function MainScreen({
         <div className="flex items-center justify-between text-xs text-stone-400">
           <span>Status: {isPlaying ? 'Time advancing...' : 'Paused'}</span>
           <div className="flex items-center gap-4">
-            <span>Infantry Units: {infantryUnits}</span>
+            <span>Reserve Divisions: {reserveDivisions.length}</span>
             <span>Active Missions: {missions.filter(m => !m.claimed).length}</span>
             <button
               onClick={onOpenEvents}

@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { RegionState, Adjacency, FactionId, Movement } from '../types/game';
+import { RegionState, Adjacency, FactionId, Movement, Division } from '../types/game';
 import { FACTION_COLORS, getAdjacentRegions } from '../utils/mapUtils';
+import { getDivisionCount } from '../utils/combat';
 
 interface GameMapProps {
   regions: RegionState;
@@ -225,7 +226,7 @@ export default function GameMap({
             onRegionSelect(regionId);
             // If this region has units owned by player, also select as unit
             const region = regions[regionId];
-            if (region && region.owner === playerFaction && region.units > 0) {
+            if (region && region.owner === playerFaction && region.divisions.length > 0) {
               onUnitSelect(regionId);
             } else {
               onUnitSelect(null);
@@ -246,9 +247,9 @@ export default function GameMap({
           const adjacentRegions = getAdjacentRegions(adjacencyRef.current, currentSelectedUnit);
           if (adjacentRegions.includes(targetRegionId)) {
             const sourceRegion = regionsRef.current[currentSelectedUnit];
-            if (sourceRegion && sourceRegion.units > 0) {
+            if (sourceRegion && sourceRegion.divisions.length > 0) {
               // Move all units (or could use unitsToMove for partial)
-              onMoveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.units);
+              onMoveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.divisions.length);
               onUnitSelectRef.current(null);
             }
           }
@@ -375,7 +376,7 @@ export default function GameMap({
     
     // Create or update markers for regions with units
     for (const [regionId, region] of Object.entries(regions)) {
-      if (region.units > 0) {
+      if (region.divisions.length > 0) {
         neededMarkers.add(regionId);
         const centroid = regionCentroids[regionId];
         if (!centroid) continue;
@@ -389,7 +390,7 @@ export default function GameMap({
           const el = existingMarker.getElement();
           const unitCountEl = el.querySelector('.unit-count');
           if (unitCountEl) {
-            unitCountEl.textContent = String(region.units);
+            unitCountEl.textContent = String(region.divisions.length);
           }
           // Update color based on owner and selection
           const bgEl = el.querySelector('.unit-bg') as HTMLElement;
@@ -421,7 +422,7 @@ export default function GameMap({
                 font-weight: bold;
                 color: ${region.owner === 'white' ? '#000' : '#fff'};
                 text-shadow: ${region.owner === 'white' ? 'none' : '1px 1px 1px rgba(0,0,0,0.5)'};
-              ">${region.units}</span>
+              ">${region.divisions.length}</span>
             </div>
           `;
           
@@ -501,7 +502,7 @@ export default function GameMap({
               font-size: 10px;
               font-weight: bold;
               color: ${movement.owner === 'white' ? '#000' : '#fff'};
-            ">${movement.count}</span>
+            ">${movement.divisions.length}</span>
           </div>
         `;
 
@@ -544,9 +545,10 @@ export default function GameMap({
               {regions[hoveredRegion].owner}
             </span>
           </div>
-          {regions[hoveredRegion].units > 0 && (
+          {regions[hoveredRegion].divisions.length > 0 && (
             <div className="mt-1 text-xs text-amber-400">
-              Units: {regions[hoveredRegion].units}
+              Divisions: {regions[hoveredRegion].divisions.length} | 
+              Total HP: {regions[hoveredRegion].divisions.reduce((sum, d) => sum + d.hp, 0)}
             </div>
           )}
         </div>
@@ -580,8 +582,34 @@ export default function GameMap({
               Country: {regions[selectedRegion].countryIso3}
             </div>
             <div className="text-stone-400">
-              Units: {regions[selectedRegion].units}
+              Divisions: {regions[selectedRegion].divisions.length}
             </div>
+            {/* Show division combat stats */}
+            {regions[selectedRegion].divisions.length > 0 && (
+              <div className="mt-2 space-y-1 rounded bg-stone-800 p-2">
+                <div className="text-xs font-semibold text-stone-300 mb-1">Combat Stats:</div>
+                {regions[selectedRegion].divisions.map((div, idx) => (
+                  <div key={div.id} className="flex items-center justify-between text-xs">
+                    <span className="text-stone-400 truncate max-w-[120px]" title={div.name}>
+                      {div.name.length > 15 ? div.name.substring(0, 15) + '...' : div.name}
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <span className="text-red-400" title="HP">❤ {div.hp}/{div.maxHp}</span>
+                      <span className="text-orange-400" title="Attack">⚔ {div.attack}</span>
+                      <span className="text-blue-400" title="Defence">🛡 {div.defence}</span>
+                    </span>
+                  </div>
+                ))}
+                <div className="border-t border-stone-700 pt-1 mt-1 flex justify-between text-xs font-semibold">
+                  <span className="text-stone-300">Total:</span>
+                  <span className="flex items-center gap-2">
+                    <span className="text-red-400">❤ {regions[selectedRegion].divisions.reduce((sum, d) => sum + d.hp, 0)}</span>
+                    <span className="text-orange-400">⚔ {regions[selectedRegion].divisions.reduce((sum, d) => sum + d.attack, 0)}</span>
+                    <span className="text-blue-400">🛡 {Math.round(regions[selectedRegion].divisions.reduce((sum, d) => sum + d.defence, 0) / regions[selectedRegion].divisions.length)}</span>
+                  </span>
+                </div>
+              </div>
+            )}
             <div className="text-stone-400">
               Adjacent: {getAdjacentRegions(adjacency, selectedRegion).length} regions
             </div>
@@ -601,10 +629,10 @@ export default function GameMap({
               )}
               
               {/* Unit selection info */}
-              {regions[selectedRegion].units > 0 && selectedUnitRegion === selectedRegion && (
+              {regions[selectedRegion].divisions.length > 0 && selectedUnitRegion === selectedRegion && (
                 <div className="space-y-2 rounded bg-cyan-900/30 p-2">
                   <p className="text-xs text-cyan-300">
-                    Right-click an adjacent region to move {regions[selectedRegion].units} unit(s)
+                    Right-click an adjacent region to move {regions[selectedRegion].divisions.length} division(s)
                   </p>
                   <p className="text-xs text-stone-400">
                     Travel time: ~6 hours
@@ -612,12 +640,12 @@ export default function GameMap({
                 </div>
               )}
               
-              {regions[selectedRegion].units > 0 && selectedUnitRegion !== selectedRegion && (
+              {regions[selectedRegion].divisions.length > 0 && selectedUnitRegion !== selectedRegion && (
                 <button
                   onClick={() => onUnitSelect(selectedRegion)}
                   className="w-full rounded bg-blue-700 py-2 text-sm font-semibold text-white hover:bg-blue-600"
                 >
-                  Select Unit ({regions[selectedRegion].units})
+                  Select Divisions ({regions[selectedRegion].divisions.length})
                 </button>
               )}
             </div>
@@ -635,7 +663,7 @@ export default function GameMap({
                   return (
                     <div
                       key={adjId}
-                      className={`w-full rounded px-2 py-1 text-left text-xs flex items-center justify-between ${
+                      className={`w-full rounded px-2 py-1 text-left text-xs ${
                         isEnemy 
                           ? 'bg-red-900/50 text-red-200' 
                           : adjRegion.owner === playerFaction
@@ -643,14 +671,23 @@ export default function GameMap({
                           : 'bg-stone-700 text-stone-200'
                       }`}
                     >
-                      <span>{adjRegion.name}</span>
-                      <span className="flex items-center gap-1">
-                        <span
-                          className="h-2 w-2 rounded-full"
-                          style={{ backgroundColor: FACTION_COLORS[adjRegion.owner] }}
-                        />
-                        {adjRegion.units > 0 && <span>({adjRegion.units})</span>}
-                      </span>
+                      <div className="flex items-center justify-between">
+                        <span>{adjRegion.name}</span>
+                        <span className="flex items-center gap-1">
+                          <span
+                            className="h-2 w-2 rounded-full"
+                            style={{ backgroundColor: FACTION_COLORS[adjRegion.owner] }}
+                          />
+                          {adjRegion.divisions.length > 0 && <span>({adjRegion.divisions.length})</span>}
+                        </span>
+                      </div>
+                      {isEnemy && adjRegion.divisions.length > 0 && (
+                        <div className="mt-1 flex items-center gap-2 text-[10px] text-red-300">
+                          <span>❤ {adjRegion.divisions.reduce((sum, d) => sum + d.hp, 0)}</span>
+                          <span>⚔ {adjRegion.divisions.reduce((sum, d) => sum + d.attack, 0)}</span>
+                          <span>🛡 {Math.round(adjRegion.divisions.reduce((sum, d) => sum + d.defence, 0) / adjRegion.divisions.length)}</span>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -687,7 +724,7 @@ export default function GameMap({
               return (
                 <div key={movement.id} className="rounded bg-stone-800 p-2">
                   <div className="text-xs text-stone-300">
-                    {movement.count} unit(s): {fromRegion?.name || movement.fromRegion} → {toRegion?.name || movement.toRegion}
+                    {movement.divisions.length} unit(s): {fromRegion?.name || movement.fromRegion} → {toRegion?.name || movement.toRegion}
                   </div>
                   <div className="mt-1 h-1 bg-stone-700 rounded-full overflow-hidden">
                     <div 
