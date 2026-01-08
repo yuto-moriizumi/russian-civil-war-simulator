@@ -35,12 +35,14 @@ export type GameSpeed = 1 | 2 | 3 | 4 | 5;
 
 export interface Mission {
   id: string;
+  faction: CountryId;
   name: string;
   description: string;
   completed: boolean;
   claimed: boolean;
   rewards: {
     money: number;
+    gameVictory?: boolean;
   };
   prerequisites: string[];
   position: { x: number; y: number };
@@ -64,7 +66,8 @@ export type GameEventType =
   | 'unit_created'
   | 'unit_deployed'
   | 'mission_completed'
-  | 'mission_claimed';
+  | 'mission_claimed'
+  | 'game_victory';
 
 export interface GameEvent {
   id: string;

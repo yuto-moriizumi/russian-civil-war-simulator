@@ -293,10 +293,14 @@ export default function Home() {
     const aiFaction: FactionId = country.id === 'soviet' ? 'white' : 'soviet';
     setAIState(createInitialAIState(aiFaction));
     
+    // Filter missions by selected faction
+    const factionMissions = initialMissions.filter(m => m.faction === country.id);
+    
     setGameState(prev => ({
       ...prev,
       selectedCountry: country,
       currentScreen: 'main',
+      missions: factionMissions,
     }));
   }, []);
 
@@ -419,20 +423,35 @@ export default function Home() {
     setGameState(prev => {
       const mission = prev.missions.find(m => m.id === missionId);
       if (mission && mission.completed && !mission.claimed) {
-        const newEvent = createGameEvent(
+        const events: GameEvent[] = [];
+        
+        // Create mission claimed event
+        events.push(createGameEvent(
           'mission_claimed',
           `Mission Completed: ${mission.name}`,
           `Reward of $${mission.rewards.money} claimed for completing "${mission.name}".`,
           prev.dateTime,
           prev.selectedCountry?.id
-        );
+        ));
+        
+        // Check for game victory
+        if (mission.rewards.gameVictory) {
+          events.push(createGameEvent(
+            'game_victory',
+            'Victory!',
+            `${prev.selectedCountry?.name} has achieved total victory in the Russian Civil War!`,
+            prev.dateTime,
+            prev.selectedCountry?.id
+          ));
+        }
+        
         return {
           ...prev,
           money: prev.money + mission.rewards.money,
           missions: prev.missions.map(m =>
             m.id === missionId ? { ...m, claimed: true } : m
           ),
-          gameEvents: [...prev.gameEvents, newEvent],
+          gameEvents: [...prev.gameEvents, ...events],
         };
       }
       return prev;
