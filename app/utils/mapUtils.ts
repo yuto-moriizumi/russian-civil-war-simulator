@@ -26,7 +26,7 @@ export function getRegionsByFaction(regions: RegionState, faction: FactionId): s
     .map(([id]) => id);
 }
 
-// Calculate total income from regions controlled by a faction
+// Calculate total income from regions controlled by a faction (using region values/weights)
 export function calculateFactionIncome(regions: RegionState, faction: FactionId): number {
   return Object.values(regions)
     .filter(region => region.owner === faction)
