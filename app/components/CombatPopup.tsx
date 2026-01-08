@@ -15,10 +15,6 @@ interface CombatPopupProps {
 export default function CombatPopup({ combat, onClose }: CombatPopupProps) {
   const attackerHp = combat.attackerDivisions.reduce((sum, d) => sum + d.hp, 0);
   const defenderHp = combat.defenderDivisions.reduce((sum, d) => sum + d.hp, 0);
-  const attackerAttack = combat.attackerDivisions.reduce((sum, d) => sum + d.attack, 0);
-  const defenderAttack = combat.defenderDivisions.reduce((sum, d) => sum + d.attack, 0);
-  const attackerDefence = combat.attackerDivisions.reduce((sum, d) => sum + d.defence, 0);
-  const defenderDefence = combat.defenderDivisions.reduce((sum, d) => sum + d.defence, 0);
   
   // Calculate progress bars
   const attackerHpProgress = combat.initialAttackerHp > 0 
@@ -27,12 +23,6 @@ export default function CombatPopup({ combat, onClose }: CombatPopupProps) {
   const defenderHpProgress = combat.initialDefenderHp > 0 
     ? (defenderHp / combat.initialDefenderHp) * 100 
     : 0;
-
-  const attackerLosses = combat.initialAttackerCount - combat.attackerDivisions.length;
-  const defenderLosses = combat.initialDefenderCount - combat.defenderDivisions.length;
-
-  const attackerColor = FACTION_COLORS[combat.attackerFaction];
-  const defenderColor = FACTION_COLORS[combat.defenderFaction];
 
   const getFactionName = (faction: FactionId) => {
     switch (faction) {
@@ -44,206 +34,190 @@ export default function CombatPopup({ combat, onClose }: CombatPopupProps) {
     }
   };
 
+  const getFactionFlag = (faction: FactionId) => {
+    switch (faction) {
+      case 'soviet': return '☭';
+      case 'white': return '🦅';
+      default: return '🏴';
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
       <div 
-        className="bg-stone-900 border-2 border-stone-600 rounded-lg shadow-2xl min-w-[400px] max-w-[500px]"
+        className="bg-[#1a1a1a] border-2 border-stone-600 rounded-lg shadow-2xl w-[600px] text-stone-200 overflow-hidden font-serif"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="bg-stone-800 px-4 py-2 rounded-t-lg border-b border-stone-600 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">&#9876;</span>
-            <span className="font-bold text-amber-400">Battle for {combat.regionName}</span>
-          </div>
-          <button 
-            onClick={onClose}
-            className="text-stone-400 hover:text-white text-xl leading-none px-2"
-          >
-            &times;
-          </button>
-        </div>
-
-        {/* Combat status */}
-        <div className="px-4 py-2 bg-stone-850 border-b border-stone-700 flex items-center justify-center gap-4 text-sm">
-          <span className="text-stone-400">
-            Round {combat.currentRound} / {combat.maxRounds}
-          </span>
-          {combat.isComplete ? (
-            <span className={`font-bold ${
-              combat.victor === combat.attackerFaction ? 'text-green-400' : 
-              combat.victor === combat.defenderFaction ? 'text-red-400' : 'text-yellow-400'
-            }`}>
-              {combat.victor ? `${getFactionName(combat.victor)} Victory!` : 'Stalemate'}
-            </span>
-          ) : (
-            <span className="text-cyan-400 animate-pulse">Combat in Progress</span>
-          )}
-        </div>
-
-        {/* Main battle display */}
-        <div className="p-4">
-          <div className="flex items-stretch gap-4">
-            {/* Attacker side */}
-            <div className="flex-1 rounded-lg overflow-hidden" style={{ border: `2px solid ${attackerColor}` }}>
-              <div 
-                className="px-3 py-2 text-center font-bold"
-                style={{ 
-                  backgroundColor: attackerColor,
-                  color: combat.attackerFaction === 'white' ? '#000' : '#fff',
-                }}
-              >
-                {getFactionName(combat.attackerFaction)}
-                <div className="text-xs font-normal opacity-80">Attacker</div>
+        {/* Battle Header */}
+        <div className="relative h-32 bg-stone-800 border-b border-stone-700 flex items-center justify-center overflow-hidden">
+          <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+          
+          <div className="relative z-10 flex items-center gap-12">
+            {/* Attacker Portrait Placeholder */}
+            <div className="flex flex-col items-center">
+              <div className="w-20 h-20 rounded-full border-2 border-stone-500 bg-stone-700 flex items-center justify-center overflow-hidden shadow-lg mb-2">
+                <span className="text-4xl">👤</span>
               </div>
-              <div className="bg-stone-800 p-3 space-y-2">
-                {/* Division count */}
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-stone-400">Divisions:</span>
-                  <span className="font-bold text-white">
-                    {combat.attackerDivisions.length}
-                    {attackerLosses > 0 && (
-                      <span className="text-red-400 ml-1">(-{attackerLosses})</span>
-                    )}
-                  </span>
-                </div>
-                
-                {/* HP bar */}
-                <div>
-                  <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="text-red-400">HP</span>
-                    <span className="text-stone-300">{attackerHp} / {combat.initialAttackerHp}</span>
-                  </div>
-                  <div className="h-3 bg-stone-700 rounded overflow-hidden">
-                    <div 
-                      className="h-full transition-all duration-500"
-                      style={{ 
-                        width: `${attackerHpProgress}%`,
-                        backgroundColor: '#ef4444',
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-stone-700">
-                  <div className="flex items-center gap-1">
-                    <span className="text-orange-400">&#9876;</span>
-                    <span className="text-stone-400">Attack:</span>
-                    <span className="text-white font-bold">{attackerAttack}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-blue-400">&#128737;</span>
-                    <span className="text-stone-400">Defence:</span>
-                    <span className="text-white font-bold">{attackerDefence}</span>
-                  </div>
-                </div>
+              <div className="bg-black/60 px-2 py-0.5 rounded text-[10px] flex gap-1">
+                <span className="text-yellow-500">★★</span>
               </div>
             </div>
 
-            {/* VS divider */}
-            <div className="flex items-center justify-center">
-              <div className="w-10 h-10 rounded-full bg-stone-700 flex items-center justify-center border-2 border-stone-500">
-                <span className="text-amber-400 font-bold text-sm">VS</span>
-              </div>
+            <div className="flex flex-col items-center">
+               <div className="text-amber-400 text-lg font-bold uppercase tracking-widest mb-1 drop-shadow-md">
+                 Battle of {combat.regionName}
+               </div>
+               <div className="flex items-center gap-2">
+                 <div className="h-0.5 w-12 bg-stone-600"></div>
+                 <div className="w-12 h-12 rounded-full bg-stone-900 border-2 border-amber-900 flex items-center justify-center shadow-inner">
+                    <span className="text-2xl">⚔️</span>
+                 </div>
+                 <div className="h-0.5 w-12 bg-stone-600"></div>
+               </div>
             </div>
 
-            {/* Defender side */}
-            <div className="flex-1 rounded-lg overflow-hidden" style={{ border: `2px solid ${defenderColor}` }}>
-              <div 
-                className="px-3 py-2 text-center font-bold"
-                style={{ 
-                  backgroundColor: defenderColor,
-                  color: combat.defenderFaction === 'white' ? '#000' : '#fff',
-                }}
-              >
-                {getFactionName(combat.defenderFaction)}
-                <div className="text-xs font-normal opacity-80">Defender</div>
+            {/* Defender Portrait Placeholder */}
+            <div className="flex flex-col items-center">
+              <div className="w-20 h-20 rounded-full border-2 border-stone-500 bg-stone-700 flex items-center justify-center overflow-hidden shadow-lg mb-2">
+                <span className="text-4xl">👤</span>
               </div>
-              <div className="bg-stone-800 p-3 space-y-2">
-                {/* Division count */}
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-stone-400">Divisions:</span>
-                  <span className="font-bold text-white">
-                    {combat.defenderDivisions.length}
-                    {defenderLosses > 0 && (
-                      <span className="text-red-400 ml-1">(-{defenderLosses})</span>
-                    )}
-                  </span>
-                </div>
-                
-                {/* HP bar */}
-                <div>
-                  <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="text-red-400">HP</span>
-                    <span className="text-stone-300">{defenderHp} / {combat.initialDefenderHp}</span>
-                  </div>
-                  <div className="h-3 bg-stone-700 rounded overflow-hidden">
-                    <div 
-                      className="h-full transition-all duration-500"
-                      style={{ 
-                        width: `${defenderHpProgress}%`,
-                        backgroundColor: '#ef4444',
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-stone-700">
-                  <div className="flex items-center gap-1">
-                    <span className="text-orange-400">&#9876;</span>
-                    <span className="text-stone-400">Attack:</span>
-                    <span className="text-white font-bold">{defenderAttack}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-blue-400">&#128737;</span>
-                    <span className="text-stone-400">Defence:</span>
-                    <span className="text-white font-bold">{defenderDefence}</span>
-                  </div>
-                </div>
+              <div className="bg-black/60 px-2 py-0.5 rounded text-[10px] flex gap-1">
+                <span className="text-yellow-500">★★</span>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Division list (collapsible) */}
-          <details className="mt-4">
-            <summary className="text-sm text-stone-400 cursor-pointer hover:text-white">
-              View Division Details
-            </summary>
-            <div className="mt-2 grid grid-cols-2 gap-4 max-h-40 overflow-y-auto">
-              {/* Attacker divisions */}
-              <div className="space-y-1">
-                {combat.attackerDivisions.map((div) => (
+        {/* Combat Stats Interface */}
+        <div className="p-4 bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a]">
+          <div className="flex items-center justify-between mb-4">
+            {/* Attacker Info */}
+            <div className="flex items-center gap-4">
+               <div className="w-16 h-10 border border-stone-600 bg-stone-800 flex items-center justify-center text-2xl shadow-md">
+                 {getFactionFlag(combat.attackerFaction)}
+               </div>
+               <div className="text-right">
+                 <div className="text-xl font-bold text-white">{attackerHp.toLocaleString()}</div>
+                 <div className="w-32 h-2 bg-stone-900 rounded-full overflow-hidden border border-stone-700">
+                    <div 
+                      className="h-full bg-red-700 transition-all duration-500"
+                      style={{ width: `${attackerHpProgress}%` }}
+                    ></div>
+                 </div>
+               </div>
+            </div>
+
+            {/* Central Combat Icon */}
+            <div className="w-16 h-16 rounded-full border-4 border-[#3a2a1a] bg-[#1a0a00] flex items-center justify-center shadow-xl transform -translate-y-2">
+              <div className="relative w-full h-full flex items-center justify-center">
+                 <span className="text-3xl filter drop-shadow-md">⚔️</span>
+                 {/* Combat Progress Circle (SVG) */}
+                 <svg className="absolute inset-0 w-full h-full -rotate-90">
+                    <circle 
+                      cx="32" cy="32" r="28" 
+                      fill="transparent" 
+                      stroke="#422" 
+                      strokeWidth="4"
+                    />
+                    <circle 
+                      cx="32" cy="32" r="28" 
+                      fill="transparent" 
+                      stroke="#822" 
+                      strokeWidth="4"
+                      strokeDasharray={`${2 * Math.PI * 28}`}
+                      strokeDashoffset={`${2 * Math.PI * 28 * (1 - (combat.currentRound / combat.maxRounds))}`}
+                      className="transition-all duration-1000"
+                    />
+                 </svg>
+              </div>
+            </div>
+
+            {/* Defender Info */}
+            <div className="flex items-center gap-4">
+               <div className="text-left">
+                 <div className="text-xl font-bold text-white">{defenderHp.toLocaleString()}</div>
+                 <div className="w-32 h-2 bg-stone-900 rounded-full overflow-hidden border border-stone-700">
+                    <div 
+                      className="h-full bg-green-700 transition-all duration-500"
+                      style={{ width: `${defenderHpProgress}%` }}
+                    ></div>
+                 </div>
+               </div>
+               <div className="w-16 h-10 border border-stone-600 bg-stone-800 flex items-center justify-center text-2xl shadow-md">
+                 {getFactionFlag(combat.defenderFaction)}
+               </div>
+            </div>
+          </div>
+
+          {/* Division Details and Round Info */}
+          <div className="grid grid-cols-2 gap-8 text-xs">
+            <div className="space-y-2">
+              <div className="flex justify-between border-b border-stone-700 pb-1 text-stone-400 uppercase tracking-tighter">
+                <span>Attacker Divisions</span>
+                <span>{combat.attackerDivisions.length}</span>
+              </div>
+              <div className="max-h-32 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                {combat.attackerDivisions.map(div => (
                   <DivisionRow key={div.id} division={div} faction={combat.attackerFaction} />
                 ))}
-                {combat.attackerDivisions.length === 0 && (
-                  <div className="text-xs text-red-400 italic">All divisions destroyed</div>
-                )}
-              </div>
-              {/* Defender divisions */}
-              <div className="space-y-1">
-                {combat.defenderDivisions.map((div) => (
-                  <DivisionRow key={div.id} division={div} faction={combat.defenderFaction} />
-                ))}
-                {combat.defenderDivisions.length === 0 && (
-                  <div className="text-xs text-red-400 italic">All divisions destroyed</div>
-                )}
               </div>
             </div>
-          </details>
+
+            <div className="space-y-2">
+              <div className="flex justify-between border-b border-stone-700 pb-1 text-stone-400 uppercase tracking-tighter">
+                <span>Defender Divisions</span>
+                <span>{combat.defenderDivisions.length}</span>
+              </div>
+              <div className="max-h-32 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                {combat.defenderDivisions.map(div => (
+                  <DivisionRow key={div.id} division={div} faction={combat.defenderFaction} />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 flex items-center justify-center gap-4">
+             <div className="text-[10px] text-stone-500 uppercase tracking-widest">
+               Round {combat.currentRound} / {combat.maxRounds}
+             </div>
+             {combat.isComplete && (
+               <div className={`px-4 py-1 rounded border font-bold uppercase tracking-widest animate-pulse ${
+                 combat.victor === combat.attackerFaction ? 'bg-red-900/40 border-red-700 text-red-400' :
+                 combat.victor === combat.defenderFaction ? 'bg-green-900/40 border-green-700 text-green-400' :
+                 'bg-stone-800 border-stone-600 text-stone-400'
+               }`}>
+                 {combat.victor ? `${getFactionName(combat.victor)} Victory` : 'Stalemate'}
+               </div>
+             )}
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-3 bg-stone-800 rounded-b-lg border-t border-stone-600 flex justify-end">
+        <div className="px-4 py-3 bg-[#111] border-t border-stone-700 flex justify-between items-center">
+          <div className="text-[10px] text-stone-600">
+            Combat Resolution v1.0 • {new Date(combat.startTime).toLocaleDateString()}
+          </div>
           <button
             onClick={onClose}
-            className="px-4 py-1 bg-stone-600 hover:bg-stone-500 text-white rounded text-sm"
+            className="px-6 py-1 bg-stone-800 hover:bg-stone-700 text-stone-300 border border-stone-600 rounded text-sm transition-colors uppercase tracking-widest"
           >
-            Close
+            Dismiss
           </button>
         </div>
       </div>
+
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(0,0,0,0.1);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #444;
+          border-radius: 2px;
+        }
+      `}</style>
     </div>
   );
 }

@@ -177,6 +177,8 @@ export function createActiveCombat(
   const attackerDivisionsCopy = attackerDivisions.map(d => ({ ...d }));
   const defenderDivisionsCopy = defenderDivisions.map(d => ({ ...d }));
   
+  // Set lastRoundTime to currentTime so the first round happens after roundIntervalHours
+  // This prevents combat from resolving immediately on creation
   return {
     id: generateCombatId(),
     regionId,

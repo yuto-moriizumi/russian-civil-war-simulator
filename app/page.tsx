@@ -67,6 +67,10 @@ export default function Home() {
   const pendingEventsRef = useRef<GameEvent[]>([]);
   // Ref to store new active combats to be added
   const pendingCombatsRef = useRef<import('./types/game').ActiveCombat[]>([]);
+  // Ref to track current dateTime for combat processing
+  const currentDateTimeRef = useRef<Date>(new Date(1917, 10, 7));
+  // Ref to store pending region updates from completed combats
+  const pendingCombatRegionUpdatesRef = useRef<import('./types/game').ActiveCombat[]>([]);
 
   // Load map data on mount
   useEffect(() => {
@@ -105,11 +109,15 @@ export default function Home() {
     // Clean up processed IDs for these movements
     movements.forEach(m => processedMovementIdsRef.current.delete(m.id));
     
+    // Use the current game time for combat creation (not arrival time)
+    // This ensures combat doesn't immediately process its first round
+    const currentGameTime = currentDateTimeRef.current;
+    
     setRegions(prev => {
       const newRegions = { ...prev };
       
       movements.forEach(movement => {
-        const { toRegion, divisions, owner, arrivalTime } = movement;
+        const { toRegion, divisions, owner } = movement;
         const to = newRegions[toRegion];
         
         if (!to) return;
@@ -138,7 +146,7 @@ export default function Home() {
                 'region_captured',
                 `${to.name} Captured!`,
                 `${owner === 'soviet' ? 'Soviet' : 'White'} forces captured the undefended region of ${to.name}.`,
-                arrivalTime,
+                currentGameTime,
                 owner,
                 toRegion
               )
@@ -152,7 +160,7 @@ export default function Home() {
               to.owner,
               attackerDivisions,
               defenderDivisions,
-              arrivalTime
+              currentGameTime
             );
             pendingCombatsRef.current.push(newCombat);
             
@@ -167,7 +175,7 @@ export default function Home() {
                 'combat_victory', // Using this as 'combat_started' would need a new event type
                 `Battle for ${to.name} Begins!`,
                 `${owner === 'soviet' ? 'Soviet' : 'White'} forces (${attackerDivisions.length} divisions) are attacking ${to.owner === 'soviet' ? 'Soviet' : 'White'} defenders (${defenderDivisions.length} divisions) at ${to.name}.`,
-                arrivalTime,
+                currentGameTime,
                 owner,
                 toRegion
               )
@@ -246,39 +254,9 @@ export default function Home() {
         return prev;
       }
       
-      // Update regions based on completed combats
+      // Queue completed combats for region updates (will be processed separately)
       if (completedCombats.length > 0) {
-        setRegions(currentRegions => {
-          const newRegions = { ...currentRegions };
-          
-          for (const combat of completedCombats) {
-            const region = newRegions[combat.regionId];
-            if (!region) continue;
-            
-            if (combat.victor === combat.attackerFaction) {
-              // Attacker won - transfer ownership and surviving attackers
-              newRegions[combat.regionId] = {
-                ...region,
-                owner: combat.attackerFaction,
-                divisions: combat.attackerDivisions,
-              };
-            } else if (combat.victor === combat.defenderFaction) {
-              // Defender won - restore surviving defenders
-              newRegions[combat.regionId] = {
-                ...region,
-                divisions: combat.defenderDivisions,
-              };
-            } else {
-              // Stalemate - surviving defenders stay, attackers retreat (lost)
-              newRegions[combat.regionId] = {
-                ...region,
-                divisions: combat.defenderDivisions,
-              };
-            }
-          }
-          
-          return newRegions;
-        });
+        pendingCombatRegionUpdatesRef.current.push(...completedCombats);
       }
       
       return {
@@ -286,6 +264,46 @@ export default function Home() {
         activeCombats: updatedCombats,
         gameEvents: [...prev.gameEvents, ...newEvents],
       };
+    });
+  }, []);
+
+  // Process completed combat region updates
+  const processCombatRegionUpdates = useCallback(() => {
+    if (pendingCombatRegionUpdatesRef.current.length === 0) return;
+    
+    const completedCombats = [...pendingCombatRegionUpdatesRef.current];
+    pendingCombatRegionUpdatesRef.current = [];
+    
+    setRegions(currentRegions => {
+      const newRegions = { ...currentRegions };
+      
+      for (const combat of completedCombats) {
+        const region = newRegions[combat.regionId];
+        if (!region) continue;
+        
+        if (combat.victor === combat.attackerFaction) {
+          // Attacker won - transfer ownership and surviving attackers
+          newRegions[combat.regionId] = {
+            ...region,
+            owner: combat.attackerFaction,
+            divisions: combat.attackerDivisions,
+          };
+        } else if (combat.victor === combat.defenderFaction) {
+          // Defender won - restore surviving defenders
+          newRegions[combat.regionId] = {
+            ...region,
+            divisions: combat.defenderDivisions,
+          };
+        } else {
+          // Stalemate - surviving defenders stay, attackers retreat (lost)
+          newRegions[combat.regionId] = {
+            ...region,
+            divisions: combat.defenderDivisions,
+          };
+        }
+      }
+      
+      return newRegions;
     });
   }, []);
 
@@ -301,6 +319,9 @@ export default function Home() {
       setGameState(prev => {
         const newDate = new Date(prev.dateTime);
         newDate.setHours(newDate.getHours() + 1);
+        
+        // Update the ref so we can use it outside this callback
+        currentDateTimeRef.current = newDate;
         
         // Add income every hour
         const newMoney = prev.money + prev.income;
@@ -331,11 +352,11 @@ export default function Home() {
       // Process any completed movements after state update
       processPendingMovements();
       
-      // Process active combats (need to get current time from state)
-      setGameState(currentState => {
-        processActiveCombats(currentState.dateTime);
-        return currentState;
-      });
+      // Process active combats using the current time from ref
+      processActiveCombats(currentDateTimeRef.current);
+      
+      // Process any completed combat region updates
+      processCombatRegionUpdates();
       
       // Run AI logic
       if (aiState) {
@@ -365,7 +386,7 @@ export default function Home() {
     }, msPerHour);
 
     return () => clearInterval(interval);
-  }, [gameState.isPlaying, gameState.gameSpeed, processPendingMovements, processActiveCombats, aiState]);
+  }, [gameState.isPlaying, gameState.gameSpeed, processPendingMovements, processActiveCombats, processCombatRegionUpdates, aiState]);
 
   // Screen navigation
   const navigateToScreen = useCallback((screen: Screen) => {
