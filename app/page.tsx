@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Screen, Country, GameSpeed, GameState, RegionState, Adjacency, Movement, AIState, FactionId, GameEvent, GameEventType } from './types/game';
 import { initialMissions } from './data/gameData';
-import { createInitialOwnership } from './utils/mapUtils';
+import { createInitialOwnership, calculateFactionIncome } from './utils/mapUtils';
 import { createInitialAIState, runAITick } from './ai/cpuPlayer';
 import TitleScreen from './screens/TitleScreen';
 import CountrySelectScreen from './screens/CountrySelectScreen';
@@ -38,7 +38,7 @@ const initialGameState: GameState = {
   isPlaying: false,
   gameSpeed: 1,
   money: 100,
-  income: 5,
+  income: 0, // Income is now calculated dynamically based on controlled states
   infantryUnits: 0,
   missions: initialMissions,
   movingUnits: [],
@@ -203,12 +203,16 @@ export default function Home() {
     const msPerHour = 1000 / gameState.gameSpeed;
     
     const interval = setInterval(() => {
+      // Calculate player income based on controlled states (1 money per state per hour)
+      const playerFaction = gameState.selectedCountry?.id;
+      const playerIncome = playerFaction ? calculateFactionIncome(regions, playerFaction) : 0;
+      
       setGameState(prev => {
         const newDate = new Date(prev.dateTime);
         newDate.setHours(newDate.getHours() + 1);
         
-        // Add income every hour
-        const newMoney = prev.money + prev.income;
+        // Add income every hour (based on controlled states)
+        const newMoney = prev.money + playerIncome;
         
         // Process unit movements
         const remainingMovements: Movement[] = [];
@@ -229,6 +233,7 @@ export default function Home() {
           ...prev,
           dateTime: newDate,
           money: newMoney,
+          income: playerIncome, // Update displayed income
           movingUnits: remainingMovements,
         };
       });
@@ -264,7 +269,7 @@ export default function Home() {
     }, msPerHour);
 
     return () => clearInterval(interval);
-  }, [gameState.isPlaying, gameState.gameSpeed, processPendingMovements, aiState]);
+  }, [gameState.isPlaying, gameState.gameSpeed, gameState.selectedCountry, regions, processPendingMovements, aiState]);
 
   // Screen navigation
   const navigateToScreen = useCallback((screen: Screen) => {
