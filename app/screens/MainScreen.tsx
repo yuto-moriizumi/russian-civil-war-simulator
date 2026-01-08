@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, Division } from '../types/game';
+import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, Division, ActiveCombat } from '../types/game';
 import SpeedControl from '../components/SpeedControl';
 
 // Dynamic import for GameMap to avoid SSR issues with MapLibre
@@ -24,6 +24,7 @@ interface MainScreenProps {
   reserveDivisions: Division[];
   missions: Mission[];
   movingUnits: Movement[];
+  activeCombats: ActiveCombat[];
   regions: RegionState;
   adjacency: Adjacency;
   selectedRegion: string | null;
@@ -40,6 +41,7 @@ interface MainScreenProps {
   onUnitSelect: (regionId: string | null) => void;
   onDeployUnit: () => void;
   onMoveUnits: (fromRegion: string, toRegion: string, count: number) => void;
+  onSelectCombat: (combatId: string | null) => void;
 }
 
 export default function MainScreen({
@@ -52,6 +54,7 @@ export default function MainScreen({
   reserveDivisions,
   missions,
   movingUnits,
+  activeCombats,
   regions,
   adjacency,
   selectedRegion,
@@ -68,6 +71,7 @@ export default function MainScreen({
   onUnitSelect,
   onDeployUnit,
   onMoveUnits,
+  onSelectCombat,
 }: MainScreenProps) {
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -97,6 +101,7 @@ export default function MainScreen({
             selectedRegion={selectedRegion}
             selectedUnitRegion={selectedUnitRegion}
             movingUnits={movingUnits}
+            activeCombats={activeCombats}
             currentDateTime={dateTime}
             playerFaction={country.id}
             unitsInReserve={reserveDivisions.length}
@@ -104,6 +109,7 @@ export default function MainScreen({
             onUnitSelect={onUnitSelect}
             onDeployUnit={onDeployUnit}
             onMoveUnits={onMoveUnits}
+            onSelectCombat={onSelectCombat}
           />
         ) : (
           <div 
@@ -235,6 +241,11 @@ export default function MainScreen({
           <span>Status: {isPlaying ? 'Time advancing...' : 'Paused'}</span>
           <div className="flex items-center gap-4">
             <span>Reserve Divisions: {reserveDivisions.length}</span>
+            {activeCombats.length > 0 && (
+              <span className="text-red-400 font-semibold animate-pulse">
+                Active Battles: {activeCombats.length}
+              </span>
+            )}
             <span>Active Missions: {missions.filter(m => !m.claimed).length}</span>
             <button
               onClick={onOpenEvents}

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { RegionState, Adjacency, FactionId, Movement, Division } from '../types/game';
+import { RegionState, Adjacency, FactionId, Movement, Division, ActiveCombat } from '../types/game';
 import { FACTION_COLORS, getAdjacentRegions } from '../utils/mapUtils';
 import { getDivisionCount } from '../utils/combat';
 
@@ -13,6 +13,7 @@ interface GameMapProps {
   selectedRegion: string | null;
   selectedUnitRegion: string | null;
   movingUnits: Movement[];
+  activeCombats: ActiveCombat[];
   currentDateTime: Date;
   playerFaction: FactionId;
   unitsInReserve: number;
@@ -21,6 +22,7 @@ interface GameMapProps {
   onRegionHover?: (regionId: string | null) => void;
   onDeployUnit: () => void;
   onMoveUnits: (fromRegion: string, toRegion: string, count: number) => void;
+  onSelectCombat: (combatId: string | null) => void;
 }
 
 export default function GameMap({
@@ -29,6 +31,7 @@ export default function GameMap({
   selectedRegion,
   selectedUnitRegion,
   movingUnits,
+  activeCombats,
   currentDateTime,
   playerFaction,
   unitsInReserve,
@@ -37,11 +40,13 @@ export default function GameMap({
   onRegionHover,
   onDeployUnit,
   onMoveUnits,
+  onSelectCombat,
 }: GameMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
   const movingMarkersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
+  const combatMarkersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
   const hoveredRegionRef = useRef<string | null>(null);
   const selectedUnitRegionRef = useRef<string | null>(null);
   const regionsRef = useRef<RegionState>(regions);
@@ -522,6 +527,151 @@ export default function GameMap({
       }
     }
   }, [movingUnits, regionCentroids, mapLoaded, currentDateTime]);
+
+  // Update combat indicator markers on the map
+  useEffect(() => {
+    if (!map.current || !mapLoaded || Object.keys(regionCentroids).length === 0) return;
+
+    // Track which combat markers we need
+    const neededCombatMarkers = new Set<string>();
+    
+    // Create or update markers for active combats
+    for (const combat of activeCombats) {
+      if (combat.isComplete) continue;
+      
+      neededCombatMarkers.add(combat.id);
+      
+      const centroid = regionCentroids[combat.regionId];
+      if (!centroid) continue;
+
+      const attackerHp = combat.attackerDivisions.reduce((sum, d) => sum + d.hp, 0);
+      const defenderHp = combat.defenderDivisions.reduce((sum, d) => sum + d.hp, 0);
+      const attackerProgress = combat.initialAttackerHp > 0 
+        ? (attackerHp / combat.initialAttackerHp) * 100 
+        : 0;
+      const defenderProgress = combat.initialDefenderHp > 0 
+        ? (defenderHp / combat.initialDefenderHp) * 100 
+        : 0;
+
+      const attackerColor = FACTION_COLORS[combat.attackerFaction];
+      const defenderColor = FACTION_COLORS[combat.defenderFaction];
+      const attackerTextColor = combat.attackerFaction === 'white' ? '#000' : '#fff';
+      const defenderTextColor = combat.defenderFaction === 'white' ? '#000' : '#fff';
+
+      const existingMarker = combatMarkersRef.current.get(combat.id);
+      
+      if (existingMarker) {
+        // Update existing marker content
+        const el = existingMarker.getElement();
+        const attackerCountEl = el.querySelector('.attacker-count');
+        const defenderCountEl = el.querySelector('.defender-count');
+        const attackerBarEl = el.querySelector('.attacker-bar') as HTMLElement;
+        const defenderBarEl = el.querySelector('.defender-bar') as HTMLElement;
+        
+        if (attackerCountEl) attackerCountEl.textContent = String(combat.attackerDivisions.length);
+        if (defenderCountEl) defenderCountEl.textContent = String(combat.defenderDivisions.length);
+        if (attackerBarEl) attackerBarEl.style.width = `${attackerProgress}%`;
+        if (defenderBarEl) defenderBarEl.style.width = `${defenderProgress}%`;
+      } else {
+        // Create new combat marker
+        const el = document.createElement('div');
+        el.className = 'combat-marker';
+        el.style.cursor = 'pointer';
+        el.style.pointerEvents = 'auto';
+        el.innerHTML = `
+          <div style="
+            display: flex;
+            align-items: center;
+            animation: combat-pulse 2s ease-in-out infinite;
+          ">
+            <!-- Attacker side -->
+            <div style="display: flex; flex-direction: column; align-items: flex-end; margin-right: 2px;">
+              <div style="
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                padding: 0 6px;
+                min-width: 35px;
+                border-radius: 3px 0 0 3px;
+                background-color: ${attackerColor};
+                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+              ">
+                <span class="attacker-count" style="
+                  font-size: 11px;
+                  font-weight: bold;
+                  color: ${attackerTextColor};
+                ">${combat.attackerDivisions.length}</span>
+              </div>
+              <div style="height: 3px; width: 100%; background: rgba(0,0,0,0.5); border-radius: 0 0 0 2px; margin-top: 1px;">
+                <div class="attacker-bar" style="height: 100%; width: ${attackerProgress}%; background: ${attackerColor}; transition: width 0.3s;"></div>
+              </div>
+            </div>
+            
+            <!-- Combat icon -->
+            <div style="
+              width: 24px;
+              height: 24px;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: radial-gradient(circle, #4a4a4a 0%, #2a2a2a 100%);
+              box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+              border: 2px solid #666;
+              z-index: 10;
+            ">
+              <span style="font-size: 10px; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.5));">&#9876;</span>
+            </div>
+            
+            <!-- Defender side -->
+            <div style="display: flex; flex-direction: column; align-items: flex-start; margin-left: 2px;">
+              <div style="
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                padding: 0 6px;
+                min-width: 35px;
+                border-radius: 0 3px 3px 0;
+                background-color: ${defenderColor};
+                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+              ">
+                <span class="defender-count" style="
+                  font-size: 11px;
+                  font-weight: bold;
+                  color: ${defenderTextColor};
+                ">${combat.defenderDivisions.length}</span>
+              </div>
+              <div style="height: 3px; width: 100%; background: rgba(0,0,0,0.5); border-radius: 0 0 2px 0; margin-top: 1px;">
+                <div class="defender-bar" style="height: 100%; width: ${defenderProgress}%; background: ${defenderColor}; transition: width 0.3s;"></div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // Add click handler to open combat popup
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          onSelectCombat(combat.id);
+        });
+
+        const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+          .setLngLat(centroid)
+          .addTo(map.current!);
+        
+        combatMarkersRef.current.set(combat.id, marker);
+      }
+    }
+
+    // Remove markers for completed combats
+    for (const [combatId, marker] of combatMarkersRef.current.entries()) {
+      if (!neededCombatMarkers.has(combatId)) {
+        marker.remove();
+        combatMarkersRef.current.delete(combatId);
+      }
+    }
+  }, [activeCombats, regionCentroids, mapLoaded, onSelectCombat]);
 
   return (
     <div className="relative h-full w-full">

@@ -40,3 +40,19 @@ body {
 .moving-unit-marker {
   animation: pulse 1.5s ease-in-out infinite;
 }
+
+/* Combat indicator animation */
+@keyframes combat-pulse {
+  0%, 100% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+  50% {
+    filter: brightness(1.3);
+    transform: scale(1.05);
+  }
+}
+
+.combat-marker {
+  animation: combat-pulse 1.5s ease-in-out infinite;
+}

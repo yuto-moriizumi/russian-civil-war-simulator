@@ -1,4 +1,4 @@
-import { Division, CombatResult, FactionId } from '../types/game';
+import { Division, CombatResult, FactionId, ActiveCombat } from '../types/game';
 
 /**
  * Generate a unique ID for a new division
@@ -153,4 +153,133 @@ export function getTotalHp(divisions: Division[]): number {
  */
 export function getDivisionCount(divisions: Division[]): number {
   return divisions.length;
+}
+
+/**
+ * Generate a unique ID for a combat
+ */
+export function generateCombatId(): string {
+  return `combat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
+ * Create a new active combat when units arrive at an enemy region
+ */
+export function createActiveCombat(
+  regionId: string,
+  regionName: string,
+  attackerFaction: FactionId,
+  defenderFaction: FactionId,
+  attackerDivisions: Division[],
+  defenderDivisions: Division[],
+  currentTime: Date
+): ActiveCombat {
+  const attackerDivisionsCopy = attackerDivisions.map(d => ({ ...d }));
+  const defenderDivisionsCopy = defenderDivisions.map(d => ({ ...d }));
+  
+  return {
+    id: generateCombatId(),
+    regionId,
+    regionName,
+    attackerFaction,
+    defenderFaction,
+    attackerDivisions: attackerDivisionsCopy,
+    defenderDivisions: defenderDivisionsCopy,
+    initialAttackerCount: attackerDivisions.length,
+    initialDefenderCount: defenderDivisions.length,
+    initialAttackerHp: getTotalHp(attackerDivisions),
+    initialDefenderHp: getTotalHp(defenderDivisions),
+    currentRound: 0,
+    maxRounds: 10,
+    startTime: new Date(currentTime),
+    lastRoundTime: new Date(currentTime),
+    roundIntervalHours: 1, // One combat round per game hour
+    isComplete: false,
+    victor: null,
+  };
+}
+
+/**
+ * Process a single combat round for an active combat
+ * Returns the updated combat state
+ */
+export function processCombatRound(combat: ActiveCombat): ActiveCombat {
+  if (combat.isComplete) {
+    return combat;
+  }
+  
+  let attackerDivisions = combat.attackerDivisions.map(d => ({ ...d }));
+  let defenderDivisions = combat.defenderDivisions.map(d => ({ ...d }));
+  
+  // If either side has no divisions, combat is over
+  if (attackerDivisions.length === 0 || defenderDivisions.length === 0) {
+    return {
+      ...combat,
+      isComplete: true,
+      victor: attackerDivisions.length > 0 ? combat.attackerFaction : 
+              defenderDivisions.length > 0 ? combat.defenderFaction : null,
+    };
+  }
+  
+  // Calculate total damage from each side
+  const attackerTotalDamage = attackerDivisions.reduce((sum, attacker) => {
+    const targetIndex = Math.floor(Math.random() * defenderDivisions.length);
+    const target = defenderDivisions[targetIndex];
+    return sum + calculateDamage(attacker, target);
+  }, 0);
+  
+  const defenderTotalDamage = defenderDivisions.reduce((sum, defender) => {
+    const targetIndex = Math.floor(Math.random() * attackerDivisions.length);
+    const target = attackerDivisions[targetIndex];
+    return sum + calculateDamage(defender, target);
+  }, 0);
+  
+  // Distribute damage to attacking divisions
+  const damagePerAttacker = Math.ceil(defenderTotalDamage / attackerDivisions.length);
+  attackerDivisions = attackerDivisions
+    .map(div => applyDamage(div, damagePerAttacker))
+    .filter((div): div is Division => div !== null);
+  
+  // Distribute damage to defending divisions
+  const damagePerDefender = Math.ceil(attackerTotalDamage / defenderDivisions.length);
+  defenderDivisions = defenderDivisions
+    .map(div => applyDamage(div, damagePerDefender))
+    .filter((div): div is Division => div !== null);
+  
+  const newRound = combat.currentRound + 1;
+  const combatEnded = 
+    attackerDivisions.length === 0 || 
+    defenderDivisions.length === 0 || 
+    newRound >= combat.maxRounds;
+  
+  let victor: FactionId | null = null;
+  if (combatEnded) {
+    if (defenderDivisions.length === 0 && attackerDivisions.length > 0) {
+      victor = combat.attackerFaction;
+    } else if (attackerDivisions.length === 0 && defenderDivisions.length > 0) {
+      victor = combat.defenderFaction;
+    }
+    // If both have units or both destroyed, victor stays null (stalemate/draw)
+  }
+  
+  return {
+    ...combat,
+    attackerDivisions,
+    defenderDivisions,
+    currentRound: newRound,
+    isComplete: combatEnded,
+    victor,
+  };
+}
+
+/**
+ * Check if a combat round should be processed based on game time
+ */
+export function shouldProcessCombatRound(combat: ActiveCombat, currentTime: Date): boolean {
+  if (combat.isComplete) return false;
+  
+  const hoursSinceLastRound = 
+    (currentTime.getTime() - combat.lastRoundTime.getTime()) / (1000 * 60 * 60);
+  
+  return hoursSinceLastRound >= combat.roundIntervalHours;
 }

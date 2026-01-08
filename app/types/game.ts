@@ -98,6 +98,7 @@ export interface GameState {
   missions: Mission[];
   movingUnits: Movement[];
   gameEvents: GameEvent[];
+  activeCombats: ActiveCombat[]; // Ongoing battles
 }
 
 // AI State for CPU-controlled factions
@@ -115,4 +116,26 @@ export interface CombatResult {
   attackerCasualties: number;       // Number of attacker divisions destroyed
   defenderCasualties: number;       // Number of defender divisions destroyed
   regionCaptured: boolean;          // Whether the attacker captured the region
+}
+
+// Active combat - represents an ongoing battle that resolves over time
+export interface ActiveCombat {
+  id: string;                       // Unique combat ID
+  regionId: string;                 // Where the combat is taking place
+  regionName: string;               // Display name of the region
+  attackerFaction: FactionId;       // Who is attacking
+  defenderFaction: FactionId;       // Who is defending
+  attackerDivisions: Division[];    // Current attacker divisions
+  defenderDivisions: Division[];    // Current defender divisions
+  initialAttackerCount: number;     // Starting attacker division count
+  initialDefenderCount: number;     // Starting defender division count
+  initialAttackerHp: number;        // Starting total HP of attackers
+  initialDefenderHp: number;        // Starting total HP of defenders
+  currentRound: number;             // Current combat round (1-10)
+  maxRounds: number;                // Maximum rounds before stalemate
+  startTime: Date;                  // When combat started
+  lastRoundTime: Date;              // When the last round was resolved
+  roundIntervalHours: number;       // Hours between rounds
+  isComplete: boolean;              // Whether combat has concluded
+  victor: FactionId | null;         // Who won (null if ongoing or stalemate)
 }

@@ -5,12 +5,13 @@ import { Screen, Country, GameSpeed, GameState, RegionState, Adjacency, Movement
 import { initialMissions } from './data/gameData';
 import { createInitialOwnership } from './utils/mapUtils';
 import { createInitialAIState, runAITick } from './ai/cpuPlayer';
-import { createDivision, resolveCombat, getDivisionCount } from './utils/combat';
+import { createDivision, resolveCombat, getDivisionCount, createActiveCombat, processCombatRound, shouldProcessCombatRound } from './utils/combat';
 import TitleScreen from './screens/TitleScreen';
 import CountrySelectScreen from './screens/CountrySelectScreen';
 import MainScreen from './screens/MainScreen';
 import MissionScreen from './screens/MissionScreen';
 import EventsModal from './components/EventsModal';
+import CombatPopup from './components/CombatPopup';
 
 // Helper function to create game events
 function createGameEvent(
@@ -44,6 +45,7 @@ const initialGameState: GameState = {
   missions: initialMissions,
   movingUnits: [],
   gameEvents: [],
+  activeCombats: [],
 };
 
 export default function Home() {
@@ -55,6 +57,7 @@ export default function Home() {
   const [mapDataLoaded, setMapDataLoaded] = useState(false);
   const [aiState, setAIState] = useState<AIState | null>(null);
   const [isEventsModalOpen, setIsEventsModalOpen] = useState(false);
+  const [selectedCombatId, setSelectedCombatId] = useState<string | null>(null);
   
   // Ref to store pending region updates from completed movements
   const pendingRegionUpdatesRef = useRef<Movement[]>([]);
@@ -62,6 +65,8 @@ export default function Home() {
   const processedMovementIdsRef = useRef<Set<string>>(new Set());
   // Ref to store pending game events from combat
   const pendingEventsRef = useRef<GameEvent[]>([]);
+  // Ref to store new active combats to be added
+  const pendingCombatsRef = useRef<import('./types/game').ActiveCombat[]>([]);
 
   // Load map data on mount
   useEffect(() => {
@@ -116,54 +121,42 @@ export default function Home() {
             divisions: [...to.divisions, ...divisions],
           };
         } else {
-          // Combat!
+          // Combat! Create an active combat instead of instant resolution
           const attackerDivisions = divisions;
           const defenderDivisions = to.divisions;
-          const defendingFaction = to.owner;
-          const regionName = to.name;
           
-          // Resolve combat using the combat system
-          const result = resolveCombat(attackerDivisions, defenderDivisions);
-          
-          if (result.regionCaptured) {
-            // Attacker wins - region captured
+          if (defenderDivisions.length === 0) {
+            // Undefended region - capture immediately
             newRegions[toRegion] = {
               ...to,
               owner: owner,
-              divisions: result.attackerDivisions,
+              divisions: attackerDivisions,
             };
             
-            // Create events for the battle
             pendingEventsRef.current.push(
               createGameEvent(
                 'region_captured',
-                `${regionName} Captured!`,
-                `${owner === 'soviet' ? 'Soviet' : 'White'} forces captured ${regionName} from ${defendingFaction === 'soviet' ? 'Soviet' : defendingFaction === 'white' ? 'White' : 'neutral'} forces. ${attackerDivisions.length} divisions attacked, ${result.attackerCasualties} lost. Defenders lost ${result.defenderCasualties} divisions.`,
-                arrivalTime,
-                owner,
-                toRegion
-              )
-            );
-          } else if (result.defenderDivisions.length > 0) {
-            // Defender wins - attacker repelled
-            newRegions[toRegion] = {
-              ...to,
-              divisions: result.defenderDivisions,
-            };
-            
-            // Create defeat event
-            pendingEventsRef.current.push(
-              createGameEvent(
-                'combat_defeat',
-                `Attack on ${regionName} Failed`,
-                `${owner === 'soviet' ? 'Soviet' : 'White'} attack on ${regionName} was repelled. ${attackerDivisions.length} attacking divisions lost ${result.attackerCasualties}. Defenders lost ${result.defenderCasualties} divisions.`,
+                `${to.name} Captured!`,
+                `${owner === 'soviet' ? 'Soviet' : 'White'} forces captured the undefended region of ${to.name}.`,
                 arrivalTime,
                 owner,
                 toRegion
               )
             );
           } else {
-            // Both sides destroyed
+            // Create active combat - divisions will fight over time
+            const newCombat = createActiveCombat(
+              toRegion,
+              to.name,
+              owner,
+              to.owner,
+              attackerDivisions,
+              defenderDivisions,
+              arrivalTime
+            );
+            pendingCombatsRef.current.push(newCombat);
+            
+            // Remove defenders from region temporarily (they're now in combat)
             newRegions[toRegion] = {
               ...to,
               divisions: [],
@@ -171,9 +164,9 @@ export default function Home() {
             
             pendingEventsRef.current.push(
               createGameEvent(
-                'combat_defeat',
-                `Pyrrhic Battle at ${regionName}`,
-                `Both attacking and defending forces were destroyed in the battle for ${regionName}. Neither side emerged victorious.`,
+                'combat_victory', // Using this as 'combat_started' would need a new event type
+                `Battle for ${to.name} Begins!`,
+                `${owner === 'soviet' ? 'Soviet' : 'White'} forces (${attackerDivisions.length} divisions) are attacking ${to.owner === 'soviet' ? 'Soviet' : 'White'} defenders (${defenderDivisions.length} divisions) at ${to.name}.`,
                 arrivalTime,
                 owner,
                 toRegion
@@ -186,16 +179,114 @@ export default function Home() {
       return newRegions;
     });
     
-    // Process pending events
-    if (pendingEventsRef.current.length > 0) {
+    // Process pending events and combats
+    setGameState(prev => {
       const newEvents = [...pendingEventsRef.current];
       pendingEventsRef.current = [];
       
-      setGameState(prev => ({
+      const newCombats = [...pendingCombatsRef.current];
+      pendingCombatsRef.current = [];
+      
+      return {
         ...prev,
         gameEvents: [...prev.gameEvents, ...newEvents],
-      }));
-    }
+        activeCombats: [...prev.activeCombats, ...newCombats],
+      };
+    });
+  }, []);
+
+  // Process active combats - resolve rounds and handle completed battles
+  const processActiveCombats = useCallback((currentTime: Date) => {
+    setGameState(prev => {
+      let hasChanges = false;
+      const updatedCombats: import('./types/game').ActiveCombat[] = [];
+      const completedCombats: import('./types/game').ActiveCombat[] = [];
+      const newEvents: GameEvent[] = [];
+      
+      for (const combat of prev.activeCombats) {
+        if (combat.isComplete) {
+          completedCombats.push(combat);
+          continue;
+        }
+        
+        if (shouldProcessCombatRound(combat, currentTime)) {
+          hasChanges = true;
+          const updatedCombat = processCombatRound({
+            ...combat,
+            lastRoundTime: new Date(currentTime),
+          });
+          
+          if (updatedCombat.isComplete) {
+            completedCombats.push(updatedCombat);
+            
+            // Create event for combat completion
+            const attackerWon = updatedCombat.victor === updatedCombat.attackerFaction;
+            const attackerLosses = updatedCombat.initialAttackerCount - updatedCombat.attackerDivisions.length;
+            const defenderLosses = updatedCombat.initialDefenderCount - updatedCombat.defenderDivisions.length;
+            
+            newEvents.push(
+              createGameEvent(
+                attackerWon ? 'region_captured' : 'combat_defeat',
+                attackerWon ? `${updatedCombat.regionName} Captured!` : `Battle for ${updatedCombat.regionName} Lost`,
+                `${updatedCombat.attackerFaction === 'soviet' ? 'Soviet' : 'White'} forces ${attackerWon ? 'captured' : 'failed to capture'} ${updatedCombat.regionName}. Attackers lost ${attackerLosses} divisions. Defenders lost ${defenderLosses} divisions.`,
+                currentTime,
+                updatedCombat.attackerFaction,
+                updatedCombat.regionId
+              )
+            );
+          } else {
+            updatedCombats.push(updatedCombat);
+          }
+        } else {
+          updatedCombats.push(combat);
+        }
+      }
+      
+      if (!hasChanges && completedCombats.length === 0) {
+        return prev;
+      }
+      
+      // Update regions based on completed combats
+      if (completedCombats.length > 0) {
+        setRegions(currentRegions => {
+          const newRegions = { ...currentRegions };
+          
+          for (const combat of completedCombats) {
+            const region = newRegions[combat.regionId];
+            if (!region) continue;
+            
+            if (combat.victor === combat.attackerFaction) {
+              // Attacker won - transfer ownership and surviving attackers
+              newRegions[combat.regionId] = {
+                ...region,
+                owner: combat.attackerFaction,
+                divisions: combat.attackerDivisions,
+              };
+            } else if (combat.victor === combat.defenderFaction) {
+              // Defender won - restore surviving defenders
+              newRegions[combat.regionId] = {
+                ...region,
+                divisions: combat.defenderDivisions,
+              };
+            } else {
+              // Stalemate - surviving defenders stay, attackers retreat (lost)
+              newRegions[combat.regionId] = {
+                ...region,
+                divisions: combat.defenderDivisions,
+              };
+            }
+          }
+          
+          return newRegions;
+        });
+      }
+      
+      return {
+        ...prev,
+        activeCombats: updatedCombats,
+        gameEvents: [...prev.gameEvents, ...newEvents],
+      };
+    });
   }, []);
 
   // Game time progression
@@ -240,6 +331,12 @@ export default function Home() {
       // Process any completed movements after state update
       processPendingMovements();
       
+      // Process active combats (need to get current time from state)
+      setGameState(currentState => {
+        processActiveCombats(currentState.dateTime);
+        return currentState;
+      });
+      
       // Run AI logic
       if (aiState) {
         setRegions(currentRegions => {
@@ -268,7 +365,7 @@ export default function Home() {
     }, msPerHour);
 
     return () => clearInterval(interval);
-  }, [gameState.isPlaying, gameState.gameSpeed, processPendingMovements, aiState]);
+  }, [gameState.isPlaying, gameState.gameSpeed, processPendingMovements, processActiveCombats, aiState]);
 
   // Screen navigation
   const navigateToScreen = useCallback((screen: Screen) => {
@@ -492,6 +589,7 @@ export default function Home() {
             reserveDivisions={gameState.reserveDivisions}
             missions={gameState.missions}
             movingUnits={gameState.movingUnits}
+            activeCombats={gameState.activeCombats}
             regions={regions}
             adjacency={adjacency}
             selectedRegion={selectedRegion}
@@ -508,6 +606,7 @@ export default function Home() {
             onUnitSelect={setSelectedUnitRegion}
             onDeployUnit={handleDeployUnit}
             onMoveUnits={handleMoveUnits}
+            onSelectCombat={setSelectedCombatId}
           />
         );
       
@@ -525,6 +624,11 @@ export default function Home() {
     }
   };
 
+  // Get the selected combat for the popup
+  const selectedCombat = selectedCombatId 
+    ? gameState.activeCombats.find(c => c.id === selectedCombatId) 
+    : null;
+
   return (
     <div className="min-h-screen w-full">
       {renderScreen()}
@@ -533,6 +637,12 @@ export default function Home() {
         onClose={handleCloseEventsModal}
         events={gameState.gameEvents}
       />
+      {selectedCombat && (
+        <CombatPopup
+          combat={selectedCombat}
+          onClose={() => setSelectedCombatId(null)}
+        />
+      )}
     </div>
   );
 }
