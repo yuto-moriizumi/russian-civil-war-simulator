@@ -18,6 +18,7 @@ const eventIcons: Record<GameEventType, string> = {
   unit_deployed: '',
   mission_completed: '',
   mission_claimed: '',
+  game_victory: '',
 };
 
 const eventColors: Record<GameEventType, string> = {
@@ -29,6 +30,7 @@ const eventColors: Record<GameEventType, string> = {
   unit_deployed: 'text-cyan-400 border-cyan-600/50 bg-cyan-900/20',
   mission_completed: 'text-purple-400 border-purple-600/50 bg-purple-900/20',
   mission_claimed: 'text-amber-400 border-amber-600/50 bg-amber-900/20',
+  game_victory: 'text-yellow-400 border-yellow-600/50 bg-yellow-900/20',
 };
 
 function formatEventTime(timestamp: Date): string {
