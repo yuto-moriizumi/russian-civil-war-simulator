@@ -36,4 +36,3 @@ Create a new git worktree for parallel development with the following task/branc
 - Continue using the current OpenCode session - no need to launch a new instance
 - Use the new worktree path as the working directory going forward
 - If the branch already exists, offer to use `git worktree add <path> <existing-branch>` instead
-- When starting a dev server, use `$RANDOM` for the PORT number to avoid port conflicts with other worktrees (e.g., `PORT=$RANDOM npm run dev`)

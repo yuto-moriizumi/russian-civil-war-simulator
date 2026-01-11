@@ -57,3 +57,11 @@ await browser_evaluate({
 ### Error Handling
 
 All API methods log warnings to the console when operations fail. Use `browser_console_messages` to check for any errors after API calls.
+
+## Development Server
+
+When starting a dev server, use `$RANDOM` for the PORT number to avoid port conflicts with other worktrees or parallel sessions:
+
+```bash
+PORT=$RANDOM npm run dev
+```
