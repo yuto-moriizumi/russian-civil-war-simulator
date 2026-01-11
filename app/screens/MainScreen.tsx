@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent } from '../types/game';
+import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, Division, ActiveCombat } from '../types/game';
 import SpeedControl from '../components/SpeedControl';
 
 // Dynamic import for GameMap to avoid SSR issues with MapLibre
@@ -22,9 +22,10 @@ interface MainScreenProps {
   gameSpeed: GameSpeed;
   money: number;
   income: number;
-  infantryUnits: number;
+  reserveDivisions: Division[];
   missions: Mission[];
   movingUnits: Movement[];
+  activeCombats: ActiveCombat[];
   regions: RegionState;
   adjacency: Adjacency;
   selectedRegion: string | null;
@@ -41,6 +42,7 @@ interface MainScreenProps {
   onUnitSelect: (regionId: string | null) => void;
   onDeployUnit: () => void;
   onMoveUnits: (fromRegion: string, toRegion: string, count: number) => void;
+  onSelectCombat: (combatId: string | null) => void;
   onSaveGame: () => void;
   lastSaveTime?: Date | null;
 }
@@ -52,9 +54,10 @@ export default function MainScreen({
   gameSpeed,
   money,
   income,
-  infantryUnits,
+  reserveDivisions,
   missions,
   movingUnits,
+  activeCombats,
   regions,
   adjacency,
   selectedRegion,
@@ -71,6 +74,7 @@ export default function MainScreen({
   onUnitSelect,
   onDeployUnit,
   onMoveUnits,
+  onSelectCombat,
   onSaveGame,
   lastSaveTime,
 }: MainScreenProps) {
@@ -113,13 +117,15 @@ export default function MainScreen({
             selectedRegion={selectedRegion}
             selectedUnitRegion={selectedUnitRegion}
             movingUnits={movingUnits}
+            activeCombats={activeCombats}
             currentDateTime={dateTime}
             playerFaction={country.id}
-            unitsInReserve={infantryUnits}
+            unitsInReserve={reserveDivisions.length}
             onRegionSelect={onRegionSelect}
             onUnitSelect={onUnitSelect}
             onDeployUnit={onDeployUnit}
             onMoveUnits={onMoveUnits}
+            onSelectCombat={onSelectCombat}
           />
         ) : (
           <div 
@@ -170,7 +176,7 @@ export default function MainScreen({
             <span className="text-lg">🎖️</span>
             <div className="flex flex-col">
               <span className="text-xs text-stone-400">Infantry</span>
-              <span className="text-sm font-bold text-white">{infantryUnits}</span>
+              <span className="text-sm font-bold text-white">{reserveDivisions.length}</span>
             </div>
             <button
               onClick={onCreateInfantry}
@@ -255,7 +261,12 @@ export default function MainScreen({
             )}
           </div>
           <div className="flex items-center gap-4">
-            <span>Infantry Units: {infantryUnits}</span>
+            <span>Reserve Divisions: {reserveDivisions.length}</span>
+            {activeCombats.length > 0 && (
+              <span className="text-red-400 font-semibold animate-pulse">
+                Active Battles: {activeCombats.length}
+              </span>
+            )}
             <span>Active Missions: {missions.filter(m => !m.claimed).length}</span>
             <button
               onClick={onSaveGame}

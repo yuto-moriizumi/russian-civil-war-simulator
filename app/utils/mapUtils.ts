@@ -52,7 +52,7 @@ export function initializeRegionState(
       name: props.shapeName || props.name || id,
       countryIso3: props.shapeGroup || 'UNK',
       owner: defaultOwner,
-      units: 0,
+      divisions: [],
       value: regionValues[id] ?? 1,  // Default value of 1 if not specified
     };
   }
@@ -83,7 +83,7 @@ export function createInitialOwnership(
       name: props.shapeName || props.name || id,
       countryIso3,
       owner,
-      units: 0,
+      divisions: [],
       value: regionValues[id] ?? 1,  // Default value of 1 if not specified
     };
   }

@@ -1,8 +1,9 @@
-import { AIState, FactionId, RegionState, Region } from '../types/game';
+import { AIState, FactionId, RegionState, Region, Division } from '../types/game';
+import { createDivision, getDivisionCount } from '../utils/combat';
 import { calculateFactionIncome } from '../utils/mapUtils';
 
-// Cost to create one infantry unit
-const UNIT_COST = 10;
+// Cost to create one division
+const DIVISION_COST = 10;
 
 /**
  * Creates initial AI state for a faction
@@ -11,8 +12,8 @@ export function createInitialAIState(factionId: FactionId): AIState {
   return {
     factionId,
     money: 100,
-    income: 0, // Income is now calculated dynamically based on controlled states
-    infantryUnits: 0,
+    income: 0, // Income is now calculated dynamically based on controlled regions
+    reserveDivisions: [],
   };
 }
 
@@ -33,25 +34,34 @@ function pickRandomRegion(regionList: Region[]): Region | null {
 }
 
 /**
+ * Generate a unique division name for the AI
+ */
+function generateAIDivisionName(factionId: FactionId, index: number): string {
+  const prefix = factionId === 'white' ? 'White Guard' : 'Red Guard';
+  return `${prefix} ${index + 1}st Division`;
+}
+
+/**
  * AI decision result - what actions the AI wants to take
  */
 export interface AIActions {
-  unitsCreated: number;
-  deployments: { regionId: string; count: number }[];
+  divisionsCreated: number;
+  deployments: { regionId: string; divisions: Division[] }[];
   updatedAIState: AIState;
 }
 
 /**
  * Run AI logic for one tick (1 game hour)
- * - Earns income based on controlled states (1 money per state)
- * - Creates units if it has enough money
- * - Deploys reserve units to random owned regions
+ * - Earns income based on controlled regions (using region values/weights)
+ * - Creates divisions if it has enough money
+ * - Deploys reserve divisions to random owned regions
  */
 export function runAITick(
   aiState: AIState,
   regions: RegionState
 ): AIActions {
-  let { money, infantryUnits, factionId } = aiState;
+  let { money, reserveDivisions, factionId } = aiState;
+  reserveDivisions = [...reserveDivisions]; // Clone to avoid mutation
   
   // 1. Calculate income from controlled regions (using region values/weights)
   const income = calculateFactionIncome(regions, factionId);
@@ -59,38 +69,49 @@ export function runAITick(
   // 2. Earn income
   money += income;
   
-  // 3. Create units if we have enough money
-  let unitsCreated = 0;
-  while (money >= UNIT_COST) {
-    money -= UNIT_COST;
-    infantryUnits += 1;
-    unitsCreated += 1;
+  // 3. Create divisions if we have enough money
+  let divisionsCreated = 0;
+  while (money >= DIVISION_COST) {
+    money -= DIVISION_COST;
+    const newDivision = createDivision(
+      factionId,
+      generateAIDivisionName(factionId, reserveDivisions.length + divisionsCreated)
+    );
+    reserveDivisions.push(newDivision);
+    divisionsCreated += 1;
   }
   
-  // 4. Deploy all reserve units to random owned regions
-  const deployments: { regionId: string; count: number }[] = [];
+  // 4. Deploy all reserve divisions to random owned regions
+  const deployments: { regionId: string; divisions: Division[] }[] = [];
   const ownedRegions = getOwnedRegions(regions, factionId);
   
-  while (infantryUnits > 0 && ownedRegions.length > 0) {
+  while (reserveDivisions.length > 0 && ownedRegions.length > 0) {
     const targetRegion = pickRandomRegion(ownedRegions);
     if (!targetRegion) break;
     
-    // Deploy 1 unit at a time to random regions
-    deployments.push({
-      regionId: targetRegion.id,
-      count: 1,
-    });
-    infantryUnits -= 1;
+    // Deploy 1 division at a time to random regions
+    const divisionToDeploy = reserveDivisions.pop()!;
+    
+    // Find existing deployment to this region or create new one
+    const existingDeployment = deployments.find(d => d.regionId === targetRegion.id);
+    if (existingDeployment) {
+      existingDeployment.divisions.push(divisionToDeploy);
+    } else {
+      deployments.push({
+        regionId: targetRegion.id,
+        divisions: [divisionToDeploy],
+      });
+    }
   }
   
   return {
-    unitsCreated,
+    divisionsCreated,
     deployments,
     updatedAIState: {
       factionId,
       money,
       income,
-      infantryUnits,
+      reserveDivisions,
     },
   };
 }

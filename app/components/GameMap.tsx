@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { RegionState, Adjacency, FactionId, Movement } from '../types/game';
+import { RegionState, Adjacency, FactionId, Movement, Division, ActiveCombat } from '../types/game';
 import { FACTION_COLORS, getAdjacentRegions } from '../utils/mapUtils';
+import { getDivisionCount } from '../utils/combat';
 
 interface GameMapProps {
   regions: RegionState;
@@ -12,6 +13,7 @@ interface GameMapProps {
   selectedRegion: string | null;
   selectedUnitRegion: string | null;
   movingUnits: Movement[];
+  activeCombats: ActiveCombat[];
   currentDateTime: Date;
   playerFaction: FactionId;
   unitsInReserve: number;
@@ -20,6 +22,7 @@ interface GameMapProps {
   onRegionHover?: (regionId: string | null) => void;
   onDeployUnit: () => void;
   onMoveUnits: (fromRegion: string, toRegion: string, count: number) => void;
+  onSelectCombat: (combatId: string | null) => void;
 }
 
 export default function GameMap({
@@ -28,6 +31,7 @@ export default function GameMap({
   selectedRegion,
   selectedUnitRegion,
   movingUnits,
+  activeCombats,
   currentDateTime,
   playerFaction,
   unitsInReserve,
@@ -36,11 +40,13 @@ export default function GameMap({
   onRegionHover,
   onDeployUnit,
   onMoveUnits,
+  onSelectCombat,
 }: GameMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
   const movingMarkersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
+  const combatMarkersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
   const hoveredRegionRef = useRef<string | null>(null);
   const selectedUnitRegionRef = useRef<string | null>(null);
   const regionsRef = useRef<RegionState>(regions);
@@ -225,7 +231,7 @@ export default function GameMap({
             onRegionSelect(regionId);
             // If this region has units owned by player, also select as unit
             const region = regions[regionId];
-            if (region && region.owner === playerFaction && region.units > 0) {
+            if (region && region.owner === playerFaction && region.divisions.length > 0) {
               onUnitSelect(regionId);
             } else {
               onUnitSelect(null);
@@ -246,9 +252,9 @@ export default function GameMap({
           const adjacentRegions = getAdjacentRegions(adjacencyRef.current, currentSelectedUnit);
           if (adjacentRegions.includes(targetRegionId)) {
             const sourceRegion = regionsRef.current[currentSelectedUnit];
-            if (sourceRegion && sourceRegion.units > 0) {
+            if (sourceRegion && sourceRegion.divisions.length > 0) {
               // Move all units (or could use unitsToMove for partial)
-              onMoveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.units);
+              onMoveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.divisions.length);
               onUnitSelectRef.current(null);
             }
           }
@@ -375,7 +381,7 @@ export default function GameMap({
     
     // Create or update markers for regions with units
     for (const [regionId, region] of Object.entries(regions)) {
-      if (region.units > 0) {
+      if (region.divisions.length > 0) {
         neededMarkers.add(regionId);
         const centroid = regionCentroids[regionId];
         if (!centroid) continue;
@@ -389,7 +395,7 @@ export default function GameMap({
           const el = existingMarker.getElement();
           const unitCountEl = el.querySelector('.unit-count');
           if (unitCountEl) {
-            unitCountEl.textContent = String(region.units);
+            unitCountEl.textContent = String(region.divisions.length);
           }
           // Update color based on owner and selection
           const bgEl = el.querySelector('.unit-bg') as HTMLElement;
@@ -415,13 +421,13 @@ export default function GameMap({
               cursor: ${isPlayerUnit ? 'pointer' : 'default'};
               transition: all 0.2s ease;
             ">
-              <span style="font-size: 12px;">&#9876;</span>
+              <span style="font-size: 14px;">&#9632;</span>
               <span class="unit-count" style="
                 font-size: 12px;
                 font-weight: bold;
                 color: ${region.owner === 'white' ? '#000' : '#fff'};
                 text-shadow: ${region.owner === 'white' ? 'none' : '1px 1px 1px rgba(0,0,0,0.5)'};
-              ">${region.units}</span>
+              ">${region.divisions.length}</span>
             </div>
           `;
           
@@ -496,12 +502,12 @@ export default function GameMap({
             box-shadow: 0 0 8px rgba(34, 211, 238, 0.5);
             animation: pulse 1.5s ease-in-out infinite;
           ">
-            <span style="font-size: 10px;">&#9876;</span>
+            <span style="font-size: 12px;">&#9632;</span>
             <span style="
               font-size: 10px;
               font-weight: bold;
               color: ${movement.owner === 'white' ? '#000' : '#fff'};
-            ">${movement.count}</span>
+            ">${movement.divisions.length}</span>
           </div>
         `;
 
@@ -521,6 +527,151 @@ export default function GameMap({
       }
     }
   }, [movingUnits, regionCentroids, mapLoaded, currentDateTime]);
+
+  // Update combat indicator markers on the map
+  useEffect(() => {
+    if (!map.current || !mapLoaded || Object.keys(regionCentroids).length === 0) return;
+
+    // Track which combat markers we need
+    const neededCombatMarkers = new Set<string>();
+    
+    // Create or update markers for active combats
+    for (const combat of activeCombats) {
+      if (combat.isComplete) continue;
+      
+      neededCombatMarkers.add(combat.id);
+      
+      const centroid = regionCentroids[combat.regionId];
+      if (!centroid) continue;
+
+      const attackerHp = combat.attackerDivisions.reduce((sum, d) => sum + d.hp, 0);
+      const defenderHp = combat.defenderDivisions.reduce((sum, d) => sum + d.hp, 0);
+      const attackerProgress = combat.initialAttackerHp > 0 
+        ? (attackerHp / combat.initialAttackerHp) * 100 
+        : 0;
+      const defenderProgress = combat.initialDefenderHp > 0 
+        ? (defenderHp / combat.initialDefenderHp) * 100 
+        : 0;
+
+      const attackerColor = FACTION_COLORS[combat.attackerFaction];
+      const defenderColor = FACTION_COLORS[combat.defenderFaction];
+      const attackerTextColor = combat.attackerFaction === 'white' ? '#000' : '#fff';
+      const defenderTextColor = combat.defenderFaction === 'white' ? '#000' : '#fff';
+
+      const existingMarker = combatMarkersRef.current.get(combat.id);
+      
+      if (existingMarker) {
+        // Update existing marker content
+        const el = existingMarker.getElement();
+        const attackerCountEl = el.querySelector('.attacker-count');
+        const defenderCountEl = el.querySelector('.defender-count');
+        const attackerBarEl = el.querySelector('.attacker-bar') as HTMLElement;
+        const defenderBarEl = el.querySelector('.defender-bar') as HTMLElement;
+        
+        if (attackerCountEl) attackerCountEl.textContent = String(combat.attackerDivisions.length);
+        if (defenderCountEl) defenderCountEl.textContent = String(combat.defenderDivisions.length);
+        if (attackerBarEl) attackerBarEl.style.width = `${attackerProgress}%`;
+        if (defenderBarEl) defenderBarEl.style.width = `${defenderProgress}%`;
+      } else {
+        // Create new combat marker
+        const el = document.createElement('div');
+        el.className = 'combat-marker';
+        el.style.cursor = 'pointer';
+        el.style.pointerEvents = 'auto';
+        el.innerHTML = `
+          <div style="
+            display: flex;
+            align-items: center;
+            animation: combat-pulse 2s ease-in-out infinite;
+          ">
+            <!-- Attacker side -->
+            <div style="display: flex; flex-direction: column; align-items: flex-end; margin-right: 2px;">
+              <div style="
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                padding: 0 6px;
+                min-width: 35px;
+                border-radius: 3px 0 0 3px;
+                background-color: ${attackerColor};
+                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+              ">
+                <span class="attacker-count" style="
+                  font-size: 11px;
+                  font-weight: bold;
+                  color: ${attackerTextColor};
+                ">${combat.attackerDivisions.length}</span>
+              </div>
+              <div style="height: 3px; width: 100%; background: rgba(0,0,0,0.5); border-radius: 0 0 0 2px; margin-top: 1px;">
+                <div class="attacker-bar" style="height: 100%; width: ${attackerProgress}%; background: ${attackerColor}; transition: width 0.3s;"></div>
+              </div>
+            </div>
+            
+            <!-- Combat icon -->
+            <div style="
+              width: 24px;
+              height: 24px;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: radial-gradient(circle, #4a4a4a 0%, #2a2a2a 100%);
+              box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+              border: 2px solid #666;
+              z-index: 10;
+            ">
+              <span style="font-size: 10px; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.5));">&#9876;</span>
+            </div>
+            
+            <!-- Defender side -->
+            <div style="display: flex; flex-direction: column; align-items: flex-start; margin-left: 2px;">
+              <div style="
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                padding: 0 6px;
+                min-width: 35px;
+                border-radius: 0 3px 3px 0;
+                background-color: ${defenderColor};
+                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+              ">
+                <span class="defender-count" style="
+                  font-size: 11px;
+                  font-weight: bold;
+                  color: ${defenderTextColor};
+                ">${combat.defenderDivisions.length}</span>
+              </div>
+              <div style="height: 3px; width: 100%; background: rgba(0,0,0,0.5); border-radius: 0 0 2px 0; margin-top: 1px;">
+                <div class="defender-bar" style="height: 100%; width: ${defenderProgress}%; background: ${defenderColor}; transition: width 0.3s;"></div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // Add click handler to open combat popup
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          onSelectCombat(combat.id);
+        });
+
+        const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+          .setLngLat(centroid)
+          .addTo(map.current!);
+        
+        combatMarkersRef.current.set(combat.id, marker);
+      }
+    }
+
+    // Remove markers for completed combats
+    for (const [combatId, marker] of combatMarkersRef.current.entries()) {
+      if (!neededCombatMarkers.has(combatId)) {
+        marker.remove();
+        combatMarkersRef.current.delete(combatId);
+      }
+    }
+  }, [activeCombats, regionCentroids, mapLoaded, onSelectCombat]);
 
   return (
     <div className="relative h-full w-full">
@@ -544,9 +695,10 @@ export default function GameMap({
               {regions[hoveredRegion].owner}
             </span>
           </div>
-          {regions[hoveredRegion].units > 0 && (
+          {regions[hoveredRegion].divisions.length > 0 && (
             <div className="mt-1 text-xs text-amber-400">
-              Units: {regions[hoveredRegion].units}
+              Divisions: {regions[hoveredRegion].divisions.length} | 
+              Total HP: {regions[hoveredRegion].divisions.reduce((sum, d) => sum + d.hp, 0)}
             </div>
           )}
         </div>
@@ -580,8 +732,34 @@ export default function GameMap({
               Country: {regions[selectedRegion].countryIso3}
             </div>
             <div className="text-stone-400">
-              Units: {regions[selectedRegion].units}
+              Divisions: {regions[selectedRegion].divisions.length}
             </div>
+            {/* Show division combat stats */}
+            {regions[selectedRegion].divisions.length > 0 && (
+              <div className="mt-2 space-y-1 rounded bg-stone-800 p-2">
+                <div className="text-xs font-semibold text-stone-300 mb-1">Combat Stats:</div>
+                {regions[selectedRegion].divisions.map((div, idx) => (
+                  <div key={div.id} className="flex items-center justify-between text-xs">
+                    <span className="text-stone-400 truncate max-w-[120px]" title={div.name}>
+                      {div.name.length > 15 ? div.name.substring(0, 15) + '...' : div.name}
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <span className="text-red-400" title="HP">❤ {div.hp}/{div.maxHp}</span>
+                      <span className="text-orange-400" title="Attack">⚔ {div.attack}</span>
+                      <span className="text-blue-400" title="Defence">🛡 {div.defence}</span>
+                    </span>
+                  </div>
+                ))}
+                <div className="border-t border-stone-700 pt-1 mt-1 flex justify-between text-xs font-semibold">
+                  <span className="text-stone-300">Total:</span>
+                  <span className="flex items-center gap-2">
+                    <span className="text-red-400">❤ {regions[selectedRegion].divisions.reduce((sum, d) => sum + d.hp, 0)}</span>
+                    <span className="text-orange-400">⚔ {regions[selectedRegion].divisions.reduce((sum, d) => sum + d.attack, 0)}</span>
+                    <span className="text-blue-400">🛡 {Math.round(regions[selectedRegion].divisions.reduce((sum, d) => sum + d.defence, 0) / regions[selectedRegion].divisions.length)}</span>
+                  </span>
+                </div>
+              </div>
+            )}
             <div className="text-stone-400">
               Adjacent: {getAdjacentRegions(adjacency, selectedRegion).length} regions
             </div>
@@ -601,10 +779,10 @@ export default function GameMap({
               )}
               
               {/* Unit selection info */}
-              {regions[selectedRegion].units > 0 && selectedUnitRegion === selectedRegion && (
+              {regions[selectedRegion].divisions.length > 0 && selectedUnitRegion === selectedRegion && (
                 <div className="space-y-2 rounded bg-cyan-900/30 p-2">
                   <p className="text-xs text-cyan-300">
-                    Right-click an adjacent region to move {regions[selectedRegion].units} unit(s)
+                    Right-click an adjacent region to move {regions[selectedRegion].divisions.length} division(s)
                   </p>
                   <p className="text-xs text-stone-400">
                     Travel time: ~6 hours
@@ -612,12 +790,12 @@ export default function GameMap({
                 </div>
               )}
               
-              {regions[selectedRegion].units > 0 && selectedUnitRegion !== selectedRegion && (
+              {regions[selectedRegion].divisions.length > 0 && selectedUnitRegion !== selectedRegion && (
                 <button
                   onClick={() => onUnitSelect(selectedRegion)}
                   className="w-full rounded bg-blue-700 py-2 text-sm font-semibold text-white hover:bg-blue-600"
                 >
-                  Select Unit ({regions[selectedRegion].units})
+                  Select Divisions ({regions[selectedRegion].divisions.length})
                 </button>
               )}
             </div>
@@ -635,7 +813,7 @@ export default function GameMap({
                   return (
                     <div
                       key={adjId}
-                      className={`w-full rounded px-2 py-1 text-left text-xs flex items-center justify-between ${
+                      className={`w-full rounded px-2 py-1 text-left text-xs ${
                         isEnemy 
                           ? 'bg-red-900/50 text-red-200' 
                           : adjRegion.owner === playerFaction
@@ -643,14 +821,23 @@ export default function GameMap({
                           : 'bg-stone-700 text-stone-200'
                       }`}
                     >
-                      <span>{adjRegion.name}</span>
-                      <span className="flex items-center gap-1">
-                        <span
-                          className="h-2 w-2 rounded-full"
-                          style={{ backgroundColor: FACTION_COLORS[adjRegion.owner] }}
-                        />
-                        {adjRegion.units > 0 && <span>({adjRegion.units})</span>}
-                      </span>
+                      <div className="flex items-center justify-between">
+                        <span>{adjRegion.name}</span>
+                        <span className="flex items-center gap-1">
+                          <span
+                            className="h-2 w-2 rounded-full"
+                            style={{ backgroundColor: FACTION_COLORS[adjRegion.owner] }}
+                          />
+                          {adjRegion.divisions.length > 0 && <span>({adjRegion.divisions.length})</span>}
+                        </span>
+                      </div>
+                      {isEnemy && adjRegion.divisions.length > 0 && (
+                        <div className="mt-1 flex items-center gap-2 text-[10px] text-red-300">
+                          <span>❤ {adjRegion.divisions.reduce((sum, d) => sum + d.hp, 0)}</span>
+                          <span>⚔ {adjRegion.divisions.reduce((sum, d) => sum + d.attack, 0)}</span>
+                          <span>🛡 {Math.round(adjRegion.divisions.reduce((sum, d) => sum + d.defence, 0) / adjRegion.divisions.length)}</span>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -687,7 +874,7 @@ export default function GameMap({
               return (
                 <div key={movement.id} className="rounded bg-stone-800 p-2">
                   <div className="text-xs text-stone-300">
-                    {movement.count} unit(s): {fromRegion?.name || movement.fromRegion} → {toRegion?.name || movement.toRegion}
+                    {movement.divisions.length} unit(s): {fromRegion?.name || movement.fromRegion} → {toRegion?.name || movement.toRegion}
                   </div>
                   <div className="mt-1 h-1 bg-stone-700 rounded-full overflow-hidden">
                     <div 
@@ -701,6 +888,122 @@ export default function GameMap({
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Active combats indicator */}
+      {activeCombats.length > 0 && (
+        <div 
+          className="absolute left-4 bottom-16 z-10 rounded-lg border border-red-500 bg-stone-900/95 p-3 min-w-[280px] max-w-[320px]"
+          style={{ 
+            bottom: movingUnits.length > 0 ? '16rem' : '4rem' // Position above transit panel if it exists
+          }}
+        >
+          <div className="text-sm font-bold text-red-400 mb-2 flex items-center gap-2">
+            <span>⚔️</span>
+            <span>Active Combats ({activeCombats.filter(c => !c.isComplete).length})</span>
+          </div>
+          <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+            {activeCombats
+              .filter(c => !c.isComplete)
+              .map((combat) => {
+                const attackerHp = combat.attackerDivisions.reduce((sum, d) => sum + d.hp, 0);
+                const defenderHp = combat.defenderDivisions.reduce((sum, d) => sum + d.hp, 0);
+                const attackerProgress = combat.initialAttackerHp > 0 
+                  ? (attackerHp / combat.initialAttackerHp) * 100 
+                  : 0;
+                const defenderProgress = combat.initialDefenderHp > 0 
+                  ? (defenderHp / combat.initialDefenderHp) * 100 
+                  : 0;
+                
+                const attackerColor = FACTION_COLORS[combat.attackerFaction];
+                const defenderColor = FACTION_COLORS[combat.defenderFaction];
+                
+                return (
+                  <div 
+                    key={combat.id} 
+                    className="rounded bg-stone-800 p-2 cursor-pointer hover:bg-stone-750 transition-colors border border-stone-700 hover:border-amber-600"
+                    onClick={() => onSelectCombat(combat.id)}
+                    title="Click to view detailed combat report"
+                  >
+                    {/* Region name and round info */}
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="text-xs font-semibold text-amber-300">
+                        {combat.regionName}
+                      </div>
+                      <div className="text-[10px] text-stone-500">
+                        Round {combat.currentRound}
+                      </div>
+                    </div>
+                    
+                    {/* Combat participants */}
+                    <div className="flex items-center gap-2 mb-2">
+                      {/* Attacker */}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-1 mb-1">
+                          <div 
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: attackerColor }}
+                          />
+                          <span className="text-[10px] text-stone-400">
+                            {combat.attackerFaction === 'soviet' ? 'Red' : 'White'}
+                          </span>
+                          <span className="text-[10px] font-bold text-stone-300">
+                            {combat.attackerDivisions.length}
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-stone-700 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full transition-all duration-500"
+                            style={{ 
+                              width: `${attackerProgress}%`,
+                              backgroundColor: attackerColor
+                            }}
+                          />
+                        </div>
+                        <div className="text-[9px] text-stone-500 mt-0.5">
+                          HP: {attackerHp}/{combat.initialAttackerHp}
+                        </div>
+                      </div>
+                      
+                      {/* VS divider */}
+                      <div className="text-[10px] text-stone-600 font-bold px-1">
+                        VS
+                      </div>
+                      
+                      {/* Defender */}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-1 mb-1 justify-end">
+                          <span className="text-[10px] font-bold text-stone-300">
+                            {combat.defenderDivisions.length}
+                          </span>
+                          <span className="text-[10px] text-stone-400">
+                            {combat.defenderFaction === 'soviet' ? 'Red' : 'White'}
+                          </span>
+                          <div 
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: defenderColor }}
+                          />
+                        </div>
+                        <div className="h-1.5 bg-stone-700 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full transition-all duration-500"
+                            style={{ 
+                              width: `${defenderProgress}%`,
+                              backgroundColor: defenderColor
+                            }}
+                          />
+                        </div>
+                        <div className="text-[9px] text-stone-500 mt-0.5 text-right">
+                          HP: {defenderHp}/{combat.initialDefenderHp}
+                        </div>
+                      </div>
+                    </div>
+                    
+                  </div>
+                );
+              })}
           </div>
         </div>
       )}

@@ -10,17 +10,19 @@ import {
   Mission,
   FactionId,
   GameEventType,
+  Division,
+  ActiveCombat,
 } from '../types/game';
 
 const STORAGE_KEY = 'rcw-save';
-const SAVE_VERSION = 1;
+const SAVE_VERSION = 2; // Bumped version for Division-based system
 
 // Serialized types (Date objects converted to ISO strings)
 interface SerializedMovement {
   id: string;
   fromRegion: string;
   toRegion: string;
-  count: number;
+  divisions: Division[];
   departureTime: string;
   arrivalTime: string;
   owner: FactionId;
@@ -36,6 +38,26 @@ interface SerializedGameEvent {
   regionId?: string;
 }
 
+interface SerializedActiveCombat {
+  id: string;
+  regionId: string;
+  regionName: string;
+  attackerFaction: FactionId;
+  defenderFaction: FactionId;
+  attackerDivisions: Division[];
+  defenderDivisions: Division[];
+  initialAttackerCount: number;
+  initialDefenderCount: number;
+  initialAttackerHp: number;
+  initialDefenderHp: number;
+  currentRound: number;
+  startTime: string;
+  lastRoundTime: string;
+  roundIntervalHours: number;
+  isComplete: boolean;
+  victor: FactionId | null;
+}
+
 interface SerializedGameState {
   currentScreen: Screen;
   selectedCountry: Country | null;
@@ -44,10 +66,11 @@ interface SerializedGameState {
   gameSpeed: GameSpeed;
   money: number;
   income: number;
-  infantryUnits: number;
+  reserveDivisions: Division[];
   missions: Mission[];
   movingUnits: SerializedMovement[];
   gameEvents: SerializedGameEvent[];
+  activeCombats: SerializedActiveCombat[];
 }
 
 interface SaveData {
@@ -72,6 +95,11 @@ function serializeGameState(state: GameState): SerializedGameState {
       ...e,
       timestamp: e.timestamp.toISOString(),
     })),
+    activeCombats: state.activeCombats.map((c) => ({
+      ...c,
+      startTime: c.startTime.toISOString(),
+      lastRoundTime: c.lastRoundTime.toISOString(),
+    })),
   };
 }
 
@@ -88,6 +116,11 @@ function deserializeGameState(data: SerializedGameState): GameState {
     gameEvents: data.gameEvents.map((e) => ({
       ...e,
       timestamp: new Date(e.timestamp),
+    })),
+    activeCombats: (data.activeCombats || []).map((c) => ({
+      ...c,
+      startTime: new Date(c.startTime),
+      lastRoundTime: new Date(c.lastRoundTime),
     })),
   };
 }
@@ -129,7 +162,12 @@ export function loadGame(): {
     // Version check (for future migrations)
     if (data.version !== SAVE_VERSION) {
       console.warn(`Save version mismatch: expected ${SAVE_VERSION}, got ${data.version}`);
-      // For now, just try to load anyway
+      // Old saves are incompatible with new Division system
+      if (data.version < 2) {
+        console.warn('Old save format detected, clearing incompatible save');
+        deleteSaveGame();
+        return null;
+      }
     }
 
     // Validate required fields
