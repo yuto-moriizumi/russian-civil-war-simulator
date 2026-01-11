@@ -179,8 +179,23 @@ export function createActiveCombat(
   
   // Set lastRoundTime to currentTime so the first round happens after roundIntervalHours
   // This prevents combat from resolving immediately on creation
+  const combatId = generateCombatId();
+  
+  console.log('[COMBAT STARTED]', {
+    combatId,
+    regionId,
+    regionName,
+    attackerFaction,
+    defenderFaction,
+    attackerDivisions: attackerDivisionsCopy.length,
+    defenderDivisions: defenderDivisionsCopy.length,
+    attackerTotalHp: getTotalHp(attackerDivisionsCopy),
+    defenderTotalHp: getTotalHp(defenderDivisionsCopy),
+    startTime: currentTime.toISOString(),
+  });
+  
   return {
-    id: generateCombatId(),
+    id: combatId,
     regionId,
     regionName,
     attackerFaction,
@@ -259,6 +274,34 @@ export function processCombatRound(combat: ActiveCombat): ActiveCombat {
     } else if (attackerDivisions.length === 0 && defenderDivisions.length > 0) {
       victor = combat.defenderFaction;
     }
+  }
+  
+  // Log combat progress
+  console.log('[COMBAT PROGRESS]', {
+    combatId: combat.id,
+    regionName: combat.regionName,
+    round: newRound,
+    attackerFaction: combat.attackerFaction,
+    defenderFaction: combat.defenderFaction,
+    attackerDivisionsRemaining: attackerDivisions.length,
+    defenderDivisionsRemaining: defenderDivisions.length,
+    attackerHp: getTotalHp(attackerDivisions),
+    defenderHp: getTotalHp(defenderDivisions),
+    attackerDamageDealt: attackerTotalDamage,
+    defenderDamageDealt: defenderTotalDamage,
+  });
+  
+  if (combatEnded) {
+    console.log('[COMBAT ENDED]', {
+      combatId: combat.id,
+      regionName: combat.regionName,
+      totalRounds: newRound,
+      victor,
+      attackerSurvivors: attackerDivisions.length,
+      defenderSurvivors: defenderDivisions.length,
+      attackerLosses: combat.initialAttackerCount - attackerDivisions.length,
+      defenderLosses: combat.initialDefenderCount - defenderDivisions.length,
+    });
   }
   
   return {
