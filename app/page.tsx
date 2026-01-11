@@ -13,6 +13,17 @@ import MainScreen from './screens/MainScreen';
 import MissionScreen from './screens/MissionScreen';
 import EventsModal from './components/EventsModal';
 
+// Declare global window.gameAPI for programmatic control (useful for AI agents and testing)
+declare global {
+  interface Window {
+    gameAPI?: {
+      selectRegion: (regionId: string | null) => void;
+      getSelectedRegion: () => string | null;
+      getRegions: () => RegionState;
+    };
+  }
+}
+
 // Helper function to create game events
 function createGameEvent(
   type: GameEventType,
@@ -72,6 +83,38 @@ export default function Home() {
     setHasSave(hasSaveGame());
     setSaveInfo(getSaveInfo());
   }, []);
+
+  // Expose game API on window for programmatic control (AI agents, testing, automation)
+  useEffect(() => {
+    window.gameAPI = {
+      selectRegion: (regionId: string | null) => {
+        if (regionId === null) {
+          setSelectedRegion(null);
+          setSelectedUnitRegion(null);
+          return;
+        }
+        // Validate region exists
+        if (regions[regionId]) {
+          setSelectedRegion(regionId);
+          // If this region has units owned by player, also select as unit
+          const region = regions[regionId];
+          if (region && region.owner === gameState.selectedCountry?.id && region.units > 0) {
+            setSelectedUnitRegion(regionId);
+          } else {
+            setSelectedUnitRegion(null);
+          }
+        } else {
+          console.warn(`[gameAPI] Region "${regionId}" not found`);
+        }
+      },
+      getSelectedRegion: () => selectedRegion,
+      getRegions: () => regions,
+    };
+
+    return () => {
+      delete window.gameAPI;
+    };
+  }, [regions, selectedRegion, gameState.selectedCountry?.id]);
 
   // Autosave callback
   const handleAutosave = useCallback(() => {
