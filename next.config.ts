@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  turbopack: {
+    root: __dirname, // Explicitly set the workspace root to silence lockfile warnings
+  },
 };
 
 export default nextConfig;
