@@ -421,7 +421,7 @@ export default function GameMap({
               cursor: ${isPlayerUnit ? 'pointer' : 'default'};
               transition: all 0.2s ease;
             ">
-              <span style="font-size: 12px;">&#9876;</span>
+              <span style="font-size: 14px;">&#9632;</span>
               <span class="unit-count" style="
                 font-size: 12px;
                 font-weight: bold;
@@ -502,7 +502,7 @@ export default function GameMap({
             box-shadow: 0 0 8px rgba(34, 211, 238, 0.5);
             animation: pulse 1.5s ease-in-out infinite;
           ">
-            <span style="font-size: 10px;">&#9876;</span>
+            <span style="font-size: 12px;">&#9632;</span>
             <span style="
               font-size: 10px;
               font-weight: bold;

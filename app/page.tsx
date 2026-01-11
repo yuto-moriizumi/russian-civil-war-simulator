@@ -173,12 +173,15 @@ export default function Home() {
 
       // Get all currently moving units
       getMovingUnits: () => gameState.movingUnits,
+
+      // Get all active combats (for debugging/AI)
+      getActiveCombats: () => gameState.activeCombats,
     };
 
     return () => {
       delete window.gameAPI;
     };
-  }, [regions, selectedRegion, selectedUnitRegion, adjacency, gameState.selectedCountry?.id, gameState.movingUnits]);
+  }, [regions, selectedRegion, selectedUnitRegion, adjacency, gameState.selectedCountry?.id, gameState.movingUnits, gameState.activeCombats]);
 
   // Autosave callback
   const handleAutosave = useCallback(() => {

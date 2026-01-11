@@ -163,6 +163,7 @@ export interface GameAPI {
   // Helper methods
   getAdjacentRegions: (regionId: string) => string[];
   getMovingUnits: () => Movement[];
+  getActiveCombats: () => ActiveCombat[];
 }
 
 // Declare global window.gameAPI
