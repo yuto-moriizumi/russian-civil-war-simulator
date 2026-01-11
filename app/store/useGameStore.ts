@@ -175,10 +175,24 @@ export const useGameStore = create<GameStore>()(
         const completedMovements: Movement[] = [];
 
         movingUnits.forEach(movement => {
+          // Regenerate HP for units in transit
+          const regeneratedDivisions = movement.divisions.map(division => {
+            const newHp = Math.min(division.hp + 10, division.maxHp);
+            return {
+              ...division,
+              hp: newHp,
+            };
+          });
+
+          const regeneratedMovement = {
+            ...movement,
+            divisions: regeneratedDivisions,
+          };
+
           if (newDate >= movement.arrivalTime) {
-            completedMovements.push(movement);
+            completedMovements.push(regeneratedMovement);
           } else {
-            remainingMovements.push(movement);
+            remainingMovements.push(regeneratedMovement);
           }
         });
 
@@ -293,6 +307,28 @@ export const useGameStore = create<GameStore>()(
             nextRegions[combat.regionId] = {
               ...region,
               divisions: combat.defenderDivisions,
+            };
+          }
+        });
+
+        // Regenerate HP for all divisions every hour
+        Object.keys(nextRegions).forEach(regionId => {
+          const region = nextRegions[regionId];
+          if (region.divisions.length > 0) {
+            const regeneratedDivisions = region.divisions.map(division => {
+              // Regenerate 10 HP per hour, but don't exceed maxHp
+              const newHp = Math.min(division.hp + 10, division.maxHp);
+              if (division.hp < division.maxHp) {
+                console.log(`[HP REGEN] ${division.name}: ${division.hp} -> ${newHp} in ${region.name}`);
+              }
+              return {
+                ...division,
+                hp: newHp,
+              };
+            });
+            nextRegions[regionId] = {
+              ...region,
+              divisions: regeneratedDivisions,
             };
           }
         });
