@@ -5,6 +5,8 @@ import { Screen, Country, GameSpeed, GameState, RegionState, Adjacency, Movement
 import { initialMissions } from './data/gameData';
 import { createInitialOwnership, calculateFactionIncome } from './utils/mapUtils';
 import { createInitialAIState, runAITick } from './ai/cpuPlayer';
+import { saveGame, loadGame, hasSaveGame, getSaveInfo } from './utils/saveLoad';
+import { useAutosave } from './hooks/useAutosave';
 import TitleScreen from './screens/TitleScreen';
 import CountrySelectScreen from './screens/CountrySelectScreen';
 import MainScreen from './screens/MainScreen';
@@ -54,6 +56,9 @@ export default function Home() {
   const [mapDataLoaded, setMapDataLoaded] = useState(false);
   const [aiState, setAIState] = useState<AIState | null>(null);
   const [isEventsModalOpen, setIsEventsModalOpen] = useState(false);
+  const [hasSave, setHasSave] = useState(false);
+  const [saveInfo, setSaveInfo] = useState<{ savedAt: Date; gameDate: Date } | null>(null);
+  const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
   
   // Ref to store pending region updates from completed movements
   const pendingRegionUpdatesRef = useRef<Movement[]>([]);
@@ -61,6 +66,22 @@ export default function Home() {
   const processedMovementIdsRef = useRef<Set<string>>(new Set());
   // Ref to store pending game events from combat
   const pendingEventsRef = useRef<GameEvent[]>([]);
+
+  // Check for existing save on mount
+  useEffect(() => {
+    setHasSave(hasSaveGame());
+    setSaveInfo(getSaveInfo());
+  }, []);
+
+  // Autosave callback
+  const handleAutosave = useCallback(() => {
+    setLastSaveTime(new Date());
+    setSaveInfo(getSaveInfo());
+    setHasSave(true);
+  }, []);
+
+  // Autosave hook - saves every game day
+  useAutosave(gameState, regions, aiState, handleAutosave);
 
   // Load map data on mount
   useEffect(() => {
@@ -479,13 +500,58 @@ export default function Home() {
     setIsEventsModalOpen(false);
   }, []);
 
+  // Save game handler
+  const handleSaveGame = useCallback(() => {
+    const success = saveGame(gameState, regions, aiState);
+    if (success) {
+      setLastSaveTime(new Date());
+      setSaveInfo(getSaveInfo());
+      setHasSave(true);
+    }
+  }, [gameState, regions, aiState]);
+
+  // Continue game handler (load from title screen)
+  const handleContinueGame = useCallback(async () => {
+    const saved = loadGame();
+    if (!saved) return;
+
+    // Load map data first if not already loaded
+    if (!mapDataLoaded) {
+      try {
+        const [geoResponse, adjResponse] = await Promise.all([
+          fetch('/map/regions.geojson'),
+          fetch('/map/adjacency.json'),
+        ]);
+        const geoData = await geoResponse.json();
+        const adjData = await adjResponse.json();
+        setAdjacency(adjData);
+        setMapDataLoaded(true);
+      } catch (error) {
+        console.error('Failed to load map data:', error);
+        return;
+      }
+    }
+
+    // Restore saved state (always start paused)
+    setGameState({
+      ...saved.gameState,
+      isPlaying: false,
+      currentScreen: 'main',
+    });
+    setRegions(saved.regions);
+    setAIState(saved.aiState);
+  }, [mapDataLoaded]);
+
   // Render current screen
   const renderScreen = () => {
     switch (gameState.currentScreen) {
       case 'title':
         return (
           <TitleScreen 
-            onStartGame={() => navigateToScreen('countrySelect')} 
+            onStartGame={() => navigateToScreen('countrySelect')}
+            onContinue={handleContinueGame}
+            hasSave={hasSave}
+            saveInfo={saveInfo}
           />
         );
       
@@ -529,6 +595,8 @@ export default function Home() {
             onUnitSelect={setSelectedUnitRegion}
             onDeployUnit={handleDeployUnit}
             onMoveUnits={handleMoveUnits}
+            onSaveGame={handleSaveGame}
+            lastSaveTime={lastSaveTime}
           />
         );
       
