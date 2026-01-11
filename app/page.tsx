@@ -13,17 +13,6 @@ import MainScreen from './screens/MainScreen';
 import MissionScreen from './screens/MissionScreen';
 import EventsModal from './components/EventsModal';
 
-// Declare global window.gameAPI for programmatic control (useful for AI agents and testing)
-declare global {
-  interface Window {
-    gameAPI?: {
-      selectRegion: (regionId: string | null) => void;
-      getSelectedRegion: () => string | null;
-      getRegions: () => RegionState;
-    };
-  }
-}
-
 // Helper function to create game events
 function createGameEvent(
   type: GameEventType,
@@ -84,6 +73,9 @@ export default function Home() {
     setSaveInfo(getSaveInfo());
   }, []);
 
+  // Ref for handleMoveUnits to be used in gameAPI (updated after handleMoveUnits is defined)
+  const handleMoveUnitsRef = useRef<((fromRegion: string, toRegion: string, count: number) => void) | null>(null);
+
   // Expose game API on window for programmatic control (AI agents, testing, automation)
   useEffect(() => {
     window.gameAPI = {
@@ -109,12 +101,74 @@ export default function Home() {
       },
       getSelectedRegion: () => selectedRegion,
       getRegions: () => regions,
+
+      // Select units in a specific region for movement
+      selectUnits: (regionId: string | null) => {
+        if (regionId === null) {
+          setSelectedUnitRegion(null);
+          return;
+        }
+        const region = regions[regionId];
+        if (region && region.owner === gameState.selectedCountry?.id && region.units > 0) {
+          setSelectedUnitRegion(regionId);
+          setSelectedRegion(regionId); // Also select the region
+        } else {
+          console.warn(`[gameAPI] Cannot select units in region "${regionId}" - region not found, not owned by player, or has no units`);
+        }
+      },
+
+      // Get the currently selected unit region
+      getSelectedUnitRegion: () => selectedUnitRegion,
+
+      // Move selected units to a target region
+      moveSelectedUnits: (toRegionId: string, count?: number): boolean => {
+        const fromRegion = selectedUnitRegion;
+        if (!fromRegion) {
+          console.warn('[gameAPI] No units selected - call selectUnits first');
+          return false;
+        }
+        const from = regions[fromRegion];
+        const to = regions[toRegionId];
+        if (!from || !to) {
+          console.warn(`[gameAPI] Invalid region - from: "${fromRegion}", to: "${toRegionId}"`);
+          return false;
+        }
+        if (!adjacency[fromRegion]?.includes(toRegionId)) {
+          console.warn(`[gameAPI] Region "${toRegionId}" is not adjacent to "${fromRegion}"`);
+          return false;
+        }
+        const unitsToMove = count ?? from.units; // Default to all units
+        if (unitsToMove <= 0) {
+          console.warn('[gameAPI] Cannot move 0 or negative units');
+          return false;
+        }
+        if (unitsToMove > from.units) {
+          console.warn(`[gameAPI] Cannot move ${unitsToMove} units - only ${from.units} available`);
+          return false;
+        }
+
+        if (!handleMoveUnitsRef.current) {
+          console.warn('[gameAPI] Move handler not ready');
+          return false;
+        }
+        handleMoveUnitsRef.current(fromRegion, toRegionId, unitsToMove);
+        setSelectedUnitRegion(null); // Clear selection after move
+        return true;
+      },
+
+      // Get adjacent regions for a given region
+      getAdjacentRegions: (regionId: string): string[] => {
+        return adjacency[regionId] ?? [];
+      },
+
+      // Get all currently moving units
+      getMovingUnits: () => gameState.movingUnits,
     };
 
     return () => {
       delete window.gameAPI;
     };
-  }, [regions, selectedRegion, gameState.selectedCountry?.id]);
+  }, [regions, selectedRegion, selectedUnitRegion, adjacency, gameState.selectedCountry?.id, gameState.movingUnits]);
 
   // Autosave callback
   const handleAutosave = useCallback(() => {
@@ -482,6 +536,11 @@ export default function Home() {
       movingUnits: [...prev.movingUnits, newMovement],
     }));
   }, [adjacency, regions, gameState.selectedCountry, gameState.dateTime]);
+
+  // Keep handleMoveUnits ref updated for gameAPI
+  useEffect(() => {
+    handleMoveUnitsRef.current = handleMoveUnits;
+  }, [handleMoveUnits]);
 
   const handleClaimMission = useCallback((missionId: string) => {
     setGameState(prev => {
