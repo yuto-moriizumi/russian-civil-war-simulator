@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, Division, ActiveCombat } from '../types/game';
 import SpeedControl from '../components/SpeedControl';
+import CombatPopup from '../components/CombatPopup';
+import EventsModal from '../components/EventsModal';
 
 // Dynamic import for GameMap to avoid SSR issues with MapLibre
 const GameMap = dynamic(() => import('../components/GameMap'), {
@@ -45,6 +47,9 @@ interface MainScreenProps {
   onSelectCombat: (combatId: string | null) => void;
   onSaveGame: () => void;
   lastSaveTime?: Date | null;
+  selectedCombatId: string | null;
+  isEventsModalOpen: boolean;
+  onCloseEvents: () => void;
 }
 
 export default function MainScreen({
@@ -77,6 +82,9 @@ export default function MainScreen({
   onSelectCombat,
   onSaveGame,
   lastSaveTime,
+  selectedCombatId,
+  isEventsModalOpen,
+  onCloseEvents,
 }: MainScreenProps) {
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);
   
@@ -113,6 +121,10 @@ export default function MainScreen({
   };
 
   const completedMissions = missions.filter(m => m.completed && !m.claimed);
+
+  const selectedCombat = selectedCombatId 
+    ? activeCombats.find(c => c.id === selectedCombatId) 
+    : null;
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
@@ -297,6 +309,21 @@ export default function MainScreen({
           </div>
         </div>
       </div>
+
+      {/* Combat Popup */}
+      {selectedCombat && (
+        <CombatPopup
+          combat={selectedCombat}
+          onClose={() => onSelectCombat(null)}
+        />
+      )}
+
+      {/* Events Modal */}
+      <EventsModal
+        isOpen={isEventsModalOpen}
+        onClose={onCloseEvents}
+        events={gameEvents}
+      />
     </div>
   );
 }

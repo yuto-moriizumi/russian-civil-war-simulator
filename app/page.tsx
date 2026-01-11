@@ -8,18 +8,10 @@ import TitleScreen from './screens/TitleScreen';
 import CountrySelectScreen from './screens/CountrySelectScreen';
 import MainScreen from './screens/MainScreen';
 import MissionScreen from './screens/MissionScreen';
-import EventsModal from './components/EventsModal';
-import CombatPopup from './components/CombatPopup';
 
 export default function Home() {
   const currentScreen = useGameStore(state => state.currentScreen);
   const selectedCountry = useGameStore(state => state.selectedCountry);
-  const isEventsModalOpen = useGameStore(state => state.isEventsModalOpen);
-  const setIsEventsModalOpen = useGameStore(state => state.setIsEventsModalOpen);
-  const selectedCombatId = useGameStore(state => state.selectedCombatId);
-  const setSelectedCombatId = useGameStore(state => state.setSelectedCombatId);
-  const activeCombats = useGameStore(state => state.activeCombats);
-  const gameEvents = useGameStore(state => state.gameEvents);
   
   // Initialize Hooks
   useGameLoop();
@@ -42,24 +34,9 @@ export default function Home() {
     }
   };
 
-  const selectedCombat = selectedCombatId 
-    ? activeCombats.find(c => c.id === selectedCombatId) 
-    : null;
-
   return (
     <div className="min-h-screen w-full">
       {renderScreen()}
-      <EventsModal
-        isOpen={isEventsModalOpen}
-        onClose={() => setIsEventsModalOpen(false)}
-        events={gameEvents}
-      />
-      {selectedCombat && (
-        <CombatPopup
-          combat={selectedCombat}
-          onClose={() => setSelectedCombatId(null)}
-        />
-      )}
     </div>
   );
 }
@@ -123,6 +100,9 @@ function MainScreenView() {
       onSelectCombat={state.setSelectedCombatId}
       onSaveGame={state.saveGame}
       lastSaveTime={state.lastSaveTime}
+      selectedCombatId={state.selectedCombatId}
+      isEventsModalOpen={state.isEventsModalOpen}
+      onCloseEvents={() => state.setIsEventsModalOpen(false)}
     />
   );
 }
