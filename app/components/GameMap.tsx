@@ -891,6 +891,138 @@ export default function GameMap({
           </div>
         </div>
       )}
+
+      {/* Active combats indicator */}
+      {activeCombats.length > 0 && (
+        <div 
+          className="absolute left-4 bottom-16 z-10 rounded-lg border border-red-500 bg-stone-900/95 p-3 min-w-[280px] max-w-[320px]"
+          style={{ 
+            bottom: movingUnits.length > 0 ? '16rem' : '4rem' // Position above transit panel if it exists
+          }}
+        >
+          <div className="text-sm font-bold text-red-400 mb-2 flex items-center gap-2">
+            <span>⚔️</span>
+            <span>Active Combats ({activeCombats.filter(c => !c.isComplete).length})</span>
+          </div>
+          <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+            {activeCombats
+              .filter(c => !c.isComplete)
+              .map((combat) => {
+                const attackerHp = combat.attackerDivisions.reduce((sum, d) => sum + d.hp, 0);
+                const defenderHp = combat.defenderDivisions.reduce((sum, d) => sum + d.hp, 0);
+                const attackerProgress = combat.initialAttackerHp > 0 
+                  ? (attackerHp / combat.initialAttackerHp) * 100 
+                  : 0;
+                const defenderProgress = combat.initialDefenderHp > 0 
+                  ? (defenderHp / combat.initialDefenderHp) * 100 
+                  : 0;
+                const roundProgress = (combat.currentRound / combat.maxRounds) * 100;
+                
+                const attackerColor = FACTION_COLORS[combat.attackerFaction];
+                const defenderColor = FACTION_COLORS[combat.defenderFaction];
+                
+                return (
+                  <div 
+                    key={combat.id} 
+                    className="rounded bg-stone-800 p-2 cursor-pointer hover:bg-stone-750 transition-colors border border-stone-700 hover:border-amber-600"
+                    onClick={() => onSelectCombat(combat.id)}
+                    title="Click to view detailed combat report"
+                  >
+                    {/* Region name and round info */}
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="text-xs font-semibold text-amber-300">
+                        {combat.regionName}
+                      </div>
+                      <div className="text-[10px] text-stone-500">
+                        Round {combat.currentRound}/{combat.maxRounds}
+                      </div>
+                    </div>
+                    
+                    {/* Combat participants */}
+                    <div className="flex items-center gap-2 mb-2">
+                      {/* Attacker */}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-1 mb-1">
+                          <div 
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: attackerColor }}
+                          />
+                          <span className="text-[10px] text-stone-400">
+                            {combat.attackerFaction === 'soviet' ? 'Red' : 'White'}
+                          </span>
+                          <span className="text-[10px] font-bold text-stone-300">
+                            {combat.attackerDivisions.length}
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-stone-700 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full transition-all duration-500"
+                            style={{ 
+                              width: `${attackerProgress}%`,
+                              backgroundColor: attackerColor
+                            }}
+                          />
+                        </div>
+                        <div className="text-[9px] text-stone-500 mt-0.5">
+                          HP: {attackerHp}/{combat.initialAttackerHp}
+                        </div>
+                      </div>
+                      
+                      {/* VS divider */}
+                      <div className="text-[10px] text-stone-600 font-bold px-1">
+                        VS
+                      </div>
+                      
+                      {/* Defender */}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-1 mb-1 justify-end">
+                          <span className="text-[10px] font-bold text-stone-300">
+                            {combat.defenderDivisions.length}
+                          </span>
+                          <span className="text-[10px] text-stone-400">
+                            {combat.defenderFaction === 'soviet' ? 'Red' : 'White'}
+                          </span>
+                          <div 
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: defenderColor }}
+                          />
+                        </div>
+                        <div className="h-1.5 bg-stone-700 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full transition-all duration-500"
+                            style={{ 
+                              width: `${defenderProgress}%`,
+                              backgroundColor: defenderColor
+                            }}
+                          />
+                        </div>
+                        <div className="text-[9px] text-stone-500 mt-0.5 text-right">
+                          HP: {defenderHp}/{combat.initialDefenderHp}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Combat progress bar */}
+                    <div className="mt-2 pt-2 border-t border-stone-700">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[9px] text-stone-500">Battle Progress</span>
+                        <span className="text-[9px] text-stone-400">
+                          {Math.round(roundProgress)}%
+                        </span>
+                      </div>
+                      <div className="h-1 bg-stone-700 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-yellow-600 to-red-600 transition-all duration-500"
+                          style={{ width: `${roundProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
