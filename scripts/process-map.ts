@@ -11,7 +11,8 @@ import * as path from 'path';
 import { fileURLToPath } from 'url';
 import * as topojson from 'topojson-server';
 import * as topojsonClient from 'topojson-client';
-import type { FeatureCollection, Feature, GeoJsonProperties, Geometry, Position } from 'geojson';
+import * as turf from '@turf/turf';
+import type { FeatureCollection, Feature, GeoJsonProperties, Geometry, Position, Polygon, MultiPolygon } from 'geojson';
 import type { Topology, GeometryCollection, GeometryObject } from 'topojson-specification';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -77,6 +78,50 @@ function getRegionId(feature: Feature, countryIso3: string): string {
 }
 
 /**
+ * 座標を量子化（丸め）する
+ * 
+ * 異なるGeoJSONソース間で微妙にズレている頂点を揃えるため、
+ * 座標を一定の精度に丸める。これによりTopoJSONのarc共有が正しく機能する。
+ * 
+ * precision=3 → 小数点以下3桁 → 約111メートルの精度
+ * precision=4 → 小数点以下4桁 → 約11メートルの精度
+ * precision=5 → 小数点以下5桁 → 約1.1メートルの精度
+ */
+const COORDINATE_PRECISION = 3;
+
+function quantizeCoordinate(value: number): number {
+  const multiplier = Math.pow(10, COORDINATE_PRECISION);
+  return Math.round(value * multiplier) / multiplier;
+}
+
+function quantizeGeometry(geometry: Geometry): Geometry {
+  if (!geometry) return geometry;
+  
+  function quantizePosition(pos: Position): Position {
+    return [quantizeCoordinate(pos[0]), quantizeCoordinate(pos[1]), ...(pos.length > 2 ? [pos[2]] : [])];
+  }
+  
+  function quantizeCoords(coords: unknown): unknown {
+    if (Array.isArray(coords)) {
+      if (coords.length >= 2 && typeof coords[0] === 'number' && typeof coords[1] === 'number') {
+        return quantizePosition(coords as Position);
+      }
+      return coords.map(c => quantizeCoords(c));
+    }
+    return coords;
+  }
+  
+  if ('coordinates' in geometry) {
+    return {
+      ...geometry,
+      coordinates: quantizeCoords(geometry.coordinates),
+    } as Geometry;
+  }
+  
+  return geometry;
+}
+
+/**
  * 複数のGeoJSONを1つに結合する
  */
 function mergeGeoJSON(
@@ -92,8 +137,12 @@ function mergeGeoJSON(
       // リージョンIDを追加
       const regionId = getRegionId(feature, countryIso3);
       
+      // 座標を量子化して異なるソース間のズレを解消
+      const quantizedGeometry = quantizeGeometry(feature.geometry);
+      
       const enhancedFeature: Feature = {
         ...feature,
+        geometry: quantizedGeometry,
         properties: {
           ...feature.properties,
           regionId,
@@ -106,6 +155,8 @@ function mergeGeoJSON(
     
     console.log(`    Added ${geojson.features.length} features`);
   }
+  
+  console.log(`  Coordinates quantized to ${COORDINATE_PRECISION} decimal places (~${Math.round(111000 / Math.pow(10, COORDINATE_PRECISION))}m precision)`);
   
   return {
     type: 'FeatureCollection',
@@ -315,6 +366,290 @@ function computeBBox(feature: Feature): [number, number, number, number] {
   return [minX, minY, maxX, maxY];
 }
 
+/**
+ * 異なる国の間の隣接関係を検出する（境界データの不整合を補完）
+ * 
+ * GeoJSONデータソースが異なる国では境界が完全に一致しないため、
+ * TopoJSONのarc共有では検出できない。バッファ付きの交差判定で検出する。
+ */
+function detectCrossBorderAdjacency(
+  mergedGeoJSON: FeatureCollection,
+  existingAdjacency: Adjacency
+): { adjacency: Adjacency; addedCount: number } {
+  const adjacency: Adjacency = {};
+  
+  // 既存の隣接関係をコピー
+  for (const [key, value] of Object.entries(existingAdjacency)) {
+    adjacency[key] = [...value];
+  }
+  
+  const features = mergedGeoJSON.features;
+  let addedCount = 0;
+  
+  // 国ごとにフィーチャーをグループ化
+  const featuresByCountry: Map<string, Feature[]> = new Map();
+  for (const feature of features) {
+    const country = feature.properties?.countryIso3 as string;
+    if (!featuresByCountry.has(country)) {
+      featuresByCountry.set(country, []);
+    }
+    featuresByCountry.get(country)!.push(feature);
+  }
+  
+  const countries = Array.from(featuresByCountry.keys());
+  console.log(`  Checking cross-border adjacency between ${countries.length} countries...`);
+  
+  // 異なる国のペアのみをチェック
+  for (let c1 = 0; c1 < countries.length; c1++) {
+    for (let c2 = c1 + 1; c2 < countries.length; c2++) {
+      const country1 = countries[c1];
+      const country2 = countries[c2];
+      const features1 = featuresByCountry.get(country1)!;
+      const features2 = featuresByCountry.get(country2)!;
+      
+      for (const featureA of features1) {
+        for (const featureB of features2) {
+          const idA = featureA.properties?.regionId as string;
+          const idB = featureB.properties?.regionId as string;
+          
+          if (!idA || !idB) continue;
+          
+          // 既に隣接している場合はスキップ
+          if (adjacency[idA]?.includes(idB)) continue;
+          
+          // バウンディングボックスの交差チェック（マージン付き）
+          const bboxA = computeBBox(featureA);
+          const bboxB = computeBBox(featureB);
+          if (!bboxIntersects(bboxA, bboxB, 0.5)) continue;
+          
+          // バッファ付きで交差判定（約2km）
+          try {
+            const geomA = featureA.geometry as Polygon | MultiPolygon;
+            const geomB = featureB.geometry as Polygon | MultiPolygon;
+            
+            // 小さいバッファでポリゴンを拡張して交差判定
+            const bufferedA = turf.buffer(turf.feature(geomA), 2, { units: 'kilometers' });
+            const bufferedB = turf.buffer(turf.feature(geomB), 2, { units: 'kilometers' });
+            
+            if (bufferedA && bufferedB && turf.booleanIntersects(bufferedA, bufferedB)) {
+              // 隣接を追加
+              if (!adjacency[idA]) adjacency[idA] = [];
+              if (!adjacency[idB]) adjacency[idB] = [];
+              
+              if (!adjacency[idA].includes(idB)) {
+                adjacency[idA].push(idB);
+              }
+              if (!adjacency[idB].includes(idA)) {
+                adjacency[idB].push(idA);
+              }
+              addedCount++;
+            }
+          } catch {
+            // ジオメトリエラーは無視
+          }
+        }
+      }
+    }
+  }
+  
+  // ソート
+  for (const regionId of Object.keys(adjacency)) {
+    adjacency[regionId].sort();
+  }
+  
+  return { adjacency, addedCount };
+}
+
+/**
+ * 同じ国内の隣接関係を検出する（arc共有で検出できなかった場合の補完）
+ * 
+ * 一部のリージョンはarc共有が正しく機能しないため、
+ * 直接交差判定で隣接関係を検出する。
+ */
+function detectSameCountryAdjacency(
+  mergedGeoJSON: FeatureCollection,
+  existingAdjacency: Adjacency
+): { adjacency: Adjacency; addedCount: number } {
+  const adjacency: Adjacency = {};
+  
+  // 既存の隣接関係をコピー
+  for (const [key, value] of Object.entries(existingAdjacency)) {
+    adjacency[key] = [...value];
+  }
+  
+  let addedCount = 0;
+  let checkedPairs = 0;
+  
+  // 国ごとにフィーチャーをグループ化
+  const featuresByCountry: Map<string, Feature[]> = new Map();
+  for (const feature of mergedGeoJSON.features) {
+    const country = feature.properties?.countryIso3 as string;
+    if (!featuresByCountry.has(country)) {
+      featuresByCountry.set(country, []);
+    }
+    featuresByCountry.get(country)!.push(feature);
+  }
+  
+  // バウンディングボックスを事前計算
+  const bboxCache: Map<string, [number, number, number, number]> = new Map();
+  for (const feature of mergedGeoJSON.features) {
+    const regionId = feature.properties?.regionId as string;
+    if (regionId) {
+      bboxCache.set(regionId, computeBBox(feature));
+    }
+  }
+  
+  // 各国内でペアをチェック
+  for (const [country, features] of featuresByCountry) {
+    // 2つ以上のリージョンがある国のみ
+    if (features.length < 2) continue;
+    
+    for (let i = 0; i < features.length; i++) {
+      const featureA = features[i];
+      const idA = featureA.properties?.regionId as string;
+      if (!idA) continue;
+      
+      for (let j = i + 1; j < features.length; j++) {
+        const featureB = features[j];
+        const idB = featureB.properties?.regionId as string;
+        if (!idB) continue;
+        
+        // 既に隣接している場合はスキップ
+        if (adjacency[idA]?.includes(idB)) continue;
+        
+        // バウンディングボックスの交差チェック（厳密、マージンなし）
+        const bboxA = bboxCache.get(idA)!;
+        const bboxB = bboxCache.get(idB)!;
+        if (!bboxIntersects(bboxA, bboxB, 0)) continue;
+        
+        checkedPairs++;
+        
+        // 直接交差判定
+        try {
+          const geomA = featureA.geometry as Polygon | MultiPolygon;
+          const geomB = featureB.geometry as Polygon | MultiPolygon;
+          
+          // 直接交差をチェック
+          if (turf.booleanIntersects(turf.feature(geomA), turf.feature(geomB))) {
+            if (!adjacency[idA]) adjacency[idA] = [];
+            if (!adjacency[idB]) adjacency[idB] = [];
+            
+            if (!adjacency[idA].includes(idB)) {
+              adjacency[idA].push(idB);
+            }
+            if (!adjacency[idB].includes(idA)) {
+              adjacency[idB].push(idA);
+            }
+            addedCount++;
+          }
+        } catch {
+          // ジオメトリエラーは無視
+        }
+      }
+    }
+  }
+  
+  console.log(`  Checked ${checkedPairs} same-country pairs`);
+  
+  // ソート
+  for (const regionId of Object.keys(adjacency)) {
+    adjacency[regionId].sort();
+  }
+  
+  return { adjacency, addedCount };
+}
+
+/**
+ * 孤立したリージョン（隣接が0のリージョン）の隣接関係を検出する
+ * 
+ * 飛び地や首都（例：BY-HM ミンスク市）など、内包されているリージョンを検出する
+ */
+function detectIsolatedRegionAdjacency(
+  mergedGeoJSON: FeatureCollection,
+  existingAdjacency: Adjacency
+): { adjacency: Adjacency; addedCount: number } {
+  const adjacency: Adjacency = {};
+  
+  // 既存の隣接関係をコピー
+  for (const [key, value] of Object.entries(existingAdjacency)) {
+    adjacency[key] = [...value];
+  }
+  
+  let addedCount = 0;
+  
+  // 孤立したリージョンを検出
+  const isolatedRegions: Feature[] = [];
+  for (const feature of mergedGeoJSON.features) {
+    const regionId = feature.properties?.regionId as string;
+    if (regionId && (!adjacency[regionId] || adjacency[regionId].length === 0)) {
+      isolatedRegions.push(feature);
+    }
+  }
+  
+  if (isolatedRegions.length === 0) {
+    return { adjacency, addedCount };
+  }
+  
+  console.log(`  Found ${isolatedRegions.length} isolated regions, checking containment...`);
+  
+  // 各孤立リージョンについて、包含している/隣接しているリージョンを探す
+  for (const isolatedFeature of isolatedRegions) {
+    const isolatedId = isolatedFeature.properties?.regionId as string;
+    const isolatedCountry = isolatedFeature.properties?.countryIso3 as string;
+    const isolatedBbox = computeBBox(isolatedFeature);
+    
+    // 同じ国の他のリージョンをチェック
+    for (const candidateFeature of mergedGeoJSON.features) {
+      const candidateId = candidateFeature.properties?.regionId as string;
+      const candidateCountry = candidateFeature.properties?.countryIso3 as string;
+      
+      if (!candidateId || candidateId === isolatedId) continue;
+      
+      // 同じ国を優先（飛び地は通常同じ国内）
+      if (candidateCountry !== isolatedCountry) continue;
+      
+      // バウンディングボックスチェック
+      const candidateBbox = computeBBox(candidateFeature);
+      if (!bboxIntersects(isolatedBbox, candidateBbox, 0.1)) continue;
+      
+      try {
+        const isolatedGeom = isolatedFeature.geometry as Polygon | MultiPolygon;
+        const candidateGeom = candidateFeature.geometry as Polygon | MultiPolygon;
+        
+        // 包含または交差をチェック
+        const isolatedCentroid = turf.centroid(turf.feature(isolatedGeom));
+        
+        if (turf.booleanPointInPolygon(isolatedCentroid, turf.feature(candidateGeom)) ||
+            turf.booleanIntersects(turf.feature(isolatedGeom), turf.feature(candidateGeom))) {
+          
+          // 隣接を追加
+          if (!adjacency[isolatedId]) adjacency[isolatedId] = [];
+          if (!adjacency[candidateId]) adjacency[candidateId] = [];
+          
+          if (!adjacency[isolatedId].includes(candidateId)) {
+            adjacency[isolatedId].push(candidateId);
+          }
+          if (!adjacency[candidateId].includes(isolatedId)) {
+            adjacency[candidateId].push(isolatedId);
+          }
+          addedCount++;
+          console.log(`    Connected isolated region ${isolatedId} to ${candidateId}`);
+          break; // 1つ見つかれば十分
+        }
+      } catch {
+        // ジオメトリエラーは無視
+      }
+    }
+  }
+  
+  // ソート
+  for (const regionId of Object.keys(adjacency)) {
+    adjacency[regionId].sort();
+  }
+  
+  return { adjacency, addedCount };
+}
+
 async function main() {
   console.log('=== Map Processing Script ===\n');
   
@@ -351,13 +686,40 @@ async function main() {
   console.log(`  Arcs count: ${topology.arcs.length}\n`);
   
   // Step 3: 隣接関係を抽出
-  console.log('Step 3: Extracting adjacency...');
+  console.log('Step 3: Extracting adjacency (arc-sharing method)...');
   
-  const adjacency = extractAdjacency(topology, mergedGeoJSON);
-  const adjacentPairs = Object.values(adjacency).reduce((sum, arr) => sum + arr.length, 0) / 2;
+  const arcAdjacency = extractAdjacency(topology, mergedGeoJSON);
+  const arcPairs = Object.values(arcAdjacency).reduce((sum, arr) => sum + arr.length, 0) / 2;
   
-  console.log(`  Regions: ${Object.keys(adjacency).length}`);
-  console.log(`  Adjacent pairs: ${adjacentPairs}\n`);
+  console.log(`  Regions: ${Object.keys(arcAdjacency).length}`);
+  console.log(`  Adjacent pairs (arc-sharing): ${arcPairs}\n`);
+  
+  // Step 3b: 異なる国間の隣接関係を補完
+  console.log('Step 3b: Detecting cross-border adjacency...');
+  
+  const { adjacency: crossBorderAdjacency, addedCount: crossBorderAdded } = 
+    detectCrossBorderAdjacency(mergedGeoJSON, arcAdjacency);
+  
+  console.log(`  Added cross-border pairs: ${crossBorderAdded}\n`);
+  
+  // Step 3c: 同じ国内の隣接関係を補完
+  console.log('Step 3c: Detecting same-country adjacency (missed by arc-sharing)...');
+  
+  const { adjacency: sameCountryAdjacency, addedCount: sameCountryAdded } = 
+    detectSameCountryAdjacency(mergedGeoJSON, crossBorderAdjacency);
+  
+  console.log(`  Added same-country pairs: ${sameCountryAdded}\n`);
+  
+  // Step 3d: 孤立したリージョンの隣接関係を検出
+  console.log('Step 3d: Detecting isolated region adjacency...');
+  
+  const { adjacency: finalAdjacency, addedCount: isolatedAdded } = 
+    detectIsolatedRegionAdjacency(mergedGeoJSON, sameCountryAdjacency);
+  
+  console.log(`  Added isolated region connections: ${isolatedAdded}`);
+  
+  const totalPairs = Object.values(finalAdjacency).reduce((sum, arr) => sum + arr.length, 0) / 2;
+  console.log(`  Total adjacent pairs: ${totalPairs}\n`);
   
   // Step 4: GeoJSONを出力（TopoJSONから逆変換してプロパティを保持）
   console.log('Step 4: Saving output files...');
@@ -379,16 +741,16 @@ async function main() {
   fs.writeFileSync(geojsonOutputPath, JSON.stringify(outputGeoJSON));
   console.log(`  GeoJSON: ${geojsonOutputPath}`);
   
-  fs.writeFileSync(adjacencyOutputPath, JSON.stringify(adjacency, null, 2));
+  fs.writeFileSync(adjacencyOutputPath, JSON.stringify(finalAdjacency, null, 2));
   console.log(`  Adjacency: ${adjacencyOutputPath}`);
   
   console.log('\n=== Processing Complete ===');
   
   // 隣接関係のサンプル表示
   console.log('\nAdjacency sample (first 5 regions):');
-  const sampleRegions = Object.keys(adjacency).slice(0, 5);
+  const sampleRegions = Object.keys(finalAdjacency).slice(0, 5);
   for (const regionId of sampleRegions) {
-    console.log(`  ${regionId}: ${adjacency[regionId].length} neighbors`);
+    console.log(`  ${regionId}: ${finalAdjacency[regionId].length} neighbors`);
   }
 }
 
