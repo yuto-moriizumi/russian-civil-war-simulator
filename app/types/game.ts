@@ -150,3 +150,25 @@ export interface StoryEvent {
   title: string;
   text: string;
 }
+
+// Game API interface for programmatic control (useful for AI agents and testing)
+export interface GameAPI {
+  // Region selection
+  selectRegion: (regionId: string | null) => void;
+  getSelectedRegion: () => string | null;
+  getRegions: () => RegionState;
+  // Unit selection and movement
+  selectUnits: (regionId: string | null) => void;
+  getSelectedUnitRegion: () => string | null;
+  moveSelectedUnits: (toRegionId: string, count?: number) => boolean;
+  // Helper methods
+  getAdjacentRegions: (regionId: string) => string[];
+  getMovingUnits: () => Movement[];
+}
+
+// Declare global window.gameAPI
+declare global {
+  interface Window {
+    gameAPI?: GameAPI;
+  }
+}
