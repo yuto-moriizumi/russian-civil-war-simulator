@@ -26,7 +26,6 @@ const sovietMissions: Mission[] = [
     claimed: false,
     rewards: { money: 100 },
     prerequisites: [],
-    position: { x: 50, y: 20 },
   },
   {
     id: 'soviet_terror',
@@ -37,7 +36,6 @@ const sovietMissions: Mission[] = [
     claimed: false,
     rewards: { money: 200 },
     prerequisites: ['soviet_mobilize'],
-    position: { x: 30, y: 40 },
   },
   {
     id: 'soviet_economy',
@@ -48,7 +46,6 @@ const sovietMissions: Mission[] = [
     claimed: false,
     rewards: { money: 150 },
     prerequisites: ['soviet_mobilize'],
-    position: { x: 70, y: 40 },
   },
   {
     id: 'soviet_crush',
@@ -59,7 +56,6 @@ const sovietMissions: Mission[] = [
     claimed: false,
     rewards: { money: 300 },
     prerequisites: ['soviet_terror', 'soviet_economy'],
-    position: { x: 50, y: 60 },
   },
   {
     id: 'soviet_march',
@@ -70,7 +66,6 @@ const sovietMissions: Mission[] = [
     claimed: false,
     rewards: { money: 400 },
     prerequisites: ['soviet_crush'],
-    position: { x: 50, y: 80 },
   },
   {
     id: 'soviet_victory',
@@ -81,7 +76,6 @@ const sovietMissions: Mission[] = [
     claimed: false,
     rewards: { money: 500, gameVictory: true },
     prerequisites: ['soviet_march'],
-    position: { x: 50, y: 95 },
   },
 ];
 
@@ -96,7 +90,6 @@ const whiteMissions: Mission[] = [
     claimed: false,
     rewards: { money: 100 },
     prerequisites: [],
-    position: { x: 50, y: 20 },
   },
   {
     id: 'white_foreign',
@@ -107,7 +100,6 @@ const whiteMissions: Mission[] = [
     claimed: false,
     rewards: { money: 200 },
     prerequisites: ['white_rally'],
-    position: { x: 30, y: 40 },
   },
   {
     id: 'white_order',
@@ -118,7 +110,6 @@ const whiteMissions: Mission[] = [
     claimed: false,
     rewards: { money: 150 },
     prerequisites: ['white_rally'],
-    position: { x: 70, y: 40 },
   },
   {
     id: 'white_break',
@@ -129,7 +120,6 @@ const whiteMissions: Mission[] = [
     claimed: false,
     rewards: { money: 300 },
     prerequisites: ['white_foreign', 'white_order'],
-    position: { x: 50, y: 60 },
   },
   {
     id: 'white_petrograd',
@@ -140,7 +130,6 @@ const whiteMissions: Mission[] = [
     claimed: false,
     rewards: { money: 400 },
     prerequisites: ['white_break'],
-    position: { x: 50, y: 80 },
   },
   {
     id: 'white_victory',
@@ -151,7 +140,6 @@ const whiteMissions: Mission[] = [
     claimed: false,
     rewards: { money: 500, gameVictory: true },
     prerequisites: ['white_petrograd'],
-    position: { x: 50, y: 95 },
   },
 ];
 

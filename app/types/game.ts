@@ -45,7 +45,7 @@ export interface Mission {
     gameVictory?: boolean;
   };
   prerequisites: string[];
-  position: { x: number; y: number };
+  // position removed - computed automatically by dagre layout
 }
 
 export interface Movement {
