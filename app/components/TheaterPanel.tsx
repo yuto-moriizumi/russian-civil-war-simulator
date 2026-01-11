@@ -159,7 +159,7 @@ export default function TheaterPanel({
                     </div>
 
                     {/* Army groups in this theater */}
-                    {isSelected && groups.length > 0 && (
+                    {groups.length > 0 && (
                       <div className="border-t border-stone-700 p-3">
                         <div className="mb-2 text-xs font-semibold text-stone-400">Army Groups:</div>
                         <div className="flex flex-wrap gap-2">
