@@ -243,6 +243,33 @@ export default function MainScreen({
             onTogglePlay={onTogglePlay}
             onChangeSpeed={onChangeSpeed}
           />
+
+          {/* Save Button */}
+          <button
+            onClick={onSaveGame}
+            className="rounded bg-amber-700 px-3 py-1 text-stone-200 transition-colors hover:bg-amber-600"
+            title="Save Game"
+          >
+            Save
+          </button>
+
+          {/* Events Button */}
+          <button
+            onClick={onOpenEvents}
+            className="relative rounded bg-stone-700 px-3 py-1 text-stone-300 transition-colors hover:bg-stone-600"
+          >
+            Events
+            {gameEvents.length > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-black">
+                {gameEvents.length > 99 ? '99+' : gameEvents.length}
+              </span>
+            )}
+          </button>
+
+          {/* Saved Indicator */}
+          {showSavedIndicator && (
+            <span className="flex items-center animate-pulse text-green-400 text-sm">Game Saved!</span>
+          )}
         </div>
       </div>
 
@@ -291,8 +318,8 @@ export default function MainScreen({
         )}
       </div>
 
-      {/* Theater Panel - above status bar */}
-      <div className="absolute bottom-10 left-0 right-0 z-10">
+      {/* Theater Panel - now at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 z-10">
         <TheaterPanel
           theaters={theaters}
           armyGroups={armyGroups}
@@ -310,44 +337,6 @@ export default function MainScreen({
           onAdvanceGroup={onAdvanceArmyGroup}
           onDeployToGroup={onDeployToArmyGroup}
         />
-      </div>
-
-      {/* Bottom status bar */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-stone-700 bg-stone-900/90 px-4 py-2">
-        <div className="flex items-center justify-between text-xs text-stone-400">
-          <div className="flex items-center gap-4">
-            <span>Status: {isPlaying ? 'Time advancing...' : 'Paused'}</span>
-            {showSavedIndicator && (
-              <span className="animate-pulse text-green-400">Game Saved!</span>
-            )}
-          </div>
-          <div className="flex items-center gap-4">
-            {activeCombats.length > 0 && (
-              <span className="text-red-400 font-semibold animate-pulse">
-                Active Battles: {activeCombats.length}
-              </span>
-            )}
-            <span>Active Missions: {missions.filter(m => !m.claimed).length}</span>
-            <button
-              onClick={onSaveGame}
-              className="rounded bg-amber-700 px-3 py-1 text-stone-200 transition-colors hover:bg-amber-600"
-              title="Save Game"
-            >
-              Save
-            </button>
-            <button
-              onClick={onOpenEvents}
-              className="relative rounded bg-stone-700 px-3 py-1 text-stone-300 transition-colors hover:bg-stone-600"
-            >
-              Events
-              {gameEvents.length > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-black">
-                  {gameEvents.length > 99 ? '99+' : gameEvents.length}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Combat Popup */}
