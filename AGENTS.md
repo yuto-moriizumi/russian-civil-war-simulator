@@ -65,3 +65,12 @@ When starting a dev server, use `$RANDOM` for the PORT number to avoid port conf
 ```bash
 PORT=$RANDOM npm run dev
 ```
+
+## Process Management
+
+**Do NOT use `pkill -f node` or similar broad kill commands.** This can terminate unrelated Node.js processes running on the system, including other development servers or tools.
+
+Instead, to stop a development server:
+- Use `Ctrl+C` in the terminal where it's running
+- Use `kill <pid>` with the specific process ID if needed
+- Use `lsof -i :<port>` to find the specific process using a port, then kill that specific PID
