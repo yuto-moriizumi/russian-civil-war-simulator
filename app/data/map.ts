@@ -138,7 +138,7 @@ export const initialRegionOwnership: Record<string, FactionId> = {
   'RU-KB': 'white',    // Kabardino-Balkar Republic
   'RU-SE': 'white',    // Republic of North Ossetia
   'RU-IN': 'white',    // Republic of Ingushetia
-  'RU-CE': 'white',    // Chechen Republic
+  'RU-CE': 'soviet',   // Chechen Republic
   'RU-DA': 'white',    // Republic of Dagestan
 
   // Siberia
