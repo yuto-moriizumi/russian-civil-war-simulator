@@ -2,9 +2,27 @@
 
 interface TitleScreenProps {
   onStartGame: () => void;
+  onContinue?: () => void;
+  hasSave?: boolean;
+  saveInfo?: { savedAt: Date; gameDate: Date } | null;
 }
 
-export default function TitleScreen({ onStartGame }: TitleScreenProps) {
+export default function TitleScreen({ 
+  onStartGame, 
+  onContinue, 
+  hasSave, 
+  saveInfo 
+}: TitleScreenProps) {
+  const formatSaveInfo = () => {
+    if (!saveInfo) return '';
+    const gameDate = saveInfo.gameDate.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+    return `Game: ${gameDate}`;
+  };
+
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-stone-900 via-stone-800 to-stone-900">
       {/* Background pattern */}
@@ -56,9 +74,27 @@ export default function TitleScreen({ onStartGame }: TitleScreenProps) {
           onClick={onStartGame}
           className="group relative mt-8 overflow-hidden rounded border-2 border-stone-600 bg-stone-800 px-12 py-4 text-xl font-semibold tracking-wider text-stone-200 transition-all duration-300 hover:border-red-600 hover:bg-stone-700 hover:text-white md:px-16 md:py-5 md:text-2xl"
         >
-          <span className="relative z-10">START GAME</span>
+          <span className="relative z-10">NEW GAME</span>
           <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-red-900/50 to-transparent transition-transform duration-300 group-hover:translate-x-0" />
         </button>
+
+        {/* Continue button - only shown if save exists */}
+        {hasSave && onContinue && (
+          <button
+            onClick={onContinue}
+            className="group relative mt-4 overflow-hidden rounded border-2 border-amber-700 bg-stone-800 px-12 py-4 text-xl font-semibold tracking-wider text-stone-200 transition-all duration-300 hover:border-amber-500 hover:bg-stone-700 hover:text-white md:px-16 md:py-5 md:text-2xl"
+          >
+            <span className="relative z-10">CONTINUE</span>
+            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-amber-900/50 to-transparent transition-transform duration-300 group-hover:translate-x-0" />
+          </button>
+        )}
+
+        {/* Save info */}
+        {hasSave && saveInfo && (
+          <p className="mt-2 text-sm text-amber-400/70">
+            {formatSaveInfo()}
+          </p>
+        )}
 
         {/* Subtitle */}
         <p className="mt-12 max-w-md text-center text-sm text-stone-500 md:text-base">

@@ -1,6 +1,40 @@
 import { FactionId } from '../types/game';
 
 /**
+ * Region economic values/weights for income generation.
+ * Default value is 1, major cities and industrial centers have higher values.
+ * 
+ * Moscow: 5 (capital, political center)
+ * St. Petersburg: 4 (former capital, major industrial city)
+ * Kyiv: 3 (major city, strategic importance)
+ * Other major cities: 2 (significant economic centers)
+ * Standard regions: 1 (default)
+ */
+export const regionValues: Record<string, number> = {
+  // Major capitals and cities (high value)
+  'RU-MOW': 5,  // Moscow (city) - Capital
+  'RU-SPE': 4,  // Saint Petersburg (city) - Former capital
+  'UA-30': 3,   // Kyiv (city) - Major city
+  
+  // Industrial and strategic centers (value 2)
+  'RU-MOS': 2,  // Moscow Oblast - Industrial heartland
+  'RU-LEN': 2,  // Leningrad Oblast - Industrial
+  'RU-NIZ': 2,  // Nizhny Novgorod Oblast - Industrial
+  'RU-SVE': 2,  // Sverdlovsk Oblast - Ural industrial center
+  'RU-CHE': 2,  // Chelyabinsk Oblast - Ural industrial
+  'RU-SAM': 2,  // Samara Oblast - Volga industrial
+  'RU-ROS': 2,  // Rostov Oblast - Southern industrial
+  'RU-KDA': 2,  // Krasnodar Krai - Agricultural heartland
+  'RU-TA': 2,   // Republic of Tatarstan - Oil and industry
+  'RU-BA': 2,   // Republic of Bashkortostan - Industrial
+  'UA-12': 2,   // Dnipropetrovsk Oblast - Industrial
+  'UA-14': 2,   // Donetsk Oblast - Coal and industry
+  'UA-63': 2,   // Kharkiv Oblast - Industrial
+  'UA-51': 2,   // Odesa Oblast - Port city
+  // All other regions default to value 1
+};
+
+/**
  * Initial region ownership at game start (November 1917 - October Revolution)
  * 
  * Soviet: Moscow and surrounding core regions (Bolshevik control)

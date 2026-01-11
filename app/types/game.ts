@@ -31,6 +31,7 @@ export interface Region {
   countryIso3: string;  // "RUS", "UKR"
   owner: FactionId;     // Which faction controls this region
   divisions: Division[]; // Divisions stationed in this region
+  value: number;        // Economic value/weight for income (default 1, capitals higher)
 }
 
 export interface Adjacency {
@@ -45,15 +46,17 @@ export type GameSpeed = 1 | 2 | 3 | 4 | 5;
 
 export interface Mission {
   id: string;
+  faction: CountryId;
   name: string;
   description: string;
   completed: boolean;
   claimed: boolean;
   rewards: {
     money: number;
+    gameVictory?: boolean;
   };
   prerequisites: string[];
-  position: { x: number; y: number };
+  // position removed - computed automatically by dagre layout
 }
 
 export interface Movement {
@@ -74,7 +77,8 @@ export type GameEventType =
   | 'unit_created'
   | 'unit_deployed'
   | 'mission_completed'
-  | 'mission_claimed';
+  | 'mission_claimed'
+  | 'game_victory';
 
 export interface GameEvent {
   id: string;
@@ -138,4 +142,11 @@ export interface ActiveCombat {
   roundIntervalHours: number;       // Hours between rounds
   isComplete: boolean;              // Whether combat has concluded
   victor: FactionId | null;         // Who won (null if ongoing or stalemate)
+}
+
+// Story/Narrative Event for master data (introduction, victory screens, etc.)
+export interface StoryEvent {
+  id: string;
+  title: string;
+  text: string;
 }

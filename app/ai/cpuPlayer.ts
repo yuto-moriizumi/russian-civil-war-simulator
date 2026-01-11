@@ -1,5 +1,6 @@
 import { AIState, FactionId, RegionState, Region, Division } from '../types/game';
 import { createDivision, getDivisionCount } from '../utils/combat';
+import { calculateFactionIncome } from '../utils/mapUtils';
 
 // Cost to create one division
 const DIVISION_COST = 10;
@@ -11,7 +12,7 @@ export function createInitialAIState(factionId: FactionId): AIState {
   return {
     factionId,
     money: 100,
-    income: 5,
+    income: 0, // Income is now calculated dynamically based on controlled regions
     reserveDivisions: [],
   };
 }
@@ -51,7 +52,7 @@ export interface AIActions {
 
 /**
  * Run AI logic for one tick (1 game hour)
- * - Earns income
+ * - Earns income based on controlled regions (using region values/weights)
  * - Creates divisions if it has enough money
  * - Deploys reserve divisions to random owned regions
  */
@@ -59,13 +60,16 @@ export function runAITick(
   aiState: AIState,
   regions: RegionState
 ): AIActions {
-  let { money, income, reserveDivisions, factionId } = aiState;
+  let { money, reserveDivisions, factionId } = aiState;
   reserveDivisions = [...reserveDivisions]; // Clone to avoid mutation
   
-  // 1. Earn income
+  // 1. Calculate income from controlled regions (using region values/weights)
+  const income = calculateFactionIncome(regions, factionId);
+  
+  // 2. Earn income
   money += income;
   
-  // 2. Create divisions if we have enough money
+  // 3. Create divisions if we have enough money
   let divisionsCreated = 0;
   while (money >= DIVISION_COST) {
     money -= DIVISION_COST;
@@ -77,7 +81,7 @@ export function runAITick(
     divisionsCreated += 1;
   }
   
-  // 3. Deploy all reserve divisions to random owned regions
+  // 4. Deploy all reserve divisions to random owned regions
   const deployments: { regionId: string; divisions: Division[] }[] = [];
   const ownedRegions = getOwnedRegions(regions, factionId);
   

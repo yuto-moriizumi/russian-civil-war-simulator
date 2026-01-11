@@ -1,0 +1,223 @@
+import {
+  GameState,
+  RegionState,
+  AIState,
+  Movement,
+  GameEvent,
+  Screen,
+  Country,
+  GameSpeed,
+  Mission,
+  FactionId,
+  GameEventType,
+  Division,
+  ActiveCombat,
+} from '../types/game';
+
+const STORAGE_KEY = 'rcw-save';
+const SAVE_VERSION = 2; // Bumped version for Division-based system
+
+// Serialized types (Date objects converted to ISO strings)
+interface SerializedMovement {
+  id: string;
+  fromRegion: string;
+  toRegion: string;
+  divisions: Division[];
+  departureTime: string;
+  arrivalTime: string;
+  owner: FactionId;
+}
+
+interface SerializedGameEvent {
+  id: string;
+  type: GameEventType;
+  timestamp: string;
+  title: string;
+  description: string;
+  faction?: FactionId;
+  regionId?: string;
+}
+
+interface SerializedActiveCombat {
+  id: string;
+  regionId: string;
+  regionName: string;
+  attackerFaction: FactionId;
+  defenderFaction: FactionId;
+  attackerDivisions: Division[];
+  defenderDivisions: Division[];
+  initialAttackerCount: number;
+  initialDefenderCount: number;
+  initialAttackerHp: number;
+  initialDefenderHp: number;
+  currentRound: number;
+  maxRounds: number;
+  startTime: string;
+  lastRoundTime: string;
+  roundIntervalHours: number;
+  isComplete: boolean;
+  victor: FactionId | null;
+}
+
+interface SerializedGameState {
+  currentScreen: Screen;
+  selectedCountry: Country | null;
+  dateTime: string;
+  isPlaying: boolean;
+  gameSpeed: GameSpeed;
+  money: number;
+  income: number;
+  reserveDivisions: Division[];
+  missions: Mission[];
+  movingUnits: SerializedMovement[];
+  gameEvents: SerializedGameEvent[];
+  activeCombats: SerializedActiveCombat[];
+}
+
+interface SaveData {
+  version: number;
+  savedAt: string;
+  gameState: SerializedGameState;
+  regions: RegionState;
+  aiState: AIState | null;
+}
+
+// Serialize GameState (convert Date objects to ISO strings)
+function serializeGameState(state: GameState): SerializedGameState {
+  return {
+    ...state,
+    dateTime: state.dateTime.toISOString(),
+    movingUnits: state.movingUnits.map((m) => ({
+      ...m,
+      departureTime: m.departureTime.toISOString(),
+      arrivalTime: m.arrivalTime.toISOString(),
+    })),
+    gameEvents: state.gameEvents.map((e) => ({
+      ...e,
+      timestamp: e.timestamp.toISOString(),
+    })),
+    activeCombats: state.activeCombats.map((c) => ({
+      ...c,
+      startTime: c.startTime.toISOString(),
+      lastRoundTime: c.lastRoundTime.toISOString(),
+    })),
+  };
+}
+
+// Deserialize GameState (convert ISO strings back to Date objects)
+function deserializeGameState(data: SerializedGameState): GameState {
+  return {
+    ...data,
+    dateTime: new Date(data.dateTime),
+    movingUnits: data.movingUnits.map((m) => ({
+      ...m,
+      departureTime: new Date(m.departureTime),
+      arrivalTime: new Date(m.arrivalTime),
+    })),
+    gameEvents: data.gameEvents.map((e) => ({
+      ...e,
+      timestamp: new Date(e.timestamp),
+    })),
+    activeCombats: (data.activeCombats || []).map((c) => ({
+      ...c,
+      startTime: new Date(c.startTime),
+      lastRoundTime: new Date(c.lastRoundTime),
+    })),
+  };
+}
+
+// Save game to localStorage
+export function saveGame(
+  gameState: GameState,
+  regions: RegionState,
+  aiState: AIState | null
+): boolean {
+  try {
+    const saveData: SaveData = {
+      version: SAVE_VERSION,
+      savedAt: new Date().toISOString(),
+      gameState: serializeGameState(gameState),
+      regions,
+      aiState,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
+    return true;
+  } catch (error) {
+    console.error('Failed to save game:', error);
+    return false;
+  }
+}
+
+// Load game from localStorage
+export function loadGame(): {
+  gameState: GameState;
+  regions: RegionState;
+  aiState: AIState | null;
+} | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+
+    const data: SaveData = JSON.parse(raw);
+
+    // Version check (for future migrations)
+    if (data.version !== SAVE_VERSION) {
+      console.warn(`Save version mismatch: expected ${SAVE_VERSION}, got ${data.version}`);
+      // Old saves are incompatible with new Division system
+      if (data.version < 2) {
+        console.warn('Old save format detected, clearing incompatible save');
+        deleteSaveGame();
+        return null;
+      }
+    }
+
+    // Validate required fields
+    if (!data.gameState || !data.regions) {
+      console.error('Invalid save data structure');
+      return null;
+    }
+
+    return {
+      gameState: deserializeGameState(data.gameState),
+      regions: data.regions,
+      aiState: data.aiState,
+    };
+  } catch (error) {
+    console.error('Failed to load game:', error);
+    return null;
+  }
+}
+
+// Check if a save game exists
+export function hasSaveGame(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEY) !== null;
+  } catch {
+    return false;
+  }
+}
+
+// Delete saved game
+export function deleteSaveGame(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (error) {
+    console.error('Failed to delete save:', error);
+  }
+}
+
+// Get save info for display (without loading full state)
+export function getSaveInfo(): { savedAt: Date; gameDate: Date } | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+
+    const data: SaveData = JSON.parse(raw);
+    return {
+      savedAt: new Date(data.savedAt),
+      gameDate: new Date(data.gameState.dateTime),
+    };
+  } catch {
+    return null;
+  }
+}

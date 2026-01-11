@@ -3,15 +3,28 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Screen, Country, GameSpeed, GameState, RegionState, Adjacency, Movement, AIState, FactionId, GameEvent, GameEventType, Division } from './types/game';
 import { initialMissions } from './data/gameData';
-import { createInitialOwnership } from './utils/mapUtils';
+import { createInitialOwnership, calculateFactionIncome } from './utils/mapUtils';
 import { createInitialAIState, runAITick } from './ai/cpuPlayer';
 import { createDivision, resolveCombat, getDivisionCount, createActiveCombat, processCombatRound, shouldProcessCombatRound } from './utils/combat';
+import { saveGame, loadGame, hasSaveGame, getSaveInfo } from './utils/saveLoad';
+import { useAutosave } from './hooks/useAutosave';
 import TitleScreen from './screens/TitleScreen';
 import CountrySelectScreen from './screens/CountrySelectScreen';
 import MainScreen from './screens/MainScreen';
 import MissionScreen from './screens/MissionScreen';
 import EventsModal from './components/EventsModal';
 import CombatPopup from './components/CombatPopup';
+
+// Declare global window.gameAPI for programmatic control (useful for AI agents and testing)
+declare global {
+  interface Window {
+    gameAPI?: {
+      selectRegion: (regionId: string | null) => void;
+      getSelectedRegion: () => string | null;
+      getRegions: () => RegionState;
+    };
+  }
+}
 
 // Helper function to create game events
 function createGameEvent(
@@ -40,7 +53,7 @@ const initialGameState: GameState = {
   isPlaying: false,
   gameSpeed: 1,
   money: 100,
-  income: 5,
+  income: 0, // Income is now calculated dynamically based on controlled states
   reserveDivisions: [],
   missions: initialMissions,
   movingUnits: [],
@@ -58,6 +71,9 @@ export default function Home() {
   const [aiState, setAIState] = useState<AIState | null>(null);
   const [isEventsModalOpen, setIsEventsModalOpen] = useState(false);
   const [selectedCombatId, setSelectedCombatId] = useState<string | null>(null);
+  const [hasSave, setHasSave] = useState(false);
+  const [saveInfo, setSaveInfo] = useState<{ savedAt: Date; gameDate: Date } | null>(null);
+  const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
   
   // Ref to store pending region updates from completed movements
   const pendingRegionUpdatesRef = useRef<Movement[]>([]);
@@ -71,6 +87,54 @@ export default function Home() {
   const currentDateTimeRef = useRef<Date>(new Date(1917, 10, 7));
   // Ref to store pending region updates from completed combats
   const pendingCombatRegionUpdatesRef = useRef<import('./types/game').ActiveCombat[]>([]);
+
+  // Check for existing save on mount
+  useEffect(() => {
+    setHasSave(hasSaveGame());
+    setSaveInfo(getSaveInfo());
+  }, []);
+
+  // Expose game API on window for programmatic control (AI agents, testing, automation)
+  useEffect(() => {
+    window.gameAPI = {
+      selectRegion: (regionId: string | null) => {
+        if (regionId === null) {
+          setSelectedRegion(null);
+          setSelectedUnitRegion(null);
+          return;
+        }
+        // Validate region exists
+        if (regions[regionId]) {
+          setSelectedRegion(regionId);
+          // If this region has units owned by player, also select as unit
+          const region = regions[regionId];
+          if (region && region.owner === gameState.selectedCountry?.id && region.divisions.length > 0) {
+            setSelectedUnitRegion(regionId);
+          } else {
+            setSelectedUnitRegion(null);
+          }
+        } else {
+          console.warn(`[gameAPI] Region "${regionId}" not found`);
+        }
+      },
+      getSelectedRegion: () => selectedRegion,
+      getRegions: () => regions,
+    };
+
+    return () => {
+      delete window.gameAPI;
+    };
+  }, [regions, selectedRegion, gameState.selectedCountry?.id]);
+
+  // Autosave callback
+  const handleAutosave = useCallback(() => {
+    setLastSaveTime(new Date());
+    setSaveInfo(getSaveInfo());
+    setHasSave(true);
+  }, []);
+
+  // Autosave hook - saves every game day
+  useAutosave(gameState, regions, aiState, handleAutosave);
 
   // Load map data on mount
   useEffect(() => {
@@ -316,6 +380,10 @@ export default function Home() {
     const msPerHour = 1000 / gameState.gameSpeed;
     
     const interval = setInterval(() => {
+      // Calculate player income based on controlled states (1 money per state per hour)
+      const playerFaction = gameState.selectedCountry?.id;
+      const playerIncome = playerFaction ? calculateFactionIncome(regions, playerFaction) : 0;
+      
       setGameState(prev => {
         const newDate = new Date(prev.dateTime);
         newDate.setHours(newDate.getHours() + 1);
@@ -323,8 +391,8 @@ export default function Home() {
         // Update the ref so we can use it outside this callback
         currentDateTimeRef.current = newDate;
         
-        // Add income every hour
-        const newMoney = prev.money + prev.income;
+        // Add income every hour (based on controlled states)
+        const newMoney = prev.money + playerIncome;
         
         // Process unit movements
         const remainingMovements: Movement[] = [];
@@ -345,6 +413,7 @@ export default function Home() {
           ...prev,
           dateTime: newDate,
           money: newMoney,
+          income: playerIncome, // Update displayed income
           movingUnits: remainingMovements,
         };
       });
@@ -386,7 +455,18 @@ export default function Home() {
     }, msPerHour);
 
     return () => clearInterval(interval);
-  }, [gameState.isPlaying, gameState.gameSpeed, processPendingMovements, processActiveCombats, processCombatRegionUpdates, aiState]);
+  }, [gameState.isPlaying, gameState.gameSpeed, gameState.selectedCountry, regions, processPendingMovements, processActiveCombats, processCombatRegionUpdates, aiState]);
+
+  // Update income when regions or selected country changes
+  useEffect(() => {
+    if (!gameState.selectedCountry || Object.keys(regions).length === 0) return;
+    
+    const newIncome = calculateFactionIncome(regions, gameState.selectedCountry.id);
+    setGameState(prev => ({
+      ...prev,
+      income: newIncome,
+    }));
+  }, [regions, gameState.selectedCountry]);
 
   // Screen navigation
   const navigateToScreen = useCallback((screen: Screen) => {
@@ -399,10 +479,14 @@ export default function Home() {
     const aiFaction: FactionId = country.id === 'soviet' ? 'white' : 'soviet';
     setAIState(createInitialAIState(aiFaction));
     
+    // Filter missions by selected faction
+    const factionMissions = initialMissions.filter(m => m.faction === country.id);
+    
     setGameState(prev => ({
       ...prev,
       selectedCountry: country,
       currentScreen: 'main',
+      missions: factionMissions,
     }));
   }, []);
 
@@ -535,20 +619,35 @@ export default function Home() {
     setGameState(prev => {
       const mission = prev.missions.find(m => m.id === missionId);
       if (mission && mission.completed && !mission.claimed) {
-        const newEvent = createGameEvent(
+        const events: GameEvent[] = [];
+        
+        // Create mission claimed event
+        events.push(createGameEvent(
           'mission_claimed',
           `Mission Completed: ${mission.name}`,
           `Reward of $${mission.rewards.money} claimed for completing "${mission.name}".`,
           prev.dateTime,
           prev.selectedCountry?.id
-        );
+        ));
+        
+        // Check for game victory
+        if (mission.rewards.gameVictory) {
+          events.push(createGameEvent(
+            'game_victory',
+            'Victory!',
+            `${prev.selectedCountry?.name} has achieved total victory in the Russian Civil War!`,
+            prev.dateTime,
+            prev.selectedCountry?.id
+          ));
+        }
+        
         return {
           ...prev,
           money: prev.money + mission.rewards.money,
           missions: prev.missions.map(m =>
             m.id === missionId ? { ...m, claimed: true } : m
           ),
-          gameEvents: [...prev.gameEvents, newEvent],
+          gameEvents: [...prev.gameEvents, ...events],
         };
       }
       return prev;
@@ -576,13 +675,58 @@ export default function Home() {
     setIsEventsModalOpen(false);
   }, []);
 
+  // Save game handler
+  const handleSaveGame = useCallback(() => {
+    const success = saveGame(gameState, regions, aiState);
+    if (success) {
+      setLastSaveTime(new Date());
+      setSaveInfo(getSaveInfo());
+      setHasSave(true);
+    }
+  }, [gameState, regions, aiState]);
+
+  // Continue game handler (load from title screen)
+  const handleContinueGame = useCallback(async () => {
+    const saved = loadGame();
+    if (!saved) return;
+
+    // Load map data first if not already loaded
+    if (!mapDataLoaded) {
+      try {
+        const [geoResponse, adjResponse] = await Promise.all([
+          fetch('/map/regions.geojson'),
+          fetch('/map/adjacency.json'),
+        ]);
+        const geoData = await geoResponse.json();
+        const adjData = await adjResponse.json();
+        setAdjacency(adjData);
+        setMapDataLoaded(true);
+      } catch (error) {
+        console.error('Failed to load map data:', error);
+        return;
+      }
+    }
+
+    // Restore saved state (always start paused)
+    setGameState({
+      ...saved.gameState,
+      isPlaying: false,
+      currentScreen: 'main',
+    });
+    setRegions(saved.regions);
+    setAIState(saved.aiState);
+  }, [mapDataLoaded]);
+
   // Render current screen
   const renderScreen = () => {
     switch (gameState.currentScreen) {
       case 'title':
         return (
           <TitleScreen 
-            onStartGame={() => navigateToScreen('countrySelect')} 
+            onStartGame={() => navigateToScreen('countrySelect')}
+            onContinue={handleContinueGame}
+            hasSave={hasSave}
+            saveInfo={saveInfo}
           />
         );
       
@@ -628,6 +772,8 @@ export default function Home() {
             onDeployUnit={handleDeployUnit}
             onMoveUnits={handleMoveUnits}
             onSelectCombat={setSelectedCombatId}
+            onSaveGame={handleSaveGame}
+            lastSaveTime={lastSaveTime}
           />
         );
       

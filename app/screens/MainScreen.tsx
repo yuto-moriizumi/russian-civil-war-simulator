@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, Division, ActiveCombat } from '../types/game';
 import SpeedControl from '../components/SpeedControl';
@@ -42,6 +43,8 @@ interface MainScreenProps {
   onDeployUnit: () => void;
   onMoveUnits: (fromRegion: string, toRegion: string, count: number) => void;
   onSelectCombat: (combatId: string | null) => void;
+  onSaveGame: () => void;
+  lastSaveTime?: Date | null;
 }
 
 export default function MainScreen({
@@ -72,7 +75,20 @@ export default function MainScreen({
   onDeployUnit,
   onMoveUnits,
   onSelectCombat,
+  onSaveGame,
+  lastSaveTime,
 }: MainScreenProps) {
+  const [showSavedIndicator, setShowSavedIndicator] = useState(false);
+
+  // Show "Saved!" indicator when lastSaveTime changes
+  useEffect(() => {
+    if (lastSaveTime) {
+      setShowSavedIndicator(true);
+      const timer = setTimeout(() => setShowSavedIndicator(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [lastSaveTime]);
+
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -238,7 +254,12 @@ export default function MainScreen({
       {/* Bottom status bar */}
       <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-stone-700 bg-stone-900/90 px-4 py-2">
         <div className="flex items-center justify-between text-xs text-stone-400">
-          <span>Status: {isPlaying ? 'Time advancing...' : 'Paused'}</span>
+          <div className="flex items-center gap-4">
+            <span>Status: {isPlaying ? 'Time advancing...' : 'Paused'}</span>
+            {showSavedIndicator && (
+              <span className="animate-pulse text-green-400">Game Saved!</span>
+            )}
+          </div>
           <div className="flex items-center gap-4">
             <span>Reserve Divisions: {reserveDivisions.length}</span>
             {activeCombats.length > 0 && (
@@ -247,6 +268,13 @@ export default function MainScreen({
               </span>
             )}
             <span>Active Missions: {missions.filter(m => !m.claimed).length}</span>
+            <button
+              onClick={onSaveGame}
+              className="rounded bg-amber-700 px-3 py-1 text-stone-200 transition-colors hover:bg-amber-600"
+              title="Save Game"
+            >
+              Save
+            </button>
             <button
               onClick={onOpenEvents}
               className="relative rounded bg-stone-700 px-3 py-1 text-stone-300 transition-colors hover:bg-stone-600"
