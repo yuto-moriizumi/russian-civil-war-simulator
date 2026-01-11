@@ -149,11 +149,17 @@ export const useGameStore = create<GameStore>()(
         const aiFaction: FactionId = country.id === 'soviet' ? 'white' : 'soviet';
         const factionMissions = initialMissions.filter(m => m.faction === country.id);
         
+        // Reset all game state for a fresh start
         set({
+          ...initialGameState,
           selectedCountry: country,
           currentScreen: 'main',
           missions: factionMissions,
           aiState: createInitialAIState(aiFaction),
+          // Keep the regions and adjacency from map data (these are static)
+          regions: get().regions,
+          adjacency: get().adjacency,
+          mapDataLoaded: get().mapDataLoaded,
         });
         
         // Detect theaters when game starts
