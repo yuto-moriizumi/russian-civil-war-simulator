@@ -1,4 +1,4 @@
-import { RegionState, Adjacency, FactionId, Theater } from '../types/game';
+import { RegionState, Adjacency, FactionId, Theater, Region } from '../types/game';
 
 /**
  * Detect theaters of operation by finding connected groups of frontline regions.
@@ -102,6 +102,7 @@ export function detectTheaters(
 
 /**
  * Generate a descriptive name for a theater based on geography and enemies.
+ * Uses sophisticated analysis of region positions, names, and context.
  */
 function generateTheaterName(
   regionIds: string[],
@@ -109,39 +110,201 @@ function generateTheaterName(
   enemyFaction: FactionId,
   index: number
 ): string {
-  // Get the first region's name as a geographic reference
-  const firstRegion = regions[regionIds[0]];
-  if (!firstRegion) return `Theater ${index + 1}`;
+  if (regionIds.length === 0) return `Theater ${index + 1}`;
   
-  // Extract geographic terms from region names
-  const regionNames = regionIds
-    .map(id => regions[id]?.name || '')
-    .filter(name => name.length > 0);
+  const regionData = regionIds.map(id => regions[id]).filter(r => r != null);
+  if (regionData.length === 0) return `Theater ${index + 1}`;
   
-  // Look for common geographic terms
-  const geoTerms = ['North', 'South', 'East', 'West', 'Central', 'Siberia', 'Caucasus', 'Urals', 'Far East'];
-  for (const term of geoTerms) {
-    if (regionNames.some(name => name.includes(term))) {
-      return `${term}ern Theater`;
+  // Analyze geographic distribution
+  const geoAnalysis = analyzeGeography(regionData);
+  
+  // Try different naming strategies in order of specificity
+  
+  // Strategy 1: Named geographic regions (highest priority)
+  const namedRegionName = getNamedRegionName(regionData);
+  if (namedRegionName) return namedRegionName;
+  
+  // Strategy 2: Country-based names for border theaters
+  const countryName = getCountryTheaterName(regionData);
+  if (countryName) return countryName;
+  
+  // Strategy 3: Directional names based on geographic center
+  const directionalName = getDirectionalName(geoAnalysis, enemyFaction);
+  if (directionalName) return directionalName;
+  
+  // Strategy 4: Regional descriptors from region names
+  const regionalName = getRegionalDescriptor(regionData);
+  if (regionalName) return regionalName;
+  
+  // Fallback: Enemy-based naming with ordinal
+  return getEnemyBasedName(enemyFaction, index);
+}
+
+/**
+ * Analyze geographic distribution of regions
+ */
+function analyzeGeography(regionData: Region[]): {
+  hasNorthern: boolean;
+  hasSouthern: boolean;
+  hasEastern: boolean;
+  hasWestern: boolean;
+  hasCentral: boolean;
+  dominantCountry: string | null;
+  countries: Set<string>;
+} {
+  const regionNames = regionData.map(r => r.name.toLowerCase());
+  const countries = new Set(regionData.map(r => r.countryIso3));
+  
+  // Count country occurrences
+  const countryCounts: Record<string, number> = {};
+  regionData.forEach(r => {
+    countryCounts[r.countryIso3] = (countryCounts[r.countryIso3] || 0) + 1;
+  });
+  const dominantCountry = Object.entries(countryCounts)
+    .sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+  
+  return {
+    hasNorthern: regionNames.some(n => n.includes('north') || n.includes('arkhangelsk') || n.includes('murmansk') || n.includes('karelia')),
+    hasSouthern: regionNames.some(n => n.includes('south') || n.includes('crimea') || n.includes('kuban') || n.includes('krasnodar') || n.includes('rostov')),
+    hasEastern: regionNames.some(n => n.includes('east') || n.includes('vladivostok') || n.includes('khabarovsk') || n.includes('sakhalin')),
+    hasWestern: regionNames.some(n => n.includes('west') || n.includes('kaliningrad') || n.includes('smolensk') || n.includes('bryansk')),
+    hasCentral: regionNames.some(n => n.includes('central') || n.includes('moscow') || n.includes('tula') || n.includes('ryazan')),
+    dominantCountry,
+    countries,
+  };
+}
+
+/**
+ * Get name based on well-known geographic regions
+ */
+function getNamedRegionName(regionData: Region[]): string | null {
+  const regionNames = regionData.map(r => r.name.toLowerCase());
+  const allNames = regionNames.join(' ');
+  
+  // Major geographic regions (specific to general)
+  const namedRegions = [
+    { keywords: ['crimea', 'sevastopol'], name: 'Crimean Front' },
+    { keywords: ['caucasus', 'georgia', 'armenia', 'azerbaijan', 'dagestan', 'chechnya'], name: 'Caucasus Front' },
+    { keywords: ['siberia', 'siberian', 'irkutsk', 'krasnoyarsk', 'novosibirsk'], name: 'Siberian Front' },
+    { keywords: ['far east', 'vladivostok', 'khabarovsk', 'primorsky', 'sakhalin'], name: 'Far Eastern Front' },
+    { keywords: ['urals', 'ural', 'sverdlovsk', 'chelyabinsk', 'perm'], name: 'Ural Front' },
+    { keywords: ['volga', 'samara', 'saratov', 'volgograd', 'kazan', 'nizhny novgorod'], name: 'Volga Front' },
+    { keywords: ['don', 'rostov', 'voronezh', 'kursk'], name: 'Don Front' },
+    { keywords: ['baltic', 'estonia', 'latvia', 'lithuania', 'kaliningrad'], name: 'Baltic Front' },
+    { keywords: ['karelia', 'murmansk', 'arkhangelsk'], name: 'Karelian Front' },
+    { keywords: ['ukraine', 'ukrainian', 'kiev', 'kharkiv', 'odessa', 'lviv'], name: 'Ukrainian Front' },
+    { keywords: ['belarus', 'belarusian', 'minsk', 'vitebsk', 'gomel'], name: 'Belarusian Front' },
+    { keywords: ['central asia', 'kazakhstan', 'uzbekistan', 'turkmenistan', 'tashkent'], name: 'Central Asian Front' },
+    { keywords: ['kuban', 'krasnodar'], name: 'Kuban Front' },
+    { keywords: ['transbaikal', 'chita'], name: 'Transbaikal Front' },
+  ];
+  
+  for (const region of namedRegions) {
+    const matchCount = region.keywords.filter(kw => allNames.includes(kw)).length;
+    if (matchCount > 0) {
+      return region.name;
     }
   }
   
-  // Check for country codes to identify borders
-  const countryCode = firstRegion.countryIso3;
-  if (countryCode === 'UKR') return 'Ukrainian Theater';
-  if (countryCode === 'BLR') return 'Belarusian Theater';
-  if (countryCode === 'KAZ') return 'Central Asian Theater';
-  if (countryCode === 'GEO' || countryCode === 'ARM' || countryCode === 'AZE') return 'Caucasus Theater';
+  return null;
+}
+
+/**
+ * Get theater name based on country
+ */
+function getCountryTheaterName(regionData: Region[]): string | null {
+  const countries = new Set(regionData.map(r => r.countryIso3));
   
-  // Use enemy faction as fallback
+  // Single country theaters
+  if (countries.size === 1) {
+    const country = Array.from(countries)[0];
+    const countryNames: Record<string, string> = {
+      'UKR': 'Ukrainian Theater',
+      'BLR': 'Belarusian Theater',
+      'KAZ': 'Central Asian Theater',
+      'GEO': 'Caucasian Theater',
+      'ARM': 'Caucasian Theater',
+      'AZE': 'Caucasian Theater',
+      'EST': 'Baltic Theater',
+      'LVA': 'Baltic Theater',
+      'LTU': 'Baltic Theater',
+      'FIN': 'Finnish Theater',
+      'POL': 'Polish Theater',
+    };
+    
+    if (countryNames[country]) {
+      return countryNames[country];
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Get directional name based on geographic analysis
+ */
+function getDirectionalName(
+  geoAnalysis: ReturnType<typeof analyzeGeography>,
+  enemyFaction: FactionId
+): string | null {
+  const directions: string[] = [];
+  
+  if (geoAnalysis.hasNorthern) directions.push('Northern');
+  if (geoAnalysis.hasSouthern) directions.push('Southern');
+  if (geoAnalysis.hasEastern) directions.push('Eastern');
+  if (geoAnalysis.hasWestern) directions.push('Western');
+  if (geoAnalysis.hasCentral && directions.length === 0) directions.push('Central');
+  
+  if (directions.length === 1) {
+    return `${directions[0]} Front`;
+  } else if (directions.length === 2) {
+    // Combine directions (e.g., "North-Western Front")
+    return `${directions[0]}-${directions[1]} Front`;
+  }
+  
+  return null;
+}
+
+/**
+ * Get regional descriptor from region names
+ */
+function getRegionalDescriptor(regionData: Region[]): string | null {
+  const firstRegion = regionData[0];
+  if (!firstRegion) return null;
+  
+  const name = firstRegion.name;
+  
+  // Extract key terms from region name
+  const descriptors = [
+    'Maritime', 'Coastal', 'Mountain', 'Steppe', 'Forest',
+    'Industrial', 'Agricultural', 'Border'
+  ];
+  
+  for (const descriptor of descriptors) {
+    if (name.toLowerCase().includes(descriptor.toLowerCase())) {
+      return `${descriptor} Front`;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Get enemy-based fallback name
+ */
+function getEnemyBasedName(enemyFaction: FactionId, index: number): string {
   const enemyNames: Record<FactionId, string> = {
     white: 'White',
     soviet: 'Soviet',
-    neutral: 'Neutral',
+    neutral: 'Independent',
     foreign: 'Foreign',
   };
   
-  return `${enemyNames[enemyFaction]} Front`;
+  const enemyName = enemyNames[enemyFaction] || 'Unknown';
+  const ordinals = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
+  const ordinal = ordinals[index] || `${index + 1}th`;
+  
+  return `${ordinal} ${enemyName} Front`;
 }
 
 /**
