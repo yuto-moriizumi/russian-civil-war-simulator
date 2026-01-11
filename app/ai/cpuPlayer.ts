@@ -52,21 +52,22 @@ export interface AIActions {
 
 /**
  * Run AI logic for one tick (1 game hour)
- * - Earns income based on controlled regions (using region values/weights)
+ * - Earns income based on controlled regions (using region values/weights) minus unit maintenance costs
  * - Creates divisions if it has enough money
  * - Deploys reserve divisions to random owned regions (excluding regions with active combat)
  */
 export function runAITick(
   aiState: AIState,
   regions: RegionState,
-  activeCombats: ActiveCombat[] = []
+  activeCombats: ActiveCombat[] = [],
+  movingUnits: any[] = []
 ): AIActions {
   const { factionId } = aiState;
   let { money, reserveDivisions } = aiState;
   reserveDivisions = [...reserveDivisions]; // Clone to avoid mutation
   
-  // 1. Calculate income from controlled regions (using region values/weights)
-  const income = calculateFactionIncome(regions, factionId);
+  // 1. Calculate income from controlled regions (using region values/weights) minus unit maintenance costs
+  const income = calculateFactionIncome(regions, factionId, movingUnits);
   
   // 2. Earn income
   money += income;

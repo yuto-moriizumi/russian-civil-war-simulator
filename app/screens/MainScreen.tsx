@@ -7,6 +7,7 @@ import SpeedControl from '../components/SpeedControl';
 import CombatPopup from '../components/CombatPopup';
 import EventsModal from '../components/EventsModal';
 import TheaterPanel from '../components/TheaterPanel';
+import { countFactionUnits } from '../utils/mapUtils';
 
 // Dynamic import for GameMap to avoid SSR issues with MapLibre
 const GameMap = dynamic(() => import('../components/GameMap'), {
@@ -146,6 +147,11 @@ export default function MainScreen({
     });
   };
 
+  // Calculate unit count and maintenance costs
+  const unitCount = countFactionUnits(regions, country.id, movingUnits);
+  const maintenanceCost = unitCount; // $1 per unit per hour
+  const grossIncome = income + maintenanceCost; // Calculate gross income before maintenance
+
   const completedMissions = missions.filter(m => m.completed && !m.claimed);
 
   const selectedCombat = selectedCombatId 
@@ -215,7 +221,13 @@ export default function MainScreen({
             <div className="text-xs text-stone-400">Treasury</div>
             <div className="flex items-center gap-2">
               <span className="text-lg font-bold text-amber-400">${money}</span>
-              <span className="text-sm text-green-400">+${income}/h</span>
+              <div className="flex flex-col text-xs">
+                <span className="text-green-400">+${grossIncome}/h</span>
+                <span className="text-red-400">-${maintenanceCost}/h ({unitCount} units)</span>
+                <span className={income >= 0 ? "text-green-400 font-semibold" : "text-red-400 font-semibold"}>
+                  {income >= 0 ? '+' : ''}${income}/h net
+                </span>
+              </div>
             </div>
           </div>
 

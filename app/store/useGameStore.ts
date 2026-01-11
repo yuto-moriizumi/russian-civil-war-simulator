@@ -173,7 +173,7 @@ export const useGameStore = create<GameStore>()(
         const { dateTime, selectedCountry, regions, movingUnits, activeCombats, money, aiState, gameEvents } = state;
         
         const playerFaction = selectedCountry?.id;
-        const playerIncome = playerFaction ? calculateFactionIncome(regions, playerFaction) : 0;
+        const playerIncome = playerFaction ? calculateFactionIncome(regions, playerFaction, movingUnits) : 0;
         
         const newDate = new Date(dateTime);
         newDate.setHours(newDate.getHours() + 1);
@@ -346,7 +346,7 @@ export const useGameStore = create<GameStore>()(
         // AI Tick
         let nextAIState = aiState;
         if (aiState) {
-          const aiActions = runAITick(aiState, nextRegions, nextCombats);
+          const aiActions = runAITick(aiState, nextRegions, nextCombats, remainingMovements);
           nextAIState = aiActions.updatedAIState;
           
           if (aiActions.deployments.length > 0) {

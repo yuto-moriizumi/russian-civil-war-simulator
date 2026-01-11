@@ -26,11 +26,32 @@ export function getRegionsByFaction(regions: RegionState, faction: FactionId): s
     .map(([id]) => id);
 }
 
+// Count total units owned by a faction (in regions and in transit)
+export function countFactionUnits(regions: RegionState, faction: FactionId, movingUnits: any[] = []): number {
+  // Count units in regions
+  const unitsInRegions = Object.values(regions)
+    .filter(region => region.owner === faction)
+    .reduce((total, region) => total + region.divisions.length, 0);
+  
+  // Count units in transit
+  const unitsInTransit = movingUnits
+    .filter(movement => movement.owner === faction)
+    .reduce((total, movement) => total + movement.divisions.length, 0);
+  
+  return unitsInRegions + unitsInTransit;
+}
+
 // Calculate total income from regions controlled by a faction (using region values/weights)
-export function calculateFactionIncome(regions: RegionState, faction: FactionId): number {
-  return Object.values(regions)
+// minus unit maintenance costs ($1 per unit per hour)
+export function calculateFactionIncome(regions: RegionState, faction: FactionId, movingUnits: any[] = []): number {
+  const grossIncome = Object.values(regions)
     .filter(region => region.owner === faction)
     .reduce((total, region) => total + region.value, 0);
+  
+  const unitCount = countFactionUnits(regions, faction, movingUnits);
+  const maintenanceCost = unitCount; // $1 per unit per hour
+  
+  return grossIncome - maintenanceCost;
 }
 
 // Initialize region state from GeoJSON features
