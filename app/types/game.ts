@@ -135,13 +135,12 @@ export interface ActiveCombat {
   initialDefenderCount: number;     // Starting defender division count
   initialAttackerHp: number;        // Starting total HP of attackers
   initialDefenderHp: number;        // Starting total HP of defenders
-  currentRound: number;             // Current combat round (1-10)
-  maxRounds: number;                // Maximum rounds before stalemate
+  currentRound: number;             // Current combat round
   startTime: Date;                  // When combat started
   lastRoundTime: Date;              // When the last round was resolved
   roundIntervalHours: number;       // Hours between rounds
   isComplete: boolean;              // Whether combat has concluded
-  victor: FactionId | null;         // Who won (null if ongoing or stalemate)
+  victor: FactionId | null;         // Who won (null if ongoing)
 }
 
 // Story/Narrative Event for master data (introduction, victory screens, etc.)

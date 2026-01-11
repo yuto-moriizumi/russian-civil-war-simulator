@@ -192,7 +192,6 @@ export function createActiveCombat(
     initialAttackerHp: getTotalHp(attackerDivisions),
     initialDefenderHp: getTotalHp(defenderDivisions),
     currentRound: 0,
-    maxRounds: 10,
     startTime: new Date(currentTime),
     lastRoundTime: new Date(currentTime),
     roundIntervalHours: 1, // One combat round per game hour
@@ -251,8 +250,7 @@ export function processCombatRound(combat: ActiveCombat): ActiveCombat {
   const newRound = combat.currentRound + 1;
   const combatEnded = 
     attackerDivisions.length === 0 || 
-    defenderDivisions.length === 0 || 
-    newRound >= combat.maxRounds;
+    defenderDivisions.length === 0;
   
   let victor: FactionId | null = null;
   if (combatEnded) {
@@ -261,7 +259,6 @@ export function processCombatRound(combat: ActiveCombat): ActiveCombat {
     } else if (attackerDivisions.length === 0 && defenderDivisions.length > 0) {
       victor = combat.defenderFaction;
     }
-    // If both have units or both destroyed, victor stays null (stalemate/draw)
   }
   
   return {

@@ -51,7 +51,6 @@ interface SerializedActiveCombat {
   initialAttackerHp: number;
   initialDefenderHp: number;
   currentRound: number;
-  maxRounds: number;
   startTime: string;
   lastRoundTime: string;
   roundIntervalHours: number;

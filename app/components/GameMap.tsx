@@ -916,7 +916,6 @@ export default function GameMap({
                 const defenderProgress = combat.initialDefenderHp > 0 
                   ? (defenderHp / combat.initialDefenderHp) * 100 
                   : 0;
-                const roundProgress = (combat.currentRound / combat.maxRounds) * 100;
                 
                 const attackerColor = FACTION_COLORS[combat.attackerFaction];
                 const defenderColor = FACTION_COLORS[combat.defenderFaction];
@@ -934,7 +933,7 @@ export default function GameMap({
                         {combat.regionName}
                       </div>
                       <div className="text-[10px] text-stone-500">
-                        Round {combat.currentRound}/{combat.maxRounds}
+                        Round {combat.currentRound}
                       </div>
                     </div>
                     
@@ -1002,21 +1001,6 @@ export default function GameMap({
                       </div>
                     </div>
                     
-                    {/* Combat progress bar */}
-                    <div className="mt-2 pt-2 border-t border-stone-700">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[9px] text-stone-500">Battle Progress</span>
-                        <span className="text-[9px] text-stone-400">
-                          {Math.round(roundProgress)}%
-                        </span>
-                      </div>
-                      <div className="h-1 bg-stone-700 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-yellow-600 to-red-600 transition-all duration-500"
-                          style={{ width: `${roundProgress}%` }}
-                        />
-                      </div>
-                    </div>
                   </div>
                 );
               })}

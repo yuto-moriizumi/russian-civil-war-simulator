@@ -125,7 +125,7 @@ export default function CombatPopup({ combat, onClose }: CombatPopupProps) {
                       stroke="#822" 
                       strokeWidth="4"
                       strokeDasharray={`${2 * Math.PI * 28}`}
-                      strokeDashoffset={`${2 * Math.PI * 28 * (1 - (combat.currentRound / combat.maxRounds))}`}
+                      strokeDashoffset="0"
                       className="transition-all duration-1000"
                     />
                  </svg>
@@ -176,10 +176,10 @@ export default function CombatPopup({ combat, onClose }: CombatPopupProps) {
             </div>
           </div>
 
-          <div className="mt-6 flex items-center justify-center gap-4">
-             <div className="text-[10px] text-stone-500 uppercase tracking-widest">
-               Round {combat.currentRound} / {combat.maxRounds}
-             </div>
+           <div className="mt-6 flex items-center justify-center gap-4">
+              <div className="text-[10px] text-stone-500 uppercase tracking-widest">
+                Round {combat.currentRound}
+              </div>
              {combat.isComplete && (
                <div className={`px-4 py-1 rounded border font-bold uppercase tracking-widest animate-pulse ${
                  combat.victor === combat.attackerFaction ? 'bg-red-900/40 border-red-700 text-red-400' :
