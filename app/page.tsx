@@ -87,6 +87,9 @@ function MainScreenView() {
       selectedUnitRegion={state.selectedUnitRegion}
       mapDataLoaded={state.mapDataLoaded}
       gameEvents={state.gameEvents}
+      armyGroups={state.armyGroups}
+      multiSelectedRegions={state.multiSelectedRegions}
+      selectedGroupId={state.selectedGroupId}
       onTogglePlay={state.togglePlay}
       onChangeSpeed={state.setGameSpeed}
       onCreateInfantry={state.createInfantry}
@@ -103,6 +106,13 @@ function MainScreenView() {
       selectedCombatId={state.selectedCombatId}
       isEventsModalOpen={state.isEventsModalOpen}
       onCloseEvents={() => state.setIsEventsModalOpen(false)}
+      onToggleMultiSelectRegion={state.toggleMultiSelectRegion}
+      onClearMultiSelection={state.clearMultiSelection}
+      onCreateArmyGroup={state.createArmyGroup}
+      onDeleteArmyGroup={state.deleteArmyGroup}
+      onRenameArmyGroup={state.renameArmyGroup}
+      onSelectArmyGroup={state.selectArmyGroup}
+      onAdvanceArmyGroup={state.advanceArmyGroup}
     />
   );
 }

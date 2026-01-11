@@ -103,6 +103,7 @@ export interface GameState {
   movingUnits: Movement[];
   gameEvents: GameEvent[];
   activeCombats: ActiveCombat[]; // Ongoing battles
+  armyGroups: ArmyGroup[]; // Player's army groups for bulk movement
 }
 
 // AI State for CPU-controlled factions
@@ -150,6 +151,15 @@ export interface StoryEvent {
   text: string;
 }
 
+// Army Group for coordinated unit movement
+export interface ArmyGroup {
+  id: string;                      // Unique identifier
+  name: string;                    // Display name (e.g., "Northern Front")
+  regionIds: string[];             // Regions assigned to this group
+  color: string;                   // Visual identifier (#hex color)
+  owner: FactionId;                // Which faction owns this group
+}
+
 // Game API interface for programmatic control (useful for AI agents and testing)
 export interface GameAPI {
   // Region selection
@@ -164,6 +174,14 @@ export interface GameAPI {
   getAdjacentRegions: (regionId: string) => string[];
   getMovingUnits: () => Movement[];
   getActiveCombats: () => ActiveCombat[];
+  // Army Group methods
+  toggleMultiSelect: (regionId: string) => void;
+  getMultiSelectedRegions: () => string[];
+  clearMultiSelection: () => void;
+  createArmyGroup: (name: string) => void;
+  getArmyGroups: () => ArmyGroup[];
+  advanceArmyGroup: (groupId: string) => void;
+  deleteArmyGroup: (groupId: string) => void;
 }
 
 // Declare global window.gameAPI
