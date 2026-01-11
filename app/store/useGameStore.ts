@@ -679,7 +679,7 @@ export const useGameStore = create<GameStore>()(
         // Distribute reserves evenly across regions
         const newRegions = { ...regions };
         const newEvents = [...gameEvents];
-        let remainingReserves = [...reserveDivisions];
+        const remainingReserves = [...reserveDivisions];
         let deployedCount = 0;
 
         // Simple round-robin distribution

@@ -72,14 +72,6 @@ export default function ArmyGroupsPanel({
     }
   };
 
-  // Count valid regions (still owned by player)
-  const getValidRegionCount = (regionIds: string[]) => {
-    return regionIds.filter(id => {
-      const region = regions[id];
-      return region && region.owner === playerFaction;
-    }).length;
-  };
-
   return (
     <div className="border-t border-stone-700 bg-stone-900/95">
       {/* Header - always visible */}
@@ -145,7 +137,6 @@ export default function ArmyGroupsPanel({
             <div className="flex flex-wrap gap-2">
               {armyGroups.map((group) => {
                 const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerFaction);
-                const validRegions = getValidRegionCount(group.regionIds);
                 const isSelected = selectedGroupId === group.id;
 
                 return (

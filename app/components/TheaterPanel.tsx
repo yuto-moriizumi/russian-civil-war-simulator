@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Theater, ArmyGroup, RegionState, FactionId } from '../types/game';
-import { getTheaterStats } from '../utils/theaterDetection';
 import { getArmyGroupUnitCount } from '../utils/pathfinding';
 
 interface TheaterPanelProps {
@@ -186,7 +185,6 @@ export default function TheaterPanel({
           ) : (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
               {theaters.map((theater) => {
-                const stats = getTheaterStats(theater, regions);
                 const isSelected = selectedTheaterId === theater.id;
                 const groups = armyGroups.filter(g => g.theaterId === theater.id);
 
@@ -407,7 +405,7 @@ export default function TheaterPanel({
           {/* Help text */}
           <div className="mt-3 text-xs text-stone-500">
             <strong>Theaters</strong> are auto-detected frontline regions facing enemies.
-            Click <strong>"+ Create Group"</strong> on a theater to instantly create an army group with an auto-generated name.
+            Click <strong>&quot;+ Create Group&quot;</strong> on a theater to instantly create an army group with an auto-generated name.
             <strong>Shift+click</strong> regions for custom selections. <strong>Double-click</strong> a group name to rename it.
           </div>
         </div>
