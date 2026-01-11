@@ -175,6 +175,8 @@ export default function MainScreen({
             unitsInReserve={reserveDivisions.length}
             multiSelectedRegions={multiSelectedRegions}
             armyGroups={armyGroups}
+            theaters={theaters}
+            selectedTheaterId={selectedTheaterId}
             onRegionSelect={onRegionSelect}
             onUnitSelect={onUnitSelect}
             onDeployUnit={onDeployUnit}

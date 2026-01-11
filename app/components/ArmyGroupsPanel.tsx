@@ -189,13 +189,6 @@ export default function ArmyGroupsPanel({
                       </span>
                     )}
 
-                    {/* Stats */}
-                    <div className="flex items-center gap-1 text-xs text-stone-400">
-                      <span title="Regions">{validRegions}R</span>
-                      <span>|</span>
-                      <span title="Divisions">{unitCount}D</span>
-                    </div>
-
                     {/* Advance button */}
                     <button
                       onClick={(e) => {

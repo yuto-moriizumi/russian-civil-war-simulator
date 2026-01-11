@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { RegionState, Adjacency, FactionId, Movement, ActiveCombat, ArmyGroup } from '../types/game';
+import { RegionState, Adjacency, FactionId, Movement, ActiveCombat, ArmyGroup, Theater } from '../types/game';
 import { FACTION_COLORS, getAdjacentRegions } from '../utils/mapUtils';
 
 interface GameMapProps {
@@ -18,6 +18,8 @@ interface GameMapProps {
   unitsInReserve: number;
   multiSelectedRegions: string[];
   armyGroups: ArmyGroup[];
+  theaters: Theater[];
+  selectedTheaterId: string | null;
   onRegionSelect: (regionId: string | null) => void;
   onUnitSelect: (regionId: string | null) => void;
   onRegionHover?: (regionId: string | null) => void;
@@ -39,6 +41,8 @@ export default function GameMap({
   unitsInReserve,
   multiSelectedRegions,
   armyGroups,
+  theaters,
+  selectedTheaterId,
   onRegionSelect,
   onUnitSelect,
   onRegionHover,
@@ -226,6 +230,8 @@ export default function GameMap({
             '#FFD700',
             ['boolean', ['feature-state', 'multiSelected'], false],
             '#3B82F6', // Blue for multi-select
+            ['boolean', ['feature-state', 'theaterFrontline'], false],
+            '#FF6B35', // Orange for theater frontline
             ['boolean', ['feature-state', 'hover'], false],
             '#FFFFFF',
             ['to-color', ['feature-state', 'groupColor'], '#333333'], // Use group color if set
@@ -236,6 +242,8 @@ export default function GameMap({
             3,
             ['boolean', ['feature-state', 'multiSelected'], false],
             3,
+            ['boolean', ['feature-state', 'theaterFrontline'], false],
+            3, // Wide border for theater frontline
             ['boolean', ['feature-state', 'inGroup'], false],
             2.5,
             ['boolean', ['feature-state', 'hover'], false],
@@ -246,6 +254,8 @@ export default function GameMap({
             'case',
             ['boolean', ['feature-state', 'multiSelected'], false],
             ['literal', [2, 2]], // Dashed for multi-select
+            ['boolean', ['feature-state', 'theaterFrontline'], false],
+            ['literal', [4, 2]], // Dashed for theater frontline
             ['literal', [1, 0]], // Solid for others
           ],
         },
@@ -385,7 +395,20 @@ export default function GameMap({
     // Clear all feature states first
     map.current.removeFeatureState({ source: 'regions' });
 
-    // Set army group region states first (so they can be overridden by selection)
+    // Set theater frontline highlights (lowest priority, rendered first)
+    if (selectedTheaterId) {
+      const theater = theaters.find(t => t.id === selectedTheaterId);
+      if (theater) {
+        for (const regionId of theater.frontlineRegions) {
+          map.current.setFeatureState(
+            { source: 'regions', id: regionId },
+            { theaterFrontline: true }
+          );
+        }
+      }
+    }
+
+    // Set army group region states (so they can be overridden by selection)
     for (const group of armyGroups) {
       for (const regionId of group.regionIds) {
         map.current.setFeatureState(
@@ -430,7 +453,7 @@ export default function GameMap({
         );
       }
     }
-  }, [selectedRegion, selectedUnitRegion, adjacency, mapLoaded, multiSelectedRegions, armyGroups]);
+  }, [selectedRegion, selectedUnitRegion, adjacency, mapLoaded, multiSelectedRegions, armyGroups, selectedTheaterId, theaters]);
 
   // Update unit markers on the map
   useEffect(() => {

@@ -184,7 +184,7 @@ export default function TheaterPanel({
               No active theaters detected. Deploy units near enemy borders to establish theaters of operation.
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
               {theaters.map((theater) => {
                 const stats = getTheaterStats(theater, regions);
                 const isSelected = selectedTheaterId === theater.id;
@@ -208,13 +208,6 @@ export default function TheaterPanel({
                         <div className="text-lg">🎖️</div>
                         <div>
                           <div className="font-semibold text-white">{theater.name}</div>
-                          <div className="flex gap-3 text-xs text-stone-400">
-                            <span title="Frontline regions">{stats.totalRegions}R</span>
-                            <span>|</span>
-                            <span title="Total divisions">{stats.totalDivisions}D</span>
-                            <span>|</span>
-                            <span title="Facing enemy">vs {theater.enemyFaction}</span>
-                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
