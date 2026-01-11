@@ -44,13 +44,27 @@ export default function Home() {
 // Sub-components to keep the main file clean and use specific store slices
 function TitleScreenView() {
   const navigateToScreen = useGameStore(state => state.navigateToScreen);
-  // Note: Persist handles loading automatically, but we can still expose a "Continue" button
+  const selectedCountry = useGameStore(state => state.selectedCountry);
+  const dateTime = useGameStore(state => state.dateTime);
+  
+  // Check if there's a valid saved game (has a selected country and non-default date)
+  const hasSave = selectedCountry !== null;
+  const saveInfo = hasSave ? {
+    savedAt: new Date(), // We don't track this separately, so use current time
+    gameDate: dateTime
+  } : null;
+  
   return (
     <TitleScreen 
       onStartGame={() => navigateToScreen('countrySelect')}
-      onContinue={() => navigateToScreen('main')} // Simplification for now
-      hasSave={true} // Hardcoded for now as Persist is active
-      saveInfo={null}
+      onContinue={() => {
+        // Continue goes directly to the main screen since state is already loaded
+        if (hasSave) {
+          navigateToScreen('main');
+        }
+      }}
+      hasSave={hasSave}
+      saveInfo={saveInfo}
     />
   );
 }

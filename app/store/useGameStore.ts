@@ -763,6 +763,11 @@ export const useGameStore = create<GameStore>()(
               timestamp: new Date(e.timestamp),
             }));
           }
+          
+          // ALWAYS reset to title screen on rehydration so save data doesn't skip it
+          state.currentScreen = 'title';
+          // Pause the game when loading
+          state.isPlaying = false;
         }
       },
     }
