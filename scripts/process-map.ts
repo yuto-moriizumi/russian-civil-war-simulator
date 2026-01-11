@@ -3,6 +3,22 @@
  * 
  * ダウンロードしたGeoJSONを結合し、TopoJSONに変換して隣接関係を抽出する
  * 
+ * Features:
+ * - Arc-sharing based adjacency detection (TopoJSON)
+ * - Cross-border adjacency detection (different countries)
+ * - Same-country adjacency detection (missed by arc-sharing)
+ * - Isolated region detection (enclaves, capitals)
+ * - Custom adjacency definitions (straits, ferry routes, etc.)
+ * 
+ * Custom Adjacency:
+ * Define manual adjacency in map-config.json under "customAdjacency":
+ * {
+ *   "customAdjacency": {
+ *     "FI-01": ["FI-19"],  // Åland Islands <-> Lapland (ferry route)
+ *     "FI-19": ["FI-01"]
+ *   }
+ * }
+ * 
  * Usage: npx tsx scripts/process-map.ts
  */
 
@@ -25,6 +41,9 @@ interface CountryConfig {
 
 interface MapConfig {
   countries: CountryConfig[];
+  customAdjacency?: {
+    [regionId: string]: string[];
+  };
   output: {
     geojson: string;
     adjacency: string;
@@ -650,6 +669,62 @@ function detectIsolatedRegionAdjacency(
   return { adjacency, addedCount };
 }
 
+/**
+ * カスタム隣接関係を適用する
+ * 
+ * map-config.json の customAdjacency フィールドで定義された
+ * 手動の隣接関係を追加する。自動検出では見つからない隣接関係
+ * （例：海峡を隔てた地域、フェリー航路など）を定義できる。
+ */
+function applyCustomAdjacency(
+  existingAdjacency: Adjacency,
+  customAdjacency?: { [regionId: string]: string[] }
+): { adjacency: Adjacency; addedCount: number } {
+  const adjacency: Adjacency = {};
+  
+  // 既存の隣接関係をコピー
+  for (const [key, value] of Object.entries(existingAdjacency)) {
+    adjacency[key] = [...value];
+  }
+  
+  let addedCount = 0;
+  
+  if (!customAdjacency) {
+    return { adjacency, addedCount };
+  }
+  
+  console.log('  Applying custom adjacency definitions...');
+  
+  for (const [regionId, neighbors] of Object.entries(customAdjacency)) {
+    if (!adjacency[regionId]) {
+      adjacency[regionId] = [];
+    }
+    
+    for (const neighborId of neighbors) {
+      // 双方向に追加
+      if (!adjacency[regionId].includes(neighborId)) {
+        adjacency[regionId].push(neighborId);
+        addedCount++;
+        console.log(`    Added custom adjacency: ${regionId} <-> ${neighborId}`);
+      }
+      
+      if (!adjacency[neighborId]) {
+        adjacency[neighborId] = [];
+      }
+      if (!adjacency[neighborId].includes(regionId)) {
+        adjacency[neighborId].push(regionId);
+      }
+    }
+  }
+  
+  // ソート
+  for (const regionId of Object.keys(adjacency)) {
+    adjacency[regionId].sort();
+  }
+  
+  return { adjacency, addedCount };
+}
+
 async function main() {
   console.log('=== Map Processing Script ===\n');
   
@@ -718,7 +793,18 @@ async function main() {
   
   console.log(`  Added isolated region connections: ${isolatedAdded}`);
   
-  const totalPairs = Object.values(finalAdjacency).reduce((sum, arr) => sum + arr.length, 0) / 2;
+  let totalPairs = Object.values(finalAdjacency).reduce((sum, arr) => sum + arr.length, 0) / 2;
+  console.log(`  Total adjacent pairs: ${totalPairs}\n`);
+  
+  // Step 3e: カスタム隣接関係を適用
+  console.log('Step 3e: Applying custom adjacency...');
+  
+  const { adjacency: customAdjacencyResult, addedCount: customAdded } = 
+    applyCustomAdjacency(finalAdjacency, config.customAdjacency);
+  
+  console.log(`  Added custom adjacency pairs: ${customAdded}`);
+  
+  totalPairs = Object.values(customAdjacencyResult).reduce((sum, arr) => sum + arr.length, 0) / 2;
   console.log(`  Total adjacent pairs: ${totalPairs}\n`);
   
   // Step 4: GeoJSONを出力（TopoJSONから逆変換してプロパティを保持）
@@ -741,16 +827,16 @@ async function main() {
   fs.writeFileSync(geojsonOutputPath, JSON.stringify(outputGeoJSON));
   console.log(`  GeoJSON: ${geojsonOutputPath}`);
   
-  fs.writeFileSync(adjacencyOutputPath, JSON.stringify(finalAdjacency, null, 2));
+  fs.writeFileSync(adjacencyOutputPath, JSON.stringify(customAdjacencyResult, null, 2));
   console.log(`  Adjacency: ${adjacencyOutputPath}`);
   
   console.log('\n=== Processing Complete ===');
   
   // 隣接関係のサンプル表示
   console.log('\nAdjacency sample (first 5 regions):');
-  const sampleRegions = Object.keys(finalAdjacency).slice(0, 5);
+  const sampleRegions = Object.keys(customAdjacencyResult).slice(0, 5);
   for (const regionId of sampleRegions) {
-    console.log(`  ${regionId}: ${finalAdjacency[regionId].length} neighbors`);
+    console.log(`  ${regionId}: ${customAdjacencyResult[regionId].length} neighbors`);
   }
 }
 

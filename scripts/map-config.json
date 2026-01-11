@@ -76,6 +76,10 @@
       "admLevel": "ADM0"
     }
   ],
+  "customAdjacency": {
+    "FI-01": ["FI-19"],
+    "FI-19": ["FI-01"]
+  },
   "output": {
     "geojson": "../public/map/regions.geojson",
     "adjacency": "../public/map/adjacency.json"
