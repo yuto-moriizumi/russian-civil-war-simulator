@@ -5,7 +5,7 @@ import { Screen, Country, GameSpeed, GameState, RegionState, Adjacency, Movement
 import { initialMissions } from './data/gameData';
 import { createInitialOwnership, calculateFactionIncome } from './utils/mapUtils';
 import { createInitialAIState, runAITick } from './ai/cpuPlayer';
-import { createDivision, resolveCombat, getDivisionCount, createActiveCombat, processCombatRound, shouldProcessCombatRound } from './utils/combat';
+import { createDivision, createActiveCombat, processCombatRound, shouldProcessCombatRound } from './utils/combat';
 import { saveGame, loadGame, hasSaveGame, getSaveInfo } from './utils/saveLoad';
 import { useAutosave } from './hooks/useAutosave';
 import TitleScreen from './screens/TitleScreen';
@@ -60,18 +60,15 @@ export default function Home() {
   const [aiState, setAIState] = useState<AIState | null>(null);
   const [isEventsModalOpen, setIsEventsModalOpen] = useState(false);
   const [selectedCombatId, setSelectedCombatId] = useState<string | null>(null);
-  const [hasSave, setHasSave] = useState(false);
-  const [saveInfo, setSaveInfo] = useState<{ savedAt: Date; gameDate: Date } | null>(null);
+  // Check for existing save on mount - using useMemo-like pattern to avoid setState in effect
+  const [hasSave, setHasSave] = useState(() => hasSaveGame());
+  const [saveInfo, setSaveInfo] = useState<{ savedAt: Date; gameDate: Date } | null>(() => getSaveInfo());
   const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
   
   // Ref to store pending region updates from completed movements
   const pendingRegionUpdatesRef = useRef<Movement[]>([]);
   // Track which movement IDs have been queued for processing to prevent double-processing
   const processedMovementIdsRef = useRef<Set<string>>(new Set());
-  // Ref to store pending game events from combat
-  const pendingEventsRef = useRef<GameEvent[]>([]);
-  // Ref to store new active combats to be added
-  const pendingCombatsRef = useRef<import('./types/game').ActiveCombat[]>([]);
   // Ref to track current dateTime for combat processing
   const currentDateTimeRef = useRef<Date>(new Date(1917, 10, 7));
   // Ref to store pending region updates from completed combats
@@ -90,12 +87,6 @@ export default function Home() {
   useEffect(() => {
     gameStateRef.current = gameState;
   }, [gameState]);
-
-  // Check for existing save on mount
-  useEffect(() => {
-    setHasSave(hasSaveGame());
-    setSaveInfo(getSaveInfo());
-  }, []);
 
   // Ref for handleMoveUnits to be used in gameAPI (updated after handleMoveUnits is defined)
   const handleMoveUnitsRef = useRef<((fromRegion: string, toRegion: string, count: number) => void) | null>(null);
@@ -548,16 +539,28 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [gameState.isPlaying, gameState.gameSpeed, gameState.selectedCountry, regions, processPendingMovements, processActiveCombats, processCombatRegionUpdates, aiState]);
 
-  // Update income when regions or selected country changes
+  // Calculate income when regions or selected country changes (derived value)
+  const calculatedIncome = gameState.selectedCountry && Object.keys(regions).length > 0
+    ? calculateFactionIncome(regions, gameState.selectedCountry.id)
+    : 0;
+  
+  // Track previous calculated income to sync with gameState
+  const prevCalculatedIncomeRef = useRef(calculatedIncome);
+  
+  // Update income in gameState only when calculatedIncome changes
+  // Using requestAnimationFrame to schedule state update outside effect body
   useEffect(() => {
-    if (!gameState.selectedCountry || Object.keys(regions).length === 0) return;
-    
-    const newIncome = calculateFactionIncome(regions, gameState.selectedCountry.id);
-    setGameState(prev => ({
-      ...prev,
-      income: newIncome,
-    }));
-  }, [regions, gameState.selectedCountry]);
+    if (calculatedIncome !== prevCalculatedIncomeRef.current) {
+      prevCalculatedIncomeRef.current = calculatedIncome;
+      const incomeToSet = calculatedIncome;
+      requestAnimationFrame(() => {
+        setGameState(prev => ({
+          ...prev,
+          income: incomeToSet,
+        }));
+      });
+    }
+  }, [calculatedIncome]);
 
   // Screen navigation
   const navigateToScreen = useCallback((screen: Screen) => {
@@ -789,11 +792,10 @@ export default function Home() {
     // Load map data first if not already loaded
     if (!mapDataLoaded) {
       try {
-        const [geoResponse, adjResponse] = await Promise.all([
+        const [, adjResponse] = await Promise.all([
           fetch('/map/regions.geojson'),
           fetch('/map/adjacency.json'),
         ]);
-        const geoData = await geoResponse.json();
         const adjData = await adjResponse.json();
         setAdjacency(adjData);
         setMapDataLoaded(true);

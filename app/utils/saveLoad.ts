@@ -2,8 +2,6 @@ import {
   GameState,
   RegionState,
   AIState,
-  Movement,
-  GameEvent,
   Screen,
   Country,
   GameSpeed,
@@ -11,7 +9,6 @@ import {
   FactionId,
   GameEventType,
   Division,
-  ActiveCombat,
 } from '../types/game';
 
 const STORAGE_KEY = 'rcw-save';

@@ -1,6 +1,6 @@
 'use client';
 
-import { ActiveCombat, FactionId } from '../types/game';
+import { ActiveCombat } from '../types/game';
 import { FACTION_COLORS } from '../utils/mapUtils';
 
 interface CombatIndicatorProps {

@@ -1,7 +1,6 @@
 'use client';
 
 import { ActiveCombat, Division, FactionId } from '../types/game';
-import { FACTION_COLORS } from '../utils/mapUtils';
 
 interface CombatPopupProps {
   combat: ActiveCombat;
@@ -223,7 +222,7 @@ export default function CombatPopup({ combat, onClose }: CombatPopupProps) {
 }
 
 // Helper component for division rows
-function DivisionRow({ division, faction }: { division: Division; faction: FactionId }) {
+function DivisionRow({ division }: { division: Division; faction: FactionId }) {
   const hpPercent = (division.hp / division.maxHp) * 100;
   const hpColor = hpPercent > 50 ? 'bg-green-500' : hpPercent > 25 ? 'bg-yellow-500' : 'bg-red-500';
   

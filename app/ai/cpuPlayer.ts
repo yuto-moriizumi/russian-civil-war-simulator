@@ -1,5 +1,5 @@
 import { AIState, FactionId, RegionState, Region, Division } from '../types/game';
-import { createDivision, getDivisionCount } from '../utils/combat';
+import { createDivision } from '../utils/combat';
 import { calculateFactionIncome } from '../utils/mapUtils';
 
 // Cost to create one division
@@ -60,7 +60,8 @@ export function runAITick(
   aiState: AIState,
   regions: RegionState
 ): AIActions {
-  let { money, reserveDivisions, factionId } = aiState;
+  const { factionId } = aiState;
+  let { money, reserveDivisions } = aiState;
   reserveDivisions = [...reserveDivisions]; // Clone to avoid mutation
   
   // 1. Calculate income from controlled regions (using region values/weights)

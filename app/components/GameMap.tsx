@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { RegionState, Adjacency, FactionId, Movement, Division, ActiveCombat } from '../types/game';
+import { RegionState, Adjacency, FactionId, Movement, ActiveCombat } from '../types/game';
 import { FACTION_COLORS, getAdjacentRegions } from '../utils/mapUtils';
-import { getDivisionCount } from '../utils/combat';
 
 interface GameMapProps {
   regions: RegionState;
@@ -738,7 +737,7 @@ export default function GameMap({
             {regions[selectedRegion].divisions.length > 0 && (
               <div className="mt-2 space-y-1 rounded bg-stone-800 p-2">
                 <div className="text-xs font-semibold text-stone-300 mb-1">Combat Stats:</div>
-                {regions[selectedRegion].divisions.map((div, idx) => (
+                {regions[selectedRegion].divisions.map((div) => (
                   <div key={div.id} className="flex items-center justify-between text-xs">
                     <span className="text-stone-400 truncate max-w-[120px]" title={div.name}>
                       {div.name.length > 15 ? div.name.substring(0, 15) + '...' : div.name}

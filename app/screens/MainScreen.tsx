@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, Division, ActiveCombat } from '../types/game';
 import SpeedControl from '../components/SpeedControl';
@@ -79,11 +79,19 @@ export default function MainScreen({
   lastSaveTime,
 }: MainScreenProps) {
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);
+  
+  // Store lastSaveTime in a ref to compare and trigger indicator
+  const prevSaveTimeRef = useRef<Date | null>(null);
 
   // Show "Saved!" indicator when lastSaveTime changes
+  // This setState is intentional - we need to show a UI indicator in response to prop change
   useEffect(() => {
-    if (lastSaveTime) {
-      setShowSavedIndicator(true);
+    if (lastSaveTime && lastSaveTime !== prevSaveTimeRef.current) {
+      prevSaveTimeRef.current = lastSaveTime;
+      // Using requestAnimationFrame to schedule the state update outside the effect body
+      requestAnimationFrame(() => {
+        setShowSavedIndicator(true);
+      });
       const timer = setTimeout(() => setShowSavedIndicator(false), 2000);
       return () => clearTimeout(timer);
     }
