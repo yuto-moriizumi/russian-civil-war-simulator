@@ -45,11 +45,9 @@ body {
 @keyframes combat-pulse {
   0%, 100% {
     filter: brightness(1);
-    transform: scale(1);
   }
   50% {
     filter: brightness(1.3);
-    transform: scale(1.05);
   }
 }
 

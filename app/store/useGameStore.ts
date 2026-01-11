@@ -300,7 +300,7 @@ export const useGameStore = create<GameStore>()(
         // AI Tick
         let nextAIState = aiState;
         if (aiState) {
-          const aiActions = runAITick(aiState, nextRegions);
+          const aiActions = runAITick(aiState, nextRegions, nextCombats);
           nextAIState = aiActions.updatedAIState;
           
           if (aiActions.deployments.length > 0) {
@@ -353,11 +353,15 @@ export const useGameStore = create<GameStore>()(
       },
 
       deployUnit: () => {
-        const { selectedRegion, reserveDivisions, regions, selectedCountry, dateTime, gameEvents } = get();
+        const { selectedRegion, reserveDivisions, regions, selectedCountry, dateTime, gameEvents, activeCombats } = get();
         if (!selectedRegion || reserveDivisions.length <= 0) return;
         
         const region = regions[selectedRegion];
         if (!region || region.owner !== selectedCountry?.id) return;
+        
+        // Cannot deploy to regions with ongoing combat
+        const hasActiveCombat = activeCombats.some(c => c.regionId === selectedRegion && !c.isComplete);
+        if (hasActiveCombat) return;
         
         const divisionToDeploy = reserveDivisions[0];
         

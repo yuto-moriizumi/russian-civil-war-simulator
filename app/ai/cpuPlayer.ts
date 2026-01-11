@@ -1,4 +1,4 @@
-import { AIState, FactionId, RegionState, Region, Division } from '../types/game';
+import { AIState, FactionId, RegionState, Region, Division, ActiveCombat } from '../types/game';
 import { createDivision } from '../utils/combat';
 import { calculateFactionIncome } from '../utils/mapUtils';
 
@@ -54,11 +54,12 @@ export interface AIActions {
  * Run AI logic for one tick (1 game hour)
  * - Earns income based on controlled regions (using region values/weights)
  * - Creates divisions if it has enough money
- * - Deploys reserve divisions to random owned regions
+ * - Deploys reserve divisions to random owned regions (excluding regions with active combat)
  */
 export function runAITick(
   aiState: AIState,
-  regions: RegionState
+  regions: RegionState,
+  activeCombats: ActiveCombat[] = []
 ): AIActions {
   const { factionId } = aiState;
   let { money, reserveDivisions } = aiState;
@@ -82,12 +83,18 @@ export function runAITick(
     divisionsCreated += 1;
   }
   
-  // 4. Deploy all reserve divisions to random owned regions
+  // 4. Deploy all reserve divisions to random owned regions (excluding regions with active combat)
   const deployments: { regionId: string; divisions: Division[] }[] = [];
   const ownedRegions = getOwnedRegions(regions, factionId);
   
-  while (reserveDivisions.length > 0 && ownedRegions.length > 0) {
-    const targetRegion = pickRandomRegion(ownedRegions);
+  // Filter out regions with active combat
+  const regionsWithActiveCombat = new Set(
+    activeCombats.filter(c => !c.isComplete).map(c => c.regionId)
+  );
+  const availableRegions = ownedRegions.filter(r => !regionsWithActiveCombat.has(r.id));
+  
+  while (reserveDivisions.length > 0 && availableRegions.length > 0) {
+    const targetRegion = pickRandomRegion(availableRegions);
     if (!targetRegion) break;
     
     // Deploy 1 division at a time to random regions

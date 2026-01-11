@@ -113,6 +113,8 @@ export default function GameMap({
           }
         }
         
+        console.log('Loaded region centroids:', Object.keys(centroids).length, 'regions');
+        console.log('Sample centroids:', Object.keys(centroids).slice(0, 5).map(k => ({ [k]: centroids[k] })));
         setRegionCentroids(centroids);
       } catch (error) {
         console.error('Failed to load centroids:', error);
@@ -588,6 +590,7 @@ export default function GameMap({
 
   // Update combat indicator markers on the map
   useEffect(() => {
+    console.log('Combat markers effect - mapLoaded:', mapLoaded, 'centroid count:', Object.keys(regionCentroids).length, 'combats:', activeCombats.length);
     if (!map.current || !mapLoaded || Object.keys(regionCentroids).length === 0) return;
 
     // Track which combat markers we need
@@ -600,7 +603,14 @@ export default function GameMap({
       neededCombatMarkers.add(combat.id);
       
       const centroid = regionCentroids[combat.regionId];
-      if (!centroid) continue;
+      console.log(`Combat ${combat.id} in region ${combat.regionId} - centroid:`, centroid);
+      console.log('Available centroids:', Object.keys(regionCentroids));
+      if (!centroid || !Array.isArray(centroid) || centroid.length !== 2 || 
+          typeof centroid[0] !== 'number' || typeof centroid[1] !== 'number' ||
+          isNaN(centroid[0]) || isNaN(centroid[1])) {
+        console.warn(`Invalid or missing centroid for region ${combat.regionId}:`, centroid);
+        continue;
+      }
 
       const attackerHp = combat.attackerDivisions.reduce((sum, d) => sum + d.hp, 0);
       const defenderHp = combat.defenderDivisions.reduce((sum, d) => sum + d.hp, 0);
@@ -633,14 +643,13 @@ export default function GameMap({
       } else {
         // Create new combat marker
         const el = document.createElement('div');
-        el.className = 'combat-marker';
+        // Don't add combat-marker class to the outer element as it would override MapLibre's transform
         el.style.cursor = 'pointer';
         el.style.pointerEvents = 'auto';
         el.innerHTML = `
-          <div style="
+          <div class="combat-marker" style="
             display: flex;
             align-items: center;
-            animation: combat-pulse 2s ease-in-out infinite;
           ">
             <!-- Attacker side -->
             <div style="display: flex; flex-direction: column; align-items: flex-end; margin-right: 2px;">
@@ -718,6 +727,7 @@ export default function GameMap({
           .setLngLat(centroid)
           .addTo(map.current!);
         
+        console.log(`Created marker for combat ${combat.id} at LngLat:`, centroid, 'Element position:', el.style.transform);
         combatMarkersRef.current.set(combat.id, marker);
       }
     }
@@ -830,14 +840,29 @@ export default function GameMap({
           {regions[selectedRegion].owner === playerFaction && (
             <div className="mt-3 space-y-2 border-t border-stone-700 pt-3">
               {/* Deploy unit button */}
-              {unitsInReserve > 0 && (
-                <button
-                  onClick={onDeployUnit}
-                  className="w-full rounded bg-green-700 py-2 text-sm font-semibold text-white hover:bg-green-600"
-                >
-                  Deploy Unit ({unitsInReserve} available)
-                </button>
-              )}
+              {unitsInReserve > 0 && (() => {
+                const hasActiveCombat = activeCombats.some(c => c.regionId === selectedRegion && !c.isComplete);
+                return (
+                  <>
+                    <button
+                      onClick={onDeployUnit}
+                      disabled={hasActiveCombat}
+                      className={`w-full rounded py-2 text-sm font-semibold text-white ${
+                        hasActiveCombat
+                          ? 'bg-stone-600 cursor-not-allowed'
+                          : 'bg-green-700 hover:bg-green-600'
+                      }`}
+                    >
+                      Deploy Unit ({unitsInReserve} available)
+                    </button>
+                    {hasActiveCombat && (
+                      <p className="text-xs text-red-400">
+                        Cannot deploy to regions with ongoing combat
+                      </p>
+                    )}
+                  </>
+                );
+              })()}
               
               {/* Unit selection info */}
               {regions[selectedRegion].divisions.length > 0 && selectedUnitRegion === selectedRegion && (
