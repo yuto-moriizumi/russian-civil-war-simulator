@@ -12,7 +12,8 @@ import {
   Movement,
   ActiveCombat,
   GameEvent,
-  ArmyGroup
+  ArmyGroup,
+  Theater
 } from '../types/game';
 import { initialMissions, GAME_START_DATE } from '../data/gameData';
 import { calculateFactionIncome } from '../utils/mapUtils';
@@ -20,6 +21,8 @@ import { createInitialAIState, runAITick } from '../ai/cpuPlayer';
 import { createDivision, createActiveCombat, processCombatRound, shouldProcessCombatRound } from '../utils/combat';
 import { createGameEvent, getOrdinalSuffix } from '../utils/eventUtils';
 import { findBestMoveTowardEnemy } from '../utils/pathfinding';
+import { detectTheaters } from '../utils/theaterDetection';
+import { generateArmyGroupName } from '../utils/armyGroupNaming';
 
 // Predefined colors for army groups
 const ARMY_GROUP_COLORS = [
@@ -46,6 +49,7 @@ interface GameStore extends GameState {
   lastSaveTime: Date | null;
   multiSelectedRegions: string[]; // Regions selected for grouping (Shift+click)
   selectedGroupId: string | null; // Currently selected army group
+  selectedTheaterId: string | null; // Currently selected theater
 
   // Actions
   setRegions: (regions: RegionState) => void;
@@ -70,14 +74,19 @@ interface GameStore extends GameState {
   claimMission: (missionId: string) => void;
   openMissions: () => void;
   
+  // Theater Actions
+  detectAndUpdateTheaters: () => void;
+  selectTheater: (theaterId: string | null) => void;
+  
   // Army Group Actions
   toggleMultiSelectRegion: (regionId: string) => void;
   clearMultiSelection: () => void;
-  createArmyGroup: (name: string) => void;
+  createArmyGroup: (name: string, theaterId?: string | null) => void;
   deleteArmyGroup: (groupId: string) => void;
   renameArmyGroup: (groupId: string, name: string) => void;
   selectArmyGroup: (groupId: string | null) => void;
   advanceArmyGroup: (groupId: string) => void;
+  deployToArmyGroup: (groupId: string) => void;
   
   // Persistence Actions
   saveGame: () => void;
@@ -97,6 +106,7 @@ const initialGameState: GameState = {
   movingUnits: [],
   gameEvents: [],
   activeCombats: [],
+  theaters: [],
   armyGroups: [],
 };
 
@@ -115,6 +125,7 @@ export const useGameStore = create<GameStore>()(
       lastSaveTime: null,
       multiSelectedRegions: [],
       selectedGroupId: null,
+      selectedTheaterId: null,
 
       setRegions: (regions) => set({ regions }),
       setAdjacency: (adjacency) => set({ adjacency }),
@@ -150,6 +161,9 @@ export const useGameStore = create<GameStore>()(
           missions: factionMissions,
           aiState: createInitialAIState(aiFaction),
         });
+        
+        // Detect theaters when game starts
+        setTimeout(() => get().detectAndUpdateTheaters(), 100);
       },
 
       togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
@@ -361,6 +375,9 @@ export const useGameStore = create<GameStore>()(
           gameEvents: nextEvents,
           aiState: nextAIState,
         });
+        
+        // Update theaters after regions change
+        get().detectAndUpdateTheaters();
       },
 
       createInfantry: () => {
@@ -506,6 +523,19 @@ export const useGameStore = create<GameStore>()(
         }));
       },
 
+      // Theater Actions
+      detectAndUpdateTheaters: () => {
+        const { regions, adjacency, selectedCountry, theaters } = get();
+        if (!selectedCountry) return;
+        
+        const newTheaters = detectTheaters(regions, adjacency, selectedCountry.id, theaters);
+        set({ theaters: newTheaters });
+      },
+
+      selectTheater: (theaterId: string | null) => {
+        set({ selectedTheaterId: theaterId });
+      },
+
       // Army Group Actions
       toggleMultiSelectRegion: (regionId: string) => {
         const { multiSelectedRegions, regions, selectedCountry } = get();
@@ -527,16 +557,27 @@ export const useGameStore = create<GameStore>()(
         set({ multiSelectedRegions: [] });
       },
 
-      createArmyGroup: (name: string) => {
-        const { multiSelectedRegions, armyGroups, selectedCountry } = get();
+      createArmyGroup: (name: string, theaterId: string | null = null) => {
+        const { multiSelectedRegions, armyGroups, selectedCountry, regions, theaters } = get();
         if (multiSelectedRegions.length === 0 || !selectedCountry) return;
+
+        // If no name provided, generate one systematically
+        const theater = theaters.find(t => t.id === theaterId);
+        const groupName = name.trim() || generateArmyGroupName(
+          armyGroups,
+          selectedCountry.id,
+          regions,
+          multiSelectedRegions,
+          theater?.name
+        );
 
         const newGroup: ArmyGroup = {
           id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          name,
+          name: groupName,
           regionIds: [...multiSelectedRegions],
           color: ARMY_GROUP_COLORS[armyGroups.length % ARMY_GROUP_COLORS.length],
           owner: selectedCountry.id,
+          theaterId,
         };
 
         set({
@@ -620,6 +661,64 @@ export const useGameStore = create<GameStore>()(
         }
       },
 
+      deployToArmyGroup: (groupId: string) => {
+        const state = get();
+        const { armyGroups, regions, reserveDivisions, selectedCountry, dateTime, gameEvents } = state;
+        
+        const group = armyGroups.find(g => g.id === groupId);
+        if (!group || !selectedCountry || reserveDivisions.length === 0) return;
+
+        // Filter valid regions (owned by player)
+        const validRegions = group.regionIds.filter(id => {
+          const region = regions[id];
+          return region && region.owner === selectedCountry.id;
+        });
+
+        if (validRegions.length === 0) return;
+
+        // Distribute reserves evenly across regions
+        const newRegions = { ...regions };
+        const newEvents = [...gameEvents];
+        let remainingReserves = [...reserveDivisions];
+        let deployedCount = 0;
+
+        // Simple round-robin distribution
+        let regionIndex = 0;
+        while (remainingReserves.length > 0 && regionIndex < remainingReserves.length) {
+          const targetRegionId = validRegions[regionIndex % validRegions.length];
+          const divisionToDeploy = remainingReserves.shift();
+          
+          if (divisionToDeploy) {
+            const region = newRegions[targetRegionId];
+            newRegions[targetRegionId] = {
+              ...region,
+              divisions: [...region.divisions, divisionToDeploy],
+            };
+
+            const newEvent = createGameEvent(
+              'unit_deployed',
+              `Division Deployed to ${region.name}`,
+              `${divisionToDeploy.name} has been deployed to ${region.name} (${group.name}).`,
+              dateTime,
+              selectedCountry.id,
+              targetRegionId
+            );
+            newEvents.push(newEvent);
+            deployedCount++;
+          }
+          
+          regionIndex++;
+        }
+
+        if (deployedCount > 0) {
+          set({
+            regions: newRegions,
+            reserveDivisions: remainingReserves,
+            gameEvents: newEvents,
+          });
+        }
+      },
+
       saveGame: () => {
         set({ lastSaveTime: new Date() });
       },
@@ -651,6 +750,7 @@ export const useGameStore = create<GameStore>()(
         regions: state.regions,
         aiState: state.aiState,
         lastSaveTime: state.lastSaveTime,
+        theaters: state.theaters,
         armyGroups: state.armyGroups,
       }),
       onRehydrateStorage: () => (state) => {
