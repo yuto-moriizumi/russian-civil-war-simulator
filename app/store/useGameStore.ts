@@ -318,6 +318,9 @@ export const useGameStore = create<GameStore>()(
             const regeneratedDivisions = region.divisions.map(division => {
               // Regenerate 10 HP per hour, but don't exceed maxHp
               const newHp = Math.min(division.hp + 10, division.maxHp);
+              if (division.hp < division.maxHp) {
+                console.log(`[HP REGEN] ${division.name}: ${division.hp} -> ${newHp} in ${region.name}`);
+              }
               return {
                 ...division,
                 hp: newHp,
