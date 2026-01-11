@@ -716,6 +716,9 @@ export default function GameMap({
               <span className="ml-2 text-xs font-normal">(Unit Selected)</span>
             )}
           </div>
+          <div className="text-xs text-stone-500 -mt-1 mb-2">
+            ID: {selectedRegion}
+          </div>
           <div className="space-y-1 text-sm">
             <div className="flex items-center gap-2">
               <span className="text-stone-400">Control:</span>

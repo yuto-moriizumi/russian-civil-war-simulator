@@ -31,6 +31,32 @@ export const regionValues: Record<string, number> = {
   'UA-14': 2,   // Donetsk Oblast - Coal and industry
   'UA-63': 2,   // Kharkiv Oblast - Industrial
   'UA-51': 2,   // Odesa Oblast - Port city
+  
+  // Belarus
+  'BY-HM': 3,   // Minsk (city) - Capital
+  
+  // Finland
+  'FI-18': 3,   // Uusimaa (Helsinki) - Capital region
+  
+  // Estonia
+  'EE-37': 2,   // Harju County (Tallinn) - Capital
+  
+  // Latvia (ADM0 - single region)
+  'LVA': 3,     // Latvia - Capital Riga
+  
+  // Lithuania
+  'LT-VL': 2,   // Vilnius County - Capital
+  'LT-KU': 2,   // Kaunas County - Major city
+  
+  // Kazakhstan
+  'KZ-ALA': 3,   // Almaty (city) - Major city
+  'KZ-AST': 2,   // Astana (city) - Capital
+  
+  // Uzbekistan (ADM0 - single region)
+  'UZB': 3,     // Uzbekistan - Capital Tashkent
+  
+  // Tajikistan
+  'TJ-DU': 2,   // Dushanbe (city) - Capital
   // All other regions default to value 1
 };
 
@@ -38,8 +64,7 @@ export const regionValues: Record<string, number> = {
  * Initial region ownership at game start (November 1917 - October Revolution)
  * 
  * Soviet: Moscow and surrounding core regions (Bolshevik control)
- * White: Peripheral Russian regions (anti-Bolshevik forces)
- * Neutral: Ukrainian regions (contested/independent)
+ * White: Peripheral Russian regions, Ukraine, Belarus, Finland, Baltics, Central Asia (anti-Bolshevik forces)
  */
 export const initialRegionOwnership: Record<string, FactionId> = {
   // ============================================
@@ -147,33 +172,159 @@ export const initialRegionOwnership: Record<string, FactionId> = {
   'RU-KGD': 'white',   // Kaliningrad Oblast
 
   // ============================================
-  // NEUTRAL REGIONS (Ukraine)
+  // UKRAINE (White-controlled)
   // ============================================
-  'UA-05': 'neutral',  // Vinnytsia Oblast
-  'UA-07': 'neutral',  // Volyn Oblast
-  'UA-09': 'neutral',  // Luhansk Oblast
-  'UA-12': 'neutral',  // Dnipropetrovsk Oblast
-  'UA-14': 'neutral',  // Donetsk Oblast
-  'UA-18': 'neutral',  // Zhytomyr Oblast
-  'UA-21': 'neutral',  // Zakarpattia Oblast
-  'UA-23': 'neutral',  // Zaporizhzhia Oblast
-  'UA-26': 'neutral',  // Ivano-Frankivsk Oblast
-  'UA-30': 'neutral',  // Kyiv (city)
-  'UA-32': 'neutral',  // Kyiv Oblast
-  'UA-35': 'neutral',  // Kirovohrad Oblast
-  'UA-40': 'neutral',  // Sevastopol (city)
-  'UA-43': 'neutral',  // Crimea
-  'UA-46': 'neutral',  // Lviv Oblast
-  'UA-48': 'neutral',  // Mykolaiv Oblast
-  'UA-51': 'neutral',  // Odesa Oblast
-  'UA-53': 'neutral',  // Poltava Oblast
-  'UA-56': 'neutral',  // Rivne Oblast
-  'UA-59': 'neutral',  // Sumy Oblast
-  'UA-61': 'neutral',  // Ternopil Oblast
-  'UA-63': 'neutral',  // Kharkiv Oblast
-  'UA-65': 'neutral',  // Kherson Oblast
-  'UA-68': 'neutral',  // Khmelnytskyi Oblast
-  'UA-71': 'neutral',  // Cherkasy Oblast
-  'UA-74': 'neutral',  // Chernihiv Oblast
-  'UA-77': 'neutral',  // Chernivtsi Oblast
+  'UA-05': 'white',  // Vinnytsia Oblast
+  'UA-07': 'white',  // Volyn Oblast
+  'UA-09': 'white',  // Luhansk Oblast
+  'UA-12': 'white',  // Dnipropetrovsk Oblast
+  'UA-14': 'white',  // Donetsk Oblast
+  'UA-18': 'white',  // Zhytomyr Oblast
+  'UA-21': 'white',  // Zakarpattia Oblast
+  'UA-23': 'white',  // Zaporizhzhia Oblast
+  'UA-26': 'white',  // Ivano-Frankivsk Oblast
+  'UA-30': 'white',  // Kyiv (city)
+  'UA-32': 'white',  // Kyiv Oblast
+  'UA-35': 'white',  // Kirovohrad Oblast
+  'UA-40': 'white',  // Sevastopol (city)
+  'UA-43': 'white',  // Crimea
+  'UA-46': 'white',  // Lviv Oblast
+  'UA-48': 'white',  // Mykolaiv Oblast
+  'UA-51': 'white',  // Odesa Oblast
+  'UA-53': 'white',  // Poltava Oblast
+  'UA-56': 'white',  // Rivne Oblast
+  'UA-59': 'white',  // Sumy Oblast
+  'UA-61': 'white',  // Ternopil Oblast
+  'UA-63': 'white',  // Kharkiv Oblast
+  'UA-65': 'white',  // Kherson Oblast
+  'UA-68': 'white',  // Khmelnytskyi Oblast
+  'UA-71': 'white',  // Cherkasy Oblast
+  'UA-74': 'white',  // Chernihiv Oblast
+  'UA-77': 'white',  // Chernivtsi Oblast
+
+  // ============================================
+  // BELARUS (White-controlled)
+  // ============================================
+  'BY-BR': 'white',   // Brest Region
+  'BY-HO': 'white',   // Gomel Region
+  'BY-HM': 'white',   // Minsk (city)
+  'BY-HR': 'white',   // Grodno Region
+  'BY-MA': 'white',   // Mogilev Region
+  'BY-MI': 'white',   // Minsk Region
+  'BY-VI': 'white',   // Vitebsk Region
+
+  // ============================================
+  // FINLAND (White-controlled)
+  // ============================================
+  'FI-01': 'white',   // Åland
+  'FI-02': 'white',   // South Karelia
+  'FI-03': 'white',   // Southern Ostrobothnia
+  'FI-04': 'white',   // Southern Savonia
+  'FI-05': 'white',   // Kainuu
+  'FI-06': 'white',   // Tavastia Proper
+  'FI-07': 'white',   // Central Ostrobothnia
+  'FI-08': 'white',   // Central Finland
+  'FI-09': 'white',   // Kymenlaakso
+  'FI-10': 'white',   // Lapland
+  'FI-11': 'white',   // Pirkanmaa
+  'FI-12': 'white',   // Ostrobothnia
+  'FI-13': 'white',   // North Karelia
+  'FI-14': 'white',   // Northern Ostrobothnia
+  'FI-15': 'white',   // Northern Savonia
+  'FI-16': 'white',   // Päijänne Tavastia
+  'FI-17': 'white',   // Satakunta
+  'FI-18': 'white',   // Uusimaa (Helsinki)
+  'FI-19': 'white',   // Southwest Finland
+
+  // ============================================
+  // ESTONIA (White-controlled)
+  // ============================================
+  'EE-37': 'white',   // Harju County (Tallinn)
+  'EE-39': 'white',   // Hiiu County
+  'EE-44': 'white',   // Ida-Viru County
+  'EE-49': 'white',   // Jõgeva County
+  'EE-51': 'white',   // Järva County
+  'EE-57': 'white',   // Lääne County
+  'EE-59': 'white',   // Lääne-Viru County
+  'EE-65': 'white',   // Põlva County
+  'EE-67': 'white',   // Pärnu County
+  'EE-70': 'white',   // Rapla County
+  'EE-74': 'white',   // Saare County
+  'EE-78': 'white',   // Tartu County
+  'EE-82': 'white',   // Valga County
+  'EE-84': 'white',   // Viljandi County
+  'EE-86': 'white',   // Võru County
+
+  // ============================================
+  // LATVIA (White-controlled) - ADM0
+  // ============================================
+  'LVA': 'white',     // Latvia (country)
+
+  // ============================================
+  // LITHUANIA (White-controlled)
+  // ============================================
+  'LT-AL': 'white',   // Alytus County
+  'LT-KU': 'white',   // Kaunas County
+  'LT-KL': 'white',   // Klaipėda County
+  'LT-MR': 'white',   // Marijampolė County
+  'LT-PN': 'white',   // Panevėžys County
+  'LT-SA': 'white',   // Šiauliai County
+  'LT-TA': 'white',   // Tauragė County
+  'LT-TE': 'white',   // Telšiai County
+  'LT-UT': 'white',   // Utena County
+  'LT-VL': 'white',   // Vilnius County
+
+  // ============================================
+  // KAZAKHSTAN (White-controlled)
+  // ============================================
+  'KZ-AKM': 'white',  // Akmola Region
+  'KZ-AKT': 'white',  // Aktobe Region
+  'KZ-ALA': 'white',  // Almaty (city)
+  'KZ-ALM': 'white',  // Almaty Region
+  'KZ-AST': 'white',  // Astana (city)
+  'KZ-ATY': 'white',  // Atyrau Region
+  'KZ-KAR': 'white',  // Karaganda Region
+  'KZ-KUS': 'white',  // Kostanay Region
+  'KZ-KZY': 'white',  // Kyzylorda Region
+  'KZ-MAN': 'white',  // Mangystau Region
+  'KZ-PAV': 'white',  // Pavlodar Region
+  'KZ-SEV': 'white',  // North Kazakhstan Region
+  'KZ-VOS': 'white',  // East Kazakhstan Region
+  'KZ-YUZ': 'white',  // South Kazakhstan Region
+  'KZ-ZAP': 'white',  // West Kazakhstan Region
+  'KZ-ZHA': 'white',  // Jambyl Region
+
+  // ============================================
+  // UZBEKISTAN (White-controlled) - ADM0
+  // ============================================
+  'UZB': 'white',     // Uzbekistan (country)
+
+  // ============================================
+  // TURKMENISTAN (White-controlled)
+  // ============================================
+  'TM-A': 'white',    // Ahal Region
+  'TM-B': 'white',    // Balkan Region
+  'TM-D': 'white',    // Dashoguz Region
+  'TM-L': 'white',    // Lebap Region
+  'TM-M': 'white',    // Mary Region
+
+  // ============================================
+  // KYRGYZSTAN (White-controlled)
+  // ============================================
+  'KG-B': 'white',    // Batken Region
+  'KG-C': 'white',    // Chüy Region
+  'KG-J': 'white',    // Jalal-Abad Region
+  'KG-N': 'white',    // Naryn Region
+  'KG-O': 'white',    // Osh Region
+  'KG-T': 'white',    // Talas Region
+  'KG-Y': 'white',    // Issyk-Kul Region
+
+  // ============================================
+  // TAJIKISTAN (White-controlled)
+  // ============================================
+  'TJ-DU': 'white',   // Dushanbe (city)
+  'TJ-GB': 'white',   // Gorno-Badakhshan
+  'TJ-KT': 'white',   // Khatlon Region
+  'TJ-RA': 'white',   // Districts of Republican Subordination
+  'TJ-SU': 'white',   // Sughd Region
 };
