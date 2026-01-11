@@ -207,25 +207,9 @@ export const useGameStore = create<GameStore>()(
             return;
           }
 
-          // Regenerate HP for divisions in combat (before processing combat round)
-          const regeneratedAttackers = combat.attackerDivisions.map(division => {
-            const newHp = Math.min(division.hp + 10, division.maxHp);
-            return { ...division, hp: newHp };
-          });
-          const regeneratedDefenders = combat.defenderDivisions.map(division => {
-            const newHp = Math.min(division.hp + 10, division.maxHp);
-            return { ...division, hp: newHp };
-          });
-
-          const regeneratedCombat = {
-            ...combat,
-            attackerDivisions: regeneratedAttackers,
-            defenderDivisions: regeneratedDefenders,
-          };
-
-          if (shouldProcessCombatRound(regeneratedCombat, newDate)) {
+          if (shouldProcessCombatRound(combat, newDate)) {
             const updatedCombat = processCombatRound({
-              ...regeneratedCombat,
+              ...combat,
               lastRoundTime: new Date(newDate),
             });
 
@@ -248,7 +232,7 @@ export const useGameStore = create<GameStore>()(
               updatedCombats.push(updatedCombat);
             }
           } else {
-            updatedCombats.push(regeneratedCombat);
+            updatedCombats.push(combat);
           }
         });
 
