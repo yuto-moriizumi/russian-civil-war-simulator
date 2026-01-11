@@ -10,6 +10,7 @@ import {
   GameEventType,
   Division,
   ArmyGroup,
+  Theater,
 } from '../types/game';
 
 const STORAGE_KEY = 'rcw-save';
@@ -70,6 +71,7 @@ interface SerializedGameState {
   gameEvents: SerializedGameEvent[];
   activeCombats: SerializedActiveCombat[];
   armyGroups: ArmyGroup[];
+  theaters: Theater[];
 }
 
 interface SaveData {

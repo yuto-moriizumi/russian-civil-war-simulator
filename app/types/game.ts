@@ -103,6 +103,7 @@ export interface GameState {
   movingUnits: Movement[];
   gameEvents: GameEvent[];
   activeCombats: ActiveCombat[]; // Ongoing battles
+  theaters: Theater[]; // Auto-detected theaters for the player
   armyGroups: ArmyGroup[]; // Player's army groups for bulk movement
 }
 
@@ -151,13 +152,23 @@ export interface StoryEvent {
   text: string;
 }
 
-// Army Group for coordinated unit movement
+// Theater - automatically detected collection of frontline regions facing an enemy
+export interface Theater {
+  id: string;                      // Unique identifier
+  name: string;                    // Auto-generated name (e.g., "Western Theater", "Finnish Front")
+  frontlineRegions: string[];      // Player-owned regions adjacent to enemies
+  enemyFaction: FactionId;         // Primary enemy faction this theater faces
+  owner: FactionId;                // Which faction owns this theater
+}
+
+// Army Group for coordinated unit movement (now assigned to a theater)
 export interface ArmyGroup {
   id: string;                      // Unique identifier
   name: string;                    // Display name (e.g., "Northern Front")
   regionIds: string[];             // Regions assigned to this group
   color: string;                   // Visual identifier (#hex color)
   owner: FactionId;                // Which faction owns this group
+  theaterId: string | null;        // Theater this group belongs to (if any)
 }
 
 // Game API interface for programmatic control (useful for AI agents and testing)
@@ -178,10 +189,14 @@ export interface GameAPI {
   toggleMultiSelect: (regionId: string) => void;
   getMultiSelectedRegions: () => string[];
   clearMultiSelection: () => void;
-  createArmyGroup: (name: string) => void;
+  createArmyGroup: (name: string, theaterId?: string | null) => void;
   getArmyGroups: () => ArmyGroup[];
   advanceArmyGroup: (groupId: string) => void;
+  deployToArmyGroup: (groupId: string) => void;
   deleteArmyGroup: (groupId: string) => void;
+  // Theater methods
+  getTheaters: () => Theater[];
+  selectTheater: (theaterId: string) => void;
 }
 
 // Declare global window.gameAPI

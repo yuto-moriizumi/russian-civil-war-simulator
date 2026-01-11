@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, Division, ActiveCombat, ArmyGroup } from '../types/game';
+import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, Division, ActiveCombat, ArmyGroup, Theater } from '../types/game';
 import SpeedControl from '../components/SpeedControl';
 import CombatPopup from '../components/CombatPopup';
 import EventsModal from '../components/EventsModal';
-import ArmyGroupsPanel from '../components/ArmyGroupsPanel';
+import TheaterPanel from '../components/TheaterPanel';
 
 // Dynamic import for GameMap to avoid SSR issues with MapLibre
 const GameMap = dynamic(() => import('../components/GameMap'), {
@@ -35,10 +35,12 @@ interface MainScreenProps {
   selectedUnitRegion: string | null;
   mapDataLoaded: boolean;
   gameEvents: GameEvent[];
-  // Army Groups props
+  // Theater and Army Groups props
+  theaters: Theater[];
   armyGroups: ArmyGroup[];
   multiSelectedRegions: string[];
   selectedGroupId: string | null;
+  selectedTheaterId: string | null;
   onTogglePlay: () => void;
   onChangeSpeed: (speed: GameSpeed) => void;
   onCreateInfantry: () => void;
@@ -55,14 +57,16 @@ interface MainScreenProps {
   selectedCombatId: string | null;
   isEventsModalOpen: boolean;
   onCloseEvents: () => void;
-  // Army Groups action props
+  // Theater and Army Groups action props
+  onSelectTheater: (theaterId: string | null) => void;
   onToggleMultiSelectRegion: (regionId: string) => void;
   onClearMultiSelection: () => void;
-  onCreateArmyGroup: (name: string) => void;
+  onCreateArmyGroup: (name: string, theaterId?: string | null) => void;
   onDeleteArmyGroup: (groupId: string) => void;
   onRenameArmyGroup: (groupId: string, name: string) => void;
   onSelectArmyGroup: (groupId: string | null) => void;
   onAdvanceArmyGroup: (groupId: string) => void;
+  onDeployToArmyGroup: (groupId: string) => void;
 }
 
 export default function MainScreen({
@@ -82,9 +86,11 @@ export default function MainScreen({
   selectedUnitRegion,
   mapDataLoaded,
   gameEvents,
+  theaters,
   armyGroups,
   multiSelectedRegions,
   selectedGroupId,
+  selectedTheaterId,
   onTogglePlay,
   onChangeSpeed,
   onCreateInfantry,
@@ -101,6 +107,7 @@ export default function MainScreen({
   selectedCombatId,
   isEventsModalOpen,
   onCloseEvents,
+  onSelectTheater,
   onToggleMultiSelectRegion,
   onClearMultiSelection,
   onCreateArmyGroup,
@@ -108,6 +115,7 @@ export default function MainScreen({
   onRenameArmyGroup,
   onSelectArmyGroup,
   onAdvanceArmyGroup,
+  onDeployToArmyGroup,
 }: MainScreenProps) {
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);
   const [isArmyGroupsPanelExpanded, setIsArmyGroupsPanelExpanded] = useState(true);
@@ -298,22 +306,27 @@ export default function MainScreen({
         )}
       </div>
 
-      {/* Army Groups Panel - above status bar */}
+      {/* Theater Panel - above status bar */}
       <div className="absolute bottom-10 left-0 right-0 z-10">
-        <ArmyGroupsPanel
+        <TheaterPanel
+          theaters={theaters}
           armyGroups={armyGroups}
           regions={regions}
           playerFaction={country.id}
           multiSelectedRegions={multiSelectedRegions}
+          selectedTheaterId={selectedTheaterId}
           selectedGroupId={selectedGroupId}
           isExpanded={isArmyGroupsPanelExpanded}
           onToggleExpanded={() => setIsArmyGroupsPanelExpanded(!isArmyGroupsPanelExpanded)}
+          onSelectTheater={onSelectTheater}
           onCreateGroup={onCreateArmyGroup}
           onDeleteGroup={onDeleteArmyGroup}
           onRenameGroup={onRenameArmyGroup}
           onSelectGroup={onSelectArmyGroup}
           onAdvanceGroup={onAdvanceArmyGroup}
+          onDeployToGroup={onDeployToArmyGroup}
           onClearMultiSelection={onClearMultiSelection}
+          onToggleMultiSelect={onToggleMultiSelectRegion}
         />
       </div>
 

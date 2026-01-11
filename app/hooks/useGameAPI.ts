@@ -53,10 +53,15 @@ export function useGameAPI() {
       },
       getMultiSelectedRegions: () => state.multiSelectedRegions,
       clearMultiSelection: () => state.clearMultiSelection(),
-      createArmyGroup: (name) => state.createArmyGroup(name),
+      createArmyGroup: (name, theaterId) => state.createArmyGroup(name, theaterId),
       getArmyGroups: () => state.armyGroups,
       advanceArmyGroup: (groupId) => state.advanceArmyGroup(groupId),
+      deployToArmyGroup: (groupId) => state.deployToArmyGroup(groupId),
       deleteArmyGroup: (groupId) => state.deleteArmyGroup(groupId),
+
+      // Theater API methods
+      getTheaters: () => state.theaters,
+      selectTheater: (theaterId) => state.selectTheater(theaterId),
     };
 
     return () => {
