@@ -9,12 +9,12 @@ Replace the current manual positioning system with an automatic layout using **R
 - [x] Research: Check existing package.json and project structure
 - [x] Plan: Design the implementation approach
 - [x] Install dependencies (@xyflow/react, @dagrejs/dagre)
-- [ ] Update Mission type (remove position)
-- [ ] Create layout utility with dagre
-- [ ] Create MissionNode component
-- [ ] Rewrite MissionScreen with React Flow
-- [ ] Update mission data (remove positions)
-- [ ] Build and verify the new mission tree renders correctly
+- [x] Update Mission type (remove position)
+- [x] Create layout utility with dagre
+- [x] Create MissionNode component
+- [x] Rewrite MissionScreen with React Flow
+- [x] Update mission data (remove positions)
+- [x] Build and verify the new mission tree renders correctly
 
 ## Dependencies Installed
 

@@ -1,0 +1,23 @@
+/* Fix pointer events for custom nodes in React Flow */
+
+/* Disable pointer events on all overlaying containers */
+.react-flow__pane,
+.react-flow__viewport-portal,
+.react-flow__container {
+  pointer-events: none !important;
+}
+
+/* Enable pointer events on nodes and their content */
+.react-flow__node {
+  pointer-events: auto !important;
+}
+
+/* Keep controls clickable */
+.react-flow__controls {
+  pointer-events: auto !important;
+}
+
+/* Keep background for scroll-based panning */
+.react-flow__background {
+  pointer-events: auto !important;
+}
