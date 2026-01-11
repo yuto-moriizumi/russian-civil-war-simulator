@@ -500,7 +500,7 @@ function detectSameCountryAdjacency(
   }
   
   // 各国内でペアをチェック
-  for (const [country, features] of featuresByCountry) {
+  for (const [, features] of featuresByCountry) {
     // 2つ以上のリージョンがある国のみ
     if (features.length < 2) continue;
     

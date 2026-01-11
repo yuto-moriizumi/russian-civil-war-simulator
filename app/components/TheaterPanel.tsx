@@ -226,7 +226,7 @@ export default function TheaterPanel({
                                     onDeployToGroup(group.id);
                                   }}
                                   className="rounded bg-blue-700 px-2 py-0.5 text-xs font-semibold text-white transition-colors hover:bg-blue-600"
-                                  title="Deploy reserve divisions to this group"
+                                  title="Create and deploy unit to this group ($10)"
                                 >
                                   Deploy
                                 </button>
@@ -297,7 +297,7 @@ export default function TheaterPanel({
                           <button
                             onClick={() => onDeployToGroup(group.id)}
                             className="rounded bg-blue-700 px-2 py-0.5 text-xs font-semibold text-white hover:bg-blue-600"
-                            title="Deploy reserve divisions to this group"
+                            title="Create and deploy unit to this group ($10)"
                           >
                             Deploy
                           </button>
@@ -328,6 +328,8 @@ export default function TheaterPanel({
             <strong>Theaters</strong> are auto-detected frontline regions facing enemies.
             Click <strong>&quot;+ Create Group&quot;</strong> on a theater to instantly create an army group with an auto-generated name.
             <strong>Double-click</strong> a group name to rename it.
+            <br />
+            <strong>Tip:</strong> New units are automatically deployed to the selected army group or region.
           </div>
         </div>
       )}

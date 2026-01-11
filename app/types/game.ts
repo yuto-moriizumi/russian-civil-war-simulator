@@ -98,7 +98,6 @@ export interface GameState {
   gameSpeed: GameSpeed;
   money: number;
   income: number;
-  reserveDivisions: Division[]; // Divisions in reserve (not yet deployed)
   missions: Mission[];
   movingUnits: Movement[];
   gameEvents: GameEvent[];
@@ -112,7 +111,6 @@ export interface AIState {
   factionId: FactionId;
   money: number;
   income: number;
-  reserveDivisions: Division[]; // Divisions in reserve (not deployed)
 }
 
 // Combat result for battle resolution

@@ -1,4 +1,4 @@
-import { AIState, FactionId, RegionState, Region, Division, ActiveCombat } from '../types/game';
+import { AIState, FactionId, RegionState, Region, Division, ActiveCombat, Movement } from '../types/game';
 import { createDivision } from '../utils/combat';
 import { calculateFactionIncome } from '../utils/mapUtils';
 
@@ -13,7 +13,6 @@ export function createInitialAIState(factionId: FactionId): AIState {
     factionId,
     money: 100,
     income: 0, // Income is now calculated dynamically based on controlled regions
-    reserveDivisions: [],
   };
 }
 
@@ -36,9 +35,13 @@ function pickRandomRegion(regionList: Region[]): Region | null {
 /**
  * Generate a unique division name for the AI
  */
-function generateAIDivisionName(factionId: FactionId, index: number): string {
+function generateAIDivisionName(factionId: FactionId, regions: RegionState): string {
   const prefix = factionId === 'white' ? 'White Guard' : 'Red Guard';
-  return `${prefix} ${index + 1}st Division`;
+  // Count existing divisions owned by this faction
+  const existingCount = Object.values(regions).reduce((acc, region) => 
+    acc + region.divisions.filter(d => d.owner === factionId).length, 0
+  );
+  return `${prefix} ${existingCount + 1}st Division`;
 }
 
 /**
@@ -53,18 +56,16 @@ export interface AIActions {
 /**
  * Run AI logic for one tick (1 game hour)
  * - Earns income based on controlled regions (using region values/weights) minus unit maintenance costs
- * - Creates divisions if it has enough money
- * - Deploys reserve divisions to random owned regions (excluding regions with active combat)
+ * - Creates divisions if it has enough money and deploys them immediately to random owned regions
  */
 export function runAITick(
   aiState: AIState,
   regions: RegionState,
   activeCombats: ActiveCombat[] = [],
-  movingUnits: any[] = []
+  movingUnits: Movement[] = []
 ): AIActions {
   const { factionId } = aiState;
-  let { money, reserveDivisions } = aiState;
-  reserveDivisions = [...reserveDivisions]; // Clone to avoid mutation
+  let { money } = aiState;
   
   // 1. Calculate income from controlled regions (using region values/weights) minus unit maintenance costs
   const income = calculateFactionIncome(regions, factionId, movingUnits);
@@ -72,19 +73,7 @@ export function runAITick(
   // 2. Earn income
   money += income;
   
-  // 3. Create divisions if we have enough money
-  let divisionsCreated = 0;
-  while (money >= DIVISION_COST) {
-    money -= DIVISION_COST;
-    const newDivision = createDivision(
-      factionId,
-      generateAIDivisionName(factionId, reserveDivisions.length + divisionsCreated)
-    );
-    reserveDivisions.push(newDivision);
-    divisionsCreated += 1;
-  }
-  
-  // 4. Deploy all reserve divisions to random owned regions (excluding regions with active combat)
+  // 3. Create divisions and deploy them immediately
   const deployments: { regionId: string; divisions: Division[] }[] = [];
   const ownedRegions = getOwnedRegions(regions, factionId);
   
@@ -94,23 +83,46 @@ export function runAITick(
   );
   const availableRegions = ownedRegions.filter(r => !regionsWithActiveCombat.has(r.id));
   
-  while (reserveDivisions.length > 0 && availableRegions.length > 0) {
+  let divisionsCreated = 0;
+  
+  if (availableRegions.length === 0) {
+    // No regions available to deploy to
+    return {
+      divisionsCreated: 0,
+      deployments: [],
+      updatedAIState: {
+        factionId,
+        money,
+        income,
+      },
+    };
+  }
+  
+  while (money >= DIVISION_COST) {
+    money -= DIVISION_COST;
+    
+    // Create division
+    const newDivision = createDivision(
+      factionId,
+      generateAIDivisionName(factionId, regions)
+    );
+    
+    // Deploy to random region
     const targetRegion = pickRandomRegion(availableRegions);
     if (!targetRegion) break;
-    
-    // Deploy 1 division at a time to random regions
-    const divisionToDeploy = reserveDivisions.pop()!;
     
     // Find existing deployment to this region or create new one
     const existingDeployment = deployments.find(d => d.regionId === targetRegion.id);
     if (existingDeployment) {
-      existingDeployment.divisions.push(divisionToDeploy);
+      existingDeployment.divisions.push(newDivision);
     } else {
       deployments.push({
         regionId: targetRegion.id,
-        divisions: [divisionToDeploy],
+        divisions: [newDivision],
       });
     }
+    
+    divisionsCreated += 1;
   }
   
   return {
@@ -120,7 +132,6 @@ export function runAITick(
       factionId,
       money,
       income,
-      reserveDivisions,
     },
   };
 }

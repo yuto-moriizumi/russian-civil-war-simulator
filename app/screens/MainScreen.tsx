@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, Division, ActiveCombat, ArmyGroup, Theater } from '../types/game';
+import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, ActiveCombat, ArmyGroup, Theater } from '../types/game';
 import SpeedControl from '../components/SpeedControl';
 import CombatPopup from '../components/CombatPopup';
 import EventsModal from '../components/EventsModal';
@@ -26,7 +26,6 @@ interface MainScreenProps {
   gameSpeed: GameSpeed;
   money: number;
   income: number;
-  reserveDivisions: Division[];
   missions: Mission[];
   movingUnits: Movement[];
   activeCombats: ActiveCombat[];
@@ -43,7 +42,6 @@ interface MainScreenProps {
   selectedTheaterId: string | null;
   onTogglePlay: () => void;
   onChangeSpeed: (speed: GameSpeed) => void;
-  onCreateInfantry: () => void;
   onOpenMissions: () => void;
   onOpenEvents: () => void;
   onClaimMission: (missionId: string) => void;
@@ -74,7 +72,6 @@ export default function MainScreen({
   gameSpeed,
   money,
   income,
-  reserveDivisions,
   missions,
   movingUnits,
   activeCombats,
@@ -90,7 +87,6 @@ export default function MainScreen({
   selectedTheaterId,
   onTogglePlay,
   onChangeSpeed,
-  onCreateInfantry,
   onOpenMissions,
   onOpenEvents,
   onClaimMission,
@@ -172,7 +168,7 @@ export default function MainScreen({
             activeCombats={activeCombats}
             currentDateTime={dateTime}
             playerFaction={country.id}
-            unitsInReserve={reserveDivisions.length}
+            unitsInReserve={0}
             theaters={theaters}
             selectedTheaterId={selectedTheaterId}
             onRegionSelect={onRegionSelect}
@@ -229,22 +225,6 @@ export default function MainScreen({
                 </span>
               </div>
             </div>
-          </div>
-
-          {/* Unit Production */}
-          <div className="flex items-center gap-2 rounded-lg border border-stone-600 bg-stone-800/80 px-3 py-2">
-            <span className="text-lg">🎖️</span>
-            <div className="flex flex-col">
-              <span className="text-xs text-stone-400">Infantry</span>
-              <span className="text-sm font-bold text-white">{reserveDivisions.length}</span>
-            </div>
-            <button
-              onClick={onCreateInfantry}
-              className="ml-2 rounded bg-green-700 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-green-600"
-              title="Create Infantry Unit ($10)"
-            >
-              + Create
-            </button>
           </div>
         </div>
 
@@ -342,7 +322,6 @@ export default function MainScreen({
             )}
           </div>
           <div className="flex items-center gap-4">
-            <span>Reserve Divisions: {reserveDivisions.length}</span>
             {activeCombats.length > 0 && (
               <span className="text-red-400 font-semibold animate-pulse">
                 Active Battles: {activeCombats.length}

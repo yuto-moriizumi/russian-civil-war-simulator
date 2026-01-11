@@ -83,7 +83,6 @@ export function detectTheaters(
     const matchingTheater = existingTheaters.find(existingTheater => {
       // Consider it a match if >80% of regions overlap
       const existingSet = new Set(existingTheater.frontlineRegions);
-      const currentSet = new Set(group.regions);
       const intersection = group.regions.filter(r => existingSet.has(r)).length;
       const union = new Set([...existingTheater.frontlineRegions, ...group.regions]).size;
       const overlap = intersection / union;
@@ -129,7 +128,7 @@ function generateTheaterName(
   if (countryName) return countryName;
   
   // Strategy 3: Directional names based on geographic center
-  const directionalName = getDirectionalName(geoAnalysis, enemyFaction);
+  const directionalName = getDirectionalName(geoAnalysis);
   if (directionalName) return directionalName;
   
   // Strategy 4: Regional descriptors from region names
@@ -244,8 +243,7 @@ function getCountryTheaterName(regionData: Region[]): string | null {
  * Get directional name based on geographic analysis
  */
 function getDirectionalName(
-  geoAnalysis: ReturnType<typeof analyzeGeography>,
-  enemyFaction: FactionId
+  geoAnalysis: ReturnType<typeof analyzeGeography>
 ): string | null {
   const directions: string[] = [];
   

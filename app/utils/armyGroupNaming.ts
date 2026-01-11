@@ -1,4 +1,4 @@
-import { RegionState, ArmyGroup, FactionId } from '../types/game';
+import { ArmyGroup, FactionId } from '../types/game';
 
 /**
  * Army group naming hierarchy following historical conventions:
@@ -28,16 +28,10 @@ const ELITE_NAMES = [
  */
 export function generateArmyGroupName(
   existingGroups: ArmyGroup[],
-  playerFaction: FactionId,
-  regions: RegionState,
-  regionIds: string[],
-  theaterName?: string
+  playerFaction: FactionId
 ): string {
   // Filter groups belonging to the same faction
   const playerGroups = existingGroups.filter(g => g.owner === playerFaction);
-  
-  // Analyze the geographic context of selected regions
-  const geoContext = analyzeGeographicContext(regionIds, regions);
   
   // Determine naming style based on number of existing groups
   const groupCount = playerGroups.length;
@@ -85,40 +79,6 @@ function getFirstGroupName(faction: FactionId): string {
     foreign: 'Expeditionary Force',
   };
   return names[faction] || '1st Army';
-}
-
-/**
- * Analyze geographic context of regions to suggest naming
- */
-function analyzeGeographicContext(
-  regionIds: string[],
-  regions: RegionState
-): {
-  direction: string | null;
-  hasCoastal: boolean;
-  hasMountain: boolean;
-} {
-  const regionNames = regionIds.map(id => regions[id]?.name || '');
-  
-  // Detect directional patterns
-  let direction: string | null = null;
-  for (const dir of GEOGRAPHIC_DIRECTIONS) {
-    if (regionNames.some(name => name.includes(dir))) {
-      direction = dir;
-      break;
-    }
-  }
-  
-  // Detect terrain features
-  const hasCoastal = regionNames.some(name => 
-    name.includes('Coast') || name.includes('Sea') || name.includes('Black')
-  );
-  
-  const hasMountain = regionNames.some(name =>
-    name.includes('Caucasus') || name.includes('Urals') || name.includes('Mountain')
-  );
-  
-  return { direction, hasCoastal, hasMountain };
 }
 
 /**

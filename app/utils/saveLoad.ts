@@ -14,7 +14,7 @@ import {
 } from '../types/game';
 
 const STORAGE_KEY = 'rcw-save';
-const SAVE_VERSION = 2; // Bumped version for Division-based system
+const SAVE_VERSION = 3; // Bumped version for removal of reserveDivisions
 
 // Serialized types (Date objects converted to ISO strings)
 interface SerializedMovement {
@@ -65,7 +65,6 @@ interface SerializedGameState {
   gameSpeed: GameSpeed;
   money: number;
   income: number;
-  reserveDivisions: Division[];
   missions: Mission[];
   movingUnits: SerializedMovement[];
   gameEvents: SerializedGameEvent[];
@@ -163,8 +162,8 @@ export function loadGame(): {
     // Version check (for future migrations)
     if (data.version !== SAVE_VERSION) {
       console.warn(`Save version mismatch: expected ${SAVE_VERSION}, got ${data.version}`);
-      // Old saves are incompatible with new Division system
-      if (data.version < 2) {
+      // Old saves are incompatible with new system
+      if (data.version < 3) {
         console.warn('Old save format detected, clearing incompatible save');
         deleteSaveGame();
         return null;

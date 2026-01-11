@@ -1,4 +1,4 @@
-import { Adjacency, FactionId, RegionState } from '../types/game';
+import { Adjacency, FactionId, RegionState, Movement } from '../types/game';
 import { initialRegionOwnership, regionValues } from '../data/map';
 
 // Faction colors for map display
@@ -27,7 +27,7 @@ export function getRegionsByFaction(regions: RegionState, faction: FactionId): s
 }
 
 // Count total units owned by a faction (in regions and in transit)
-export function countFactionUnits(regions: RegionState, faction: FactionId, movingUnits: any[] = []): number {
+export function countFactionUnits(regions: RegionState, faction: FactionId, movingUnits: Movement[] = []): number {
   // Count units in regions
   const unitsInRegions = Object.values(regions)
     .filter(region => region.owner === faction)
@@ -43,7 +43,7 @@ export function countFactionUnits(regions: RegionState, faction: FactionId, movi
 
 // Calculate total income from regions controlled by a faction (using region values/weights)
 // minus unit maintenance costs ($1 per unit per hour)
-export function calculateFactionIncome(regions: RegionState, faction: FactionId, movingUnits: any[] = []): number {
+export function calculateFactionIncome(regions: RegionState, faction: FactionId, movingUnits: Movement[] = []): number {
   const grossIncome = Object.values(regions)
     .filter(region => region.owner === faction)
     .reduce((total, region) => total + region.value, 0);

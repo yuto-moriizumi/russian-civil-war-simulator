@@ -12,8 +12,7 @@ import {
   Movement,
   ActiveCombat,
   GameEvent,
-  ArmyGroup,
-  Theater
+  ArmyGroup
 } from '../types/game';
 import { initialMissions, GAME_START_DATE } from '../data/gameData';
 import { calculateFactionIncome } from '../utils/mapUtils';
@@ -98,7 +97,6 @@ const initialGameState: GameState = {
   gameSpeed: 1,
   money: 100,
   income: 0,
-  reserveDivisions: [],
   missions: initialMissions,
   movingUnits: [],
   gameEvents: [],
@@ -377,65 +375,86 @@ export const useGameStore = create<GameStore>()(
       },
 
       createInfantry: () => {
-        const { money, selectedCountry, reserveDivisions, dateTime, gameEvents } = get();
+        const { money, selectedCountry, dateTime, gameEvents, regions, selectedGroupId, armyGroups, selectedRegion } = get();
         const cost = 10;
         
         if (money >= cost && selectedCountry) {
-          const divisionNumber = reserveDivisions.length + 1;
+          // Find deployment target
+          let deploymentTarget: string | null = null;
+          
+          // Priority 1: If an army group is selected, deploy to it
+          if (selectedGroupId) {
+            const group = armyGroups.find(g => g.id === selectedGroupId);
+            if (group) {
+              const validRegions = group.regionIds.filter(id => {
+                const region = regions[id];
+                return region && region.owner === selectedCountry.id;
+              });
+              if (validRegions.length > 0) {
+                // Pick random region in the group
+                deploymentTarget = validRegions[Math.floor(Math.random() * validRegions.length)];
+              }
+            }
+          }
+          
+          // Priority 2: If a region is selected and owned by player, deploy there
+          if (!deploymentTarget && selectedRegion) {
+            const region = regions[selectedRegion];
+            if (region && region.owner === selectedCountry.id) {
+              deploymentTarget = selectedRegion;
+            }
+          }
+          
+          // Priority 3: Deploy to any owned region
+          if (!deploymentTarget) {
+            const ownedRegions = Object.keys(regions).filter(id => regions[id].owner === selectedCountry.id);
+            if (ownedRegions.length > 0) {
+              deploymentTarget = ownedRegions[Math.floor(Math.random() * ownedRegions.length)];
+            }
+          }
+          
+          if (!deploymentTarget) {
+            console.warn('No valid deployment target found for new division');
+            return;
+          }
+          
+          // Count existing divisions to generate unique name
+          const existingDivisions = Object.values(regions).reduce((acc, region) => 
+            acc + region.divisions.filter(d => d.owner === selectedCountry.id).length, 0
+          );
+          const divisionNumber = existingDivisions + 1;
           const divisionName = `${selectedCountry.id === 'soviet' ? 'Red' : 'White'} Guard ${divisionNumber}${getOrdinalSuffix(divisionNumber)} Division`;
           const newDivision = createDivision(selectedCountry.id, divisionName);
           
+          const targetRegion = regions[deploymentTarget];
           const newEvent = createGameEvent(
-            'unit_created',
-            'Division Trained',
-            `${divisionName} has been trained for $${cost}. HP: ${newDivision.hp}, Attack: ${newDivision.attack}, Defence: ${newDivision.defence}. Ready for deployment.`,
+            'unit_deployed',
+            `Division Trained and Deployed`,
+            `${divisionName} has been trained for $${cost} and deployed to ${targetRegion.name}. HP: ${newDivision.hp}, Attack: ${newDivision.attack}, Defence: ${newDivision.defence}.`,
             dateTime,
-            selectedCountry.id
+            selectedCountry.id,
+            deploymentTarget
           );
+
+          const newRegions = {
+            ...regions,
+            [deploymentTarget]: {
+              ...targetRegion,
+              divisions: [...targetRegion.divisions, newDivision],
+            },
+          };
 
           set({
             money: money - cost,
-            reserveDivisions: [...reserveDivisions, newDivision],
+            regions: newRegions,
             gameEvents: [...gameEvents, newEvent],
           });
         }
       },
 
       deployUnit: () => {
-        const { selectedRegion, reserveDivisions, regions, selectedCountry, dateTime, gameEvents, activeCombats } = get();
-        if (!selectedRegion || reserveDivisions.length <= 0) return;
-        
-        const region = regions[selectedRegion];
-        if (!region || region.owner !== selectedCountry?.id) return;
-        
-        // Cannot deploy to regions with ongoing combat
-        const hasActiveCombat = activeCombats.some(c => c.regionId === selectedRegion && !c.isComplete);
-        if (hasActiveCombat) return;
-        
-        const divisionToDeploy = reserveDivisions[0];
-        
-        const newEvent = createGameEvent(
-          'unit_deployed',
-          `Division Deployed to ${region.name}`,
-          `${divisionToDeploy.name} has been deployed to ${region.name}.`,
-          dateTime,
-          selectedCountry?.id,
-          selectedRegion
-        );
-
-        const newRegions = {
-          ...regions,
-          [selectedRegion]: {
-            ...region,
-            divisions: [...region.divisions, divisionToDeploy],
-          },
-        };
-
-        set({
-          reserveDivisions: reserveDivisions.slice(1),
-          gameEvents: [...gameEvents, newEvent],
-          regions: newRegions,
-        });
+        // This function is no longer needed - units are deployed directly when created
+        console.warn('deployUnit is deprecated - units are now deployed directly when created');
       },
 
       moveUnits: (fromRegion, toRegion, count) => {
@@ -537,17 +556,13 @@ export const useGameStore = create<GameStore>()(
 
       // Army Group Actions
       createArmyGroup: (name: string, regionIds: string[], theaterId: string | null = null) => {
-        const { armyGroups, selectedCountry, regions, theaters } = get();
+        const { armyGroups, selectedCountry } = get();
         if (!selectedCountry || regionIds.length === 0) return;
 
         // If no name provided, generate one systematically
-        const theater = theaters.find(t => t.id === theaterId);
         const groupName = name.trim() || generateArmyGroupName(
           armyGroups,
-          selectedCountry.id,
-          regions,
-          regionIds,
-          theater?.name
+          selectedCountry.id
         );
 
         const newGroup: ArmyGroup = {
@@ -640,61 +655,59 @@ export const useGameStore = create<GameStore>()(
       },
 
       deployToArmyGroup: (groupId: string) => {
-        const state = get();
-        const { armyGroups, regions, reserveDivisions, selectedCountry, dateTime, gameEvents } = state;
+        const { money, selectedCountry, dateTime, gameEvents, regions, armyGroups } = get();
+        const cost = 10;
+        
+        if (money < cost || !selectedCountry) return;
         
         const group = armyGroups.find(g => g.id === groupId);
-        if (!group || !selectedCountry || reserveDivisions.length === 0) return;
-
-        // Filter valid regions (owned by player)
+        if (!group) return;
+        
+        // Find valid regions in this army group
         const validRegions = group.regionIds.filter(id => {
           const region = regions[id];
           return region && region.owner === selectedCountry.id;
         });
-
-        if (validRegions.length === 0) return;
-
-        // Distribute reserves evenly across regions
-        const newRegions = { ...regions };
-        const newEvents = [...gameEvents];
-        const remainingReserves = [...reserveDivisions];
-        let deployedCount = 0;
-
-        // Simple round-robin distribution
-        let regionIndex = 0;
-        while (remainingReserves.length > 0 && regionIndex < remainingReserves.length) {
-          const targetRegionId = validRegions[regionIndex % validRegions.length];
-          const divisionToDeploy = remainingReserves.shift();
-          
-          if (divisionToDeploy) {
-            const region = newRegions[targetRegionId];
-            newRegions[targetRegionId] = {
-              ...region,
-              divisions: [...region.divisions, divisionToDeploy],
-            };
-
-            const newEvent = createGameEvent(
-              'unit_deployed',
-              `Division Deployed to ${region.name}`,
-              `${divisionToDeploy.name} has been deployed to ${region.name} (${group.name}).`,
-              dateTime,
-              selectedCountry.id,
-              targetRegionId
-            );
-            newEvents.push(newEvent);
-            deployedCount++;
-          }
-          
-          regionIndex++;
+        
+        if (validRegions.length === 0) {
+          console.warn('No valid regions in army group for deployment');
+          return;
         }
+        
+        // Pick a random region in the group
+        const deploymentTarget = validRegions[Math.floor(Math.random() * validRegions.length)];
+        
+        // Count existing divisions to generate unique name
+        const existingDivisions = Object.values(regions).reduce((acc, region) => 
+          acc + region.divisions.filter(d => d.owner === selectedCountry.id).length, 0
+        );
+        const divisionNumber = existingDivisions + 1;
+        const divisionName = `${selectedCountry.id === 'soviet' ? 'Red' : 'White'} Guard ${divisionNumber}${getOrdinalSuffix(divisionNumber)} Division`;
+        const newDivision = createDivision(selectedCountry.id, divisionName);
+        
+        const targetRegion = regions[deploymentTarget];
+        const newEvent = createGameEvent(
+          'unit_deployed',
+          `Division Deployed to ${group.name}`,
+          `${divisionName} has been trained for $${cost} and deployed to ${targetRegion.name} (${group.name}).`,
+          dateTime,
+          selectedCountry.id,
+          deploymentTarget
+        );
 
-        if (deployedCount > 0) {
-          set({
-            regions: newRegions,
-            reserveDivisions: remainingReserves,
-            gameEvents: newEvents,
-          });
-        }
+        const newRegions = {
+          ...regions,
+          [deploymentTarget]: {
+            ...targetRegion,
+            divisions: [...targetRegion.divisions, newDivision],
+          },
+        };
+
+        set({
+          money: money - cost,
+          regions: newRegions,
+          gameEvents: [...gameEvents, newEvent],
+        });
       },
 
       saveGame: () => {
@@ -720,7 +733,6 @@ export const useGameStore = create<GameStore>()(
         selectedCountry: state.selectedCountry,
         dateTime: state.dateTime,
         money: state.money,
-        reserveDivisions: state.reserveDivisions,
         missions: state.missions,
         movingUnits: state.movingUnits,
         gameEvents: state.gameEvents,

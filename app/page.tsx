@@ -91,7 +91,6 @@ function MainScreenView() {
       gameSpeed={state.gameSpeed}
       money={state.money}
       income={state.income}
-      reserveDivisions={state.reserveDivisions}
       missions={state.missions}
       movingUnits={state.movingUnits}
       activeCombats={state.activeCombats}
@@ -107,7 +106,6 @@ function MainScreenView() {
       selectedTheaterId={state.selectedTheaterId}
       onTogglePlay={state.togglePlay}
       onChangeSpeed={state.setGameSpeed}
-      onCreateInfantry={state.createInfantry}
       onOpenMissions={state.openMissions}
       onOpenEvents={() => state.setIsEventsModalOpen(true)}
       onClaimMission={state.claimMission}
