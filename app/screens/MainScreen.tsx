@@ -167,7 +167,6 @@ export default function MainScreen({
             currentDateTime={dateTime}
             playerFaction={country.id}
             unitsInReserve={reserveDivisions.length}
-            armyGroups={armyGroups}
             theaters={theaters}
             selectedTheaterId={selectedTheaterId}
             onRegionSelect={onRegionSelect}
