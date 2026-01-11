@@ -48,12 +48,7 @@ export function useGameAPI() {
       getActiveCombats: () => state.activeCombats,
 
       // Army Group API methods
-      toggleMultiSelect: (regionId) => {
-        state.toggleMultiSelectRegion(regionId);
-      },
-      getMultiSelectedRegions: () => state.multiSelectedRegions,
-      clearMultiSelection: () => state.clearMultiSelection(),
-      createArmyGroup: (name, theaterId) => state.createArmyGroup(name, theaterId),
+      createArmyGroup: (name, regionIds, theaterId) => state.createArmyGroup(name, regionIds, theaterId),
       getArmyGroups: () => state.armyGroups,
       advanceArmyGroup: (groupId) => state.advanceArmyGroup(groupId),
       deployToArmyGroup: (groupId) => state.deployToArmyGroup(groupId),

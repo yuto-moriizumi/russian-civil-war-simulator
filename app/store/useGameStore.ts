@@ -47,7 +47,6 @@ interface GameStore extends GameState {
   isEventsModalOpen: boolean;
   selectedCombatId: string | null;
   lastSaveTime: Date | null;
-  multiSelectedRegions: string[]; // Regions selected for grouping (Shift+click)
   selectedGroupId: string | null; // Currently selected army group
   selectedTheaterId: string | null; // Currently selected theater
 
@@ -79,9 +78,7 @@ interface GameStore extends GameState {
   selectTheater: (theaterId: string | null) => void;
   
   // Army Group Actions
-  toggleMultiSelectRegion: (regionId: string) => void;
-  clearMultiSelection: () => void;
-  createArmyGroup: (name: string, theaterId?: string | null) => void;
+  createArmyGroup: (name: string, regionIds: string[], theaterId?: string | null) => void;
   deleteArmyGroup: (groupId: string) => void;
   renameArmyGroup: (groupId: string, name: string) => void;
   selectArmyGroup: (groupId: string | null) => void;
@@ -123,7 +120,6 @@ export const useGameStore = create<GameStore>()(
       isEventsModalOpen: false,
       selectedCombatId: null,
       lastSaveTime: null,
-      multiSelectedRegions: [],
       selectedGroupId: null,
       selectedTheaterId: null,
 
@@ -537,29 +533,9 @@ export const useGameStore = create<GameStore>()(
       },
 
       // Army Group Actions
-      toggleMultiSelectRegion: (regionId: string) => {
-        const { multiSelectedRegions, regions, selectedCountry } = get();
-        const region = regions[regionId];
-        
-        // Only allow selecting player-owned regions
-        if (!region || region.owner !== selectedCountry?.id) {
-          return;
-        }
-        
-        if (multiSelectedRegions.includes(regionId)) {
-          set({ multiSelectedRegions: multiSelectedRegions.filter(id => id !== regionId) });
-        } else {
-          set({ multiSelectedRegions: [...multiSelectedRegions, regionId] });
-        }
-      },
-
-      clearMultiSelection: () => {
-        set({ multiSelectedRegions: [] });
-      },
-
-      createArmyGroup: (name: string, theaterId: string | null = null) => {
-        const { multiSelectedRegions, armyGroups, selectedCountry, regions, theaters } = get();
-        if (multiSelectedRegions.length === 0 || !selectedCountry) return;
+      createArmyGroup: (name: string, regionIds: string[], theaterId: string | null = null) => {
+        const { armyGroups, selectedCountry, regions, theaters } = get();
+        if (!selectedCountry || regionIds.length === 0) return;
 
         // If no name provided, generate one systematically
         const theater = theaters.find(t => t.id === theaterId);
@@ -567,14 +543,14 @@ export const useGameStore = create<GameStore>()(
           armyGroups,
           selectedCountry.id,
           regions,
-          multiSelectedRegions,
+          regionIds,
           theater?.name
         );
 
         const newGroup: ArmyGroup = {
           id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           name: groupName,
-          regionIds: [...multiSelectedRegions],
+          regionIds: [...regionIds],
           color: ARMY_GROUP_COLORS[armyGroups.length % ARMY_GROUP_COLORS.length],
           owner: selectedCountry.id,
           theaterId,
@@ -582,7 +558,6 @@ export const useGameStore = create<GameStore>()(
 
         set({
           armyGroups: [...armyGroups, newGroup],
-          multiSelectedRegions: [],
           selectedGroupId: newGroup.id,
         });
       },

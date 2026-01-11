@@ -9,20 +9,17 @@ interface TheaterPanelProps {
   armyGroups: ArmyGroup[];
   regions: RegionState;
   playerFaction: FactionId;
-  multiSelectedRegions: string[];
   selectedTheaterId: string | null;
   selectedGroupId: string | null;
   isExpanded: boolean;
   onToggleExpanded: () => void;
   onSelectTheater: (theaterId: string | null) => void;
-  onCreateGroup: (name: string, theaterId: string | null) => void;
+  onCreateGroup: (name: string, regionIds: string[], theaterId: string | null) => void;
   onDeleteGroup: (groupId: string) => void;
   onRenameGroup: (groupId: string, name: string) => void;
   onSelectGroup: (groupId: string | null) => void;
   onAdvanceGroup: (groupId: string) => void;
   onDeployToGroup: (groupId: string) => void;
-  onClearMultiSelection: () => void;
-  onToggleMultiSelect: (regionId: string) => void;
 }
 
 export default function TheaterPanel({
@@ -30,7 +27,6 @@ export default function TheaterPanel({
   armyGroups,
   regions,
   playerFaction,
-  multiSelectedRegions,
   selectedTheaterId,
   selectedGroupId,
   isExpanded,
@@ -42,23 +38,13 @@ export default function TheaterPanel({
   onSelectGroup,
   onAdvanceGroup,
   onDeployToGroup,
-  onClearMultiSelection,
-  onToggleMultiSelect,
 }: TheaterPanelProps) {
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
 
-  const selectedTheater = theaters.find(t => t.id === selectedTheaterId);
   const theaterGroups = selectedTheaterId 
     ? armyGroups.filter(g => g.theaterId === selectedTheaterId)
     : armyGroups.filter(g => g.theaterId === null);
-
-  const handleCreateGroup = () => {
-    if (multiSelectedRegions.length > 0) {
-      // Empty string triggers auto-generation
-      onCreateGroup('', selectedTheaterId);
-    }
-  };
 
   const handleStartRename = (group: ArmyGroup) => {
     setEditingGroupId(group.id);
@@ -82,40 +68,20 @@ export default function TheaterPanel({
     }
   };
 
-  const handleSelectAllTheaterRegions = (theater: Theater) => {
-    // Select the theater first
-    onSelectTheater(theater.id);
-    // Clear current selection
-    onClearMultiSelection();
-    // Select all frontline regions in this theater
-    theater.frontlineRegions.forEach(regionId => {
-      const region = regions[regionId];
-      if (region && region.owner === playerFaction) {
-        onToggleMultiSelect(regionId);
-      }
-    });
-  };
-
   const handleCreateGroupForTheater = (theater: Theater) => {
     // Select the theater first
     onSelectTheater(theater.id);
-    // Clear current selection
-    onClearMultiSelection();
-    // Select all frontline regions in this theater
+    // Get all valid frontline regions in this theater
     const validRegions: string[] = [];
     theater.frontlineRegions.forEach(regionId => {
       const region = regions[regionId];
       if (region && region.owner === playerFaction) {
-        onToggleMultiSelect(regionId);
         validRegions.push(regionId);
       }
     });
-    // Immediately create the group if we have valid regions
+    // Create the group if we have valid regions
     if (validRegions.length > 0) {
-      // Use setTimeout to ensure the multi-selection state is updated first
-      setTimeout(() => {
-        onCreateGroup('', theater.id);
-      }, 0);
+      onCreateGroup('', validRegions, theater.id);
     }
   };
 
@@ -133,11 +99,6 @@ export default function TheaterPanel({
           <span className="rounded bg-stone-700 px-2 py-0.5 text-xs text-stone-300">
             {theaters.length} {theaters.length === 1 ? 'Theater' : 'Theaters'}
           </span>
-          {multiSelectedRegions.length > 0 && (
-            <span className="rounded bg-blue-600 px-2 py-0.5 text-xs text-white">
-              {multiSelectedRegions.length} regions selected (Shift+click)
-            </span>
-          )}
         </div>
         <span className="text-stone-400">
           {isExpanded ? '▼' : '▲'}
@@ -147,36 +108,6 @@ export default function TheaterPanel({
       {/* Expanded content */}
       {isExpanded && (
         <div className="border-t border-stone-700 px-4 py-3">
-          {/* Create new group section */}
-          {multiSelectedRegions.length > 0 && (
-            <div className="mb-3 flex items-center justify-between rounded border border-blue-600/50 bg-blue-900/20 p-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-blue-200">
-                  {multiSelectedRegions.length} {multiSelectedRegions.length === 1 ? 'region' : 'regions'} selected
-                </span>
-                {selectedTheater && (
-                  <span className="text-xs text-blue-300/70">in {selectedTheater.name}</span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleCreateGroup}
-                  className="rounded bg-green-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-500"
-                  title="Create army group with auto-generated name"
-                >
-                  + Create Army Group
-                </button>
-                <button
-                  onClick={onClearMultiSelection}
-                  className="rounded bg-stone-700 px-2 py-2 text-sm text-stone-300 transition-colors hover:bg-stone-600"
-                  title="Clear selection"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Theaters list */}
           {theaters.length === 0 ? (
             <div className="py-4 text-center text-sm text-stone-500">
@@ -209,16 +140,6 @@ export default function TheaterPanel({
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectAllTheaterRegions(theater);
-                          }}
-                          className="rounded bg-blue-700 px-2 py-1 text-xs font-semibold text-white transition-colors hover:bg-blue-600"
-                          title="Select all frontline regions"
-                        >
-                          Select All
-                        </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -406,7 +327,7 @@ export default function TheaterPanel({
           <div className="mt-3 text-xs text-stone-500">
             <strong>Theaters</strong> are auto-detected frontline regions facing enemies.
             Click <strong>&quot;+ Create Group&quot;</strong> on a theater to instantly create an army group with an auto-generated name.
-            <strong>Shift+click</strong> regions for custom selections. <strong>Double-click</strong> a group name to rename it.
+            <strong>Double-click</strong> a group name to rename it.
           </div>
         </div>
       )}

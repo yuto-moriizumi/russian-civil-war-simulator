@@ -38,7 +38,6 @@ interface MainScreenProps {
   // Theater and Army Groups props
   theaters: Theater[];
   armyGroups: ArmyGroup[];
-  multiSelectedRegions: string[];
   selectedGroupId: string | null;
   selectedTheaterId: string | null;
   onTogglePlay: () => void;
@@ -59,9 +58,7 @@ interface MainScreenProps {
   onCloseEvents: () => void;
   // Theater and Army Groups action props
   onSelectTheater: (theaterId: string | null) => void;
-  onToggleMultiSelectRegion: (regionId: string) => void;
-  onClearMultiSelection: () => void;
-  onCreateArmyGroup: (name: string, theaterId?: string | null) => void;
+  onCreateArmyGroup: (name: string, regionIds: string[], theaterId?: string | null) => void;
   onDeleteArmyGroup: (groupId: string) => void;
   onRenameArmyGroup: (groupId: string, name: string) => void;
   onSelectArmyGroup: (groupId: string | null) => void;
@@ -88,7 +85,6 @@ export default function MainScreen({
   gameEvents,
   theaters,
   armyGroups,
-  multiSelectedRegions,
   selectedGroupId,
   selectedTheaterId,
   onTogglePlay,
@@ -108,8 +104,6 @@ export default function MainScreen({
   isEventsModalOpen,
   onCloseEvents,
   onSelectTheater,
-  onToggleMultiSelectRegion,
-  onClearMultiSelection,
   onCreateArmyGroup,
   onDeleteArmyGroup,
   onRenameArmyGroup,
@@ -173,7 +167,6 @@ export default function MainScreen({
             currentDateTime={dateTime}
             playerFaction={country.id}
             unitsInReserve={reserveDivisions.length}
-            multiSelectedRegions={multiSelectedRegions}
             armyGroups={armyGroups}
             theaters={theaters}
             selectedTheaterId={selectedTheaterId}
@@ -182,7 +175,6 @@ export default function MainScreen({
             onDeployUnit={onDeployUnit}
             onMoveUnits={onMoveUnits}
             onSelectCombat={onSelectCombat}
-            onToggleMultiSelect={onToggleMultiSelectRegion}
           />
         ) : (
           <div 
@@ -315,7 +307,6 @@ export default function MainScreen({
           armyGroups={armyGroups}
           regions={regions}
           playerFaction={country.id}
-          multiSelectedRegions={multiSelectedRegions}
           selectedTheaterId={selectedTheaterId}
           selectedGroupId={selectedGroupId}
           isExpanded={isArmyGroupsPanelExpanded}
@@ -327,8 +318,6 @@ export default function MainScreen({
           onSelectGroup={onSelectArmyGroup}
           onAdvanceGroup={onAdvanceArmyGroup}
           onDeployToGroup={onDeployToArmyGroup}
-          onClearMultiSelection={onClearMultiSelection}
-          onToggleMultiSelect={onToggleMultiSelectRegion}
         />
       </div>
 

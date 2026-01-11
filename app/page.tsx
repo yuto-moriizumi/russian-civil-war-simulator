@@ -89,7 +89,6 @@ function MainScreenView() {
       gameEvents={state.gameEvents}
       theaters={state.theaters}
       armyGroups={state.armyGroups}
-      multiSelectedRegions={state.multiSelectedRegions}
       selectedGroupId={state.selectedGroupId}
       selectedTheaterId={state.selectedTheaterId}
       onTogglePlay={state.togglePlay}
@@ -109,8 +108,6 @@ function MainScreenView() {
       isEventsModalOpen={state.isEventsModalOpen}
       onCloseEvents={() => state.setIsEventsModalOpen(false)}
       onSelectTheater={state.selectTheater}
-      onToggleMultiSelectRegion={state.toggleMultiSelectRegion}
-      onClearMultiSelection={state.clearMultiSelection}
       onCreateArmyGroup={state.createArmyGroup}
       onDeleteArmyGroup={state.deleteArmyGroup}
       onRenameArmyGroup={state.renameArmyGroup}

@@ -8,43 +8,29 @@ interface ArmyGroupsPanelProps {
   armyGroups: ArmyGroup[];
   regions: RegionState;
   playerFaction: FactionId;
-  multiSelectedRegions: string[];
   selectedGroupId: string | null;
   isExpanded: boolean;
   onToggleExpanded: () => void;
-  onCreateGroup: (name: string) => void;
   onDeleteGroup: (groupId: string) => void;
   onRenameGroup: (groupId: string, name: string) => void;
   onSelectGroup: (groupId: string | null) => void;
   onAdvanceGroup: (groupId: string) => void;
-  onClearMultiSelection: () => void;
 }
 
 export default function ArmyGroupsPanel({
   armyGroups,
   regions,
   playerFaction,
-  multiSelectedRegions,
   selectedGroupId,
   isExpanded,
   onToggleExpanded,
-  onCreateGroup,
   onDeleteGroup,
   onRenameGroup,
   onSelectGroup,
   onAdvanceGroup,
-  onClearMultiSelection,
 }: ArmyGroupsPanelProps) {
-  const [newGroupName, setNewGroupName] = useState('');
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
-
-  const handleCreateGroup = () => {
-    if (newGroupName.trim() && multiSelectedRegions.length > 0) {
-      onCreateGroup(newGroupName.trim());
-      setNewGroupName('');
-    }
-  };
 
   const handleStartRename = (group: ArmyGroup) => {
     setEditingGroupId(group.id);
@@ -61,11 +47,7 @@ export default function ArmyGroupsPanel({
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      if (editingGroupId) {
-        handleFinishRename();
-      } else {
-        handleCreateGroup();
-      }
+      handleFinishRename();
     } else if (e.key === 'Escape') {
       setEditingGroupId(null);
       setEditingName('');
@@ -86,11 +68,6 @@ export default function ArmyGroupsPanel({
           <span className="rounded bg-stone-700 px-2 py-0.5 text-xs text-stone-300">
             {armyGroups.length}
           </span>
-          {multiSelectedRegions.length > 0 && (
-            <span className="rounded bg-blue-600 px-2 py-0.5 text-xs text-white">
-              {multiSelectedRegions.length} regions selected (Shift+click)
-            </span>
-          )}
         </div>
         <span className="text-stone-400">
           {isExpanded ? '▼' : '▲'}
@@ -100,38 +77,10 @@ export default function ArmyGroupsPanel({
       {/* Expanded content */}
       {isExpanded && (
         <div className="border-t border-stone-700 px-4 py-3">
-          {/* Create new group section */}
-          {multiSelectedRegions.length > 0 && (
-            <div className="mb-3 flex items-center gap-2 rounded border border-blue-600/50 bg-blue-900/20 p-2">
-              <input
-                type="text"
-                value={newGroupName}
-                onChange={(e) => setNewGroupName(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Enter group name..."
-                className="flex-1 rounded border border-stone-600 bg-stone-800 px-2 py-1 text-sm text-white placeholder-stone-500 focus:border-blue-500 focus:outline-none"
-              />
-              <button
-                onClick={handleCreateGroup}
-                disabled={!newGroupName.trim()}
-                className="rounded bg-blue-600 px-3 py-1 text-sm font-semibold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Create Group
-              </button>
-              <button
-                onClick={onClearMultiSelection}
-                className="rounded bg-stone-700 px-2 py-1 text-sm text-stone-300 transition-colors hover:bg-stone-600"
-                title="Clear selection"
-              >
-                ✕
-              </button>
-            </div>
-          )}
-
           {/* Army groups list */}
           {armyGroups.length === 0 ? (
             <div className="py-4 text-center text-sm text-stone-500">
-              No army groups yet. Shift+click regions to select, then create a group.
+              No army groups yet. Use the Theater panel to create groups from frontline regions.
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -212,8 +161,8 @@ export default function ArmyGroupsPanel({
 
           {/* Help text */}
           <div className="mt-3 text-xs text-stone-500">
-            <strong>Shift+click</strong> regions to select them, then create a group.
             Click <strong>Advance</strong> to move all units toward the nearest enemy.
+            <strong>Double-click</strong> a group name to rename it.
           </div>
         </div>
       )}

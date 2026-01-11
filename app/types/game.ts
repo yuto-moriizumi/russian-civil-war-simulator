@@ -186,10 +186,7 @@ export interface GameAPI {
   getMovingUnits: () => Movement[];
   getActiveCombats: () => ActiveCombat[];
   // Army Group methods
-  toggleMultiSelect: (regionId: string) => void;
-  getMultiSelectedRegions: () => string[];
-  clearMultiSelection: () => void;
-  createArmyGroup: (name: string, theaterId?: string | null) => void;
+  createArmyGroup: (name: string, regionIds: string[], theaterId?: string | null) => void;
   getArmyGroups: () => ArmyGroup[];
   advanceArmyGroup: (groupId: string) => void;
   deployToArmyGroup: (groupId: string) => void;
