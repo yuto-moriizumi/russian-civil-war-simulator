@@ -11,13 +11,27 @@ import {
   FactionId, 
   Movement,
   ActiveCombat,
-  GameEvent
+  GameEvent,
+  ArmyGroup
 } from '../types/game';
 import { initialMissions, GAME_START_DATE } from '../data/gameData';
 import { calculateFactionIncome } from '../utils/mapUtils';
 import { createInitialAIState, runAITick } from '../ai/cpuPlayer';
 import { createDivision, createActiveCombat, processCombatRound, shouldProcessCombatRound } from '../utils/combat';
 import { createGameEvent, getOrdinalSuffix } from '../utils/eventUtils';
+import { findBestMoveTowardEnemy } from '../utils/pathfinding';
+
+// Predefined colors for army groups
+const ARMY_GROUP_COLORS = [
+  '#3B82F6', // blue
+  '#10B981', // emerald
+  '#F59E0B', // amber
+  '#8B5CF6', // violet
+  '#EC4899', // pink
+  '#06B6D4', // cyan
+  '#F97316', // orange
+  '#84CC16', // lime
+];
 
 interface GameStore extends GameState {
   // Additional UI State
@@ -30,6 +44,8 @@ interface GameStore extends GameState {
   isEventsModalOpen: boolean;
   selectedCombatId: string | null;
   lastSaveTime: Date | null;
+  multiSelectedRegions: string[]; // Regions selected for grouping (Shift+click)
+  selectedGroupId: string | null; // Currently selected army group
 
   // Actions
   setRegions: (regions: RegionState) => void;
@@ -54,6 +70,15 @@ interface GameStore extends GameState {
   claimMission: (missionId: string) => void;
   openMissions: () => void;
   
+  // Army Group Actions
+  toggleMultiSelectRegion: (regionId: string) => void;
+  clearMultiSelection: () => void;
+  createArmyGroup: (name: string) => void;
+  deleteArmyGroup: (groupId: string) => void;
+  renameArmyGroup: (groupId: string, name: string) => void;
+  selectArmyGroup: (groupId: string | null) => void;
+  advanceArmyGroup: (groupId: string) => void;
+  
   // Persistence Actions
   saveGame: () => void;
   loadGame: (savedData: { gameState: GameState; regions: RegionState; aiState: AIState | null }) => void;
@@ -72,6 +97,7 @@ const initialGameState: GameState = {
   movingUnits: [],
   gameEvents: [],
   activeCombats: [],
+  armyGroups: [],
 };
 
 export const useGameStore = create<GameStore>()(
@@ -87,6 +113,8 @@ export const useGameStore = create<GameStore>()(
       isEventsModalOpen: false,
       selectedCombatId: null,
       lastSaveTime: null,
+      multiSelectedRegions: [],
+      selectedGroupId: null,
 
       setRegions: (regions) => set({ regions }),
       setAdjacency: (adjacency) => set({ adjacency }),
@@ -438,6 +466,120 @@ export const useGameStore = create<GameStore>()(
         }));
       },
 
+      // Army Group Actions
+      toggleMultiSelectRegion: (regionId: string) => {
+        const { multiSelectedRegions, regions, selectedCountry } = get();
+        const region = regions[regionId];
+        
+        // Only allow selecting player-owned regions
+        if (!region || region.owner !== selectedCountry?.id) {
+          return;
+        }
+        
+        if (multiSelectedRegions.includes(regionId)) {
+          set({ multiSelectedRegions: multiSelectedRegions.filter(id => id !== regionId) });
+        } else {
+          set({ multiSelectedRegions: [...multiSelectedRegions, regionId] });
+        }
+      },
+
+      clearMultiSelection: () => {
+        set({ multiSelectedRegions: [] });
+      },
+
+      createArmyGroup: (name: string) => {
+        const { multiSelectedRegions, armyGroups, selectedCountry } = get();
+        if (multiSelectedRegions.length === 0 || !selectedCountry) return;
+
+        const newGroup: ArmyGroup = {
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          name,
+          regionIds: [...multiSelectedRegions],
+          color: ARMY_GROUP_COLORS[armyGroups.length % ARMY_GROUP_COLORS.length],
+          owner: selectedCountry.id,
+        };
+
+        set({
+          armyGroups: [...armyGroups, newGroup],
+          multiSelectedRegions: [],
+          selectedGroupId: newGroup.id,
+        });
+      },
+
+      deleteArmyGroup: (groupId: string) => {
+        const { armyGroups, selectedGroupId } = get();
+        set({
+          armyGroups: armyGroups.filter(g => g.id !== groupId),
+          selectedGroupId: selectedGroupId === groupId ? null : selectedGroupId,
+        });
+      },
+
+      renameArmyGroup: (groupId: string, name: string) => {
+        const { armyGroups } = get();
+        set({
+          armyGroups: armyGroups.map(g => 
+            g.id === groupId ? { ...g, name } : g
+          ),
+        });
+      },
+
+      selectArmyGroup: (groupId: string | null) => {
+        set({ selectedGroupId: groupId });
+      },
+
+      advanceArmyGroup: (groupId: string) => {
+        const state = get();
+        const { armyGroups, regions, adjacency, selectedCountry, dateTime, movingUnits } = state;
+        
+        const group = armyGroups.find(g => g.id === groupId);
+        if (!group || !selectedCountry) return;
+
+        const newMovements: Movement[] = [];
+        const newRegions = { ...regions };
+
+        for (const regionId of group.regionIds) {
+          const region = newRegions[regionId];
+          if (!region || region.owner !== selectedCountry.id || region.divisions.length === 0) continue;
+
+          // Find the best move toward an enemy
+          const nextStep = findBestMoveTowardEnemy(regionId, newRegions, adjacency, selectedCountry.id);
+          if (!nextStep) continue;
+
+          // Check if this region's units are already moving
+          const alreadyMoving = movingUnits.some(m => m.fromRegion === regionId);
+          if (alreadyMoving) continue;
+
+          // Create the movement
+          const divisionsToMove = region.divisions;
+          const travelTimeHours = 6;
+          const arrivalTime = new Date(dateTime);
+          arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
+
+          const newMovement: Movement = {
+            id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${regionId}`,
+            fromRegion: regionId,
+            toRegion: nextStep,
+            divisions: divisionsToMove,
+            departureTime: new Date(dateTime),
+            arrivalTime,
+            owner: selectedCountry.id,
+          };
+
+          newMovements.push(newMovement);
+          newRegions[regionId] = {
+            ...region,
+            divisions: [],
+          };
+        }
+
+        if (newMovements.length > 0) {
+          set({
+            regions: newRegions,
+            movingUnits: [...movingUnits, ...newMovements],
+          });
+        }
+      },
+
       saveGame: () => {
         set({ lastSaveTime: new Date() });
       },
@@ -469,6 +611,7 @@ export const useGameStore = create<GameStore>()(
         regions: state.regions,
         aiState: state.aiState,
         lastSaveTime: state.lastSaveTime,
+        armyGroups: state.armyGroups,
       }),
       onRehydrateStorage: () => (state) => {
         // Convert date strings back to Date objects after rehydration

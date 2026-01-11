@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { RegionState, Adjacency, FactionId, Movement, ActiveCombat } from '../types/game';
+import { RegionState, Adjacency, FactionId, Movement, ActiveCombat, ArmyGroup } from '../types/game';
 import { FACTION_COLORS, getAdjacentRegions } from '../utils/mapUtils';
 
 interface GameMapProps {
@@ -16,12 +16,15 @@ interface GameMapProps {
   currentDateTime: Date;
   playerFaction: FactionId;
   unitsInReserve: number;
+  multiSelectedRegions: string[];
+  armyGroups: ArmyGroup[];
   onRegionSelect: (regionId: string | null) => void;
   onUnitSelect: (regionId: string | null) => void;
   onRegionHover?: (regionId: string | null) => void;
   onDeployUnit: () => void;
   onMoveUnits: (fromRegion: string, toRegion: string, count: number) => void;
   onSelectCombat: (combatId: string | null) => void;
+  onToggleMultiSelect: (regionId: string) => void;
 }
 
 export default function GameMap({
@@ -34,12 +37,15 @@ export default function GameMap({
   currentDateTime,
   playerFaction,
   unitsInReserve,
+  multiSelectedRegions,
+  armyGroups,
   onRegionSelect,
   onUnitSelect,
   onRegionHover,
   onDeployUnit,
   onMoveUnits,
   onSelectCombat,
+  onToggleMultiSelect,
 }: GameMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
@@ -52,6 +58,9 @@ export default function GameMap({
   const adjacencyRef = useRef<Adjacency>(adjacency);
   const onMoveUnitsRef = useRef(onMoveUnits);
   const onUnitSelectRef = useRef(onUnitSelect);
+  const onToggleMultiSelectRef = useRef(onToggleMultiSelect);
+  const multiSelectedRegionsRef = useRef<string[]>(multiSelectedRegions);
+  const armyGroupsRef = useRef<ArmyGroup[]>(armyGroups);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [regionCentroids, setRegionCentroids] = useState<Record<string, [number, number]>>({});
@@ -134,6 +143,18 @@ export default function GameMap({
     onUnitSelectRef.current = onUnitSelect;
   }, [onUnitSelect]);
 
+  useEffect(() => {
+    onToggleMultiSelectRef.current = onToggleMultiSelect;
+  }, [onToggleMultiSelect]);
+
+  useEffect(() => {
+    multiSelectedRegionsRef.current = multiSelectedRegions;
+  }, [multiSelectedRegions]);
+
+  useEffect(() => {
+    armyGroupsRef.current = armyGroups;
+  }, [armyGroups]);
+
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -180,6 +201,8 @@ export default function GameMap({
             'case',
             ['boolean', ['feature-state', 'selected'], false],
             0.9,
+            ['boolean', ['feature-state', 'multiSelected'], false],
+            0.85,
             ['boolean', ['feature-state', 'hover'], false],
             0.8,
             ['boolean', ['feature-state', 'adjacent'], false],
@@ -199,17 +222,29 @@ export default function GameMap({
             'case',
             ['boolean', ['feature-state', 'selected'], false],
             '#FFD700',
+            ['boolean', ['feature-state', 'multiSelected'], false],
+            '#3B82F6', // Blue for multi-select
             ['boolean', ['feature-state', 'hover'], false],
             '#FFFFFF',
-            '#333333',
+            ['to-color', ['feature-state', 'groupColor'], '#333333'], // Use group color if set
           ],
           'line-width': [
             'case',
             ['boolean', ['feature-state', 'selected'], false],
             3,
+            ['boolean', ['feature-state', 'multiSelected'], false],
+            3,
+            ['boolean', ['feature-state', 'inGroup'], false],
+            2.5,
             ['boolean', ['feature-state', 'hover'], false],
             2,
             1,
+          ],
+          'line-dasharray': [
+            'case',
+            ['boolean', ['feature-state', 'multiSelected'], false],
+            ['literal', [2, 2]], // Dashed for multi-select
+            ['literal', [1, 0]], // Solid for others
           ],
         },
       });
@@ -217,11 +252,17 @@ export default function GameMap({
       setMapLoaded(true);
     });
 
-    // Left-click handler - select region or unit
+    // Left-click handler - select region or unit, or multi-select with Shift
     map.current.on('click', 'regions-fill', (e) => {
       if (e.features && e.features.length > 0) {
         const regionId = e.features[0].properties?.shapeISO;
         if (regionId) {
+          // Check if Shift is held for multi-select
+          if (e.originalEvent.shiftKey) {
+            onToggleMultiSelectRef.current(regionId);
+            return;
+          }
+          
           // If clicking on same region, deselect
           if (regionId === selectedRegion) {
             onRegionSelect(null);
@@ -342,6 +383,24 @@ export default function GameMap({
     // Clear all feature states first
     map.current.removeFeatureState({ source: 'regions' });
 
+    // Set army group region states first (so they can be overridden by selection)
+    for (const group of armyGroups) {
+      for (const regionId of group.regionIds) {
+        map.current.setFeatureState(
+          { source: 'regions', id: regionId },
+          { inGroup: true, groupColor: group.color }
+        );
+      }
+    }
+
+    // Set multi-selected region states
+    for (const regionId of multiSelectedRegions) {
+      map.current.setFeatureState(
+        { source: 'regions', id: regionId },
+        { multiSelected: true }
+      );
+    }
+
     if (selectedRegion) {
       // Set selected state
       map.current.setFeatureState(
@@ -369,7 +428,7 @@ export default function GameMap({
         );
       }
     }
-  }, [selectedRegion, selectedUnitRegion, adjacency, mapLoaded]);
+  }, [selectedRegion, selectedUnitRegion, adjacency, mapLoaded, multiSelectedRegions, armyGroups]);
 
   // Update unit markers on the map
   useEffect(() => {

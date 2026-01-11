@@ -9,6 +9,7 @@ import {
   FactionId,
   GameEventType,
   Division,
+  ArmyGroup,
 } from '../types/game';
 
 const STORAGE_KEY = 'rcw-save';
@@ -68,6 +69,7 @@ interface SerializedGameState {
   movingUnits: SerializedMovement[];
   gameEvents: SerializedGameEvent[];
   activeCombats: SerializedActiveCombat[];
+  armyGroups: ArmyGroup[];
 }
 
 interface SaveData {

@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, Division, ActiveCombat } from '../types/game';
+import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, Division, ActiveCombat, ArmyGroup } from '../types/game';
 import SpeedControl from '../components/SpeedControl';
 import CombatPopup from '../components/CombatPopup';
 import EventsModal from '../components/EventsModal';
+import ArmyGroupsPanel from '../components/ArmyGroupsPanel';
 
 // Dynamic import for GameMap to avoid SSR issues with MapLibre
 const GameMap = dynamic(() => import('../components/GameMap'), {
@@ -34,6 +35,10 @@ interface MainScreenProps {
   selectedUnitRegion: string | null;
   mapDataLoaded: boolean;
   gameEvents: GameEvent[];
+  // Army Groups props
+  armyGroups: ArmyGroup[];
+  multiSelectedRegions: string[];
+  selectedGroupId: string | null;
   onTogglePlay: () => void;
   onChangeSpeed: (speed: GameSpeed) => void;
   onCreateInfantry: () => void;
@@ -50,6 +55,14 @@ interface MainScreenProps {
   selectedCombatId: string | null;
   isEventsModalOpen: boolean;
   onCloseEvents: () => void;
+  // Army Groups action props
+  onToggleMultiSelectRegion: (regionId: string) => void;
+  onClearMultiSelection: () => void;
+  onCreateArmyGroup: (name: string) => void;
+  onDeleteArmyGroup: (groupId: string) => void;
+  onRenameArmyGroup: (groupId: string, name: string) => void;
+  onSelectArmyGroup: (groupId: string | null) => void;
+  onAdvanceArmyGroup: (groupId: string) => void;
 }
 
 export default function MainScreen({
@@ -69,6 +82,9 @@ export default function MainScreen({
   selectedUnitRegion,
   mapDataLoaded,
   gameEvents,
+  armyGroups,
+  multiSelectedRegions,
+  selectedGroupId,
   onTogglePlay,
   onChangeSpeed,
   onCreateInfantry,
@@ -85,8 +101,16 @@ export default function MainScreen({
   selectedCombatId,
   isEventsModalOpen,
   onCloseEvents,
+  onToggleMultiSelectRegion,
+  onClearMultiSelection,
+  onCreateArmyGroup,
+  onDeleteArmyGroup,
+  onRenameArmyGroup,
+  onSelectArmyGroup,
+  onAdvanceArmyGroup,
 }: MainScreenProps) {
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);
+  const [isArmyGroupsPanelExpanded, setIsArmyGroupsPanelExpanded] = useState(true);
   
   // Store lastSaveTime in a ref to compare and trigger indicator
   const prevSaveTimeRef = useRef<Date | null>(null);
@@ -141,11 +165,14 @@ export default function MainScreen({
             currentDateTime={dateTime}
             playerFaction={country.id}
             unitsInReserve={reserveDivisions.length}
+            multiSelectedRegions={multiSelectedRegions}
+            armyGroups={armyGroups}
             onRegionSelect={onRegionSelect}
             onUnitSelect={onUnitSelect}
             onDeployUnit={onDeployUnit}
             onMoveUnits={onMoveUnits}
             onSelectCombat={onSelectCombat}
+            onToggleMultiSelect={onToggleMultiSelectRegion}
           />
         ) : (
           <div 
@@ -269,6 +296,25 @@ export default function MainScreen({
             {completedMissions.length} mission(s) ready to claim!
           </div>
         )}
+      </div>
+
+      {/* Army Groups Panel - above status bar */}
+      <div className="absolute bottom-10 left-0 right-0 z-10">
+        <ArmyGroupsPanel
+          armyGroups={armyGroups}
+          regions={regions}
+          playerFaction={country.id}
+          multiSelectedRegions={multiSelectedRegions}
+          selectedGroupId={selectedGroupId}
+          isExpanded={isArmyGroupsPanelExpanded}
+          onToggleExpanded={() => setIsArmyGroupsPanelExpanded(!isArmyGroupsPanelExpanded)}
+          onCreateGroup={onCreateArmyGroup}
+          onDeleteGroup={onDeleteArmyGroup}
+          onRenameGroup={onRenameArmyGroup}
+          onSelectGroup={onSelectArmyGroup}
+          onAdvanceGroup={onAdvanceArmyGroup}
+          onClearMultiSelection={onClearMultiSelection}
+        />
       </div>
 
       {/* Bottom status bar */}

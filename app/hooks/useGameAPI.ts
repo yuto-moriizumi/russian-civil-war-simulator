@@ -46,6 +46,17 @@ export function useGameAPI() {
       getAdjacentRegions: (regionId) => state.adjacency[regionId] ?? [],
       getMovingUnits: () => state.movingUnits,
       getActiveCombats: () => state.activeCombats,
+
+      // Army Group API methods
+      toggleMultiSelect: (regionId) => {
+        state.toggleMultiSelectRegion(regionId);
+      },
+      getMultiSelectedRegions: () => state.multiSelectedRegions,
+      clearMultiSelection: () => state.clearMultiSelection(),
+      createArmyGroup: (name) => state.createArmyGroup(name),
+      getArmyGroups: () => state.armyGroups,
+      advanceArmyGroup: (groupId) => state.advanceArmyGroup(groupId),
+      deleteArmyGroup: (groupId) => state.deleteArmyGroup(groupId),
     };
 
     return () => {
