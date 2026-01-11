@@ -18,6 +18,7 @@ export interface Division {
   id: string;           // Unique identifier for this division
   name: string;         // Display name (e.g., "1st Infantry Division")
   owner: FactionId;     // Which faction owns this division
+  armyGroupId: string;  // Army group this division belongs to
   hp: number;           // Current hit points (0-100)
   maxHp: number;        // Maximum hit points
   attack: number;       // Attack power (damage dealt)

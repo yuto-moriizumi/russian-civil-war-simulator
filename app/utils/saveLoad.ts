@@ -14,7 +14,7 @@ import {
 } from '../types/game';
 
 const STORAGE_KEY = 'rcw-save';
-const SAVE_VERSION = 3; // Bumped version for removal of reserveDivisions
+const SAVE_VERSION = 4; // Bumped version for army group assignment (divisions now require armyGroupId)
 
 // Serialized types (Date objects converted to ISO strings)
 interface SerializedMovement {
@@ -163,8 +163,8 @@ export function loadGame(): {
     if (data.version !== SAVE_VERSION) {
       console.warn(`Save version mismatch: expected ${SAVE_VERSION}, got ${data.version}`);
       // Old saves are incompatible with new system
-      if (data.version < 3) {
-        console.warn('Old save format detected, clearing incompatible save');
+      if (data.version < 4) {
+        console.warn('Old save format detected (pre-army-group-assignment), clearing incompatible save');
         deleteSaveGame();
         return null;
       }

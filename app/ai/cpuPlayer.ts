@@ -57,10 +57,13 @@ export interface AIActions {
  * Run AI logic for one tick (1 game hour)
  * - Earns income based on controlled regions (using region values/weights) minus unit maintenance costs
  * - Creates divisions if it has enough money and deploys them immediately to random owned regions
+ * 
+ * @param aiArmyGroupId - The ID of the AI's default army group (e.g., 'ai-general-reserve')
  */
 export function runAITick(
   aiState: AIState,
   regions: RegionState,
+  aiArmyGroupId: string,
   activeCombats: ActiveCombat[] = [],
   movingUnits: Movement[] = []
 ): AIActions {
@@ -101,10 +104,11 @@ export function runAITick(
   while (money >= DIVISION_COST) {
     money -= DIVISION_COST;
     
-    // Create division
+    // Create division assigned to AI's default army group
     const newDivision = createDivision(
       factionId,
-      generateAIDivisionName(factionId, regions)
+      generateAIDivisionName(factionId, regions),
+      aiArmyGroupId
     );
     
     // Deploy to random region

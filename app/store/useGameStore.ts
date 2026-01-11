@@ -17,7 +17,7 @@ import {
 import { initialMissions, GAME_START_DATE } from '../data/gameData';
 import { calculateFactionIncome } from '../utils/mapUtils';
 import { createInitialAIState, runAITick } from '../ai/cpuPlayer';
-import { createDivision, createActiveCombat, processCombatRound, shouldProcessCombatRound } from '../utils/combat';
+import { createDivision, createActiveCombat, processCombatRound, shouldProcessCombatRound, validateDivisionArmyGroup } from '../utils/combat';
 import { createGameEvent, getOrdinalSuffix } from '../utils/eventUtils';
 import { findBestMoveTowardEnemy } from '../utils/pathfinding';
 import { detectTheaters } from '../utils/theaterDetection';
@@ -149,6 +149,26 @@ export const useGameStore = create<GameStore>()(
         const aiFaction: FactionId = country.id === 'soviet' ? 'white' : 'soviet';
         const factionMissions = initialMissions.filter(m => m.faction === country.id);
         
+        // Create a default "General Reserve" army group for divisions not assigned to specific groups
+        const defaultArmyGroup: ArmyGroup = {
+          id: 'default-general-reserve',
+          name: 'General Reserve',
+          regionIds: [], // General reserve can deploy to any owned region
+          color: '#6B7280', // Gray color for default group
+          owner: country.id,
+          theaterId: null,
+        };
+        
+        // Create a default AI army group
+        const aiDefaultArmyGroup: ArmyGroup = {
+          id: 'ai-general-reserve',
+          name: 'AI General Reserve',
+          regionIds: [],
+          color: '#6B7280',
+          owner: aiFaction,
+          theaterId: null,
+        };
+        
         // Reset all game state for a fresh start
         set({
           ...initialGameState,
@@ -156,6 +176,7 @@ export const useGameStore = create<GameStore>()(
           currentScreen: 'main',
           missions: factionMissions,
           aiState: createInitialAIState(aiFaction),
+          armyGroups: [defaultArmyGroup, aiDefaultArmyGroup], // Start with default army groups for player and AI
           // Keep the regions and adjacency from map data (these are static)
           regions: get().regions,
           adjacency: get().adjacency,
@@ -174,7 +195,21 @@ export const useGameStore = create<GameStore>()(
         const state = get();
         if (!state.isPlaying) return;
 
-        const { dateTime, selectedCountry, regions, movingUnits, activeCombats, money, aiState, gameEvents } = state;
+        const { dateTime, selectedCountry, regions, movingUnits, activeCombats, money, aiState, gameEvents, armyGroups } = state;
+        
+        // Validate all divisions have valid army groups (development mode)
+        if (process.env.NODE_ENV === 'development') {
+          Object.values(regions).forEach(region => {
+            region.divisions.forEach(division => {
+              validateDivisionArmyGroup(division, armyGroups);
+            });
+          });
+          movingUnits.forEach(movement => {
+            movement.divisions.forEach(division => {
+              validateDivisionArmyGroup(division, armyGroups);
+            });
+          });
+        }
         
         const playerFaction = selectedCountry?.id;
         const playerIncome = playerFaction ? calculateFactionIncome(regions, playerFaction, movingUnits) : 0;
@@ -350,7 +385,7 @@ export const useGameStore = create<GameStore>()(
         // AI Tick
         let nextAIState = aiState;
         if (aiState) {
-          const aiActions = runAITick(aiState, nextRegions, nextCombats, remainingMovements);
+          const aiActions = runAITick(aiState, nextRegions, 'ai-general-reserve', nextCombats, remainingMovements);
           nextAIState = aiActions.updatedAIState;
           
           if (aiActions.deployments.length > 0) {
@@ -424,13 +459,25 @@ export const useGameStore = create<GameStore>()(
             return;
           }
           
+          // Determine which army group this division belongs to
+          let targetGroupId = selectedGroupId;
+          if (!targetGroupId) {
+            // Find the default "General Reserve" group
+            const defaultGroup = armyGroups.find(g => g.id === 'default-general-reserve');
+            if (!defaultGroup) {
+              console.warn('No default army group found - this should not happen');
+              return;
+            }
+            targetGroupId = defaultGroup.id;
+          }
+          
           // Count existing divisions to generate unique name
           const existingDivisions = Object.values(regions).reduce((acc, region) => 
             acc + region.divisions.filter(d => d.owner === selectedCountry.id).length, 0
           );
           const divisionNumber = existingDivisions + 1;
           const divisionName = `${selectedCountry.id === 'soviet' ? 'Red' : 'White'} Guard ${divisionNumber}${getOrdinalSuffix(divisionNumber)} Division`;
-          const newDivision = createDivision(selectedCountry.id, divisionName);
+          const newDivision = createDivision(selectedCountry.id, divisionName, targetGroupId);
           
           const targetRegion = regions[deploymentTarget];
           const newEvent = createGameEvent(
@@ -689,7 +736,7 @@ export const useGameStore = create<GameStore>()(
         );
         const divisionNumber = existingDivisions + 1;
         const divisionName = `${selectedCountry.id === 'soviet' ? 'Red' : 'White'} Guard ${divisionNumber}${getOrdinalSuffix(divisionNumber)} Division`;
-        const newDivision = createDivision(selectedCountry.id, divisionName);
+        const newDivision = createDivision(selectedCountry.id, divisionName, groupId);
         
         const targetRegion = regions[deploymentTarget];
         const newEvent = createGameEvent(

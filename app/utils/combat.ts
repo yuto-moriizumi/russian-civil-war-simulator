@@ -1,4 +1,4 @@
-import { Division, CombatResult, FactionId, ActiveCombat } from '../types/game';
+import { Division, CombatResult, FactionId, ActiveCombat, ArmyGroup } from '../types/game';
 
 /**
  * Generate a unique ID for a new division
@@ -8,11 +8,38 @@ export function generateDivisionId(): string {
 }
 
 /**
+ * Validate that a division has a valid army group assignment
+ */
+export function validateDivisionArmyGroup(
+  division: Division,
+  armyGroups: ArmyGroup[]
+): boolean {
+  if (!division.armyGroupId) {
+    console.error(`Division ${division.id} (${division.name}) has no army group assigned`);
+    return false;
+  }
+  
+  const armyGroup = armyGroups.find(g => g.id === division.armyGroupId);
+  if (!armyGroup) {
+    console.error(`Division ${division.id} (${division.name}) is assigned to non-existent army group ${division.armyGroupId}`);
+    return false;
+  }
+  
+  if (armyGroup.owner !== division.owner) {
+    console.error(`Division ${division.id} (${division.name}) owner (${division.owner}) does not match army group ${armyGroup.id} owner (${armyGroup.owner})`);
+    return false;
+  }
+  
+  return true;
+}
+
+/**
  * Create a new division with default stats
  */
 export function createDivision(
   owner: FactionId,
   name: string,
+  armyGroupId: string,
   options?: {
     hp?: number;
     maxHp?: number;
@@ -25,6 +52,7 @@ export function createDivision(
     id: generateDivisionId(),
     name,
     owner,
+    armyGroupId,
     hp: options?.hp ?? maxHp,
     maxHp,
     attack: options?.attack ?? 20,
