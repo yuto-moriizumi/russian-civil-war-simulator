@@ -61,7 +61,7 @@ export const regionValues: Record<string, number> = {
 };
 
 /**
- * Initial region ownership at game start (November 1917 - October Revolution)
+ * Initial region ownership at game start (November 20, 1917 - Ukrainian People's Republic declared)
  * 
  * Soviet: Moscow and surrounding core regions (Bolshevik control)
  * White: Peripheral Russian regions, Ukraine, Belarus, Finland, Baltics, Central Asia (anti-Bolshevik forces)
@@ -73,13 +73,13 @@ export const initialRegionOwnership: Record<string, FactionId> = {
   'RU-MOW': 'soviet',  // Moscow (city)
   'RU-MOS': 'soviet',  // Moscow Oblast
   'RU-TVE': 'soviet',  // Tver Oblast
-  'RU-YAR': 'soviet',  // Yaroslavl Oblast
+  'RU-YAR': 'white',  // Yaroslavl Oblast
   'RU-KOS': 'soviet',  // Kostroma Oblast
   'RU-IVA': 'soviet',  // Ivanovo Oblast
   'RU-VLA': 'soviet',  // Vladimir Oblast
   'RU-RYA': 'soviet',  // Ryazan Oblast
-  'RU-TUL': 'soviet',  // Tula Oblast
-  'RU-KLU': 'soviet',  // Kaluga Oblast
+  'RU-TUL': 'white',  // Tula Oblast
+  'RU-KLU': 'white',  // Kaluga Oblast
   'RU-SMO': 'soviet',  // Smolensk Oblast
   'RU-NIZ': 'soviet',  // Nizhny Novgorod Oblast
 
@@ -87,10 +87,10 @@ export const initialRegionOwnership: Record<string, FactionId> = {
   // WHITE-CONTROLLED RUSSIAN REGIONS
   // ============================================
   // Northwest Russia
-  'RU-SPE': 'white',   // Saint Petersburg (city)
-  'RU-LEN': 'white',   // Leningrad Oblast
+  'RU-SPE': 'soviet',   // Saint Petersburg (city)
+  'RU-LEN': 'soviet',   // Leningrad Oblast
   'RU-NGR': 'white',   // Novgorod Oblast
-  'RU-PSK': 'white',   // Pskov Oblast
+  'RU-PSK': 'soviet',   // Pskov Oblast (German-controlled)
   'RU-KR': 'white',    // Republic of Karelia
   'RU-MUR': 'white',   // Murmansk Oblast
   'RU-ARK': 'white',   // Arkhangelsk Oblast
@@ -102,8 +102,8 @@ export const initialRegionOwnership: Record<string, FactionId> = {
   'RU-ORL': 'white',   // Oryol Oblast
   'RU-LIP': 'white',   // Lipetsk Oblast
   'RU-TAM': 'white',   // Tambov Oblast
-  'RU-VOR': 'white',   // Voronezh Oblast
-  'RU-BEL': 'white',   // Belgorod Oblast
+  'RU-VOR': 'soviet',   // Voronezh Oblast
+  'RU-BEL': 'soviet',   // Belgorod Oblast
   'RU-KRS': 'white',   // Kursk Oblast
   'RU-PNZ': 'white',   // Penza Oblast
   'RU-SAR': 'white',   // Saratov Oblast
@@ -168,8 +168,8 @@ export const initialRegionOwnership: Record<string, FactionId> = {
   'RU-KAM': 'white',   // Kamchatka Krai
   'RU-SAK': 'white',   // Sakhalin Oblast
 
-  // Exclave
-  'RU-KGD': 'white',   // Kaliningrad Oblast
+  // Exclave (Soviet/German-controlled)
+  'RU-KGD': 'soviet',   // Kaliningrad Oblast
 
   // ============================================
   // UKRAINE (White-controlled)
@@ -203,15 +203,15 @@ export const initialRegionOwnership: Record<string, FactionId> = {
   'UA-77': 'white',  // Chernivtsi Oblast
 
   // ============================================
-  // BELARUS (White-controlled)
+  // BELARUS (Soviet/German-controlled)
   // ============================================
   'BY-BR': 'white',   // Brest Region
-  'BY-HO': 'white',   // Gomel Region
-  'BY-HM': 'white',   // Minsk (city)
-  'BY-HR': 'white',   // Grodno Region
+  'BY-HO': 'soviet',   // Gomel Region
+  'BY-HM': 'soviet',   // Minsk (city)
+  'BY-HR': 'soviet',   // Grodno Region
   'BY-MA': 'white',   // Mogilev Region
-  'BY-MI': 'white',   // Minsk Region
-  'BY-VI': 'white',   // Vitebsk Region
+  'BY-MI': 'soviet',   // Minsk Region
+  'BY-VI': 'soviet',   // Vitebsk Region
 
   // ============================================
   // FINLAND (White-controlled)
@@ -237,42 +237,42 @@ export const initialRegionOwnership: Record<string, FactionId> = {
   'FI-19': 'white',   // Southwest Finland
 
   // ============================================
-  // ESTONIA (White-controlled)
+  // ESTONIA (Soviet/German-controlled)
   // ============================================
-  'EE-37': 'white',   // Harju County (Tallinn)
-  'EE-39': 'white',   // Hiiu County
-  'EE-44': 'white',   // Ida-Viru County
-  'EE-49': 'white',   // Jõgeva County
-  'EE-51': 'white',   // Järva County
-  'EE-57': 'white',   // Lääne County
-  'EE-59': 'white',   // Lääne-Viru County
-  'EE-65': 'white',   // Põlva County
-  'EE-67': 'white',   // Pärnu County
-  'EE-70': 'white',   // Rapla County
-  'EE-74': 'white',   // Saare County
-  'EE-78': 'white',   // Tartu County
-  'EE-82': 'white',   // Valga County
-  'EE-84': 'white',   // Viljandi County
-  'EE-86': 'white',   // Võru County
+  'EE-37': 'soviet',   // Harju County (Tallinn)
+  'EE-39': 'soviet',   // Hiiu County
+  'EE-44': 'soviet',   // Ida-Viru County
+  'EE-49': 'soviet',   // Jõgeva County
+  'EE-51': 'soviet',   // Järva County
+  'EE-57': 'soviet',   // Lääne County
+  'EE-59': 'soviet',   // Lääne-Viru County
+  'EE-65': 'soviet',   // Põlva County
+  'EE-67': 'soviet',   // Pärnu County
+  'EE-70': 'soviet',   // Rapla County
+  'EE-74': 'soviet',   // Saare County
+  'EE-78': 'soviet',   // Tartu County
+  'EE-82': 'soviet',   // Valga County
+  'EE-84': 'soviet',   // Viljandi County
+  'EE-86': 'soviet',   // Võru County
 
   // ============================================
-  // LATVIA (White-controlled) - ADM0
+  // LATVIA (Soviet/German-controlled) - ADM0
   // ============================================
-  'LVA': 'white',     // Latvia (country)
+  'LVA': 'soviet',     // Latvia (country)
 
   // ============================================
-  // LITHUANIA (White-controlled)
+  // LITHUANIA (Soviet/German-controlled)
   // ============================================
-  'LT-AL': 'white',   // Alytus County
-  'LT-KU': 'white',   // Kaunas County
-  'LT-KL': 'white',   // Klaipėda County
-  'LT-MR': 'white',   // Marijampolė County
-  'LT-PN': 'white',   // Panevėžys County
-  'LT-SA': 'white',   // Šiauliai County
-  'LT-TA': 'white',   // Tauragė County
-  'LT-TE': 'white',   // Telšiai County
-  'LT-UT': 'white',   // Utena County
-  'LT-VL': 'white',   // Vilnius County
+  'LT-AL': 'soviet',   // Alytus County
+  'LT-KU': 'soviet',   // Kaunas County
+  'LT-KL': 'soviet',   // Klaipėda County
+  'LT-MR': 'soviet',   // Marijampolė County
+  'LT-PN': 'soviet',   // Panevėžys County
+  'LT-SA': 'soviet',   // Šiauliai County
+  'LT-TA': 'soviet',   // Tauragė County
+  'LT-TE': 'soviet',   // Telšiai County
+  'LT-UT': 'soviet',   // Utena County
+  'LT-VL': 'soviet',   // Vilnius County
 
   // ============================================
   // KAZAKHSTAN (White-controlled)
@@ -327,4 +327,11 @@ export const initialRegionOwnership: Record<string, FactionId> = {
   'TJ-KT': 'white',   // Khatlon Region
   'TJ-RA': 'white',   // Districts of Republican Subordination
   'TJ-SU': 'white',   // Sughd Region
+
+  // ============================================
+  // CAUCASUS / TRANSCAUCASIA (White-controlled)
+  // ============================================
+  'GEO': 'white',    // Georgia (country)
+  'ARM': 'white',    // Armenia (country)
+  'AZE': 'white',    // Azerbaijan (country)
 };

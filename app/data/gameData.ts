@@ -1,5 +1,11 @@
 import { Country, Mission } from '../types/game';
 
+/**
+ * Game start date: November 20, 1917
+ * This date marks the declaration of the Ukrainian People's Republic
+ */
+export const GAME_START_DATE = new Date(1917, 10, 20);
+
 export const countries: Country[] = [
   {
     id: 'soviet',

@@ -9,6 +9,71 @@
       "iso3": "UKR",
       "name": "Ukraine",
       "admLevel": "ADM1"
+    },
+    {
+      "iso3": "BLR",
+      "name": "Belarus",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "FIN",
+      "name": "Finland",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "EST",
+      "name": "Estonia",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "LVA",
+      "name": "Latvia",
+      "admLevel": "ADM0"
+    },
+    {
+      "iso3": "LTU",
+      "name": "Lithuania",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "KAZ",
+      "name": "Kazakhstan",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "UZB",
+      "name": "Uzbekistan",
+      "admLevel": "ADM0"
+    },
+    {
+      "iso3": "TKM",
+      "name": "Turkmenistan",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "KGZ",
+      "name": "Kyrgyzstan",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "TJK",
+      "name": "Tajikistan",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "GEO",
+      "name": "Georgia",
+      "admLevel": "ADM0"
+    },
+    {
+      "iso3": "ARM",
+      "name": "Armenia",
+      "admLevel": "ADM0"
+    },
+    {
+      "iso3": "AZE",
+      "name": "Azerbaijan",
+      "admLevel": "ADM0"
     }
   ],
   "output": {

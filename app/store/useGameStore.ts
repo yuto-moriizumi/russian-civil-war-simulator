@@ -13,7 +13,7 @@ import {
   ActiveCombat,
   GameEvent
 } from '../types/game';
-import { initialMissions } from '../data/gameData';
+import { initialMissions, GAME_START_DATE } from '../data/gameData';
 import { calculateFactionIncome } from '../utils/mapUtils';
 import { createInitialAIState, runAITick } from '../ai/cpuPlayer';
 import { createDivision, createActiveCombat, processCombatRound, shouldProcessCombatRound } from '../utils/combat';
@@ -62,7 +62,7 @@ interface GameStore extends GameState {
 const initialGameState: GameState = {
   currentScreen: 'title',
   selectedCountry: null,
-  dateTime: new Date(1917, 10, 7),
+  dateTime: new Date(GAME_START_DATE),
   isPlaying: false,
   gameSpeed: 1,
   money: 100,
@@ -470,6 +470,40 @@ export const useGameStore = create<GameStore>()(
         aiState: state.aiState,
         lastSaveTime: state.lastSaveTime,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Convert date strings back to Date objects after rehydration
+        if (state) {
+          if (state.dateTime && typeof state.dateTime === 'string') {
+            state.dateTime = new Date(state.dateTime);
+          }
+          if (state.lastSaveTime && typeof state.lastSaveTime === 'string') {
+            state.lastSaveTime = new Date(state.lastSaveTime);
+          }
+          // Convert dates in movingUnits
+          if (state.movingUnits) {
+            state.movingUnits = state.movingUnits.map((m: Movement) => ({
+              ...m,
+              departureTime: new Date(m.departureTime),
+              arrivalTime: new Date(m.arrivalTime),
+            }));
+          }
+          // Convert dates in activeCombats
+          if (state.activeCombats) {
+            state.activeCombats = state.activeCombats.map((c: ActiveCombat) => ({
+              ...c,
+              startTime: new Date(c.startTime),
+              lastRoundTime: new Date(c.lastRoundTime),
+            }));
+          }
+          // Convert dates in gameEvents
+          if (state.gameEvents) {
+            state.gameEvents = state.gameEvents.map((e: GameEvent) => ({
+              ...e,
+              timestamp: new Date(e.timestamp),
+            }));
+          }
+        }
+      },
     }
   )
 );

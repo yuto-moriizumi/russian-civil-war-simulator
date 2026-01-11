@@ -1,5 +1,6 @@
 {
   "RU-ALT": [
+    "KZ-VOS",
     "RU-AL",
     "RU-KEM",
     "RU-NVS"
@@ -18,10 +19,12 @@
     "RU-RYA"
   ],
   "RU-KGN": [
-    "RU-CHE",
+    "KZ-KUS",
+    "KZ-SEV",
     "RU-TYU"
   ],
   "RU-IN": [
+    "GEO",
     "RU-SE"
   ],
   "RU-KHM": [
@@ -80,7 +83,6 @@
     "RU-TYU"
   ],
   "RU-VGG": [
-    "RU-AST",
     "RU-KL",
     "RU-ROS",
     "RU-VOR"
@@ -98,6 +100,8 @@
     "RU-UD"
   ],
   "RU-PSK": [
+    "EE-65",
+    "EE-86",
     "RU-NGR",
     "RU-SMO",
     "RU-TVE"
@@ -167,9 +171,11 @@
     "RU-VLA"
   ],
   "RU-KR": [
+    "FI-05",
+    "FI-13",
+    "FI-14",
     "RU-ARK",
     "RU-LEN",
-    "RU-MUR",
     "RU-VLG"
   ],
   "RU-ARK": [
@@ -180,8 +186,8 @@
     "RU-VLG"
   ],
   "RU-AST": [
-    "RU-KL",
-    "RU-VGG"
+    "KZ-ATY",
+    "RU-KL"
   ],
   "RU-BEL": [
     "RU-VOR",
@@ -203,12 +209,13 @@
     "RU-ZAB"
   ],
   "RU-CE": [
+    "GEO",
     "RU-DA",
     "RU-STA"
   ],
   "RU-CHE": [
+    "KZ-KUS",
     "RU-BA",
-    "RU-KGN",
     "RU-ORE"
   ],
   "RU-CU": [
@@ -219,6 +226,7 @@
     "RU-ULY"
   ],
   "RU-TYU": [
+    "KZ-SEV",
     "RU-KGN",
     "RU-KHM",
     "RU-OMS",
@@ -226,6 +234,7 @@
     "RU-TOM"
   ],
   "RU-SE": [
+    "GEO",
     "RU-IN",
     "RU-KB",
     "RU-STA"
@@ -242,11 +251,13 @@
     "RU-ZAB"
   ],
   "RU-KB": [
+    "GEO",
     "RU-KC",
     "RU-SE",
     "RU-STA"
   ],
   "RU-KDA": [
+    "GEO",
     "RU-KC",
     "RU-ROS",
     "RU-STA"
@@ -258,6 +269,7 @@
     "UA-59"
   ],
   "RU-LEN": [
+    "FI-09",
     "RU-KR",
     "RU-NGR",
     "RU-SPE",
@@ -283,7 +295,7 @@
     "RU-YAR"
   ],
   "RU-MUR": [
-    "RU-KR"
+    "FI-10"
   ],
   "RU-NEN": [
     "RU-ARK",
@@ -298,11 +310,11 @@
   "RU-NVS": [
     "RU-ALT",
     "RU-KEM",
-    "RU-OMS",
     "RU-TOM"
   ],
   "RU-OMS": [
-    "RU-NVS",
+    "KZ-PAV",
+    "KZ-SEV",
     "RU-TOM",
     "RU-TYU"
   ],
@@ -323,6 +335,7 @@
     "RU-ZAB"
   ],
   "RU-SAR": [
+    "KZ-ZAP",
     "RU-PNZ",
     "RU-SAM",
     "RU-TAM",
@@ -420,6 +433,7 @@
     "RU-NEN"
   ],
   "RU-AL": [
+    "KZ-VOS",
     "RU-ALT",
     "RU-KK",
     "RU-TY"
@@ -442,6 +456,7 @@
     "RU-MAG"
   ],
   "RU-KC": [
+    "GEO",
     "RU-KB",
     "RU-KDA",
     "RU-STA"
@@ -463,12 +478,20 @@
     "RU-SA"
   ],
   "RU-DA": [
+    "GEO",
     "RU-CE",
     "RU-KL",
     "RU-STA"
   ],
-  "RU-KGD": [],
+  "RU-KGD": [
+    "LT-KL",
+    "LT-MR",
+    "LT-TA"
+  ],
   "RU-ORE": [
+    "KZ-AKT",
+    "KZ-KUS",
+    "KZ-ZAP",
     "RU-CHE",
     "RU-SAM",
     "RU-TA"
@@ -637,5 +660,460 @@
   ],
   "UA-40": [
     "UA-43"
-  ]
+  ],
+  "BY-HO": [
+    "BY-BR",
+    "BY-MA",
+    "BY-MI"
+  ],
+  "BY-VI": [
+    "BY-HR",
+    "BY-MI"
+  ],
+  "BY-HR": [
+    "BY-BR",
+    "BY-VI"
+  ],
+  "BY-BR": [
+    "BY-HO",
+    "BY-HR",
+    "BY-MI"
+  ],
+  "BY-MA": [
+    "BY-HO"
+  ],
+  "BY-MI": [
+    "BY-BR",
+    "BY-HO",
+    "BY-VI"
+  ],
+  "BY-HM": [],
+  "FI-18": [
+    "FI-06",
+    "FI-09",
+    "FI-16"
+  ],
+  "FI-19": [
+    "FI-06",
+    "FI-11",
+    "FI-17"
+  ],
+  "FI-04": [
+    "FI-02",
+    "FI-08",
+    "FI-09",
+    "FI-13",
+    "FI-16"
+  ],
+  "FI-15": [
+    "FI-05",
+    "FI-13",
+    "FI-14"
+  ],
+  "FI-06": [
+    "FI-08",
+    "FI-16",
+    "FI-18",
+    "FI-19"
+  ],
+  "FI-08": [
+    "FI-03",
+    "FI-04",
+    "FI-06",
+    "FI-07",
+    "FI-11",
+    "FI-14"
+  ],
+  "FI-11": [
+    "FI-03",
+    "FI-08",
+    "FI-16",
+    "FI-19"
+  ],
+  "FI-03": [
+    "FI-07",
+    "FI-08",
+    "FI-11",
+    "FI-12",
+    "FI-17"
+  ],
+  "FI-07": [
+    "FI-03",
+    "FI-08",
+    "FI-12",
+    "FI-14",
+    "FI-17"
+  ],
+  "FI-16": [
+    "FI-04",
+    "FI-06",
+    "FI-11",
+    "FI-18"
+  ],
+  "FI-10": [
+    "RU-MUR"
+  ],
+  "FI-14": [
+    "FI-07",
+    "FI-08",
+    "FI-15",
+    "RU-KR"
+  ],
+  "FI-05": [
+    "FI-15",
+    "RU-KR"
+  ],
+  "FI-13": [
+    "FI-04",
+    "FI-15",
+    "RU-KR"
+  ],
+  "FI-12": [
+    "FI-03",
+    "FI-07",
+    "FI-17"
+  ],
+  "FI-17": [
+    "FI-03",
+    "FI-07",
+    "FI-12",
+    "FI-19"
+  ],
+  "FI-02": [
+    "FI-04"
+  ],
+  "FI-09": [
+    "FI-04",
+    "FI-18",
+    "RU-LEN"
+  ],
+  "FI-01": [],
+  "EE-74": [],
+  "EE-67": [
+    "EE-57",
+    "EE-70",
+    "EE-84"
+  ],
+  "EE-39": [],
+  "EE-57": [
+    "EE-37",
+    "EE-67",
+    "EE-70"
+  ],
+  "EE-44": [
+    "EE-59"
+  ],
+  "EE-37": [
+    "EE-49",
+    "EE-51",
+    "EE-57",
+    "EE-59",
+    "EE-70"
+  ],
+  "EE-59": [
+    "EE-37",
+    "EE-44",
+    "EE-51"
+  ],
+  "EE-78": [
+    "EE-49",
+    "EE-82",
+    "EE-84"
+  ],
+  "EE-82": [
+    "EE-65",
+    "EE-78",
+    "EE-84",
+    "EE-86"
+  ],
+  "EE-84": [
+    "EE-49",
+    "EE-65",
+    "EE-67",
+    "EE-78",
+    "EE-82"
+  ],
+  "EE-65": [
+    "EE-51",
+    "EE-82",
+    "EE-84",
+    "EE-86",
+    "RU-PSK"
+  ],
+  "EE-51": [
+    "EE-37",
+    "EE-49",
+    "EE-59",
+    "EE-65"
+  ],
+  "EE-70": [
+    "EE-37",
+    "EE-57",
+    "EE-67"
+  ],
+  "EE-86": [
+    "EE-65",
+    "EE-82",
+    "RU-PSK"
+  ],
+  "EE-49": [
+    "EE-37",
+    "EE-51",
+    "EE-78",
+    "EE-84"
+  ],
+  "LVA": [],
+  "LT-UT": [
+    "LT-PN",
+    "LT-VL"
+  ],
+  "LT-MR": [
+    "LT-AL",
+    "LT-KU",
+    "RU-KGD"
+  ],
+  "LT-VL": [
+    "LT-AL",
+    "LT-KU",
+    "LT-PN",
+    "LT-TA",
+    "LT-UT"
+  ],
+  "LT-PN": [
+    "LT-SA",
+    "LT-UT",
+    "LT-VL"
+  ],
+  "LT-KU": [
+    "LT-AL",
+    "LT-MR",
+    "LT-SA",
+    "LT-VL"
+  ],
+  "LT-AL": [
+    "LT-KU",
+    "LT-MR",
+    "LT-TA",
+    "LT-VL"
+  ],
+  "LT-KL": [
+    "LT-TA",
+    "RU-KGD"
+  ],
+  "LT-TE": [
+    "LT-SA",
+    "LT-TA"
+  ],
+  "LT-SA": [
+    "LT-KU",
+    "LT-PN",
+    "LT-TE"
+  ],
+  "LT-TA": [
+    "LT-AL",
+    "LT-KL",
+    "LT-TE",
+    "LT-VL",
+    "RU-KGD"
+  ],
+  "KZ-PAV": [
+    "KZ-AKM",
+    "KZ-KAR",
+    "KZ-SEV",
+    "RU-OMS"
+  ],
+  "KZ-ZHA": [
+    "KG-C",
+    "KG-T",
+    "KZ-ALM",
+    "KZ-YUZ"
+  ],
+  "KZ-KUS": [
+    "KZ-AKM",
+    "KZ-AKT",
+    "KZ-KAR",
+    "RU-CHE",
+    "RU-KGN",
+    "RU-ORE"
+  ],
+  "KZ-MAN": [
+    "KZ-AKT",
+    "KZ-ATY"
+  ],
+  "KZ-KAR": [
+    "KZ-AKM",
+    "KZ-AKT",
+    "KZ-ALM",
+    "KZ-KUS",
+    "KZ-KZY",
+    "KZ-PAV",
+    "KZ-YUZ"
+  ],
+  "KZ-KZY": [
+    "KZ-AKT",
+    "KZ-KAR",
+    "UZB"
+  ],
+  "KZ-VOS": [
+    "KZ-ALM",
+    "RU-AL",
+    "RU-ALT"
+  ],
+  "KZ-AKT": [
+    "KZ-KAR",
+    "KZ-KUS",
+    "KZ-KZY",
+    "KZ-MAN",
+    "KZ-ZAP",
+    "RU-ORE",
+    "UZB"
+  ],
+  "KZ-ATY": [
+    "KZ-MAN",
+    "RU-AST"
+  ],
+  "KZ-YUZ": [
+    "KZ-KAR",
+    "KZ-ZHA",
+    "UZB"
+  ],
+  "KZ-AKM": [
+    "KZ-AST",
+    "KZ-KAR",
+    "KZ-KUS",
+    "KZ-PAV",
+    "KZ-SEV"
+  ],
+  "KZ-ALM": [
+    "KG-C",
+    "KG-Y",
+    "KZ-ALA",
+    "KZ-KAR",
+    "KZ-VOS",
+    "KZ-ZHA"
+  ],
+  "KZ-SEV": [
+    "KZ-AKM",
+    "KZ-PAV",
+    "RU-KGN",
+    "RU-OMS",
+    "RU-TYU"
+  ],
+  "KZ-ALA": [
+    "KZ-ALM"
+  ],
+  "KZ-ZAP": [
+    "KZ-AKT",
+    "RU-ORE",
+    "RU-SAR"
+  ],
+  "KZ-AST": [
+    "KZ-AKM"
+  ],
+  "UZB": [
+    "KG-B",
+    "KG-J",
+    "KG-O",
+    "KG-T",
+    "KZ-AKT",
+    "KZ-KZY",
+    "KZ-YUZ",
+    "TJ-KT",
+    "TJ-RA",
+    "TJ-SU"
+  ],
+  "TM-B": [
+    "TM-A",
+    "TM-D"
+  ],
+  "TM-A": [
+    "TM-B",
+    "TM-L",
+    "TM-M"
+  ],
+  "TM-D": [
+    "TM-B",
+    "TM-L"
+  ],
+  "TM-L": [
+    "TM-A",
+    "TM-D",
+    "TM-M"
+  ],
+  "TM-M": [
+    "TM-A",
+    "TM-L"
+  ],
+  "KG-B": [
+    "KG-O",
+    "TJ-RA",
+    "TJ-SU",
+    "UZB"
+  ],
+  "KG-O": [
+    "KG-B",
+    "KG-J",
+    "KG-N",
+    "TJ-GB",
+    "UZB"
+  ],
+  "KG-T": [
+    "KG-J",
+    "KZ-ZHA",
+    "UZB"
+  ],
+  "KG-J": [
+    "KG-C",
+    "KG-N",
+    "KG-O",
+    "KG-T",
+    "UZB"
+  ],
+  "KG-Y": [
+    "KG-N",
+    "KZ-ALM"
+  ],
+  "KG-C": [
+    "KG-J",
+    "KG-N",
+    "KZ-ALM",
+    "KZ-ZHA"
+  ],
+  "KG-N": [
+    "KG-C",
+    "KG-J",
+    "KG-O",
+    "KG-Y"
+  ],
+  "TJ-SU": [
+    "KG-B",
+    "UZB"
+  ],
+  "TJ-GB": [
+    "KG-O",
+    "TJ-KT"
+  ],
+  "TJ-RA": [
+    "KG-B",
+    "UZB"
+  ],
+  "TJ-KT": [
+    "TJ-DU",
+    "TJ-GB",
+    "UZB"
+  ],
+  "TJ-DU": [
+    "TJ-KT"
+  ],
+  "GEO": [
+    "RU-CE",
+    "RU-DA",
+    "RU-IN",
+    "RU-KB",
+    "RU-KC",
+    "RU-KDA",
+    "RU-SE"
+  ],
+  "ARM": [],
+  "AZE": []
 }
