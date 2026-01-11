@@ -119,7 +119,7 @@ export default function Home() {
           return;
         }
         const region = regions[regionId];
-        if (region && region.owner === gameState.selectedCountry?.id && region.units > 0) {
+        if (region && region.owner === gameState.selectedCountry?.id && region.divisions.length > 0) {
           setSelectedUnitRegion(regionId);
           setSelectedRegion(regionId); // Also select the region
         } else {
@@ -147,13 +147,13 @@ export default function Home() {
           console.warn(`[gameAPI] Region "${toRegionId}" is not adjacent to "${fromRegion}"`);
           return false;
         }
-        const unitsToMove = count ?? from.units; // Default to all units
+        const unitsToMove = count ?? from.divisions.length; // Default to all divisions
         if (unitsToMove <= 0) {
-          console.warn('[gameAPI] Cannot move 0 or negative units');
+          console.warn('[gameAPI] Cannot move 0 or negative divisions');
           return false;
         }
-        if (unitsToMove > from.units) {
-          console.warn(`[gameAPI] Cannot move ${unitsToMove} units - only ${from.units} available`);
+        if (unitsToMove > from.divisions.length) {
+          console.warn(`[gameAPI] Cannot move ${unitsToMove} divisions - only ${from.divisions.length} available`);
           return false;
         }
 
