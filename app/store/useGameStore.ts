@@ -529,7 +529,10 @@ export const useGameStore = create<GameStore>()(
       },
 
       selectTheater: (theaterId: string | null) => {
-        set({ selectedTheaterId: theaterId });
+        set({ 
+          selectedTheaterId: theaterId,
+          selectedGroupId: null // Clear selected army group when changing theaters
+        });
       },
 
       // Army Group Actions
