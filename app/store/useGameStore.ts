@@ -485,11 +485,11 @@ export const useGameStore = create<GameStore>()(
 
       // Theater Actions
       detectAndUpdateTheaters: () => {
-        const { regions, adjacency, selectedCountry } = get();
+        const { regions, adjacency, selectedCountry, theaters } = get();
         if (!selectedCountry) return;
         
-        const theaters = detectTheaters(regions, adjacency, selectedCountry.id);
-        set({ theaters });
+        const newTheaters = detectTheaters(regions, adjacency, selectedCountry.id, theaters);
+        set({ theaters: newTheaters });
       },
 
       selectTheater: (theaterId: string | null) => {
