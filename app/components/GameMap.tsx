@@ -437,7 +437,7 @@ export default function GameMap({
           const bgEl = el.querySelector('.unit-bg') as HTMLElement;
           if (bgEl) {
             bgEl.style.backgroundColor = FACTION_COLORS[region.owner];
-            bgEl.style.border = isSelected ? '3px solid #22d3ee' : '2px solid rgba(0,0,0,0.5)';
+            bgEl.style.border = isSelected ? '2px solid #22d3ee' : '1px solid rgba(0,0,0,0.5)';
             bgEl.style.boxShadow = isSelected ? '0 0 10px #22d3ee' : '0 2px 4px rgba(0,0,0,0.3)';
           }
         } else {
@@ -448,7 +448,7 @@ export default function GameMap({
           el.innerHTML = `
             <div class="unit-bg" style="
               background-color: ${FACTION_COLORS[region.owner]};
-              border: ${isSelected ? '3px solid #22d3ee' : '2px solid rgba(0,0,0,0.5)'};
+              border: ${isSelected ? '2px solid #22d3ee' : '1px solid rgba(0,0,0,0.5)'};
               border-radius: 4px;
               padding: 2px 6px;
               display: flex;
@@ -458,7 +458,7 @@ export default function GameMap({
               cursor: ${isPlayerUnit ? 'pointer' : 'default'};
               transition: all 0.2s ease;
             ">
-              ${flagUrl ? `<img src="${flagUrl}" alt="${region.owner}" style="width: 16px; height: 11px; object-fit: cover;" />` : '<span style="font-size: 14px;">&#9632;</span>'}
+              ${flagUrl ? `<img src="${flagUrl}" alt="${region.owner}" style="width: 16px; height: 11px; object-fit: cover; border: 1px solid rgba(0,0,0,0.3);" />` : '<span style="font-size: 14px;">&#9632;</span>'}
               <span class="unit-count" style="
                 font-size: 12px;
                 font-weight: bold;
@@ -531,7 +531,7 @@ export default function GameMap({
         el.innerHTML = `
           <div style="
             background-color: ${FACTION_COLORS[movement.owner]};
-            border: 2px dashed #22d3ee;
+            border: 1px dashed #22d3ee;
             border-radius: 50%;
             padding: 4px 8px;
             display: flex;
@@ -540,7 +540,7 @@ export default function GameMap({
             box-shadow: 0 0 8px rgba(34, 211, 238, 0.5);
             animation: pulse 1.5s ease-in-out infinite;
           ">
-            ${flagUrl ? `<img src="${flagUrl}" alt="${movement.owner}" style="width: 14px; height: 9px; object-fit: cover;" />` : '<span style="font-size: 12px;">&#9632;</span>'}
+            ${flagUrl ? `<img src="${flagUrl}" alt="${movement.owner}" style="width: 14px; height: 9px; object-fit: cover; border: 1px solid rgba(0,0,0,0.3);" />` : '<span style="font-size: 12px;">&#9632;</span>'}
             <span style="
               font-size: 10px;
               font-weight: bold;
