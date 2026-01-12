@@ -639,9 +639,9 @@ export const useGameStore = create<GameStore>()(
         // Sync army group regionIds with actual division locations
         // This ensures army group territory updates as divisions move
         nextArmyGroups = nextArmyGroups.map(group => {
-          const currentRegions = new Set<string>();
+          const currentRegions = new Set<string>(group.regionIds);
           
-          // Check all regions for divisions belonging to this group
+          // Add regions where divisions are (expansion)
           Object.entries(nextRegions).forEach(([regionId, region]) => {
             if (region.divisions.some(d => d.armyGroupId === group.id)) {
               currentRegions.add(regionId);
@@ -655,23 +655,15 @@ export const useGameStore = create<GameStore>()(
             }
           });
           
-          // If no regions found (e.g. all units in combat or destroyed), 
-          // keep existing regions or clear them? 
-          // We'll keep existing if none found to avoid groups with 0 regions unless they are truly empty.
-          if (currentRegions.size === 0 && group.regionIds.length > 0) {
-            // Check if any divisions are in combat
-            const inCombat = nextCombats.some(c => 
-              c.attackerDivisions.some(d => d.armyGroupId === group.id) ||
-              c.defenderDivisions.some(d => d.armyGroupId === group.id)
-            );
-            if (!inCombat) {
-              // Truly has no units left in regions or transit or combat
-              return { ...group, regionIds: [] };
-            }
-            return group;
-          }
+          // Filter out regions that are no longer owned by the player
+          // This ensures that if we lose a region, it's removed from the army group
+          // but "empty" regions stay in the army group as long as they are owned.
+          const filteredRegions = Array.from(currentRegions).filter(id => {
+            const region = nextRegions[id];
+            return region && region.owner === group.owner;
+          });
           
-          return { ...group, regionIds: Array.from(currentRegions) };
+          return { ...group, regionIds: filteredRegions };
         });
 
         set({
@@ -1094,6 +1086,7 @@ export const useGameStore = create<GameStore>()(
         const newMovements: Movement[] = [];
         const newRegions = { ...regions };
         const movedRegions = new Set<string>();
+        const targetRegions = new Set<string>();
 
         // Find all regions that contain divisions belonging to this army group
         // This allows divisions to be moved even after they've been relocated
@@ -1145,15 +1138,26 @@ export const useGameStore = create<GameStore>()(
             divisions: remainingDivisions,
           };
           movedRegions.add(regionId);
+          targetRegions.add(nextStep);
         }
 
         if (newMovements.length > 0) {
           // Clear selectedUnitRegion if it was in a region that had units moved
           const shouldClearSelection = selectedUnitRegion && movedRegions.has(selectedUnitRegion);
           
+          // Update army groups to include target regions immediately
+          const updatedArmyGroups = armyGroups.map(g => {
+            if (g.id === groupId) {
+              const newRegionIds = new Set([...g.regionIds, ...Array.from(targetRegions)]);
+              return { ...g, regionIds: Array.from(newRegionIds) };
+            }
+            return g;
+          });
+
           set({
             regions: newRegions,
             movingUnits: [...movingUnits, ...newMovements],
+            armyGroups: updatedArmyGroups,
             ...(shouldClearSelection && { selectedUnitRegion: null }),
           });
         }
