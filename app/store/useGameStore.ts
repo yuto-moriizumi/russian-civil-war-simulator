@@ -632,6 +632,44 @@ export const useGameStore = create<GameStore>()(
           }
         }
 
+        // Sync army group regionIds with actual division locations
+        // This ensures army group territory updates as divisions move
+        nextArmyGroups = nextArmyGroups.map(group => {
+          const currentRegions = new Set<string>();
+          
+          // Check all regions for divisions belonging to this group
+          Object.entries(nextRegions).forEach(([regionId, region]) => {
+            if (region.divisions.some(d => d.armyGroupId === group.id)) {
+              currentRegions.add(regionId);
+            }
+          });
+          
+          // Also include regions where units of this group are currently moving to
+          remainingMovements.forEach(m => {
+            if (m.divisions.some(d => d.armyGroupId === group.id)) {
+              currentRegions.add(m.toRegion);
+            }
+          });
+          
+          // If no regions found (e.g. all units in combat or destroyed), 
+          // keep existing regions or clear them? 
+          // We'll keep existing if none found to avoid groups with 0 regions unless they are truly empty.
+          if (currentRegions.size === 0 && group.regionIds.length > 0) {
+            // Check if any divisions are in combat
+            const inCombat = nextCombats.some(c => 
+              c.attackerDivisions.some(d => d.armyGroupId === group.id) ||
+              c.defenderDivisions.some(d => d.armyGroupId === group.id)
+            );
+            if (!inCombat) {
+              // Truly has no units left in regions or transit or combat
+              return { ...group, regionIds: [] };
+            }
+            return group;
+          }
+          
+          return { ...group, regionIds: Array.from(currentRegions) };
+        });
+
         set({
           dateTime: newDate,
           money: newMoney,
@@ -1044,25 +1082,37 @@ export const useGameStore = create<GameStore>()(
 
       advanceArmyGroup: (groupId: string) => {
         const state = get();
-        const { armyGroups, regions, adjacency, selectedCountry, dateTime, movingUnits } = state;
+        const { armyGroups, regions, adjacency, selectedCountry, dateTime, movingUnits, selectedUnitRegion } = state;
         
         const group = armyGroups.find(g => g.id === groupId);
         if (!group || !selectedCountry) return;
 
         const newMovements: Movement[] = [];
         const newRegions = { ...regions };
+        const movedRegions = new Set<string>();
 
-        for (const regionId of group.regionIds) {
+        // Find all regions that contain divisions belonging to this army group
+        // This allows divisions to be moved even after they've been relocated
+        const regionsWithGroupDivisions = Object.keys(newRegions).filter(regionId => {
           const region = newRegions[regionId];
-          if (!region || region.owner !== selectedCountry.id || region.divisions.length === 0) continue;
+          if (!region || region.owner !== selectedCountry.id) return false;
+          return region.divisions.some(d => d.armyGroupId === groupId);
+        });
+
+        for (const regionId of regionsWithGroupDivisions) {
+          const region = newRegions[regionId];
+          if (!region || region.divisions.length === 0) continue;
 
           // Find the best move toward an enemy
           const nextStep = findBestMoveTowardEnemy(regionId, newRegions, adjacency, selectedCountry.id);
           if (!nextStep) continue;
 
-          // Check if this region's units are already moving
-          const alreadyMoving = movingUnits.some(m => m.fromRegion === regionId);
-          if (alreadyMoving) continue;
+          // Check if divisions from THIS specific group are already moving from this region
+          const groupAlreadyMoving = movingUnits.some(m => 
+            m.fromRegion === regionId && 
+            m.divisions.some(d => d.armyGroupId === groupId)
+          );
+          if (groupAlreadyMoving) continue;
 
           // Filter divisions that belong to this specific army group
           const divisionsInGroup = region.divisions.filter(d => d.armyGroupId === groupId);
@@ -1090,12 +1140,17 @@ export const useGameStore = create<GameStore>()(
             ...region,
             divisions: remainingDivisions,
           };
+          movedRegions.add(regionId);
         }
 
         if (newMovements.length > 0) {
+          // Clear selectedUnitRegion if it was in a region that had units moved
+          const shouldClearSelection = selectedUnitRegion && movedRegions.has(selectedUnitRegion);
+          
           set({
             regions: newRegions,
             movingUnits: [...movingUnits, ...newMovements],
+            ...(shouldClearSelection && { selectedUnitRegion: null }),
           });
         }
       },
