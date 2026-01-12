@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Theater, ArmyGroup, RegionState, FactionId } from '../types/game';
+import { Theater, ArmyGroup, RegionState, FactionId, Movement } from '../types/game';
 import { getArmyGroupUnitCount } from '../utils/pathfinding';
 
 interface TheaterPanelProps {
@@ -12,6 +12,7 @@ interface TheaterPanelProps {
   selectedTheaterId: string | null;
   selectedGroupId: string | null;
   isExpanded: boolean;
+  movingUnits: Movement[];
   onToggleExpanded: () => void;
   onSelectTheater: (theaterId: string | null) => void;
   onCreateGroup: (name: string, regionIds: string[], theaterId: string | null) => void;
@@ -30,6 +31,7 @@ export default function TheaterPanel({
   selectedTheaterId,
   selectedGroupId,
   isExpanded,
+  movingUnits,
   onToggleExpanded,
   onSelectTheater,
   onCreateGroup,
@@ -164,7 +166,7 @@ export default function TheaterPanel({
                         <div className="mb-2 text-xs font-semibold text-stone-400">Army Groups:</div>
                         <div className="flex flex-wrap gap-2">
                           {groups.map((group) => {
-                            const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerFaction);
+                            const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerFaction, group.id, movingUnits);
                             const validRegions = group.regionIds.filter(id => {
                               const region = regions[id];
                               return region && region.owner === playerFaction;
@@ -271,7 +273,7 @@ export default function TheaterPanel({
                   <div className="mb-2 text-xs font-semibold text-stone-400">Unassigned Army Groups:</div>
                   <div className="flex flex-wrap gap-2">
                     {theaterGroups.map((group) => {
-                      const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerFaction);
+                      const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerFaction, group.id, movingUnits);
                       const validRegions = group.regionIds.filter(id => {
                         const region = regions[id];
                         return region && region.owner === playerFaction;

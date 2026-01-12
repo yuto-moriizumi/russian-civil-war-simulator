@@ -820,8 +820,13 @@ export const useGameStore = create<GameStore>()(
           const alreadyMoving = movingUnits.some(m => m.fromRegion === regionId);
           if (alreadyMoving) continue;
 
-          // Create the movement
-          const divisionsToMove = region.divisions;
+          // Filter divisions that belong to this specific army group
+          const divisionsInGroup = region.divisions.filter(d => d.armyGroupId === groupId);
+          if (divisionsInGroup.length === 0) continue;
+
+          // Create the movement with only the divisions from this group
+          const divisionsToMove = divisionsInGroup;
+          const remainingDivisions = region.divisions.filter(d => d.armyGroupId !== groupId);
           const travelTimeHours = 6;
           const arrivalTime = new Date(dateTime);
           arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
@@ -839,7 +844,7 @@ export const useGameStore = create<GameStore>()(
           newMovements.push(newMovement);
           newRegions[regionId] = {
             ...region,
-            divisions: [],
+            divisions: remainingDivisions,
           };
         }
 

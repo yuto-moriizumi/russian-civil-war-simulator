@@ -337,6 +337,7 @@ export default function MainScreen({
           selectedTheaterId={selectedTheaterId}
           selectedGroupId={selectedGroupId}
           isExpanded={isArmyGroupsPanelExpanded}
+          movingUnits={movingUnits}
           onToggleExpanded={() => setIsArmyGroupsPanelExpanded(!isArmyGroupsPanelExpanded)}
           onSelectTheater={onSelectTheater}
           onCreateGroup={onCreateArmyGroup}

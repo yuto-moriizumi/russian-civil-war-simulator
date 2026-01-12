@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArmyGroup, RegionState, FactionId } from '../types/game';
+import { ArmyGroup, RegionState, FactionId, Movement } from '../types/game';
 import { getArmyGroupUnitCount } from '../utils/pathfinding';
 
 interface ArmyGroupsPanelProps {
@@ -10,6 +10,7 @@ interface ArmyGroupsPanelProps {
   playerFaction: FactionId;
   selectedGroupId: string | null;
   isExpanded: boolean;
+  movingUnits: Movement[];
   onToggleExpanded: () => void;
   onDeleteGroup: (groupId: string) => void;
   onRenameGroup: (groupId: string, name: string) => void;
@@ -23,6 +24,7 @@ export default function ArmyGroupsPanel({
   playerFaction,
   selectedGroupId,
   isExpanded,
+  movingUnits,
   onToggleExpanded,
   onDeleteGroup,
   onRenameGroup,
@@ -85,7 +87,7 @@ export default function ArmyGroupsPanel({
           ) : (
             <div className="flex flex-wrap gap-2">
               {armyGroups.map((group) => {
-                const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerFaction);
+                const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerFaction, group.id, movingUnits);
                 const isSelected = selectedGroupId === group.id;
 
                 return (

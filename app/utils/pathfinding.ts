@@ -1,4 +1,4 @@
-import { RegionState, Adjacency, FactionId } from '../types/game';
+import { RegionState, Adjacency, FactionId, Movement } from '../types/game';
 
 /**
  * Find the nearest enemy-controlled region from a starting region using BFS.
@@ -109,13 +109,39 @@ export function findBestMoveTowardEnemy(
 }
 
 /**
- * Calculate the total number of divisions in an army group's regions.
+ * Calculate the total number of divisions assigned to a specific army group.
+ * This counts divisions by their armyGroupId field, including in-transit divisions.
  */
 export function getArmyGroupUnitCount(
   regionIds: string[],
   regions: RegionState,
-  playerFaction: FactionId
+  playerFaction: FactionId,
+  armyGroupId?: string,
+  movingUnits?: Movement[]
 ): number {
+  // If armyGroupId is provided, count only divisions with that armyGroupId
+  if (armyGroupId) {
+    // Count divisions in regions
+    let total = Object.values(regions).reduce((sum, region) => {
+      if (!region || region.owner !== playerFaction) return sum;
+      const matchingDivisions = region.divisions.filter(d => d.armyGroupId === armyGroupId);
+      return sum + matchingDivisions.length;
+    }, 0);
+    
+    // Count divisions in transit
+    if (movingUnits) {
+      const inTransit = movingUnits.reduce((sum, movement) => {
+        if (movement.owner !== playerFaction) return sum;
+        const matchingDivisions = movement.divisions.filter(d => d.armyGroupId === armyGroupId);
+        return sum + matchingDivisions.length;
+      }, 0);
+      total += inTransit;
+    }
+    
+    return total;
+  }
+  
+  // Legacy behavior: count all divisions in the specified regions
   return regionIds.reduce((total, regionId) => {
     const region = regions[regionId];
     if (!region || region.owner !== playerFaction) return total;
