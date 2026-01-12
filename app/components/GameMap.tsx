@@ -963,40 +963,7 @@ export default function GameMap({
         </div>
       )}
 
-      {/* Moving units indicator */}
-      {movingUnits.length > 0 && (
-        <div className="absolute right-4 bottom-16 z-10 rounded-lg border border-blue-500 bg-stone-900/95 p-3 min-w-[200px]">
-          <div className="text-sm font-bold text-blue-400 mb-2">
-            Units in Transit ({movingUnits.length})
-          </div>
-          <div className="max-h-40 overflow-y-auto space-y-2">
-            {movingUnits.map((movement) => {
-              const fromRegion = regions[movement.fromRegion];
-              const toRegion = regions[movement.toRegion];
-              const totalTime = movement.arrivalTime.getTime() - movement.departureTime.getTime();
-              const elapsed = currentDateTime.getTime() - movement.departureTime.getTime();
-              const progress = Math.min(100, Math.max(0, (elapsed / totalTime) * 100));
-              
-              return (
-                <div key={movement.id} className="rounded bg-stone-800 p-2">
-                  <div className="text-xs text-stone-300">
-                    {movement.divisions.length} unit(s): {fromRegion?.name || movement.fromRegion} → {toRegion?.name || movement.toRegion}
-                  </div>
-                  <div className="mt-1 h-1 bg-stone-700 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-blue-500 transition-all duration-500"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  <div className="text-xs text-stone-500 mt-1">
-                    Arrives: {movement.arrivalTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
