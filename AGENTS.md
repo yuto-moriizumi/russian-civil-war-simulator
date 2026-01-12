@@ -28,22 +28,22 @@ await browser_evaluate({
     if (adjacent.length > 0) {
       window.gameAPI.moveSelectedUnits(adjacent[0]);
     }
-  }`
+  }`,
 });
 ```
 
 ### Available Methods
 
-| Method | Description |
-|--------|-------------|
-| `selectRegion(regionId)` | Select a region on the map |
-| `getSelectedRegion()` | Get the currently selected region ID |
-| `getRegions()` | Get all regions and their state |
-| `selectUnits(regionId)` | Select units in a region for movement |
-| `getSelectedUnitRegion()` | Get the region with selected units |
+| Method                                  | Description                               |
+| --------------------------------------- | ----------------------------------------- |
+| `selectRegion(regionId)`                | Select a region on the map                |
+| `getSelectedRegion()`                   | Get the currently selected region ID      |
+| `getRegions()`                          | Get all regions and their state           |
+| `selectUnits(regionId)`                 | Select units in a region for movement     |
+| `getSelectedUnitRegion()`               | Get the region with selected units        |
 | `moveSelectedUnits(toRegionId, count?)` | Move selected units to an adjacent region |
-| `getAdjacentRegions(regionId)` | Get list of adjacent region IDs |
-| `getMovingUnits()` | Get all in-transit unit movements |
+| `getAdjacentRegions(regionId)`          | Get list of adjacent region IDs           |
+| `getMovingUnits()`                      | Get all in-transit unit movements         |
 
 ### Workflow for Moving Units
 
@@ -60,14 +60,11 @@ All API methods log warnings to the console when operations fail. Use `browser_c
 
 ## Development Server
 
-When starting a dev server, use a specific port range and echo it so you can capture the value. Always wait for the server to be ready before proceeding to browser actions. Use the following pattern to ensure observability and readiness:
+When starting a dev server, use a specific port range and echo it so you can capture the value. Use the following pattern to ensure observability and readiness:
 
 ```bash
 # Pick a port, echo it for visibility, and start in background
 PORT=$((3000 + RANDOM % 1000)); echo "STARTING_PORT=$PORT"; PORT=$PORT npm run dev &
-
-# Wait for the server to be ready (up to 60s)
-timeout 60s bash -c "until lsof -i :$PORT -t >/dev/null; do sleep 1; done" && echo "Server is ready at http://localhost:$PORT"
 ```
 
 ## Process Management
@@ -82,5 +79,6 @@ kill $(lsof -t -i :$PORT)
 ```
 
 Other options:
+
 - Use `Ctrl+C` if the process is in the foreground
 - Use `kill <pid>` if you have the specific process ID
