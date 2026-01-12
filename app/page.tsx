@@ -100,6 +100,7 @@ function MainScreenView() {
       selectedUnitRegion={state.selectedUnitRegion}
       mapDataLoaded={state.mapDataLoaded}
       gameEvents={state.gameEvents}
+      notifications={state.notifications}
       theaters={state.theaters}
       armyGroups={state.armyGroups}
       selectedGroupId={state.selectedGroupId}
@@ -119,6 +120,7 @@ function MainScreenView() {
       selectedCombatId={state.selectedCombatId}
       isEventsModalOpen={state.isEventsModalOpen}
       onCloseEvents={() => state.setIsEventsModalOpen(false)}
+      onDismissNotification={state.dismissNotification}
       onSelectTheater={state.selectTheater}
       onCreateArmyGroup={state.createArmyGroup}
       onDeleteArmyGroup={state.deleteArmyGroup}
