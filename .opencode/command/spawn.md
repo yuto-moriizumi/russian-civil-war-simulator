@@ -26,11 +26,13 @@ Create a new git worktree for parallel development with the following task/branc
    
    > **Note**: The branch is created from `main` by default. If the user specifies a different base branch, use that instead.
 
-5. **Confirm success**: Report the created worktree path and branch name.
+5. **Install dependencies**: Run `npm install` within the new worktree directory to ensure the environment is ready for development.
 
-6. **Continue working in the new worktree**: From this point forward, use the new worktree path as the working directory for all subsequent commands and file operations. Simply use the `workdir` parameter for bash commands and use absolute paths based on the new worktree location.
+6. **Confirm success**: Report the created worktree path and branch name.
 
-7. **Start the task**: Begin working on the task described in $ARGUMENTS immediately.
+7. **Continue working in the new worktree**: From this point forward, use the new worktree path as the working directory for all subsequent commands and file operations. Simply use the `workdir` parameter for bash commands and use absolute paths based on the new worktree location.
+
+8. **Start the task**: Begin working on the task described in $ARGUMENTS immediately.
 
 ## Important notes:
 - Continue using the current OpenCode session - no need to launch a new instance
