@@ -1,0 +1,28 @@
+echo "Running pre-push checks..."
+
+# Run typecheck
+echo "Running TypeScript type check..."
+npm run typecheck
+TYPECHECK_EXIT_CODE=$?
+
+if [ $TYPECHECK_EXIT_CODE -ne 0 ]; then
+  echo "❌ TypeScript type check failed. Push aborted."
+  exit 1
+fi
+
+echo "✓ TypeScript type check passed"
+
+# Run lint
+echo "Running ESLint..."
+npm run lint
+LINT_EXIT_CODE=$?
+
+if [ $LINT_EXIT_CODE -ne 0 ]; then
+  echo "❌ ESLint check failed. Push aborted."
+  exit 1
+fi
+
+echo "✓ ESLint check passed"
+
+echo "✓ All pre-push checks passed!"
+exit 0

@@ -50,16 +50,21 @@ export const createTickActions = (
     const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications } = processCombats(activeCombats, newDate);
 
     // Step 5: Apply completed movements to regions
-    let { nextRegions, nextCombats, nextEvents, nextNotifications } = applyCompletedMovements(
-      completedMovements,
-      {
-        regions: updatedRegions,
-        combats: updatedCombats,
-        events: [...gameEvents, ...newCombatEvents],
-        notifications: [...notifications, ...newCombatNotifications],
-      },
-      newDate
-    );
+    let nextRegions: typeof updatedRegions;
+    const { nextCombats, nextEvents, nextNotifications } = (() => {
+      const result = applyCompletedMovements(
+        completedMovements,
+        {
+          regions: updatedRegions,
+          combats: updatedCombats,
+          events: [...gameEvents, ...newCombatEvents],
+          notifications: [...notifications, ...newCombatNotifications],
+        },
+        newDate
+      );
+      nextRegions = result.nextRegions;
+      return result;
+    })();
 
     // Step 6: Apply finished combats to regions
     nextRegions = applyFinishedCombats(finishedCombats, nextRegions);

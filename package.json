@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "map:dl": "tsx scripts/download-geojson.ts",
     "map:build": "tsx scripts/process-map.ts",
-    "map:gen": "npm run map:dl && npm run map:build"
+    "map:gen": "npm run map:dl && npm run map:build",
+    "prepare": "husky"
   },
   "dependencies": {
     "@dagrejs/dagre": "^1.1.8",
@@ -32,6 +34,7 @@
     "@types/topojson-server": "^3.0.4",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
+    "husky": "^9.1.7",
     "tailwindcss": "^4",
     "topojson-client": "^3.1.0",
     "topojson-server": "^3.0.1",

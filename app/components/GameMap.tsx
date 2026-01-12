@@ -2,14 +2,13 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import Map, { MapRef, Source, Layer, NavigationControl } from 'react-map-gl/maplibre';
-import type { MapMouseEvent } from 'maplibre-gl';
+import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { RegionState, Adjacency, FactionId, Movement, ActiveCombat, Theater } from '../types/game';
 import { getAdjacentRegions } from '../utils/mapUtils';
 import { useRegionCentroids } from './GameMap/mapHooks';
 import { UnitMarker, MovingUnitMarker, CombatMarker } from './GameMap/MapMarkers';
 import { RegionTooltip, RegionInfoPanel } from './GameMap/RegionPanels';
-import { createMapClickHandler, createContextMenuHandler } from './GameMap/mapInteractions';
 import { useMapState } from './GameMap/useMapState';
 import {
   createFillColorExpression,
@@ -119,24 +118,53 @@ export default function GameMap({
 
   // Event handlers
   const handleMapClick = useCallback(
-    createMapClickHandler({
-      selectedRegion,
-      regions,
-      playerFaction,
-      onRegionSelect,
-      onUnitSelect,
-    }),
+    (e: MapLayerMouseEvent) => {
+      const features = e.features;
+      if (features && features.length > 0) {
+        const regionId = features[0].properties?.shapeISO;
+        if (regionId) {
+          // If clicking on same region, deselect
+          if (regionId === selectedRegion) {
+            onRegionSelect(null);
+            onUnitSelect(null);
+          } else {
+            onRegionSelect(regionId);
+            // If this region has units owned by player, also select as unit
+            const region = regions[regionId];
+            if (region && region.owner === playerFaction && region.divisions.length > 0) {
+              onUnitSelect(regionId);
+            } else {
+              onUnitSelect(null);
+            }
+          }
+        }
+      }
+    },
     [selectedRegion, regions, playerFaction, onRegionSelect, onUnitSelect]
   );
 
   const handleContextMenu = useCallback(
-    createContextMenuHandler({
-      selectedUnitRegionRef,
-      regionsRef,
-      adjacencyRef,
-      onMoveUnitsRef,
-      onUnitSelectRef,
-    }),
+    (e: MapLayerMouseEvent) => {
+      e.preventDefault();
+      const features = e.features;
+      if (features && features.length > 0) {
+        const targetRegionId = features[0].properties?.shapeISO;
+        const currentSelectedUnit = selectedUnitRegionRef.current;
+        
+        // Check if we have a unit selected and this is an adjacent region
+        if (currentSelectedUnit && targetRegionId && targetRegionId !== currentSelectedUnit) {
+          const adjacentRegions = getAdjacentRegions(adjacencyRef.current, currentSelectedUnit);
+          if (adjacentRegions.includes(targetRegionId)) {
+            const sourceRegion = regionsRef.current[currentSelectedUnit];
+            if (sourceRegion && sourceRegion.divisions.length > 0) {
+              // Move all units (or could use unitsToMove for partial)
+              onMoveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.divisions.length);
+              onUnitSelectRef.current(null);
+            }
+          }
+        }
+      }
+    },
     []
   );
 
