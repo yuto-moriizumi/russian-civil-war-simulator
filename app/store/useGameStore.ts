@@ -12,7 +12,8 @@ import {
   Movement,
   ActiveCombat,
   GameEvent,
-  ArmyGroup
+  ArmyGroup,
+  Division
 } from '../types/game';
 import { initialMissions, GAME_START_DATE } from '../data/gameData';
 import { calculateFactionIncome } from '../utils/mapUtils';
@@ -197,22 +198,94 @@ export const useGameStore = create<GameStore>()(
 
         const { dateTime, selectedCountry, regions, movingUnits, activeCombats, money, aiState, gameEvents, armyGroups } = state;
         
-        // Validate all divisions have valid army groups (development mode)
+        // Ensure required army groups exist
+        let updatedArmyGroups = armyGroups;
+        const aiFaction: FactionId = selectedCountry?.id === 'soviet' ? 'white' : 'soviet';
+        
+        // Check if ai-general-reserve exists
+        if (!armyGroups.find(g => g.id === 'ai-general-reserve')) {
+          console.warn('ai-general-reserve army group missing, recreating it');
+          const aiReserve: ArmyGroup = {
+            id: 'ai-general-reserve',
+            name: 'AI General Reserve',
+            regionIds: [],
+            color: '#6B7280',
+            owner: aiFaction,
+            theaterId: null,
+          };
+          updatedArmyGroups = [...armyGroups, aiReserve];
+        }
+        
+        // Check if default-general-reserve exists
+        if (!armyGroups.find(g => g.id === 'default-general-reserve') && selectedCountry) {
+          console.warn('default-general-reserve army group missing, recreating it');
+          const defaultReserve: ArmyGroup = {
+            id: 'default-general-reserve',
+            name: 'General Reserve',
+            regionIds: [],
+            color: '#6B7280',
+            owner: selectedCountry.id,
+            theaterId: null,
+          };
+          updatedArmyGroups = [...updatedArmyGroups, defaultReserve];
+        }
+        
+        // Validate and auto-repair divisions with invalid army groups (development mode)
+        let updatedRegions = regions;
+        let updatedMovingUnits = movingUnits;
+        let needsUpdate = false;
+        
         if (process.env.NODE_ENV === 'development') {
-          Object.values(regions).forEach(region => {
-            region.divisions.forEach(division => {
-              validateDivisionArmyGroup(division, armyGroups);
+          // First pass: validate and collect fixes
+          const regionFixes: { regionId: string; divisionIndex: number; newDivision: Division }[] = [];
+          const movementFixes: { movementIndex: number; divisionIndex: number; newDivision: Division }[] = [];
+          
+          Object.entries(regions).forEach(([regionId, region]) => {
+            region.divisions.forEach((division, divIndex) => {
+              const result = validateDivisionArmyGroup(division, updatedArmyGroups);
+              if (result.wasFixed) {
+                regionFixes.push({ regionId, divisionIndex: divIndex, newDivision: result.division });
+                needsUpdate = true;
+              }
             });
           });
-          movingUnits.forEach(movement => {
-            movement.divisions.forEach(division => {
-              validateDivisionArmyGroup(division, armyGroups);
+          
+          movingUnits.forEach((movement, movIndex) => {
+            movement.divisions.forEach((division, divIndex) => {
+              const result = validateDivisionArmyGroup(division, updatedArmyGroups);
+              if (result.wasFixed) {
+                movementFixes.push({ movementIndex: movIndex, divisionIndex: divIndex, newDivision: result.division });
+                needsUpdate = true;
+              }
             });
           });
+          
+          // Apply fixes if needed
+          if (needsUpdate) {
+            updatedRegions = { ...regions };
+            regionFixes.forEach(fix => {
+              const newDivisions = [...updatedRegions[fix.regionId].divisions];
+              newDivisions[fix.divisionIndex] = fix.newDivision;
+              updatedRegions[fix.regionId] = {
+                ...updatedRegions[fix.regionId],
+                divisions: newDivisions
+              };
+            });
+            
+            updatedMovingUnits = [...movingUnits];
+            movementFixes.forEach(fix => {
+              const newDivisions = [...updatedMovingUnits[fix.movementIndex].divisions];
+              newDivisions[fix.divisionIndex] = fix.newDivision;
+              updatedMovingUnits[fix.movementIndex] = {
+                ...updatedMovingUnits[fix.movementIndex],
+                divisions: newDivisions
+              };
+            });
+          }
         }
         
         const playerFaction = selectedCountry?.id;
-        const playerIncome = playerFaction ? calculateFactionIncome(regions, playerFaction, movingUnits) : 0;
+        const playerIncome = playerFaction ? calculateFactionIncome(updatedRegions, playerFaction, updatedMovingUnits) : 0;
         
         const newDate = new Date(dateTime);
         newDate.setHours(newDate.getHours() + 1);
@@ -223,7 +296,7 @@ export const useGameStore = create<GameStore>()(
         const remainingMovements: Movement[] = [];
         const completedMovements: Movement[] = [];
 
-        movingUnits.forEach(movement => {
+        updatedMovingUnits.forEach(movement => {
           // Regenerate HP for units in transit
           const regeneratedDivisions = movement.divisions.map(division => {
             const newHp = Math.min(division.hp + 10, division.maxHp);
@@ -286,7 +359,7 @@ export const useGameStore = create<GameStore>()(
         });
 
         // Apply completed movements and combats to regions
-        const nextRegions = { ...regions };
+        const nextRegions = { ...updatedRegions };
         const nextCombats = [...updatedCombats];
         const nextEvents = [...gameEvents, ...newCombatEvents];
 
@@ -409,6 +482,7 @@ export const useGameStore = create<GameStore>()(
           regions: nextRegions,
           gameEvents: nextEvents,
           aiState: nextAIState,
+          armyGroups: updatedArmyGroups,
         });
         
         // Update theaters after regions change
@@ -593,11 +667,74 @@ export const useGameStore = create<GameStore>()(
 
       // Theater Actions
       detectAndUpdateTheaters: () => {
-        const { regions, adjacency, selectedCountry, theaters } = get();
+        const { regions, adjacency, selectedCountry, theaters, armyGroups } = get();
         if (!selectedCountry) return;
         
         const newTheaters = detectTheaters(regions, adjacency, selectedCountry.id, theaters);
-        set({ theaters: newTheaters });
+        
+        // Handle army group reassignment when theaters merge or disappear
+        const oldTheaterIds = new Set(theaters.map(t => t.id));
+        const newTheaterIds = new Set(newTheaters.map(t => t.id));
+        const disappearedTheaterIds = Array.from(oldTheaterIds).filter(id => !newTheaterIds.has(id));
+        
+        let updatedArmyGroups = armyGroups;
+        
+        if (disappearedTheaterIds.length > 0) {
+          console.log('[THEATER MERGE] Theaters disappeared:', disappearedTheaterIds);
+          
+          // For each disappeared theater, find which new theater(s) contain its regions
+          disappearedTheaterIds.forEach(oldTheaterId => {
+            const oldTheater = theaters.find(t => t.id === oldTheaterId);
+            if (!oldTheater) return;
+            
+            // Find army groups assigned to this theater
+            const affectedGroups = armyGroups.filter(g => g.theaterId === oldTheaterId);
+            if (affectedGroups.length === 0) return;
+            
+            console.log(`[THEATER MERGE] ${affectedGroups.length} army groups affected by theater ${oldTheaterId} disappearing`);
+            
+            // Find which new theater contains the most regions from the old theater
+            let bestMatchTheaterId: string | null = null;
+            let bestMatchTheaterName = '';
+            let bestMatchScore = 0;
+            
+            newTheaters.forEach(newTheater => {
+              const intersection = oldTheater.frontlineRegions.filter(r => 
+                newTheater.frontlineRegions.includes(r)
+              ).length;
+              
+              if (intersection > bestMatchScore) {
+                bestMatchScore = intersection;
+                bestMatchTheaterId = newTheater.id;
+                bestMatchTheaterName = newTheater.name;
+              }
+            });
+            
+            // Reassign army groups to the best matching theater
+            if (bestMatchTheaterId !== null) {
+              console.log(`[THEATER MERGE] Reassigning ${affectedGroups.length} army groups from ${oldTheaterId} to ${bestMatchTheaterId} (${bestMatchTheaterName})`);
+              
+              updatedArmyGroups = updatedArmyGroups.map(group => {
+                if (group.theaterId === oldTheaterId) {
+                  return { ...group, theaterId: bestMatchTheaterId };
+                }
+                return group;
+              });
+            } else {
+              // No match found, set theaterId to null (general reserve)
+              console.log(`[THEATER MERGE] No matching theater found for ${oldTheaterId}, moving army groups to general reserve`);
+              
+              updatedArmyGroups = updatedArmyGroups.map(group => {
+                if (group.theaterId === oldTheaterId) {
+                  return { ...group, theaterId: null };
+                }
+                return group;
+              });
+            }
+          });
+        }
+        
+        set({ theaters: newTheaters, armyGroups: updatedArmyGroups });
       },
 
       selectTheater: (theaterId: string | null) => {

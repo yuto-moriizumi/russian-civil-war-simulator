@@ -9,28 +9,46 @@ export function generateDivisionId(): string {
 
 /**
  * Validate that a division has a valid army group assignment
+ * Returns the division (potentially with corrected armyGroupId) and whether it was fixed
  */
 export function validateDivisionArmyGroup(
   division: Division,
   armyGroups: ArmyGroup[]
-): boolean {
+): { division: Division; isValid: boolean; wasFixed: boolean } {
   if (!division.armyGroupId) {
     console.error(`Division ${division.id} (${division.name}) has no army group assigned`);
-    return false;
+    return { division, isValid: false, wasFixed: false };
   }
   
   const armyGroup = armyGroups.find(g => g.id === division.armyGroupId);
   if (!armyGroup) {
-    console.error(`Division ${division.id} (${division.name}) is assigned to non-existent army group ${division.armyGroupId}`);
-    return false;
+    console.warn(`Division ${division.id} (${division.name}) is assigned to non-existent army group ${division.armyGroupId}`);
+    
+    // Try to find a valid general reserve army group for this division's owner
+    const generalReserve = armyGroups.find(g => 
+      g.owner === division.owner && 
+      (g.id.includes('general-reserve') || g.name.toLowerCase().includes('general reserve'))
+    );
+    
+    if (generalReserve) {
+      console.log(`Auto-fixing: Reassigning division ${division.id} to ${generalReserve.id}`);
+      return {
+        division: { ...division, armyGroupId: generalReserve.id },
+        isValid: true,
+        wasFixed: true
+      };
+    }
+    
+    console.error(`Cannot auto-fix: No general reserve found for faction ${division.owner}`);
+    return { division, isValid: false, wasFixed: false };
   }
   
   if (armyGroup.owner !== division.owner) {
     console.error(`Division ${division.id} (${division.name}) owner (${division.owner}) does not match army group ${armyGroup.id} owner (${armyGroup.owner})`);
-    return false;
+    return { division, isValid: false, wasFixed: false };
   }
   
-  return true;
+  return { division, isValid: true, wasFixed: false };
 }
 
 /**
