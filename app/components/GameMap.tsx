@@ -159,18 +159,18 @@ export default function GameMap({
 
   // Build line color expression for region borders
   const lineColorExpression = useMemo(() => {
-    const expression: any[] = ['case'];
+    const conditions: any[] = [];
     
     // Selected region
     if (selectedRegion) {
-      expression.push(['==', ['get', 'shapeISO'], selectedRegion], '#FFD700');
+      conditions.push(['==', ['get', 'shapeISO'], selectedRegion], '#FFD700');
     }
     
     // Theater frontline
     if (selectedTheaterId) {
       const theater = theaters.find(t => t.id === selectedTheaterId);
-      if (theater) {
-        expression.push(
+      if (theater && theater.frontlineRegions.length > 0) {
+        conditions.push(
           ['in', ['get', 'shapeISO'], ['literal', theater.frontlineRegions]],
           '#FF6B35'
         );
@@ -179,28 +179,31 @@ export default function GameMap({
     
     // Hovered region
     if (hoveredRegion) {
-      expression.push(['==', ['get', 'shapeISO'], hoveredRegion], '#FFFFFF');
+      conditions.push(['==', ['get', 'shapeISO'], hoveredRegion], '#FFFFFF');
+    }
+    
+    // If no conditions, return simple value
+    if (conditions.length === 0) {
+      return '#333333';
     }
     
     // Default color
-    expression.push('#333333');
-    
-    return expression;
+    return ['case', ...conditions, '#333333'];
   }, [selectedRegion, hoveredRegion, selectedTheaterId, theaters]);
 
   // Build line width expression
   const lineWidthExpression = useMemo(() => {
-    const expression: any[] = ['case'];
+    const conditions: any[] = [];
     
     // Selected region or theater frontline
     if (selectedRegion) {
-      expression.push(['==', ['get', 'shapeISO'], selectedRegion], 3);
+      conditions.push(['==', ['get', 'shapeISO'], selectedRegion], 3);
     }
     
     if (selectedTheaterId) {
       const theater = theaters.find(t => t.id === selectedTheaterId);
-      if (theater) {
-        expression.push(
+      if (theater && theater.frontlineRegions.length > 0) {
+        conditions.push(
           ['in', ['get', 'shapeISO'], ['literal', theater.frontlineRegions]],
           3
         );
@@ -209,27 +212,30 @@ export default function GameMap({
     
     // Hovered region
     if (hoveredRegion) {
-      expression.push(['==', ['get', 'shapeISO'], hoveredRegion], 2);
+      conditions.push(['==', ['get', 'shapeISO'], hoveredRegion], 2);
+    }
+    
+    // If no conditions, return simple value
+    if (conditions.length === 0) {
+      return 1;
     }
     
     // Default width
-    expression.push(1);
-    
-    return expression;
+    return ['case', ...conditions, 1];
   }, [selectedRegion, hoveredRegion, selectedTheaterId, theaters]);
 
   // Build opacity expression for fill
   const fillOpacityExpression = useMemo(() => {
-    const expression: any[] = ['case'];
+    const conditions: any[] = [];
     
     // Selected region
     if (selectedRegion) {
-      expression.push(['==', ['get', 'shapeISO'], selectedRegion], 0.9);
+      conditions.push(['==', ['get', 'shapeISO'], selectedRegion], 0.9);
     }
     
     // Hovered region
     if (hoveredRegion) {
-      expression.push(['==', ['get', 'shapeISO'], hoveredRegion], 0.8);
+      conditions.push(['==', ['get', 'shapeISO'], hoveredRegion], 0.8);
     }
     
     // Adjacent regions to selected unit or region
@@ -242,16 +248,19 @@ export default function GameMap({
     }
     
     if (adjacentRegionIds.size > 0) {
-      expression.push(
+      conditions.push(
         ['in', ['get', 'shapeISO'], ['literal', Array.from(adjacentRegionIds)]],
         0.7
       );
     }
     
-    // Default opacity
-    expression.push(0.6);
+    // If no conditions, return simple value
+    if (conditions.length === 0) {
+      return 0.6;
+    }
     
-    return expression;
+    // Build case expression with conditions and default
+    return ['case', ...conditions, 0.6];
   }, [selectedRegion, hoveredRegion, selectedUnitRegion, adjacency]);
 
   // Handle left-click on region
