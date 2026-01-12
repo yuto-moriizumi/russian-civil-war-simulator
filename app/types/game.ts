@@ -45,6 +45,20 @@ export interface RegionState {
 
 export type GameSpeed = 1 | 2 | 3 | 4 | 5;
 
+// Mission availability conditions - all conditions in the array must be met (AND)
+export type MissionCondition =
+  | { type: 'controlRegion'; regionId: string }                    // Control a specific region
+  | { type: 'controlRegions'; regionIds: string[] }                // Control all listed regions
+  | { type: 'controlRegionCount'; count: number }                  // Control at least N regions
+  | { type: 'hasUnits'; count: number }                            // Have at least N divisions
+  | { type: 'hasMoney'; amount: number }                           // Have at least N money
+  | { type: 'dateAfter'; date: string }                            // Date is after specified (YYYY-MM-DD)
+  | { type: 'combatVictories'; count: number }                     // Win at least N combats
+  | { type: 'enemyRegionCount'; faction: FactionId; maxCount: number } // Enemy controls at most N regions
+  | { type: 'allRegionsControlled'; countryIso3: string }          // Control all regions in a country
+  | { type: 'theaterExists'; enemyFaction: FactionId }             // Have at least one theater facing enemy
+  | { type: 'armyGroupCount'; count: number };                     // Have at least N army groups
+
 export interface Mission {
   id: string;
   faction: CountryId;
@@ -57,6 +71,7 @@ export interface Mission {
     gameVictory?: boolean;
   };
   prerequisites: string[];
+  available?: MissionCondition[]; // All conditions must be met (AND) for mission to auto-complete
   // position removed - computed automatically by dagre layout
 }
 

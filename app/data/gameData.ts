@@ -32,6 +32,9 @@ const sovietMissions: Mission[] = [
     claimed: false,
     rewards: { money: 100 },
     prerequisites: [],
+    available: [
+      { type: 'hasUnits', count: 5 }, // Recruit at least 5 divisions
+    ],
   },
   {
     id: 'soviet_terror',
@@ -42,6 +45,10 @@ const sovietMissions: Mission[] = [
     claimed: false,
     rewards: { money: 200 },
     prerequisites: ['soviet_mobilize'],
+    available: [
+      { type: 'combatVictories', count: 2 }, // Win at least 2 battles
+      { type: 'controlRegionCount', count: 10 }, // Control at least 10 regions
+    ],
   },
   {
     id: 'soviet_economy',
@@ -52,6 +59,10 @@ const sovietMissions: Mission[] = [
     claimed: false,
     rewards: { money: 150 },
     prerequisites: ['soviet_mobilize'],
+    available: [
+      { type: 'hasMoney', amount: 500 }, // Accumulate 500 money
+      { type: 'dateAfter', date: '1918-06-01' }, // After June 1918 (historical War Communism start)
+    ],
   },
   {
     id: 'soviet_crush',
@@ -62,6 +73,11 @@ const sovietMissions: Mission[] = [
     claimed: false,
     rewards: { money: 300 },
     prerequisites: ['soviet_terror', 'soviet_economy'],
+    available: [
+      { type: 'combatVictories', count: 5 }, // Win at least 5 battles
+      { type: 'controlRegionCount', count: 20 }, // Control at least 20 regions
+      { type: 'theaterExists', enemyFaction: 'white' }, // Have active theater against Whites
+    ],
   },
   {
     id: 'soviet_march',
@@ -72,6 +88,11 @@ const sovietMissions: Mission[] = [
     claimed: false,
     rewards: { money: 400 },
     prerequisites: ['soviet_crush'],
+    available: [
+      { type: 'controlRegionCount', count: 35 }, // Control at least 35 regions
+      { type: 'hasUnits', count: 20 }, // Have at least 20 divisions
+      { type: 'enemyRegionCount', faction: 'white', maxCount: 15 }, // Whites control at most 15 regions
+    ],
   },
   {
     id: 'soviet_victory',
@@ -82,6 +103,9 @@ const sovietMissions: Mission[] = [
     claimed: false,
     rewards: { money: 500, gameVictory: true },
     prerequisites: ['soviet_march'],
+    available: [
+      { type: 'enemyRegionCount', faction: 'white', maxCount: 0 }, // Whites control no regions
+    ],
   },
 ];
 
@@ -96,6 +120,9 @@ const whiteMissions: Mission[] = [
     claimed: false,
     rewards: { money: 100 },
     prerequisites: [],
+    available: [
+      { type: 'hasUnits', count: 5 }, // Recruit at least 5 divisions
+    ],
   },
   {
     id: 'white_foreign',
@@ -106,6 +133,10 @@ const whiteMissions: Mission[] = [
     claimed: false,
     rewards: { money: 200 },
     prerequisites: ['white_rally'],
+    available: [
+      { type: 'hasMoney', amount: 600 }, // Demonstrate financial stability
+      { type: 'controlRegionCount', count: 8 }, // Control at least 8 regions
+    ],
   },
   {
     id: 'white_order',
@@ -116,6 +147,10 @@ const whiteMissions: Mission[] = [
     claimed: false,
     rewards: { money: 150 },
     prerequisites: ['white_rally'],
+    available: [
+      { type: 'combatVictories', count: 2 }, // Win at least 2 battles
+      { type: 'armyGroupCount', count: 1 }, // Have at least 1 organized army group
+    ],
   },
   {
     id: 'white_break',
@@ -126,6 +161,11 @@ const whiteMissions: Mission[] = [
     claimed: false,
     rewards: { money: 300 },
     prerequisites: ['white_foreign', 'white_order'],
+    available: [
+      { type: 'combatVictories', count: 6 }, // Win at least 6 battles
+      { type: 'controlRegionCount', count: 20 }, // Control at least 20 regions
+      { type: 'theaterExists', enemyFaction: 'soviet' }, // Have active theater against Soviets
+    ],
   },
   {
     id: 'white_petrograd',
@@ -136,6 +176,11 @@ const whiteMissions: Mission[] = [
     claimed: false,
     rewards: { money: 400 },
     prerequisites: ['white_break'],
+    available: [
+      { type: 'controlRegion', regionId: 'RU-LEN' }, // Control Leningrad Oblast (near Petrograd)
+      { type: 'hasUnits', count: 25 }, // Have at least 25 divisions
+      { type: 'enemyRegionCount', faction: 'soviet', maxCount: 15 }, // Soviets control at most 15 regions
+    ],
   },
   {
     id: 'white_victory',
@@ -146,6 +191,9 @@ const whiteMissions: Mission[] = [
     claimed: false,
     rewards: { money: 500, gameVictory: true },
     prerequisites: ['white_petrograd'],
+    available: [
+      { type: 'enemyRegionCount', faction: 'soviet', maxCount: 0 }, // Soviets control no regions
+    ],
   },
 ];
 
