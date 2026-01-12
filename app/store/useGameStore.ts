@@ -14,7 +14,10 @@ import {
   GameEvent,
   NotificationItem,
   ArmyGroup,
-  Division
+  Division,
+  MissionCondition,
+  Mission,
+  Theater
 } from '../types/game';
 import { initialMissions, GAME_START_DATE } from '../data/gameData';
 import { calculateFactionIncome } from '../utils/mapUtils';
@@ -36,6 +39,131 @@ const ARMY_GROUP_COLORS = [
   '#F97316', // orange
   '#84CC16', // lime
 ];
+
+/**
+ * Evaluates a single mission condition against the current game state
+ * @returns true if the condition is met, false otherwise
+ */
+function evaluateMissionCondition(
+  condition: MissionCondition,
+  state: {
+    regions: RegionState;
+    money: number;
+    dateTime: Date;
+    gameEvents: GameEvent[];
+    selectedCountry: Country;
+    theaters: Theater[];
+    armyGroups: ArmyGroup[];
+  }
+): boolean {
+  const { regions, money, dateTime, gameEvents, selectedCountry, theaters, armyGroups } = state;
+  const playerFaction = selectedCountry.id;
+
+  switch (condition.type) {
+    case 'controlRegion': {
+      const region = regions[condition.regionId];
+      return region?.owner === playerFaction;
+    }
+    
+    case 'controlRegions': {
+      return condition.regionIds.every(regionId => {
+        const region = regions[regionId];
+        return region?.owner === playerFaction;
+      });
+    }
+    
+    case 'controlRegionCount': {
+      const controlledCount = Object.values(regions).filter(
+        region => region.owner === playerFaction
+      ).length;
+      return controlledCount >= condition.count;
+    }
+    
+    case 'hasUnits': {
+      const totalUnits = Object.values(regions).reduce((acc, region) => {
+        if (region.owner === playerFaction) {
+          return acc + region.divisions.filter(d => d.owner === playerFaction).length;
+        }
+        return acc;
+      }, 0);
+      return totalUnits >= condition.count;
+    }
+    
+    case 'hasMoney': {
+      return money >= condition.amount;
+    }
+    
+    case 'dateAfter': {
+      const targetDate = new Date(condition.date);
+      return dateTime >= targetDate;
+    }
+    
+    case 'combatVictories': {
+      const victories = gameEvents.filter(
+        event => event.type === 'combat_victory' && event.faction === playerFaction
+      ).length;
+      return victories >= condition.count;
+    }
+    
+    case 'enemyRegionCount': {
+      const enemyCount = Object.values(regions).filter(
+        region => region.owner === condition.faction
+      ).length;
+      return enemyCount <= condition.maxCount;
+    }
+    
+    case 'allRegionsControlled': {
+      const countryRegions = Object.values(regions).filter(
+        region => region.countryIso3 === condition.countryIso3
+      );
+      return countryRegions.length > 0 && countryRegions.every(
+        region => region.owner === playerFaction
+      );
+    }
+    
+    case 'theaterExists': {
+      return theaters.some(
+        theater => theater.owner === playerFaction && theater.enemyFaction === condition.enemyFaction
+      );
+    }
+    
+    case 'armyGroupCount': {
+      const playerArmyGroups = armyGroups.filter(g => g.owner === playerFaction);
+      return playerArmyGroups.length >= condition.count;
+    }
+    
+    default:
+      console.warn('Unknown mission condition type:', condition);
+      return false;
+  }
+}
+
+/**
+ * Checks if all conditions for a mission are met (AND logic)
+ * @returns true if all conditions are met or no conditions exist
+ */
+function areMissionConditionsMet(
+  mission: Mission,
+  state: {
+    regions: RegionState;
+    money: number;
+    dateTime: Date;
+    gameEvents: GameEvent[];
+    selectedCountry: Country;
+    theaters: Theater[];
+    armyGroups: ArmyGroup[];
+  }
+): boolean {
+  // If no conditions, mission is always available
+  if (!mission.available || mission.available.length === 0) {
+    return true;
+  }
+  
+  // All conditions must be met (AND logic)
+  return mission.available.every(condition => 
+    evaluateMissionCondition(condition, state)
+  );
+}
 
 interface GameStore extends GameState {
   // Additional UI State
@@ -516,6 +644,66 @@ export const useGameStore = create<GameStore>()(
           aiState: nextAIState,
           armyGroups: nextArmyGroups,
         });
+        
+        // Check and auto-complete missions based on conditions
+        if (selectedCountry) {
+          const currentState = get();
+          const updatedMissions = currentState.missions.map(mission => {
+            // Skip if mission is already completed
+            if (mission.completed) {
+              return mission;
+            }
+            
+            // Check if prerequisites are met (all must be claimed)
+            const prerequisitesMet = mission.prerequisites.every(prereqId => {
+              const prereqMission = currentState.missions.find(m => m.id === prereqId);
+              return prereqMission?.claimed;
+            });
+            
+            if (!prerequisitesMet) {
+              return mission;
+            }
+            
+            // Check if all availability conditions are met
+            const conditionsMet = areMissionConditionsMet(mission, {
+              regions: currentState.regions,
+              money: currentState.money,
+              dateTime: currentState.dateTime,
+              gameEvents: currentState.gameEvents,
+              selectedCountry: currentState.selectedCountry!,
+              theaters: currentState.theaters,
+              armyGroups: currentState.armyGroups,
+            });
+            
+            if (conditionsMet) {
+              // Auto-complete the mission
+              const completionEvent = createGameEvent(
+                'mission_completed',
+                `Mission Complete: ${mission.name}`,
+                mission.description,
+                currentState.dateTime,
+                selectedCountry.id
+              );
+              
+              const completionNotification = createNotification(completionEvent, currentState.dateTime);
+              
+              // Add event and notification
+              set({
+                gameEvents: [...currentState.gameEvents, completionEvent],
+                notifications: [...currentState.notifications, completionNotification],
+              });
+              
+              return { ...mission, completed: true };
+            }
+            
+            return mission;
+          });
+          
+          // Update missions if any changed
+          if (updatedMissions.some((m, i) => m.completed !== currentState.missions[i].completed)) {
+            set({ missions: updatedMissions });
+          }
+        }
         
         // Update theaters after regions change
         get().detectAndUpdateTheaters();
