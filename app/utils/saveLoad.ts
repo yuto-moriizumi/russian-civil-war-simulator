@@ -37,6 +37,17 @@ interface SerializedGameEvent {
   regionId?: string;
 }
 
+interface SerializedNotificationItem {
+  id: string;
+  type: GameEventType;
+  timestamp: string;
+  title: string;
+  description: string;
+  faction?: FactionId;
+  regionId?: string;
+  expiresAt: string;
+}
+
 interface SerializedActiveCombat {
   id: string;
   regionId: string;
@@ -68,6 +79,7 @@ interface SerializedGameState {
   missions: Mission[];
   movingUnits: SerializedMovement[];
   gameEvents: SerializedGameEvent[];
+  notifications: SerializedNotificationItem[];
   activeCombats: SerializedActiveCombat[];
   armyGroups: ArmyGroup[];
   theaters: Theater[];
@@ -95,6 +107,11 @@ function serializeGameState(state: GameState): SerializedGameState {
       ...e,
       timestamp: e.timestamp.toISOString(),
     })),
+    notifications: state.notifications.map((n) => ({
+      ...n,
+      timestamp: n.timestamp.toISOString(),
+      expiresAt: n.expiresAt.toISOString(),
+    })),
     activeCombats: state.activeCombats.map((c) => ({
       ...c,
       startTime: c.startTime.toISOString(),
@@ -116,6 +133,11 @@ function deserializeGameState(data: SerializedGameState): GameState {
     gameEvents: data.gameEvents.map((e) => ({
       ...e,
       timestamp: new Date(e.timestamp),
+    })),
+    notifications: (data.notifications || []).map((n) => ({
+      ...n,
+      timestamp: new Date(n.timestamp),
+      expiresAt: new Date(n.expiresAt),
     })),
     activeCombats: (data.activeCombats || []).map((c) => ({
       ...c,

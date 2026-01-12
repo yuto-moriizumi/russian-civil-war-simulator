@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import maplibregl from 'maplibre-gl';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import Map, { MapRef, Source, Layer, Marker, NavigationControl } from 'react-map-gl/maplibre';
+import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
+import type { MapMouseEvent } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { RegionState, Adjacency, FactionId, Movement, ActiveCombat, Theater } from '../types/game';
 import { FACTION_COLORS, getAdjacentRegions } from '../utils/mapUtils';
@@ -53,20 +55,16 @@ export default function GameMap({
   onMoveUnits,
   onSelectCombat,
 }: GameMapProps) {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<maplibregl.Map | null>(null);
-  const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
-  const movingMarkersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
-  const combatMarkersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
-  const hoveredRegionRef = useRef<string | null>(null);
+  const mapRef = useRef<MapRef>(null);
   const selectedUnitRegionRef = useRef<string | null>(null);
   const regionsRef = useRef<RegionState>(regions);
   const adjacencyRef = useRef<Adjacency>(adjacency);
   const onMoveUnitsRef = useRef(onMoveUnits);
   const onUnitSelectRef = useRef(onUnitSelect);
+  const hoveredRegionIdRef = useRef<string | null>(null);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
-  const [mapLoaded, setMapLoaded] = useState(false);
   const [regionCentroids, setRegionCentroids] = useState<Record<string, [number, number]>>({});
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   // Calculate centroid of a polygon
   const calculateCentroid = (coordinates: number[][][]): [number, number] => {
@@ -117,7 +115,6 @@ export default function GameMap({
         }
         
         console.log('Loaded region centroids:', Object.keys(centroids).length, 'regions');
-        console.log('Sample centroids:', Object.keys(centroids).slice(0, 5).map(k => ({ [k]: centroids[k] })));
         setRegionCentroids(centroids);
       } catch (error) {
         console.error('Failed to load centroids:', error);
@@ -148,230 +145,76 @@ export default function GameMap({
     onUnitSelectRef.current = onUnitSelect;
   }, [onUnitSelect]);
 
-  // Initialize map
+  // Handle map load event
+  const handleMapLoad = useCallback(() => {
+    setMapLoaded(true);
+  }, []);
+
+  // Set up native MapLibre hover handlers for better performance
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+    const map = mapRef.current?.getMap();
+    if (!map || !mapLoaded) return;
 
-    map.current = new maplibregl.Map({
-      container: mapContainer.current,
-      style: {
-        version: 8,
-        sources: {},
-        layers: [
-          {
-            id: 'background',
-            type: 'background',
-            paint: {
-              'background-color': '#1a2e1a',
-            },
-          },
-        ],
-      },
-      center: [50, 55], // Center on Russia
-      zoom: 3,
-      minZoom: 2,
-      maxZoom: 8,
-    });
-
-    map.current.on('load', () => {
-      if (!map.current) return;
-
-      // Add regions GeoJSON source
-      map.current.addSource('regions', {
-        type: 'geojson',
-        data: '/map/regions.geojson',
-        promoteId: 'shapeISO',
-      });
-
-      // Add fill layer for regions
-      map.current.addLayer({
-        id: 'regions-fill',
-        type: 'fill',
-        source: 'regions',
-        paint: {
-          'fill-color': '#808080',
-          'fill-opacity': [
-            'case',
-            ['boolean', ['feature-state', 'selected'], false],
-            0.9,
-            ['boolean', ['feature-state', 'hover'], false],
-            0.8,
-            ['boolean', ['feature-state', 'adjacent'], false],
-            0.7,
-            0.6,
-          ],
-        },
-      });
-
-      // Add border layer
-      map.current.addLayer({
-        id: 'regions-border',
-        type: 'line',
-        source: 'regions',
-        paint: {
-          'line-color': [
-            'case',
-            ['boolean', ['feature-state', 'selected'], false],
-            '#FFD700',
-            ['boolean', ['feature-state', 'theaterFrontline'], false],
-            '#FF6B35', // Orange for theater frontline
-            ['boolean', ['feature-state', 'hover'], false],
-            '#FFFFFF',
-            '#333333', // Default gray border
-          ],
-          'line-width': [
-            'case',
-            ['boolean', ['feature-state', 'selected'], false],
-            3,
-            ['boolean', ['feature-state', 'theaterFrontline'], false],
-            3, // Wide border for theater frontline
-            ['boolean', ['feature-state', 'hover'], false],
-            2,
-            1,
-          ],
-          'line-dasharray': [
-            'case',
-            ['boolean', ['feature-state', 'theaterFrontline'], false],
-            ['literal', [4, 2]], // Dashed for theater frontline
-            ['literal', [1, 0]], // Solid for others
-          ],
-        },
-      });
-
-      setMapLoaded(true);
-    });
-
-    // Left-click handler - select region or unit, or multi-select with Shift
-    map.current.on('click', 'regions-fill', (e) => {
+    const onMouseMove = (e: MapMouseEvent & { features?: GeoJSON.Feature[] }) => {
       if (e.features && e.features.length > 0) {
         const regionId = e.features[0].properties?.shapeISO;
-        if (regionId) {
-          // If clicking on same region, deselect
-          if (regionId === selectedRegion) {
-            onRegionSelect(null);
-            onUnitSelect(null);
-          } else {
-            onRegionSelect(regionId);
-            // If this region has units owned by player, also select as unit
-            const region = regions[regionId];
-            if (region && region.owner === playerFaction && region.divisions.length > 0) {
-              onUnitSelect(regionId);
-            } else {
-              onUnitSelect(null);
-            }
-          }
-        }
-      }
-    });
-
-    // Right-click handler - move selected unit
-    map.current.on('contextmenu', 'regions-fill', (e) => {
-      e.preventDefault();
-      if (e.features && e.features.length > 0) {
-        const targetRegionId = e.features[0].properties?.shapeISO;
-        const currentSelectedUnit = selectedUnitRegionRef.current;
-        // Check if we have a unit selected and this is an adjacent region
-        if (currentSelectedUnit && targetRegionId && targetRegionId !== currentSelectedUnit) {
-          const adjacentRegions = getAdjacentRegions(adjacencyRef.current, currentSelectedUnit);
-          if (adjacentRegions.includes(targetRegionId)) {
-            const sourceRegion = regionsRef.current[currentSelectedUnit];
-            if (sourceRegion && sourceRegion.divisions.length > 0) {
-              // Move all units (or could use unitsToMove for partial)
-              onMoveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.divisions.length);
-              onUnitSelectRef.current(null);
-            }
-          }
-        }
-      }
-    });
-
-    // Hover handlers
-    map.current.on('mousemove', 'regions-fill', (e) => {
-      if (!map.current) return;
-      map.current.getCanvas().style.cursor = 'pointer';
-
-      if (e.features && e.features.length > 0) {
-        const regionId = e.features[0].properties?.shapeISO;
-        if (regionId && regionId !== hoveredRegionRef.current) {
+        if (regionId && regionId !== hoveredRegionIdRef.current) {
           // Clear previous hover
-          if (hoveredRegionRef.current) {
-            map.current.setFeatureState(
-              { source: 'regions', id: hoveredRegionRef.current },
+          if (hoveredRegionIdRef.current) {
+            map.setFeatureState(
+              { source: 'regions', id: hoveredRegionIdRef.current },
               { hover: false }
             );
           }
           // Set new hover
-          map.current.setFeatureState(
+          map.setFeatureState(
             { source: 'regions', id: regionId },
             { hover: true }
           );
-          hoveredRegionRef.current = regionId;
+          hoveredRegionIdRef.current = regionId;
           setHoveredRegion(regionId);
           onRegionHover?.(regionId);
         }
       }
-    });
+      map.getCanvas().style.cursor = 'pointer';
+    };
 
-    map.current.on('mouseleave', 'regions-fill', () => {
-      if (!map.current) return;
-      map.current.getCanvas().style.cursor = '';
-
-      if (hoveredRegionRef.current) {
-        map.current.setFeatureState(
-          { source: 'regions', id: hoveredRegionRef.current },
+    const onMouseLeave = () => {
+      map.getCanvas().style.cursor = '';
+      if (hoveredRegionIdRef.current) {
+        map.setFeatureState(
+          { source: 'regions', id: hoveredRegionIdRef.current },
           { hover: false }
         );
-        hoveredRegionRef.current = null;
+        hoveredRegionIdRef.current = null;
         setHoveredRegion(null);
         onRegionHover?.(null);
       }
-    });
+    };
 
-    // Add navigation controls
-    map.current.addControl(new maplibregl.NavigationControl(), 'bottom-right');
+    map.on('mousemove', 'regions-fill', onMouseMove);
+    map.on('mouseleave', 'regions-fill', onMouseLeave);
 
     return () => {
-      map.current?.remove();
-      map.current = null;
+      map.off('mousemove', 'regions-fill', onMouseMove);
+      map.off('mouseleave', 'regions-fill', onMouseLeave);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mapLoaded, onRegionHover]);
 
-  // Update region colors based on ownership
-  const updateRegionColors = useCallback(() => {
-    if (!map.current || !mapLoaded) return;
-
-    // Build color expression from regions state
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const colorExpression: any[] = ['match', ['get', 'shapeISO']];
-    
-    for (const [id, region] of Object.entries(regions)) {
-      colorExpression.push(id, FACTION_COLORS[region.owner]);
-    }
-    
-    // Default color for unmatched regions
-    colorExpression.push(FACTION_COLORS.neutral);
-
-    map.current.setPaintProperty('regions-fill', 'fill-color', colorExpression);
-  }, [regions, mapLoaded]);
-
+  // Update feature states for selected regions, hover, and adjacent regions
   useEffect(() => {
-    updateRegionColors();
-  }, [updateRegionColors]);
+    const map = mapRef.current?.getMap();
+    if (!map || !mapLoaded) return;
 
-  // Update selected region state and highlight adjacent regions for unit movement
-  useEffect(() => {
-    if (!map.current || !mapLoaded) return;
+    // Clear all feature states except hover (hover is managed separately)
+    map.removeFeatureState({ source: 'regions' });
 
-    // Clear all feature states first
-    map.current.removeFeatureState({ source: 'regions' });
-
-    // Set theater frontline highlights (lowest priority, rendered first)
+    // Set theater frontline highlights (lowest priority)
     if (selectedTheaterId) {
       const theater = theaters.find(t => t.id === selectedTheaterId);
       if (theater) {
         for (const regionId of theater.frontlineRegions) {
-          map.current.setFeatureState(
+          map.setFeatureState(
             { source: 'regions', id: regionId },
             { theaterFrontline: true }
           );
@@ -379,9 +222,9 @@ export default function GameMap({
       }
     }
 
+    // Set selected region state
     if (selectedRegion) {
-      // Set selected state
-      map.current.setFeatureState(
+      map.setFeatureState(
         { source: 'regions', id: selectedRegion },
         { selected: true }
       );
@@ -389,7 +232,7 @@ export default function GameMap({
       // Highlight adjacent regions
       const adjacent = getAdjacentRegions(adjacency, selectedRegion);
       for (const adjId of adjacent) {
-        map.current.setFeatureState(
+        map.setFeatureState(
           { source: 'regions', id: adjId },
           { adjacent: true }
         );
@@ -400,115 +243,156 @@ export default function GameMap({
     if (selectedUnitRegion && selectedUnitRegion !== selectedRegion) {
       const adjacent = getAdjacentRegions(adjacency, selectedUnitRegion);
       for (const adjId of adjacent) {
-        map.current.setFeatureState(
+        map.setFeatureState(
           { source: 'regions', id: adjId },
           { adjacent: true }
         );
       }
     }
+
+    // Restore hover state if there's a currently hovered region
+    if (hoveredRegionIdRef.current) {
+      map.setFeatureState(
+        { source: 'regions', id: hoveredRegionIdRef.current },
+        { hover: true }
+      );
+    }
   }, [selectedRegion, selectedUnitRegion, adjacency, mapLoaded, selectedTheaterId, theaters]);
 
-  // Update unit markers on the map
-  useEffect(() => {
-    if (!map.current || !mapLoaded || Object.keys(regionCentroids).length === 0) return;
-
-    // Track which markers we need
-    const neededMarkers = new Set<string>();
+  // Build color expression for region fill based on ownership
+  const fillColorExpression = useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const expression: any[] = ['match', ['get', 'shapeISO']];
     
-    // Create or update markers for regions with units
-    for (const [regionId, region] of Object.entries(regions)) {
-      if (region.divisions.length > 0) {
-        neededMarkers.add(regionId);
-        const centroid = regionCentroids[regionId];
-        if (!centroid) continue;
+    for (const [id, region] of Object.entries(regions)) {
+      expression.push(id, FACTION_COLORS[region.owner]);
+    }
+    
+    // Default color for unmatched regions
+    expression.push(FACTION_COLORS.neutral);
+    
+    return expression;
+  }, [regions]);
 
-        const isSelected = selectedUnitRegion === regionId;
-        const isPlayerUnit = region.owner === playerFaction;
-        const existingMarker = markersRef.current.get(regionId);
-        
-        if (existingMarker) {
-          // Update existing marker
-          const el = existingMarker.getElement();
-          const unitCountEl = el.querySelector('.unit-count');
-          if (unitCountEl) {
-            unitCountEl.textContent = String(region.divisions.length);
-          }
-          // Update color based on owner and selection
-          const bgEl = el.querySelector('.unit-bg') as HTMLElement;
-          if (bgEl) {
-            bgEl.style.backgroundColor = FACTION_COLORS[region.owner];
-            bgEl.style.border = isSelected ? '2px solid #22d3ee' : '1px solid rgba(0,0,0,0.5)';
-            bgEl.style.boxShadow = isSelected ? '0 0 10px #22d3ee' : '0 2px 4px rgba(0,0,0,0.3)';
-          }
+  // Build line color expression using feature-state
+  const lineColorExpression = useMemo(() => {
+    return [
+      'case',
+      ['boolean', ['feature-state', 'selected'], false],
+      '#FFD700',
+      ['boolean', ['feature-state', 'theaterFrontline'], false],
+      '#FF6B35',
+      ['boolean', ['feature-state', 'hover'], false],
+      '#FFFFFF',
+      '#333333'
+    ];
+  }, []);
+
+  // Build line width expression using feature-state
+  const lineWidthExpression = useMemo(() => {
+    return [
+      'case',
+      ['boolean', ['feature-state', 'selected'], false],
+      3,
+      ['boolean', ['feature-state', 'theaterFrontline'], false],
+      3,
+      ['boolean', ['feature-state', 'hover'], false],
+      2,
+      1
+    ];
+  }, []);
+
+  // Build opacity expression for fill using feature-state for performance
+  const fillOpacityExpression = useMemo(() => {
+    return [
+      'case',
+      ['boolean', ['feature-state', 'selected'], false],
+      0.9,
+      ['boolean', ['feature-state', 'hover'], false],
+      0.8,
+      ['boolean', ['feature-state', 'adjacent'], false],
+      0.7,
+      0.6
+    ];
+  }, []);
+
+  // Handle left-click on region
+  const handleMapClick = useCallback((e: MapLayerMouseEvent) => {
+    const features = e.features;
+    if (features && features.length > 0) {
+      const regionId = features[0].properties?.shapeISO;
+      if (regionId) {
+        // If clicking on same region, deselect
+        if (regionId === selectedRegion) {
+          onRegionSelect(null);
+          onUnitSelect(null);
         } else {
-          // Create new marker
-          const el = document.createElement('div');
-          el.className = 'unit-marker';
-          const flagUrl = FACTION_FLAGS[region.owner];
-          el.innerHTML = `
-            <div class="unit-bg" style="
-              background-color: ${FACTION_COLORS[region.owner]};
-              border: ${isSelected ? '2px solid #22d3ee' : '1px solid rgba(0,0,0,0.5)'};
-              border-radius: 4px;
-              padding: 2px 6px;
-              display: flex;
-              align-items: center;
-              gap: 4px;
-              box-shadow: ${isSelected ? '0 0 10px #22d3ee' : '0 2px 4px rgba(0,0,0,0.3)'};
-              cursor: ${isPlayerUnit ? 'pointer' : 'default'};
-              transition: all 0.2s ease;
-            ">
-              ${flagUrl ? `<img src="${flagUrl}" alt="${region.owner}" style="width: 16px; height: 11px; object-fit: cover; border: 1px solid rgba(0,0,0,0.3);" />` : '<span style="font-size: 14px;">&#9632;</span>'}
-              <span class="unit-count" style="
-                font-size: 12px;
-                font-weight: bold;
-                color: ${region.owner === 'white' ? '#000' : '#fff'};
-                text-shadow: ${region.owner === 'white' ? 'none' : '1px 1px 1px rgba(0,0,0,0.5)'};
-              ">${region.divisions.length}</span>
-            </div>
-          `;
-          
-          // Make marker clickable to select unit (left-click)
-          el.addEventListener('click', (e) => {
-            e.stopPropagation();
-            onRegionSelect(regionId);
-            if (isPlayerUnit) {
-              onUnitSelect(regionId);
-            }
-          });
-
-          const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
-            .setLngLat(centroid)
-            .addTo(map.current!);
-          
-          markersRef.current.set(regionId, marker);
+          onRegionSelect(regionId);
+          // If this region has units owned by player, also select as unit
+          const region = regions[regionId];
+          if (region && region.owner === playerFaction && region.divisions.length > 0) {
+            onUnitSelect(regionId);
+          } else {
+            onUnitSelect(null);
+          }
         }
       }
     }
+  }, [selectedRegion, regions, playerFaction, onRegionSelect, onUnitSelect]);
 
-    // Remove markers for regions that no longer have units
-    for (const [regionId, marker] of markersRef.current.entries()) {
-      if (!neededMarkers.has(regionId)) {
-        marker.remove();
-        markersRef.current.delete(regionId);
+  // Handle right-click on region (context menu for unit movement)
+  const handleContextMenu = useCallback((e: MapLayerMouseEvent) => {
+    e.preventDefault();
+    const features = e.features;
+    if (features && features.length > 0) {
+      const targetRegionId = features[0].properties?.shapeISO;
+      const currentSelectedUnit = selectedUnitRegionRef.current;
+      
+      // Check if we have a unit selected and this is an adjacent region
+      if (currentSelectedUnit && targetRegionId && targetRegionId !== currentSelectedUnit) {
+        const adjacentRegions = getAdjacentRegions(adjacencyRef.current, currentSelectedUnit);
+        if (adjacentRegions.includes(targetRegionId)) {
+          const sourceRegion = regionsRef.current[currentSelectedUnit];
+          if (sourceRegion && sourceRegion.divisions.length > 0) {
+            // Move all units (or could use unitsToMove for partial)
+            onMoveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.divisions.length);
+            onUnitSelectRef.current(null);
+          }
+        }
       }
     }
-  }, [regions, regionCentroids, mapLoaded, onRegionSelect, onUnitSelect, selectedUnitRegion, playerFaction]);
+  }, []);
 
-  // Update moving unit markers on the map
-  useEffect(() => {
-    if (!map.current || !mapLoaded || Object.keys(regionCentroids).length === 0) return;
+  // Calculate unit markers
+  const unitMarkers = useMemo(() => {
+    return Object.entries(regions)
+      .filter(([, region]) => region.divisions.length > 0)
+      .map(([regionId, region]) => {
+        const centroid = regionCentroids[regionId];
+        if (!centroid) return null;
+        
+        const isSelected = selectedUnitRegion === regionId;
+        const isPlayerUnit = region.owner === playerFaction;
+        const flagUrl = FACTION_FLAGS[region.owner];
+        
+        return {
+          regionId,
+          region,
+          centroid,
+          isSelected,
+          isPlayerUnit,
+          flagUrl,
+        };
+      })
+      .filter(Boolean);
+  }, [regions, regionCentroids, selectedUnitRegion, playerFaction]);
 
-    // Track which moving markers we need
-    const neededMovingMarkers = new Set<string>();
-    
-    // Create or update markers for moving units
-    for (const movement of movingUnits) {
-      neededMovingMarkers.add(movement.id);
-      
+  // Calculate moving unit markers
+  const movingUnitMarkers = useMemo(() => {
+    return movingUnits.map((movement) => {
       const fromCentroid = regionCentroids[movement.fromRegion];
       const toCentroid = regionCentroids[movement.toRegion];
-      if (!fromCentroid || !toCentroid) continue;
+      if (!fromCentroid || !toCentroid) return null;
 
       // Calculate current position based on progress
       const totalTime = movement.arrivalTime.getTime() - movement.departureTime.getTime();
@@ -518,210 +402,368 @@ export default function GameMap({
       const currentLng = fromCentroid[0] + (toCentroid[0] - fromCentroid[0]) * progress;
       const currentLat = fromCentroid[1] + (toCentroid[1] - fromCentroid[1]) * progress;
 
-      const existingMarker = movingMarkersRef.current.get(movement.id);
+      const flagUrl = FACTION_FLAGS[movement.owner];
       
-      if (existingMarker) {
-        // Update position
-        existingMarker.setLngLat([currentLng, currentLat]);
-      } else {
-        // Create new moving marker
-        const el = document.createElement('div');
-        el.className = 'moving-unit-marker';
-        const flagUrl = FACTION_FLAGS[movement.owner];
-        el.innerHTML = `
-          <div style="
-            background-color: ${FACTION_COLORS[movement.owner]};
-            border: 1px dashed #22d3ee;
-            border-radius: 50%;
-            padding: 4px 8px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            box-shadow: 0 0 8px rgba(34, 211, 238, 0.5);
-            animation: pulse 1.5s ease-in-out infinite;
-          ">
-            ${flagUrl ? `<img src="${flagUrl}" alt="${movement.owner}" style="width: 14px; height: 9px; object-fit: cover; border: 1px solid rgba(0,0,0,0.3);" />` : '<span style="font-size: 12px;">&#9632;</span>'}
-            <span style="
-              font-size: 10px;
-              font-weight: bold;
-              color: ${movement.owner === 'white' ? '#000' : '#fff'};
-            ">${movement.divisions.length}</span>
-          </div>
-        `;
+      return {
+        id: movement.id,
+        movement,
+        longitude: currentLng,
+        latitude: currentLat,
+        flagUrl,
+      };
+    }).filter(Boolean);
+  }, [movingUnits, regionCentroids, currentDateTime]);
 
-        const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
-          .setLngLat([currentLng, currentLat])
-          .addTo(map.current!);
-        
-        movingMarkersRef.current.set(movement.id, marker);
-      }
-    }
+  // Calculate combat markers
+  const combatMarkers = useMemo(() => {
+    return activeCombats
+      .filter(combat => !combat.isComplete)
+      .map((combat) => {
+        const centroid = regionCentroids[combat.regionId];
+        if (!centroid || !Array.isArray(centroid) || centroid.length !== 2 || 
+            typeof centroid[0] !== 'number' || typeof centroid[1] !== 'number' ||
+            isNaN(centroid[0]) || isNaN(centroid[1])) {
+          return null;
+        }
 
-    // Remove markers for completed movements
-    for (const [movementId, marker] of movingMarkersRef.current.entries()) {
-      if (!neededMovingMarkers.has(movementId)) {
-        marker.remove();
-        movingMarkersRef.current.delete(movementId);
-      }
-    }
-  }, [movingUnits, regionCentroids, mapLoaded, currentDateTime]);
+        const attackerHp = combat.attackerDivisions.reduce((sum, d) => sum + d.hp, 0);
+        const defenderHp = combat.defenderDivisions.reduce((sum, d) => sum + d.hp, 0);
+        const attackerProgress = combat.initialAttackerHp > 0 
+          ? (attackerHp / combat.initialAttackerHp) * 100 
+          : 0;
+        const defenderProgress = combat.initialDefenderHp > 0 
+          ? (defenderHp / combat.initialDefenderHp) * 100 
+          : 0;
 
-  // Update combat indicator markers on the map
-  useEffect(() => {
-    console.log('Combat markers effect - mapLoaded:', mapLoaded, 'centroid count:', Object.keys(regionCentroids).length, 'combats:', activeCombats.length);
-    if (!map.current || !mapLoaded || Object.keys(regionCentroids).length === 0) return;
+        const attackerColor = FACTION_COLORS[combat.attackerFaction];
+        const defenderColor = FACTION_COLORS[combat.defenderFaction];
+        const attackerTextColor = combat.attackerFaction === 'white' ? '#000' : '#fff';
+        const defenderTextColor = combat.defenderFaction === 'white' ? '#000' : '#fff';
 
-    // Track which combat markers we need
-    const neededCombatMarkers = new Set<string>();
-    
-    // Create or update markers for active combats
-    for (const combat of activeCombats) {
-      if (combat.isComplete) continue;
-      
-      neededCombatMarkers.add(combat.id);
-      
-      const centroid = regionCentroids[combat.regionId];
-      console.log(`Combat ${combat.id} in region ${combat.regionId} - centroid:`, centroid);
-      console.log('Available centroids:', Object.keys(regionCentroids));
-      if (!centroid || !Array.isArray(centroid) || centroid.length !== 2 || 
-          typeof centroid[0] !== 'number' || typeof centroid[1] !== 'number' ||
-          isNaN(centroid[0]) || isNaN(centroid[1])) {
-        console.warn(`Invalid or missing centroid for region ${combat.regionId}:`, centroid);
-        continue;
-      }
+        return {
+          combat,
+          centroid,
+          attackerProgress,
+          defenderProgress,
+          attackerColor,
+          defenderColor,
+          attackerTextColor,
+          defenderTextColor,
+        };
+      })
+      .filter(Boolean);
+  }, [activeCombats, regionCentroids]);
 
-      const attackerHp = combat.attackerDivisions.reduce((sum, d) => sum + d.hp, 0);
-      const defenderHp = combat.defenderDivisions.reduce((sum, d) => sum + d.hp, 0);
-      const attackerProgress = combat.initialAttackerHp > 0 
-        ? (attackerHp / combat.initialAttackerHp) * 100 
-        : 0;
-      const defenderProgress = combat.initialDefenderHp > 0 
-        ? (defenderHp / combat.initialDefenderHp) * 100 
-        : 0;
+  // Memoize mapStyle to prevent unnecessary re-renders
+  const mapStyle = useMemo(() => ({
+    version: 8 as const,
+    sources: {},
+    layers: [
+      {
+        id: 'background',
+        type: 'background' as const,
+        paint: {
+          'background-color': '#1a2e1a',
+        },
+      },
+    ],
+  }), []);
 
-      const attackerColor = FACTION_COLORS[combat.attackerFaction];
-      const defenderColor = FACTION_COLORS[combat.defenderFaction];
-      const attackerTextColor = combat.attackerFaction === 'white' ? '#000' : '#fff';
-      const defenderTextColor = combat.defenderFaction === 'white' ? '#000' : '#fff';
+  // Memoize style object
+  const mapContainerStyle = useMemo(() => ({ 
+    width: '100%', 
+    height: '100%' 
+  }), []);
 
-      const existingMarker = combatMarkersRef.current.get(combat.id);
-      
-      if (existingMarker) {
-        // Update existing marker content
-        const el = existingMarker.getElement();
-        const attackerCountEl = el.querySelector('.attacker-count');
-        const defenderCountEl = el.querySelector('.defender-count');
-        const attackerBarEl = el.querySelector('.attacker-bar') as HTMLElement;
-        const defenderBarEl = el.querySelector('.defender-bar') as HTMLElement;
-        
-        if (attackerCountEl) attackerCountEl.textContent = String(combat.attackerDivisions.length);
-        if (defenderCountEl) defenderCountEl.textContent = String(combat.defenderDivisions.length);
-        if (attackerBarEl) attackerBarEl.style.width = `${attackerProgress}%`;
-        if (defenderBarEl) defenderBarEl.style.width = `${defenderProgress}%`;
-      } else {
-        // Create new combat marker
-        const el = document.createElement('div');
-        // Don't add combat-marker class to the outer element as it would override MapLibre's transform
-        el.style.cursor = 'pointer';
-        el.style.pointerEvents = 'auto';
-        el.innerHTML = `
-          <div class="combat-marker" style="
-            display: flex;
-            align-items: center;
-          ">
-            <!-- Attacker side -->
-            <div style="display: flex; flex-direction: column; align-items: flex-end; margin-right: 2px;">
-              <div style="
-                height: 20px;
-                display: flex;
-                align-items: center;
-                justify-content: flex-end;
-                padding: 0 6px;
-                min-width: 35px;
-                border-radius: 3px 0 0 3px;
-                background-color: ${attackerColor};
-                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-              ">
-                <span class="attacker-count" style="
-                  font-size: 11px;
-                  font-weight: bold;
-                  color: ${attackerTextColor};
-                ">${combat.attackerDivisions.length}</span>
-              </div>
-              <div style="height: 3px; width: 100%; background: rgba(0,0,0,0.5); border-radius: 0 0 0 2px; margin-top: 1px;">
-                <div class="attacker-bar" style="height: 100%; width: ${attackerProgress}%; background: ${attackerColor}; transition: width 0.3s;"></div>
-              </div>
-            </div>
-            
-            <!-- Combat icon -->
-            <div style="
-              width: 24px;
-              height: 24px;
-              border-radius: 50%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              background: radial-gradient(circle, #4a4a4a 0%, #2a2a2a 100%);
-              box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-              border: 2px solid #666;
-              z-index: 10;
-            ">
-              <span style="font-size: 10px; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.5));">&#9876;</span>
-            </div>
-            
-            <!-- Defender side -->
-            <div style="display: flex; flex-direction: column; align-items: flex-start; margin-left: 2px;">
-              <div style="
-                height: 20px;
-                display: flex;
-                align-items: center;
-                justify-content: flex-start;
-                padding: 0 6px;
-                min-width: 35px;
-                border-radius: 0 3px 3px 0;
-                background-color: ${defenderColor};
-                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-              ">
-                <span class="defender-count" style="
-                  font-size: 11px;
-                  font-weight: bold;
-                  color: ${defenderTextColor};
-                ">${combat.defenderDivisions.length}</span>
-              </div>
-              <div style="height: 3px; width: 100%; background: rgba(0,0,0,0.5); border-radius: 0 0 2px 0; margin-top: 1px;">
-                <div class="defender-bar" style="height: 100%; width: ${defenderProgress}%; background: ${defenderColor}; transition: width 0.3s;"></div>
-              </div>
-            </div>
-          </div>
-        `;
-        
-        // Add click handler to open combat popup
-        el.addEventListener('click', (e) => {
-          e.stopPropagation();
-          onSelectCombat(combat.id);
-        });
+  // Memoize interactive layer IDs
+  const interactiveLayerIds = useMemo(() => ['regions-fill'], []);
 
-        const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
-          .setLngLat(centroid)
-          .addTo(map.current!);
-        
-        console.log(`Created marker for combat ${combat.id} at LngLat:`, centroid, 'Element position:', el.style.transform);
-        combatMarkersRef.current.set(combat.id, marker);
-      }
-    }
+  // Memoize paint properties to prevent layer re-creation
+  // MapLibre expressions require complex types that don't match react-map-gl's FillPaint/LinePaint
+  const fillPaint = useMemo(() => ({
+    'fill-color': fillColorExpression,
+    'fill-opacity': fillOpacityExpression,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any), [fillColorExpression, fillOpacityExpression]);
 
-    // Remove markers for completed combats
-    for (const [combatId, marker] of combatMarkersRef.current.entries()) {
-      if (!neededCombatMarkers.has(combatId)) {
-        marker.remove();
-        combatMarkersRef.current.delete(combatId);
-      }
-    }
-  }, [activeCombats, regionCentroids, mapLoaded, onSelectCombat]);
+  const linePaint = useMemo(() => ({
+    'line-color': lineColorExpression,
+    'line-width': lineWidthExpression,
+    'line-dasharray': [
+      'case',
+      ['boolean', ['feature-state', 'theaterFrontline'], false],
+      ['literal', [4, 2]],
+      ['literal', [1, 0]]
+    ],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any), [lineColorExpression, lineWidthExpression]);
 
   return (
     <div className="relative h-full w-full">
-      <div ref={mapContainer} className="h-full w-full" />
+      <Map
+        ref={mapRef}
+        initialViewState={{
+          longitude: 50,
+          latitude: 55,
+          zoom: 3,
+        }}
+        style={mapContainerStyle}
+        mapStyle={mapStyle}
+        minZoom={2}
+        maxZoom={8}
+        interactiveLayerIds={interactiveLayerIds}
+        onClick={handleMapClick}
+        onContextMenu={handleContextMenu}
+        onLoad={handleMapLoad}
+      >
+        {/* Regions GeoJSON source and layers */}
+        <Source
+          id="regions"
+          type="geojson"
+          data="/map/regions.geojson"
+          promoteId="shapeISO"
+        >
+          {/* Fill layer for regions */}
+          <Layer
+            id="regions-fill"
+            type="fill"
+            paint={fillPaint}
+          />
+
+          {/* Border layer */}
+          <Layer
+            id="regions-border"
+            type="line"
+            paint={linePaint}
+          />
+        </Source>
+
+        {/* Unit markers */}
+        {unitMarkers.map((marker) => {
+          if (!marker) return null;
+          const { regionId, region, centroid, isSelected, isPlayerUnit, flagUrl } = marker;
+          
+          return (
+            <Marker
+              key={regionId}
+              longitude={centroid[0]}
+              latitude={centroid[1]}
+              anchor="center"
+              onClick={(e) => {
+                e.originalEvent.stopPropagation();
+                onRegionSelect(regionId);
+                if (isPlayerUnit) {
+                  onUnitSelect(regionId);
+                }
+              }}
+            >
+              <div
+                className="unit-marker"
+                style={{
+                  backgroundColor: FACTION_COLORS[region.owner],
+                  border: isSelected ? '2px solid #22d3ee' : '1px solid rgba(0,0,0,0.5)',
+                  borderRadius: '4px',
+                  padding: '2px 6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  boxShadow: isSelected ? '0 0 10px #22d3ee' : '0 2px 4px rgba(0,0,0,0.3)',
+                  cursor: isPlayerUnit ? 'pointer' : 'default',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {flagUrl ? (
+                  <img
+                    src={flagUrl}
+                    alt={region.owner}
+                    style={{
+                      width: '16px',
+                      height: '11px',
+                      objectFit: 'cover',
+                      border: '1px solid rgba(0,0,0,0.3)',
+                    }}
+                  />
+                ) : (
+                  <span style={{ fontSize: '14px' }}>&#9632;</span>
+                )}
+                <span
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    color: region.owner === 'white' ? '#000' : '#fff',
+                    textShadow: region.owner === 'white' ? 'none' : '1px 1px 1px rgba(0,0,0,0.5)',
+                  }}
+                >
+                  {region.divisions.length}
+                </span>
+              </div>
+            </Marker>
+          );
+        })}
+
+        {/* Moving unit markers */}
+        {movingUnitMarkers.map((marker) => {
+          if (!marker) return null;
+          const { id, movement, longitude, latitude, flagUrl } = marker;
+          
+          return (
+            <Marker
+              key={id}
+              longitude={longitude}
+              latitude={latitude}
+              anchor="center"
+            >
+              <div
+                className="moving-unit-marker"
+                style={{
+                  backgroundColor: FACTION_COLORS[movement.owner],
+                  border: '1px dashed #22d3ee',
+                  borderRadius: '50%',
+                  padding: '4px 8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  boxShadow: '0 0 8px rgba(34, 211, 238, 0.5)',
+                  animation: 'pulse 1.5s ease-in-out infinite',
+                }}
+              >
+                {flagUrl ? (
+                  <img
+                    src={flagUrl}
+                    alt={movement.owner}
+                    style={{
+                      width: '14px',
+                      height: '9px',
+                      objectFit: 'cover',
+                      border: '1px solid rgba(0,0,0,0.3)',
+                    }}
+                  />
+                ) : (
+                  <span style={{ fontSize: '12px' }}>&#9632;</span>
+                )}
+                <span
+                  style={{
+                    fontSize: '10px',
+                    fontWeight: 'bold',
+                    color: movement.owner === 'white' ? '#000' : '#fff',
+                  }}
+                >
+                  {movement.divisions.length}
+                </span>
+              </div>
+            </Marker>
+          );
+        })}
+
+        {/* Combat markers */}
+        {combatMarkers.map((marker) => {
+          if (!marker) return null;
+          const {
+            combat,
+            centroid,
+            attackerProgress,
+            defenderProgress,
+            attackerColor,
+            defenderColor,
+            attackerTextColor,
+            defenderTextColor,
+          } = marker;
+          
+          return (
+            <Marker
+              key={combat.id}
+              longitude={centroid[0]}
+              latitude={centroid[1]}
+              anchor="center"
+              onClick={(e) => {
+                e.originalEvent.stopPropagation();
+                onSelectCombat(combat.id);
+              }}
+            >
+              <div
+                className="combat-marker"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  pointerEvents: 'auto',
+                }}
+              >
+                {/* Attacker side */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginRight: '2px' }}>
+                  <div style={{
+                    height: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-end',
+                    padding: '0 6px',
+                    minWidth: '35px',
+                    borderRadius: '3px 0 0 3px',
+                    backgroundColor: attackerColor,
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                  }}>
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      color: attackerTextColor,
+                    }}>
+                      {combat.attackerDivisions.length}
+                    </span>
+                  </div>
+                  <div style={{ height: '3px', width: '100%', background: 'rgba(0,0,0,0.5)', borderRadius: '0 0 0 2px', marginTop: '1px' }}>
+                    <div style={{ height: '100%', width: `${attackerProgress}%`, background: attackerColor, transition: 'width 0.3s' }}></div>
+                  </div>
+                </div>
+                
+                {/* Combat icon */}
+                <div style={{
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'radial-gradient(circle, #4a4a4a 0%, #2a2a2a 100%)',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
+                  border: '2px solid #666',
+                  zIndex: 10,
+                }}>
+                  <span style={{ fontSize: '10px', filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.5))' }}>&#9876;</span>
+                </div>
+                
+                {/* Defender side */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginLeft: '2px' }}>
+                  <div style={{
+                    height: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    padding: '0 6px',
+                    minWidth: '35px',
+                    borderRadius: '0 3px 3px 0',
+                    backgroundColor: defenderColor,
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                  }}>
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      color: defenderTextColor,
+                    }}>
+                      {combat.defenderDivisions.length}
+                    </span>
+                  </div>
+                  <div style={{ height: '3px', width: '100%', background: 'rgba(0,0,0,0.5)', borderRadius: '0 0 2px 0', marginTop: '1px' }}>
+                    <div style={{ height: '100%', width: `${defenderProgress}%`, background: defenderColor, transition: 'width 0.3s' }}></div>
+                  </div>
+                </div>
+              </div>
+            </Marker>
+          );
+        })}
+
+        {/* Navigation controls */}
+        <NavigationControl position="bottom-right" />
+      </Map>
       
       {/* Region info tooltip - only show when no region is selected */}
       {!selectedRegion && hoveredRegion && regions[hoveredRegion] && (
@@ -955,8 +997,6 @@ export default function GameMap({
           </div>
         </div>
       )}
-
-
     </div>
   );
 }
