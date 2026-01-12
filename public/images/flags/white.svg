@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600">
+  <!-- White background -->
+  <rect width="900" height="600" fill="#FFFFFF"/>
+  
+  <!-- Russian Imperial Eagle (simplified) in black/dark -->
+  <g transform="translate(450, 300)">
+    <!-- Eagle body -->
+    <ellipse cx="0" cy="0" rx="80" ry="100" fill="#1a1a1a"/>
+    
+    <!-- Left wing -->
+    <path d="M -40 -20 Q -120 -40 -180 -10 Q -200 0 -180 20 Q -140 40 -80 30 L -40 10 Z" fill="#1a1a1a"/>
+    
+    <!-- Right wing -->
+    <path d="M 40 -20 Q 120 -40 180 -10 Q 200 0 180 20 Q 140 40 80 30 L 40 10 Z" fill="#1a1a1a"/>
+    
+    <!-- Left head -->
+    <ellipse cx="-50" cy="-80" rx="35" ry="40" fill="#1a1a1a"/>
+    <circle cx="-60" cy="-90" r="8" fill="#FFD700"/>
+    <path d="M -50 -50 L -60 -40 L -40 -40 Z" fill="#FFA500"/>
+    
+    <!-- Right head -->
+    <ellipse cx="50" cy="-80" rx="35" ry="40" fill="#1a1a1a"/>
+    <circle cx="60" cy="-90" r="8" fill="#FFD700"/>
+    <path d="M 50 -50 L 60 -40 L 40 -40 Z" fill="#FFA500"/>
+    
+    <!-- Crown -->
+    <path d="M -30 -120 L 0 -140 L 30 -120 L 20 -110 L -20 -110 Z" fill="#FFD700"/>
+    <circle cx="0" cy="-145" r="8" fill="#FFD700"/>
+    
+    <!-- Legs and talons -->
+    <rect x="-20" y="80" width="15" height="40" fill="#1a1a1a"/>
+    <rect x="5" y="80" width="15" height="40" fill="#1a1a1a"/>
+    <path d="M -20 120 L -35 130 M -10 120 L -10 130 M -5 120 L 0 130" stroke="#1a1a1a" stroke-width="3" fill="none"/>
+    <path d="M 20 120 L 35 130 M 10 120 L 10 130 M 5 120 L 0 130" stroke="#1a1a1a" stroke-width="3" fill="none"/>
+  </g>
+  
+  <!-- Border for visibility -->
+  <rect width="900" height="600" fill="none" stroke="#cccccc" stroke-width="4"/>
+</svg>
