@@ -1,19 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600">
-  <!-- Red background -->
-  <rect width="900" height="600" fill="#CC0000"/>
+  <!-- Historical RSFSR Flag (1918-1937): Plain red with "РСФСР" in gold -->
   
-  <!-- Hammer and Sickle -->
-  <g transform="translate(225, 150)">
-    <!-- Hammer (yellow/gold) -->
-    <path d="M 180 100 L 190 100 L 190 220 L 180 220 Z" fill="#FFD700"/>
-    <path d="M 165 85 L 205 85 L 210 100 L 160 100 Z" fill="#FFD700"/>
-    <path d="M 160 85 L 210 85 L 215 75 L 155 75 Z" fill="#FFD700"/>
-    
-    <!-- Sickle (yellow/gold) -->
-    <path d="M 185 180 Q 140 160 130 120 Q 125 95 135 75 Q 145 60 165 55 L 170 65 Q 155 68 148 80 Q 142 95 145 115 Q 150 145 185 165 Z" fill="#FFD700"/>
-    <path d="M 185 165 L 195 168 L 185 180 Z" fill="#FFD700"/>
-    
-    <!-- Star (optional, for decoration) -->
-    <path transform="translate(85, 30)" d="M 0 -20 L 6 -6 L 21 -6 L 9 3 L 15 17 L 0 8 L -15 17 L -9 3 L -21 -6 L -6 -6 Z" fill="#FFD700"/>
+  <!-- Red background -->
+  <rect width="900" height="600" fill="#DA0000"/>
+  
+  <!-- "РСФСР" text in gold (RSFSR in Cyrillic) -->
+  <g transform="translate(50, 80)">
+    <!-- Р (R) -->
+    <text x="0" y="0" font-family="serif" font-size="80" font-weight="bold" fill="#FFD700">РСФСР</text>
   </g>
 </svg>
