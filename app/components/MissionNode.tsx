@@ -3,6 +3,7 @@
 import { memo } from 'react';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import { Mission } from '../types/game';
+import { formatCondition } from '../utils/missionUtils';
 
 type MissionNodeData = {
   mission: Mission;
@@ -69,6 +70,25 @@ function MissionNode({ data }: NodeProps<MissionNodeType>) {
         <p className="mt-1 text-xs text-stone-400 line-clamp-2">
           {mission.description}
         </p>
+
+        {/* Conditions */}
+        {mission.available && mission.available.length > 0 && !mission.claimed && (
+          <div className="mt-3 space-y-1 border-t border-stone-700/50 pt-2">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
+              Requirements:
+            </p>
+            {mission.available.map((condition, idx) => (
+              <p
+                key={idx}
+                className={`text-[11px] leading-tight ${
+                  mission.completed ? 'text-green-500/70 line-through' : 'text-stone-300'
+                }`}
+              >
+                • {formatCondition(condition)}
+              </p>
+            ))}
+          </div>
+        )}
 
         {/* Reward */}
         <div

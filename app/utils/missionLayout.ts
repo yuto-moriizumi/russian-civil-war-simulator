@@ -3,7 +3,7 @@ import { Node, Edge } from '@xyflow/react';
 import { Mission } from '../types/game';
 
 const NODE_WIDTH = 240; // w-60 in tailwind
-const NODE_HEIGHT = 160; // approximate card height
+const NODE_HEIGHT = 280; // approximate card height with requirements
 
 export type MissionNodeData = {
   mission: Mission;
@@ -22,7 +22,7 @@ export function getLayoutedElements(
   g.setGraph({
     rankdir: 'TB', // Top to bottom
     nodesep: 80, // Horizontal spacing
-    ranksep: 100, // Vertical spacing between rows
+    ranksep: 120, // Vertical spacing between rows
     marginx: 50,
     marginy: 50,
   });
