@@ -420,6 +420,48 @@ export default function GameMap({
       .filter(Boolean);
   }, [activeCombats, regionCentroids]);
 
+  // Memoize mapStyle to prevent unnecessary re-renders
+  const mapStyle = useMemo(() => ({
+    version: 8 as const,
+    sources: {},
+    layers: [
+      {
+        id: 'background',
+        type: 'background' as const,
+        paint: {
+          'background-color': '#1a2e1a',
+        },
+      },
+    ],
+  }), []);
+
+  // Memoize style object
+  const mapContainerStyle = useMemo(() => ({ 
+    width: '100%', 
+    height: '100%' 
+  }), []);
+
+  // Memoize interactive layer IDs
+  const interactiveLayerIds = useMemo(() => ['regions-fill'], []);
+
+  // Memoize paint properties to prevent layer re-creation
+  const fillPaint = useMemo(() => ({
+    'fill-color': fillColorExpression as any,
+    'fill-opacity': fillOpacityExpression as any,
+  }), [fillColorExpression, fillOpacityExpression]);
+
+  const linePaint = useMemo(() => ({
+    'line-color': lineColorExpression as any,
+    'line-width': lineWidthExpression as any,
+    'line-dasharray': (selectedTheaterId && theaters.find(t => t.id === selectedTheaterId)
+      ? ['case',
+          ['in', ['get', 'shapeISO'], ['literal', theaters.find(t => t.id === selectedTheaterId)!.frontlineRegions]],
+          ['literal', [4, 2]],
+          ['literal', [1, 0]]
+        ]
+      : [1, 0]) as any,
+  }), [lineColorExpression, lineWidthExpression, selectedTheaterId, theaters]);
+
   return (
     <div className="relative h-full w-full">
       <Map
@@ -429,24 +471,12 @@ export default function GameMap({
           latitude: 55,
           zoom: 3,
         }}
-        style={{ width: '100%', height: '100%' }}
-        mapStyle={{
-          version: 8,
-          sources: {},
-          layers: [
-            {
-              id: 'background',
-              type: 'background',
-              paint: {
-                'background-color': '#1a2e1a',
-              },
-            },
-          ],
-        }}
+        style={mapContainerStyle}
+        mapStyle={mapStyle}
         minZoom={2}
         maxZoom={8}
         cursor={cursor}
-        interactiveLayerIds={['regions-fill']}
+        interactiveLayerIds={interactiveLayerIds}
         onClick={handleMapClick}
         onContextMenu={handleContextMenu}
         onMouseEnter={handleMouseEnter}
@@ -463,27 +493,14 @@ export default function GameMap({
           <Layer
             id="regions-fill"
             type="fill"
-            paint={{
-              'fill-color': fillColorExpression as any,
-              'fill-opacity': fillOpacityExpression as any,
-            }}
+            paint={fillPaint}
           />
 
           {/* Border layer */}
           <Layer
             id="regions-border"
             type="line"
-            paint={{
-              'line-color': lineColorExpression as any,
-              'line-width': lineWidthExpression as any,
-              'line-dasharray': (selectedTheaterId && theaters.find(t => t.id === selectedTheaterId)
-                ? ['case',
-                    ['in', ['get', 'shapeISO'], ['literal', theaters.find(t => t.id === selectedTheaterId)!.frontlineRegions]],
-                    ['literal', [4, 2]],
-                    ['literal', [1, 0]]
-                  ]
-                : [1, 0]) as any,
-            }}
+            paint={linePaint}
           />
         </Source>
 
