@@ -57,53 +57,52 @@ export default function NotificationToast({
 
   return (
     <div className="fixed bottom-24 right-4 z-50 flex flex-col gap-2 pointer-events-none">
-      {visibleNotifications.map((notification, index) => (
-        <div
-          key={notification.id}
-          className={`
-            pointer-events-auto
-            w-80 rounded-lg border-2 p-4 shadow-2xl
-            animate-slide-in-right
-            ${eventColors[notification.type]}
-          `}
-          style={{
-            animationDelay: `${index * 100}ms`,
-          }}
-        >
-          <div className="flex items-start gap-3">
-            <span className="text-2xl flex-shrink-0">{eventIcons[notification.type]}</span>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="font-bold text-white text-sm leading-tight">
-                  {notification.title}
-                </h3>
-                <button
-                  onClick={() => onDismiss(notification.id)}
-                  className="flex-shrink-0 text-stone-400 hover:text-white transition-colors text-lg leading-none"
-                  title="Dismiss"
-                >
-                  ×
-                </button>
-              </div>
-              <p className="mt-1 text-xs text-stone-200 leading-snug">
-                {notification.description}
-              </p>
-              <div className="mt-2 text-xs text-stone-400">
-                {formatEventTime(notification.timestamp)}
-              </div>
+      {visibleNotifications.map((notification, index) => {
+        // Calculate progress percentage (0-100)
+        const createdAt = new Date(notification.timestamp).getTime();
+        const expiresAt = new Date(notification.expiresAt).getTime();
+        const now = new Date(currentGameTime).getTime();
+        const totalDuration = expiresAt - createdAt;
+        const elapsed = now - createdAt;
+        const progress = Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
+
+        return (
+          <div
+            key={notification.id}
+            className={`
+              pointer-events-auto
+              w-80 rounded-lg border-2 shadow-2xl
+              animate-slide-in-right
+              overflow-hidden
+              ${eventColors[notification.type]}
+            `}
+            style={{
+              animationDelay: `${index * 100}ms`,
+            }}
+          >
+            <div className="flex items-center gap-2 px-3 py-2">
+              <span className="text-xl flex-shrink-0">{eventIcons[notification.type]}</span>
+              <h3 className="flex-1 font-semibold text-white text-sm leading-tight">
+                {notification.title}
+              </h3>
+              <button
+                onClick={() => onDismiss(notification.id)}
+                className="flex-shrink-0 text-stone-400 hover:text-white transition-colors text-xl leading-none"
+                title="Dismiss"
+              >
+                ×
+              </button>
+            </div>
+            {/* Progress bar */}
+            <div className="h-1 bg-black/30">
+              <div 
+                className="h-full bg-white/40 transition-all duration-300"
+                style={{ width: `${100 - progress}%` }}
+              />
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
-}
-
-function formatEventTime(timestamp: Date): string {
-  return new Date(timestamp).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 }

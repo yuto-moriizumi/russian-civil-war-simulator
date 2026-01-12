@@ -21,11 +21,11 @@ export function createGameEvent(
 }
 
 // Helper function to create a notification from a game event
-// Notifications auto-dismiss after 6 game hours
+// Notifications auto-dismiss after 24 game hours
 export function createNotification(
   event: GameEvent,
   currentGameTime: Date,
-  durationHours: number = 6
+  durationHours: number = 24
 ): NotificationItem {
   const expiresAt = new Date(currentGameTime);
   expiresAt.setHours(expiresAt.getHours() + durationHours);
