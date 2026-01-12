@@ -5,7 +5,7 @@ import Map, { MapRef, Source, Layer, Marker, NavigationControl } from 'react-map
 import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import type { MapMouseEvent } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { RegionState, Adjacency, FactionId, Movement, ActiveCombat, Theater } from '../types/game';
+import { RegionState, Adjacency, FactionId, ActiveCombat, Theater } from '../types/game';
 import { FACTION_COLORS, getAdjacentRegions } from '../utils/mapUtils';
 
 // Map faction to flag image URL
@@ -21,9 +21,7 @@ interface GameMapProps {
   adjacency: Adjacency;
   selectedRegion: string | null;
   selectedUnitRegion: string | null;
-  movingUnits: Movement[];
   activeCombats: ActiveCombat[];
-  currentDateTime: Date;
   playerFaction: FactionId;
   unitsInReserve: number;
   theaters: Theater[];
@@ -41,9 +39,7 @@ export default function GameMap({
   adjacency,
   selectedRegion,
   selectedUnitRegion,
-  movingUnits,
   activeCombats,
-  currentDateTime,
   playerFaction,
   unitsInReserve,
   theaters,
