@@ -185,7 +185,9 @@ export default function MainScreen({
             adjacency={adjacency}
             selectedRegion={selectedRegion}
             selectedUnitRegion={selectedUnitRegion}
+            movingUnits={movingUnits}
             activeCombats={activeCombats}
+            currentDateTime={dateTime}
             playerFaction={country.id}
             unitsInReserve={0}
             theaters={theaters}
