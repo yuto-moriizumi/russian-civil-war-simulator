@@ -82,3 +82,14 @@ Other options:
 
 - Use `Ctrl+C` if the process is in the foreground
 - Use `kill <pid>` if you have the specific process ID
+
+## Code Organization
+
+### File Length Guidelines
+
+- TypeScript files should not exceed **400 lines**
+- If a file grows beyond this limit, consider refactoring by:
+  - Extracting related functions into separate modules
+  - Splitting large components into smaller, focused components
+  - Moving utility functions to dedicated utility files
+  - Separating types/interfaces into their own type definition files
