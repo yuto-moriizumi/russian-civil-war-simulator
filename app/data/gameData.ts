@@ -10,13 +10,13 @@ export const countries: Country[] = [
   {
     id: 'soviet',
     name: 'Soviet Russia',
-    flag: '☭',
+    flag: '/images/flags/soviet.svg',
     color: '#CC0000',
   },
   {
     id: 'white',
     name: 'White Army',
-    flag: '🦅',
+    flag: '/images/flags/white.svg',
     color: '#FFFFFF',
   },
 ];

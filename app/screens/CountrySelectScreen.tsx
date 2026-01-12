@@ -42,13 +42,17 @@ export default function CountrySelectScreen({ onSelectCountry, onBack }: Country
             <div className="relative z-10 flex flex-col items-center">
               {/* Flag */}
               <div 
-                className="mb-6 flex h-32 w-32 items-center justify-center rounded-full border-4 text-6xl transition-transform duration-300 group-hover:scale-110"
+                className="mb-6 flex h-32 w-48 items-center justify-center overflow-hidden rounded border-4 transition-transform duration-300 group-hover:scale-110"
                 style={{ 
                   borderColor: country.color,
-                  backgroundColor: country.id === 'soviet' ? '#1a0000' : '#1a1a1a'
+                  backgroundColor: country.id === 'soviet' ? '#1a0000' : '#f5f5f5'
                 }}
               >
-                {country.flag}
+                <img 
+                  src={country.flag} 
+                  alt={`${country.name} flag`}
+                  className="h-full w-full object-cover"
+                />
               </div>
 
               {/* Country name */}

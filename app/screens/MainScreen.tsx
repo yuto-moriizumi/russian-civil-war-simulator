@@ -202,10 +202,14 @@ export default function MainScreen({
         {/* Left Side: Country Info and Resources */}
         <div className="flex items-center gap-4">
           <div 
-            className="flex h-12 w-12 items-center justify-center rounded-lg border-2 text-2xl"
+            className="flex h-12 w-18 items-center justify-center overflow-hidden rounded border-2"
             style={{ borderColor: country.color, backgroundColor: 'rgba(0,0,0,0.5)' }}
           >
-            {country.flag}
+            <img 
+              src={country.flag} 
+              alt={`${country.name} flag`}
+              className="h-full w-full object-cover"
+            />
           </div>
           <div>
             <h1 className="text-lg font-bold text-white">{country.name}</h1>

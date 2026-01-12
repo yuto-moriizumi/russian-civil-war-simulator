@@ -6,6 +6,14 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { RegionState, Adjacency, FactionId, Movement, ActiveCombat, Theater } from '../types/game';
 import { FACTION_COLORS, getAdjacentRegions } from '../utils/mapUtils';
 
+// Map faction to flag image URL
+const FACTION_FLAGS: Record<FactionId, string> = {
+  soviet: '/images/flags/soviet.svg',
+  white: '/images/flags/white.svg',
+  neutral: '',
+  foreign: '',
+};
+
 interface GameMapProps {
   regions: RegionState;
   adjacency: Adjacency;
@@ -436,6 +444,7 @@ export default function GameMap({
           // Create new marker
           const el = document.createElement('div');
           el.className = 'unit-marker';
+          const flagUrl = FACTION_FLAGS[region.owner];
           el.innerHTML = `
             <div class="unit-bg" style="
               background-color: ${FACTION_COLORS[region.owner]};
@@ -449,7 +458,7 @@ export default function GameMap({
               cursor: ${isPlayerUnit ? 'pointer' : 'default'};
               transition: all 0.2s ease;
             ">
-              <span style="font-size: 14px;">&#9632;</span>
+              ${flagUrl ? `<img src="${flagUrl}" alt="${region.owner}" style="width: 16px; height: 11px; object-fit: cover;" />` : '<span style="font-size: 14px;">&#9632;</span>'}
               <span class="unit-count" style="
                 font-size: 12px;
                 font-weight: bold;
@@ -518,6 +527,7 @@ export default function GameMap({
         // Create new moving marker
         const el = document.createElement('div');
         el.className = 'moving-unit-marker';
+        const flagUrl = FACTION_FLAGS[movement.owner];
         el.innerHTML = `
           <div style="
             background-color: ${FACTION_COLORS[movement.owner]};
@@ -530,7 +540,7 @@ export default function GameMap({
             box-shadow: 0 0 8px rgba(34, 211, 238, 0.5);
             animation: pulse 1.5s ease-in-out infinite;
           ">
-            <span style="font-size: 12px;">&#9632;</span>
+            ${flagUrl ? `<img src="${flagUrl}" alt="${movement.owner}" style="width: 14px; height: 9px; object-fit: cover;" />` : '<span style="font-size: 12px;">&#9632;</span>'}
             <span style="
               font-size: 10px;
               font-weight: bold;
