@@ -155,7 +155,7 @@ export default function GameMap({
     const map = mapRef.current?.getMap();
     if (!map || !mapLoaded) return;
 
-    // Clear all feature states
+    // Clear all feature states except hover (hover is managed separately)
     map.removeFeatureState({ source: 'regions' });
 
     // Set theater frontline highlights (lowest priority)
@@ -197,6 +197,14 @@ export default function GameMap({
           { adjacent: true }
         );
       }
+    }
+
+    // Restore hover state if there's a currently hovered region
+    if (hoveredRegionIdRef.current) {
+      map.setFeatureState(
+        { source: 'regions', id: hoveredRegionIdRef.current },
+        { hover: true }
+      );
     }
   }, [selectedRegion, selectedUnitRegion, adjacency, mapLoaded, selectedTheaterId, theaters]);
 
@@ -303,12 +311,11 @@ export default function GameMap({
     }
   }, []);
 
-  // Handle mouse enter/leave for hover state
-  const handleMouseEnter = useCallback((e: any) => {
+  // Handle mouse move for hover state (more performant than mouseenter/leave)
+  const handleMouseMove = useCallback((e: any) => {
     const map = mapRef.current?.getMap();
     if (!map) return;
     
-    setCursor('pointer');
     const features = e.features;
     if (features && features.length > 0) {
       const regionId = features[0].properties?.shapeISO;
@@ -328,6 +335,7 @@ export default function GameMap({
         hoveredRegionIdRef.current = regionId;
         setHoveredRegion(regionId);
         onRegionHover?.(regionId);
+        setCursor('pointer');
       }
     }
   }, [onRegionHover]);
@@ -497,7 +505,7 @@ export default function GameMap({
         interactiveLayerIds={interactiveLayerIds}
         onClick={handleMapClick}
         onContextMenu={handleContextMenu}
-        onMouseEnter={handleMouseEnter}
+        onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onLoad={handleMapLoad}
       >
