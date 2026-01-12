@@ -1,13 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { 
-  GameState, 
-  RegionState, 
-  Adjacency, 
-  AIState, 
-  Screen, 
-  Country, 
-  GameSpeed, 
   FactionId, 
   Movement,
   ActiveCombat,
@@ -15,11 +8,8 @@ import {
   NotificationItem,
   ArmyGroup,
   Division,
-  MissionCondition,
-  Mission,
-  Theater
 } from '../types/game';
-import { initialMissions, GAME_START_DATE } from '../data/gameData';
+import { initialMissions } from '../data/gameData';
 import { calculateFactionIncome } from '../utils/mapUtils';
 import { createInitialAIState, createInitialAIArmyGroup, runAITick } from '../ai/cpuPlayer';
 import { createDivision, createActiveCombat, processCombatRound, shouldProcessCombatRound, validateDivisionArmyGroup } from '../utils/combat';
@@ -28,216 +18,10 @@ import { findBestMoveTowardEnemy } from '../utils/pathfinding';
 import { detectTheaters } from '../utils/theaterDetection';
 import { generateArmyGroupName } from '../utils/armyGroupNaming';
 
-// Predefined colors for army groups
-const ARMY_GROUP_COLORS = [
-  '#3B82F6', // blue
-  '#10B981', // emerald
-  '#F59E0B', // amber
-  '#8B5CF6', // violet
-  '#EC4899', // pink
-  '#06B6D4', // cyan
-  '#F97316', // orange
-  '#84CC16', // lime
-];
-
-/**
- * Evaluates a single mission condition against the current game state
- * @returns true if the condition is met, false otherwise
- */
-function evaluateMissionCondition(
-  condition: MissionCondition,
-  state: {
-    regions: RegionState;
-    money: number;
-    dateTime: Date;
-    gameEvents: GameEvent[];
-    selectedCountry: Country;
-    theaters: Theater[];
-    armyGroups: ArmyGroup[];
-  }
-): boolean {
-  const { regions, money, dateTime, gameEvents, selectedCountry, theaters, armyGroups } = state;
-  const playerFaction = selectedCountry.id;
-
-  switch (condition.type) {
-    case 'controlRegion': {
-      const region = regions[condition.regionId];
-      return region?.owner === playerFaction;
-    }
-    
-    case 'controlRegions': {
-      return condition.regionIds.every(regionId => {
-        const region = regions[regionId];
-        return region?.owner === playerFaction;
-      });
-    }
-    
-    case 'controlRegionCount': {
-      const controlledCount = Object.values(regions).filter(
-        region => region.owner === playerFaction
-      ).length;
-      return controlledCount >= condition.count;
-    }
-    
-    case 'hasUnits': {
-      const totalUnits = Object.values(regions).reduce((acc, region) => {
-        if (region.owner === playerFaction) {
-          return acc + region.divisions.filter(d => d.owner === playerFaction).length;
-        }
-        return acc;
-      }, 0);
-      return totalUnits >= condition.count;
-    }
-    
-    case 'hasMoney': {
-      return money >= condition.amount;
-    }
-    
-    case 'dateAfter': {
-      const targetDate = new Date(condition.date);
-      return dateTime >= targetDate;
-    }
-    
-    case 'combatVictories': {
-      const victories = gameEvents.filter(
-        event => event.type === 'combat_victory' && event.faction === playerFaction
-      ).length;
-      return victories >= condition.count;
-    }
-    
-    case 'enemyRegionCount': {
-      const enemyCount = Object.values(regions).filter(
-        region => region.owner === condition.faction
-      ).length;
-      return enemyCount <= condition.maxCount;
-    }
-    
-    case 'allRegionsControlled': {
-      const countryRegions = Object.values(regions).filter(
-        region => region.countryIso3 === condition.countryIso3
-      );
-      return countryRegions.length > 0 && countryRegions.every(
-        region => region.owner === playerFaction
-      );
-    }
-    
-    case 'theaterExists': {
-      return theaters.some(
-        theater => theater.owner === playerFaction && theater.enemyFaction === condition.enemyFaction
-      );
-    }
-    
-    case 'armyGroupCount': {
-      const playerArmyGroups = armyGroups.filter(g => g.owner === playerFaction);
-      return playerArmyGroups.length >= condition.count;
-    }
-    
-    default:
-      console.warn('Unknown mission condition type:', condition);
-      return false;
-  }
-}
-
-/**
- * Checks if all conditions for a mission are met (AND logic)
- * @returns true if all conditions are met or no conditions exist
- */
-function areMissionConditionsMet(
-  mission: Mission,
-  state: {
-    regions: RegionState;
-    money: number;
-    dateTime: Date;
-    gameEvents: GameEvent[];
-    selectedCountry: Country;
-    theaters: Theater[];
-    armyGroups: ArmyGroup[];
-  }
-): boolean {
-  // If no conditions, mission is always available
-  if (!mission.available || mission.available.length === 0) {
-    return true;
-  }
-  
-  // All conditions must be met (AND logic)
-  return mission.available.every(condition => 
-    evaluateMissionCondition(condition, state)
-  );
-}
-
-interface GameStore extends GameState {
-  // Additional UI State
-  regions: RegionState;
-  adjacency: Adjacency;
-  selectedRegion: string | null;
-  selectedUnitRegion: string | null;
-  mapDataLoaded: boolean;
-  aiState: AIState | null;
-  isEventsModalOpen: boolean;
-  selectedCombatId: string | null;
-  lastSaveTime: Date | null;
-  selectedGroupId: string | null; // Currently selected army group
-  selectedTheaterId: string | null; // Currently selected theater
-
-  // Actions
-  setRegions: (regions: RegionState) => void;
-  setAdjacency: (adjacency: Adjacency) => void;
-  setMapDataLoaded: (loaded: boolean) => void;
-  setSelectedRegion: (regionId: string | null) => void;
-  setSelectedUnitRegion: (regionId: string | null) => void;
-  setIsEventsModalOpen: (isOpen: boolean) => void;
-  setSelectedCombatId: (combatId: string | null) => void;
-  
-  // Notification Actions
-  dismissNotification: (notificationId: string) => void;
-  
-  // Game Control Actions
-  navigateToScreen: (screen: Screen) => void;
-  selectCountry: (country: Country) => void;
-  togglePlay: () => void;
-  setGameSpeed: (speed: GameSpeed) => void;
-  
-  // Game Logic Actions
-  tick: () => void;
-  createInfantry: () => void;
-  deployUnit: () => void;
-  moveUnits: (fromRegion: string, toRegion: string, count: number) => void;
-  claimMission: (missionId: string) => void;
-  openMissions: () => void;
-  
-  // Theater Actions
-  detectAndUpdateTheaters: () => void;
-  selectTheater: (theaterId: string | null) => void;
-  
-  // Army Group Actions
-  createArmyGroup: (name: string, regionIds: string[], theaterId?: string | null) => void;
-  deleteArmyGroup: (groupId: string) => void;
-  renameArmyGroup: (groupId: string, name: string) => void;
-  selectArmyGroup: (groupId: string | null) => void;
-  advanceArmyGroup: (groupId: string) => void;
-  deployToArmyGroup: (groupId: string) => void;
-  
-  // Persistence Actions
-  saveGame: () => void;
-  loadGame: (savedData: { gameState: GameState; regions: RegionState; aiState: AIState | null }) => void;
-}
-
-const initialGameState: GameState = {
-  currentScreen: 'title',
-  selectedCountry: null,
-  dateTime: new Date(GAME_START_DATE),
-  isPlaying: false,
-  gameSpeed: 1,
-  money: 100,
-  income: 0,
-  missions: initialMissions,
-  movingUnits: [],
-  gameEvents: [],
-  notifications: [],
-  activeCombats: [],
-  theaters: [],
-  armyGroups: [],
-};
+// Internal imports
+import { GameStore } from './game/types';
+import { initialGameState, ARMY_GROUP_COLORS } from './game/initialState';
+import { areMissionConditionsMet } from './game/missionHelpers';
 
 export const useGameStore = create<GameStore>()(
   persist(
