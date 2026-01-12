@@ -18,12 +18,12 @@ export default function CombatIndicator({ combat, onClick, isSelected }: CombatI
   const defenderHp = combat.defenderDivisions.reduce((sum, d) => sum + d.hp, 0);
   
   // Calculate progress bars based on HP relative to initial
-  const attackerProgress = combat.initialAttackerHp > 0 
+  const attackerProgress = Math.min(100, combat.initialAttackerHp > 0 
     ? (attackerHp / combat.initialAttackerHp) * 100 
-    : 0;
-  const defenderProgress = combat.initialDefenderHp > 0 
+    : 0);
+  const defenderProgress = Math.min(100, combat.initialDefenderHp > 0 
     ? (defenderHp / combat.initialDefenderHp) * 100 
-    : 0;
+    : 0);
 
   const attackerColor = FACTION_COLORS[combat.attackerFaction];
   const defenderColor = FACTION_COLORS[combat.defenderFaction];

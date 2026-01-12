@@ -16,12 +16,12 @@ export default function CombatPopup({ combat, onClose }: CombatPopupProps) {
   const defenderHp = combat.defenderDivisions.reduce((sum, d) => sum + d.hp, 0);
   
   // Calculate progress bars
-  const attackerHpProgress = combat.initialAttackerHp > 0 
+  const attackerHpProgress = Math.min(100, combat.initialAttackerHp > 0 
     ? (attackerHp / combat.initialAttackerHp) * 100 
-    : 0;
-  const defenderHpProgress = combat.initialDefenderHp > 0 
+    : 0);
+  const defenderHpProgress = Math.min(100, combat.initialDefenderHp > 0 
     ? (defenderHp / combat.initialDefenderHp) * 100 
-    : 0;
+    : 0);
 
   const getFactionName = (faction: FactionId) => {
     switch (faction) {
