@@ -4,6 +4,7 @@ import { createGameEvent, createNotification, getOrdinalSuffix } from '../../uti
 import { generateArmyGroupName } from '../../utils/armyGroupNaming';
 import { ARMY_GROUP_COLORS } from './initialState';
 import { GameStore } from './types';
+import { StoreApi } from 'zustand';
 
 /**
  * Defines actions related to unit creation, deployment, and movement:
@@ -11,7 +12,10 @@ import { GameStore } from './types';
  * - Moving units between regions
  * - Deploying units to army groups
  */
-export const createUnitActions = (set: any, get: () => GameStore) => ({
+export const createUnitActions = (
+  set: StoreApi<GameStore>['setState'],
+  get: StoreApi<GameStore>['getState']
+) => ({
   createInfantry: () => {
     const { money, selectedCountry, dateTime, gameEvents, regions, selectedGroupId, armyGroups, selectedRegion } = get();
     const cost = 10;

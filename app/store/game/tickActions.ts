@@ -11,6 +11,7 @@ import { createActiveCombat, processCombatRound, shouldProcessCombatRound, valid
 import { createGameEvent, createNotification } from '../../utils/eventUtils';
 import { areMissionConditionsMet } from './missionHelpers';
 import { GameStore } from './types';
+import { StoreApi } from 'zustand';
 
 /**
  * Defines the game tick action which runs every game hour
@@ -22,7 +23,10 @@ import { GameStore } from './types';
  * - Mission completion
  * - Theater updates
  */
-export const createTickActions = (set: any, get: () => GameStore) => ({
+export const createTickActions = (
+  set: StoreApi<GameStore>['setState'],
+  get: StoreApi<GameStore>['getState']
+) => ({
   tick: () => {
     const state = get();
     if (!state.isPlaying) return;

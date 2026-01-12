@@ -4,6 +4,7 @@ import { detectTheaters } from '../../utils/theaterDetection';
 import { generateArmyGroupName } from '../../utils/armyGroupNaming';
 import { ARMY_GROUP_COLORS } from './initialState';
 import { GameStore } from './types';
+import { StoreApi } from 'zustand';
 
 /**
  * Defines actions related to army group management:
@@ -12,7 +13,10 @@ import { GameStore } from './types';
  * - Theater detection and updates
  * - Army group advancement (moving all units toward enemy)
  */
-export const createArmyGroupActions = (set: any, get: () => GameStore) => ({
+export const createArmyGroupActions = (
+  set: StoreApi<GameStore>['setState'],
+  get: StoreApi<GameStore>['getState']
+) => ({
   // Theater Actions
   detectAndUpdateTheaters: () => {
     const { regions, adjacency, selectedCountry, theaters, armyGroups } = get();

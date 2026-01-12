@@ -1,9 +1,10 @@
-import { FactionId, Screen, Region, Adjacency } from '../../types/game';
+import { FactionId, Screen, Region, Adjacency, Country, GameSpeed, GameState, RegionState, AIState } from '../../types/game';
 import { initialMissions } from '../../data/gameData';
 import { createInitialAIState, createInitialAIArmyGroup } from '../../ai/cpuPlayer';
 import { createGameEvent, createNotification } from '../../utils/eventUtils';
 import { initialGameState } from './initialState';
 import { GameStore } from './types';
+import { StoreApi } from 'zustand';
 
 /**
  * Defines basic state management actions:
@@ -16,7 +17,10 @@ import { GameStore } from './types';
  * - Mission management
  * - Save/load functionality
  */
-export const createBasicActions = (set: any, get: () => GameStore) => ({
+export const createBasicActions = (
+  set: StoreApi<GameStore>['setState'],
+  get: StoreApi<GameStore>['getState']
+) => ({
   setRegions: (regions: Record<string, Region>) => set({ regions }),
   
   setAdjacency: (adjacency: Adjacency) => set({ adjacency }),
@@ -54,7 +58,7 @@ export const createBasicActions = (set: any, get: () => GameStore) => ({
 
   navigateToScreen: (screen: Screen) => set({ currentScreen: screen }),
   
-  selectCountry: (country: { id: FactionId; name: string; color: string; }) => {
+  selectCountry: (country: Country) => {
     const aiFaction: FactionId = country.id === 'soviet' ? 'white' : 'soviet';
     const factionMissions = initialMissions.filter(m => m.faction === country.id);
     const currentRegions = get().regions;
@@ -82,7 +86,7 @@ export const createBasicActions = (set: any, get: () => GameStore) => ({
 
   togglePlay: () => set((state: GameStore) => ({ isPlaying: !state.isPlaying })),
   
-  setGameSpeed: (speed: number) => set({ gameSpeed: speed }),
+  setGameSpeed: (speed: GameSpeed) => set({ gameSpeed: speed }),
 
   claimMission: (missionId: string) => {
     set((state: GameStore) => {
@@ -139,7 +143,7 @@ export const createBasicActions = (set: any, get: () => GameStore) => ({
     set({ lastSaveTime: new Date() });
   },
 
-  loadGame: (savedData: any) => {
+  loadGame: (savedData: { gameState: GameState; regions: RegionState; aiState: AIState | null }) => {
     set({
       ...savedData.gameState,
       regions: savedData.regions,
