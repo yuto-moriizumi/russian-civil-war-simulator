@@ -485,6 +485,8 @@ export const useGameStore = create<GameStore>()(
                 const updatedCombat = {
                   ...ongoingCombat,
                   attackerDivisions: [...ongoingCombat.attackerDivisions, ...divisions],
+                  initialAttackerHp: ongoingCombat.initialAttackerHp + divisions.reduce((sum, d) => sum + d.hp, 0),
+                  initialAttackerCount: ongoingCombat.initialAttackerCount + divisions.length,
                 };
                 nextCombats[combatIndex] = updatedCombat;
                 
@@ -505,6 +507,8 @@ export const useGameStore = create<GameStore>()(
                 const updatedCombat = {
                   ...ongoingCombat,
                   defenderDivisions: [...ongoingCombat.defenderDivisions, ...divisions],
+                  initialDefenderHp: ongoingCombat.initialDefenderHp + divisions.reduce((sum, d) => sum + d.hp, 0),
+                  initialDefenderCount: ongoingCombat.initialDefenderCount + divisions.length,
                 };
                 nextCombats[combatIndex] = updatedCombat;
                 

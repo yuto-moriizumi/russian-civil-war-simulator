@@ -429,12 +429,12 @@ export default function GameMap({
 
         const attackerHp = combat.attackerDivisions.reduce((sum, d) => sum + d.hp, 0);
         const defenderHp = combat.defenderDivisions.reduce((sum, d) => sum + d.hp, 0);
-        const attackerProgress = combat.initialAttackerHp > 0 
+        const attackerProgress = Math.min(100, combat.initialAttackerHp > 0 
           ? (attackerHp / combat.initialAttackerHp) * 100 
-          : 0;
-        const defenderProgress = combat.initialDefenderHp > 0 
+          : 0);
+        const defenderProgress = Math.min(100, combat.initialDefenderHp > 0 
           ? (defenderHp / combat.initialDefenderHp) * 100 
-          : 0;
+          : 0);
 
         const attackerColor = FACTION_COLORS[combat.attackerFaction];
         const defenderColor = FACTION_COLORS[combat.defenderFaction];
@@ -711,7 +711,7 @@ export default function GameMap({
                       {combat.attackerDivisions.length}
                     </span>
                   </div>
-                  <div style={{ height: '3px', width: '100%', background: 'rgba(0,0,0,0.5)', borderRadius: '0 0 0 2px', marginTop: '1px' }}>
+                  <div style={{ height: '3px', width: '100%', background: 'rgba(0,0,0,0.5)', borderRadius: '0 0 0 2px', marginTop: '1px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${attackerProgress}%`, background: attackerColor, transition: 'width 0.3s' }}></div>
                   </div>
                 </div>
@@ -753,7 +753,7 @@ export default function GameMap({
                       {combat.defenderDivisions.length}
                     </span>
                   </div>
-                  <div style={{ height: '3px', width: '100%', background: 'rgba(0,0,0,0.5)', borderRadius: '0 0 2px 0', marginTop: '1px' }}>
+                  <div style={{ height: '3px', width: '100%', background: 'rgba(0,0,0,0.5)', borderRadius: '0 0 2px 0', marginTop: '1px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${defenderProgress}%`, background: defenderColor, transition: 'width 0.3s' }}></div>
                   </div>
                 </div>
