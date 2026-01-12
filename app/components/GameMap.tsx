@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
@@ -11,7 +10,6 @@ import { FACTION_COLORS, getAdjacentRegions } from '../utils/mapUtils';
 import { useRegionCentroids } from './GameMap/mapHooks';
 import { UnitMarker, MovingUnitMarker, CombatMarker } from './GameMap/MapMarkers';
 import { RegionTooltip, RegionInfoPanel } from './GameMap/RegionPanels';
-import { FACTION_FLAGS } from './GameMap/mapConstants';
 
 interface GameMapProps {
   regions: RegionState;

@@ -2,7 +2,7 @@
 'use client';
 
 import { Marker } from 'react-map-gl/maplibre';
-import { Region, FactionId, Movement, ActiveCombat } from '../../types/game';
+import { Region, Movement, ActiveCombat } from '../../types/game';
 import { FACTION_COLORS } from '../../utils/mapUtils';
 import { FACTION_FLAGS } from './mapConstants';
 
