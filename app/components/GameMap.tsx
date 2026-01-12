@@ -60,9 +60,11 @@ export default function GameMap({
   const adjacencyRef = useRef<Adjacency>(adjacency);
   const onMoveUnitsRef = useRef(onMoveUnits);
   const onUnitSelectRef = useRef(onUnitSelect);
+  const hoveredRegionIdRef = useRef<string | null>(null);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
   const [regionCentroids, setRegionCentroids] = useState<Record<string, [number, number]>>({});
   const [cursor, setCursor] = useState<string>('');
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   // Calculate centroid of a polygon
   const calculateCentroid = (coordinates: number[][][]): [number, number] => {
@@ -143,6 +145,61 @@ export default function GameMap({
     onUnitSelectRef.current = onUnitSelect;
   }, [onUnitSelect]);
 
+  // Handle map load event
+  const handleMapLoad = useCallback(() => {
+    setMapLoaded(true);
+  }, []);
+
+  // Update feature states for selected regions, hover, and adjacent regions
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map || !mapLoaded) return;
+
+    // Clear all feature states
+    map.removeFeatureState({ source: 'regions' });
+
+    // Set theater frontline highlights (lowest priority)
+    if (selectedTheaterId) {
+      const theater = theaters.find(t => t.id === selectedTheaterId);
+      if (theater) {
+        for (const regionId of theater.frontlineRegions) {
+          map.setFeatureState(
+            { source: 'regions', id: regionId },
+            { theaterFrontline: true }
+          );
+        }
+      }
+    }
+
+    // Set selected region state
+    if (selectedRegion) {
+      map.setFeatureState(
+        { source: 'regions', id: selectedRegion },
+        { selected: true }
+      );
+
+      // Highlight adjacent regions
+      const adjacent = getAdjacentRegions(adjacency, selectedRegion);
+      for (const adjId of adjacent) {
+        map.setFeatureState(
+          { source: 'regions', id: adjId },
+          { adjacent: true }
+        );
+      }
+    }
+
+    // If a unit is selected, also highlight adjacent regions for movement
+    if (selectedUnitRegion && selectedUnitRegion !== selectedRegion) {
+      const adjacent = getAdjacentRegions(adjacency, selectedUnitRegion);
+      for (const adjId of adjacent) {
+        map.setFeatureState(
+          { source: 'regions', id: adjId },
+          { adjacent: true }
+        );
+      }
+    }
+  }, [selectedRegion, selectedUnitRegion, adjacency, mapLoaded, selectedTheaterId, theaters]);
+
   // Build color expression for region fill based on ownership
   const fillColorExpression = useMemo(() => {
     const expression: any[] = ['match', ['get', 'shapeISO']];
@@ -157,111 +214,47 @@ export default function GameMap({
     return expression;
   }, [regions]);
 
-  // Build line color expression for region borders
+  // Build line color expression using feature-state
   const lineColorExpression = useMemo(() => {
-    const conditions: any[] = [];
-    
-    // Selected region
-    if (selectedRegion) {
-      conditions.push(['==', ['get', 'shapeISO'], selectedRegion], '#FFD700');
-    }
-    
-    // Theater frontline
-    if (selectedTheaterId) {
-      const theater = theaters.find(t => t.id === selectedTheaterId);
-      if (theater && theater.frontlineRegions.length > 0) {
-        conditions.push(
-          ['in', ['get', 'shapeISO'], ['literal', theater.frontlineRegions]],
-          '#FF6B35'
-        );
-      }
-    }
-    
-    // Hovered region
-    if (hoveredRegion) {
-      conditions.push(['==', ['get', 'shapeISO'], hoveredRegion], '#FFFFFF');
-    }
-    
-    // If no conditions, return simple value
-    if (conditions.length === 0) {
-      return '#333333';
-    }
-    
-    // Default color
-    return ['case', ...conditions, '#333333'];
-  }, [selectedRegion, hoveredRegion, selectedTheaterId, theaters]);
+    return [
+      'case',
+      ['boolean', ['feature-state', 'selected'], false],
+      '#FFD700',
+      ['boolean', ['feature-state', 'theaterFrontline'], false],
+      '#FF6B35',
+      ['boolean', ['feature-state', 'hover'], false],
+      '#FFFFFF',
+      '#333333'
+    ];
+  }, []);
 
-  // Build line width expression
+  // Build line width expression using feature-state
   const lineWidthExpression = useMemo(() => {
-    const conditions: any[] = [];
-    
-    // Selected region or theater frontline
-    if (selectedRegion) {
-      conditions.push(['==', ['get', 'shapeISO'], selectedRegion], 3);
-    }
-    
-    if (selectedTheaterId) {
-      const theater = theaters.find(t => t.id === selectedTheaterId);
-      if (theater && theater.frontlineRegions.length > 0) {
-        conditions.push(
-          ['in', ['get', 'shapeISO'], ['literal', theater.frontlineRegions]],
-          3
-        );
-      }
-    }
-    
-    // Hovered region
-    if (hoveredRegion) {
-      conditions.push(['==', ['get', 'shapeISO'], hoveredRegion], 2);
-    }
-    
-    // If no conditions, return simple value
-    if (conditions.length === 0) {
-      return 1;
-    }
-    
-    // Default width
-    return ['case', ...conditions, 1];
-  }, [selectedRegion, hoveredRegion, selectedTheaterId, theaters]);
+    return [
+      'case',
+      ['boolean', ['feature-state', 'selected'], false],
+      3,
+      ['boolean', ['feature-state', 'theaterFrontline'], false],
+      3,
+      ['boolean', ['feature-state', 'hover'], false],
+      2,
+      1
+    ];
+  }, []);
 
-  // Build opacity expression for fill
+  // Build opacity expression for fill using feature-state for performance
   const fillOpacityExpression = useMemo(() => {
-    const conditions: any[] = [];
-    
-    // Selected region
-    if (selectedRegion) {
-      conditions.push(['==', ['get', 'shapeISO'], selectedRegion], 0.9);
-    }
-    
-    // Hovered region
-    if (hoveredRegion) {
-      conditions.push(['==', ['get', 'shapeISO'], hoveredRegion], 0.8);
-    }
-    
-    // Adjacent regions to selected unit or region
-    const adjacentRegionIds = new Set<string>();
-    if (selectedRegion) {
-      getAdjacentRegions(adjacency, selectedRegion).forEach(id => adjacentRegionIds.add(id));
-    }
-    if (selectedUnitRegion && selectedUnitRegion !== selectedRegion) {
-      getAdjacentRegions(adjacency, selectedUnitRegion).forEach(id => adjacentRegionIds.add(id));
-    }
-    
-    if (adjacentRegionIds.size > 0) {
-      conditions.push(
-        ['in', ['get', 'shapeISO'], ['literal', Array.from(adjacentRegionIds)]],
-        0.7
-      );
-    }
-    
-    // If no conditions, return simple value
-    if (conditions.length === 0) {
-      return 0.6;
-    }
-    
-    // Build case expression with conditions and default
-    return ['case', ...conditions, 0.6];
-  }, [selectedRegion, hoveredRegion, selectedUnitRegion, adjacency]);
+    return [
+      'case',
+      ['boolean', ['feature-state', 'selected'], false],
+      0.9,
+      ['boolean', ['feature-state', 'hover'], false],
+      0.8,
+      ['boolean', ['feature-state', 'adjacent'], false],
+      0.7,
+      0.6
+    ];
+  }, []);
 
   // Handle left-click on region
   const handleMapClick = useCallback((e: any) => {
@@ -312,11 +305,27 @@ export default function GameMap({
 
   // Handle mouse enter/leave for hover state
   const handleMouseEnter = useCallback((e: any) => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    
     setCursor('pointer');
     const features = e.features;
     if (features && features.length > 0) {
       const regionId = features[0].properties?.shapeISO;
-      if (regionId) {
+      if (regionId && regionId !== hoveredRegionIdRef.current) {
+        // Clear previous hover
+        if (hoveredRegionIdRef.current) {
+          map.setFeatureState(
+            { source: 'regions', id: hoveredRegionIdRef.current },
+            { hover: false }
+          );
+        }
+        // Set new hover
+        map.setFeatureState(
+          { source: 'regions', id: regionId },
+          { hover: true }
+        );
+        hoveredRegionIdRef.current = regionId;
         setHoveredRegion(regionId);
         onRegionHover?.(regionId);
       }
@@ -324,7 +333,17 @@ export default function GameMap({
   }, [onRegionHover]);
 
   const handleMouseLeave = useCallback(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    
     setCursor('');
+    if (hoveredRegionIdRef.current) {
+      map.setFeatureState(
+        { source: 'regions', id: hoveredRegionIdRef.current },
+        { hover: false }
+      );
+      hoveredRegionIdRef.current = null;
+    }
     setHoveredRegion(null);
     onRegionHover?.(null);
   }, [onRegionHover]);
@@ -453,14 +472,13 @@ export default function GameMap({
   const linePaint = useMemo(() => ({
     'line-color': lineColorExpression as any,
     'line-width': lineWidthExpression as any,
-    'line-dasharray': (selectedTheaterId && theaters.find(t => t.id === selectedTheaterId)
-      ? ['case',
-          ['in', ['get', 'shapeISO'], ['literal', theaters.find(t => t.id === selectedTheaterId)!.frontlineRegions]],
-          ['literal', [4, 2]],
-          ['literal', [1, 0]]
-        ]
-      : [1, 0]) as any,
-  }), [lineColorExpression, lineWidthExpression, selectedTheaterId, theaters]);
+    'line-dasharray': [
+      'case',
+      ['boolean', ['feature-state', 'theaterFrontline'], false],
+      ['literal', [4, 2]],
+      ['literal', [1, 0]]
+    ] as any,
+  }), [lineColorExpression, lineWidthExpression]);
 
   return (
     <div className="relative h-full w-full">
@@ -481,6 +499,7 @@ export default function GameMap({
         onContextMenu={handleContextMenu}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onLoad={handleMapLoad}
       >
         {/* Regions GeoJSON source and layers */}
         <Source
