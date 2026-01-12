@@ -1,4 +1,4 @@
-import { AIState, FactionId, RegionState, Region, Division, ActiveCombat, Movement } from '../types/game';
+import { AIState, FactionId, RegionState, Region, Division, ActiveCombat, Movement, ArmyGroup } from '../types/game';
 import { createDivision } from '../utils/combat';
 import { calculateFactionIncome } from '../utils/mapUtils';
 
@@ -51,6 +51,7 @@ export interface AIActions {
   divisionsCreated: number;
   deployments: { regionId: string; divisions: Division[] }[];
   updatedAIState: AIState;
+  newArmyGroup?: ArmyGroup; // New army group created by AI if needed
 }
 
 /**
@@ -58,12 +59,12 @@ export interface AIActions {
  * - Earns income based on controlled regions (using region values/weights) minus unit maintenance costs
  * - Creates divisions if it has enough money and deploys them immediately to random owned regions
  * 
- * @param aiArmyGroupId - The ID of the AI's default army group (e.g., 'ai-general-reserve')
+ * @param armyGroups - All army groups in the game
  */
 export function runAITick(
   aiState: AIState,
   regions: RegionState,
-  aiArmyGroupId: string,
+  armyGroups: ArmyGroup[],
   activeCombats: ActiveCombat[] = [],
   movingUnits: Movement[] = []
 ): AIActions {
@@ -76,7 +77,28 @@ export function runAITick(
   // 2. Earn income
   money += income;
   
-  // 3. Create divisions and deploy them immediately
+  // 3. Find or create an army group for the AI
+  let aiArmyGroup = armyGroups.find(g => g.owner === factionId);
+  let newArmyGroup: ArmyGroup | undefined = undefined;
+  
+  if (!aiArmyGroup) {
+    // Create a default AI army group
+    const ownedRegions = getOwnedRegions(regions, factionId);
+    const ownedRegionIds = ownedRegions.map(r => r.id);
+    
+    newArmyGroup = {
+      id: `ai-army-group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      name: `${factionId === 'soviet' ? 'Soviet' : 'White'} Army Group`,
+      regionIds: ownedRegionIds,
+      color: '#6B7280',
+      owner: factionId,
+      theaterId: null,
+    };
+    
+    aiArmyGroup = newArmyGroup;
+  }
+  
+  // 4. Create divisions and deploy them immediately
   const deployments: { regionId: string; divisions: Division[] }[] = [];
   const ownedRegions = getOwnedRegions(regions, factionId);
   
@@ -98,17 +120,18 @@ export function runAITick(
         money,
         income,
       },
+      newArmyGroup,
     };
   }
   
   while (money >= DIVISION_COST) {
     money -= DIVISION_COST;
     
-    // Create division assigned to AI's default army group
+    // Create division assigned to AI's army group
     const newDivision = createDivision(
       factionId,
       generateAIDivisionName(factionId, regions),
-      aiArmyGroupId
+      aiArmyGroup.id
     );
     
     // Deploy to random region
@@ -137,5 +160,6 @@ export function runAITick(
       money,
       income,
     },
+    newArmyGroup,
   };
 }

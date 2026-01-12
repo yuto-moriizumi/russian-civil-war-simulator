@@ -24,22 +24,19 @@ export function validateDivisionArmyGroup(
   if (!armyGroup) {
     console.warn(`Division ${division.id} (${division.name}) is assigned to non-existent army group ${division.armyGroupId}`);
     
-    // Try to find a valid general reserve army group for this division's owner
-    const generalReserve = armyGroups.find(g => 
-      g.owner === division.owner && 
-      (g.id.includes('general-reserve') || g.name.toLowerCase().includes('general reserve'))
-    );
+    // Try to find any valid army group for this division's owner
+    const anyValidGroup = armyGroups.find(g => g.owner === division.owner);
     
-    if (generalReserve) {
-      console.log(`Auto-fixing: Reassigning division ${division.id} to ${generalReserve.id}`);
+    if (anyValidGroup) {
+      console.log(`Auto-fixing: Reassigning division ${division.id} to ${anyValidGroup.id} (${anyValidGroup.name})`);
       return {
-        division: { ...division, armyGroupId: generalReserve.id },
+        division: { ...division, armyGroupId: anyValidGroup.id },
         isValid: true,
         wasFixed: true
       };
     }
     
-    console.error(`Cannot auto-fix: No general reserve found for faction ${division.owner}`);
+    console.error(`Cannot auto-fix: No army group found for faction ${division.owner}`);
     return { division, isValid: false, wasFixed: false };
   }
   

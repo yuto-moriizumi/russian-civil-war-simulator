@@ -150,26 +150,6 @@ export const useGameStore = create<GameStore>()(
         const aiFaction: FactionId = country.id === 'soviet' ? 'white' : 'soviet';
         const factionMissions = initialMissions.filter(m => m.faction === country.id);
         
-        // Create a default "General Reserve" army group for divisions not assigned to specific groups
-        const defaultArmyGroup: ArmyGroup = {
-          id: 'default-general-reserve',
-          name: 'General Reserve',
-          regionIds: [], // General reserve can deploy to any owned region
-          color: '#6B7280', // Gray color for default group
-          owner: country.id,
-          theaterId: null,
-        };
-        
-        // Create a default AI army group
-        const aiDefaultArmyGroup: ArmyGroup = {
-          id: 'ai-general-reserve',
-          name: 'AI General Reserve',
-          regionIds: [],
-          color: '#6B7280',
-          owner: aiFaction,
-          theaterId: null,
-        };
-        
         // Reset all game state for a fresh start
         set({
           ...initialGameState,
@@ -177,7 +157,7 @@ export const useGameStore = create<GameStore>()(
           currentScreen: 'main',
           missions: factionMissions,
           aiState: createInitialAIState(aiFaction),
-          armyGroups: [defaultArmyGroup, aiDefaultArmyGroup], // Start with default army groups for player and AI
+          armyGroups: [], // Start with no army groups
           // Keep the regions and adjacency from map data (these are static)
           regions: get().regions,
           adjacency: get().adjacency,
@@ -198,38 +178,6 @@ export const useGameStore = create<GameStore>()(
 
         const { dateTime, selectedCountry, regions, movingUnits, activeCombats, money, aiState, gameEvents, armyGroups } = state;
         
-        // Ensure required army groups exist
-        let updatedArmyGroups = armyGroups;
-        const aiFaction: FactionId = selectedCountry?.id === 'soviet' ? 'white' : 'soviet';
-        
-        // Check if ai-general-reserve exists
-        if (!armyGroups.find(g => g.id === 'ai-general-reserve')) {
-          console.warn('ai-general-reserve army group missing, recreating it');
-          const aiReserve: ArmyGroup = {
-            id: 'ai-general-reserve',
-            name: 'AI General Reserve',
-            regionIds: [],
-            color: '#6B7280',
-            owner: aiFaction,
-            theaterId: null,
-          };
-          updatedArmyGroups = [...armyGroups, aiReserve];
-        }
-        
-        // Check if default-general-reserve exists
-        if (!armyGroups.find(g => g.id === 'default-general-reserve') && selectedCountry) {
-          console.warn('default-general-reserve army group missing, recreating it');
-          const defaultReserve: ArmyGroup = {
-            id: 'default-general-reserve',
-            name: 'General Reserve',
-            regionIds: [],
-            color: '#6B7280',
-            owner: selectedCountry.id,
-            theaterId: null,
-          };
-          updatedArmyGroups = [...updatedArmyGroups, defaultReserve];
-        }
-        
         // Validate and auto-repair divisions with invalid army groups (development mode)
         let updatedRegions = regions;
         let updatedMovingUnits = movingUnits;
@@ -242,7 +190,7 @@ export const useGameStore = create<GameStore>()(
           
           Object.entries(regions).forEach(([regionId, region]) => {
             region.divisions.forEach((division, divIndex) => {
-              const result = validateDivisionArmyGroup(division, updatedArmyGroups);
+              const result = validateDivisionArmyGroup(division, armyGroups);
               if (result.wasFixed) {
                 regionFixes.push({ regionId, divisionIndex: divIndex, newDivision: result.division });
                 needsUpdate = true;
@@ -252,7 +200,7 @@ export const useGameStore = create<GameStore>()(
           
           movingUnits.forEach((movement, movIndex) => {
             movement.divisions.forEach((division, divIndex) => {
-              const result = validateDivisionArmyGroup(division, updatedArmyGroups);
+              const result = validateDivisionArmyGroup(division, armyGroups);
               if (result.wasFixed) {
                 movementFixes.push({ movementIndex: movIndex, divisionIndex: divIndex, newDivision: result.division });
                 needsUpdate = true;
@@ -457,9 +405,15 @@ export const useGameStore = create<GameStore>()(
 
         // AI Tick
         let nextAIState = aiState;
+        let nextArmyGroups = armyGroups;
         if (aiState) {
-          const aiActions = runAITick(aiState, nextRegions, 'ai-general-reserve', nextCombats, remainingMovements);
+          const aiActions = runAITick(aiState, nextRegions, armyGroups, nextCombats, remainingMovements);
           nextAIState = aiActions.updatedAIState;
+          
+          // If AI created a new army group, add it
+          if (aiActions.newArmyGroup) {
+            nextArmyGroups = [...armyGroups, aiActions.newArmyGroup];
+          }
           
           if (aiActions.deployments.length > 0) {
             aiActions.deployments.forEach(deployment => {
@@ -482,7 +436,7 @@ export const useGameStore = create<GameStore>()(
           regions: nextRegions,
           gameEvents: nextEvents,
           aiState: nextAIState,
-          armyGroups: updatedArmyGroups,
+          armyGroups: nextArmyGroups,
         });
         
         // Update theaters after regions change
@@ -496,6 +450,7 @@ export const useGameStore = create<GameStore>()(
         if (money >= cost && selectedCountry) {
           // Find deployment target
           let deploymentTarget: string | null = null;
+          let targetGroupId: string | null = selectedGroupId;
           
           // Priority 1: If an army group is selected, deploy to it
           if (selectedGroupId) {
@@ -534,15 +489,35 @@ export const useGameStore = create<GameStore>()(
           }
           
           // Determine which army group this division belongs to
-          let targetGroupId = selectedGroupId;
           if (!targetGroupId) {
-            // Find the default "General Reserve" group
-            const defaultGroup = armyGroups.find(g => g.id === 'default-general-reserve');
-            if (!defaultGroup) {
-              console.warn('No default army group found - this should not happen');
-              return;
+            // If no army group is selected, we need to create one or find one
+            // Check if there are any existing army groups for this player
+            const playerArmyGroups = armyGroups.filter(g => g.owner === selectedCountry.id);
+            
+            if (playerArmyGroups.length === 0) {
+              // No army groups exist, create a default one automatically
+              const newGroupId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+              const ownedRegions = Object.keys(regions).filter(id => regions[id].owner === selectedCountry.id);
+              const newGroup: ArmyGroup = {
+                id: newGroupId,
+                name: generateArmyGroupName(armyGroups, selectedCountry.id),
+                regionIds: ownedRegions,
+                color: ARMY_GROUP_COLORS[0],
+                owner: selectedCountry.id,
+                theaterId: null,
+              };
+              
+              set({ armyGroups: [...armyGroups, newGroup], selectedGroupId: newGroupId });
+              targetGroupId = newGroupId;
+            } else {
+              // Use the first available player army group
+              targetGroupId = playerArmyGroups[0].id;
             }
-            targetGroupId = defaultGroup.id;
+          }
+          
+          if (!targetGroupId) {
+            console.warn('No army group available for new division');
+            return;
           }
           
           // Count existing divisions to generate unique name
