@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import Map, { MapRef, Source, Layer, Marker, NavigationControl } from 'react-map-gl/maplibre';
-import type { LayerProps } from 'react-map-gl/maplibre';
+import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
+import type { MapMouseEvent } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { RegionState, Adjacency, FactionId, Movement, ActiveCombat, Theater } from '../types/game';
 import { FACTION_COLORS, getAdjacentRegions } from '../utils/mapUtils';
@@ -63,7 +64,6 @@ export default function GameMap({
   const hoveredRegionIdRef = useRef<string | null>(null);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
   const [regionCentroids, setRegionCentroids] = useState<Record<string, [number, number]>>({});
-  const [cursor, setCursor] = useState<string>('');
   const [mapLoaded, setMapLoaded] = useState(false);
 
   // Calculate centroid of a polygon
@@ -155,7 +155,7 @@ export default function GameMap({
     const map = mapRef.current?.getMap();
     if (!map || !mapLoaded) return;
 
-    const onMouseMove = (e: any) => {
+    const onMouseMove = (e: MapMouseEvent & { features?: GeoJSON.Feature[] }) => {
       if (e.features && e.features.length > 0) {
         const regionId = e.features[0].properties?.shapeISO;
         if (regionId && regionId !== hoveredRegionIdRef.current) {
@@ -261,6 +261,7 @@ export default function GameMap({
 
   // Build color expression for region fill based on ownership
   const fillColorExpression = useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const expression: any[] = ['match', ['get', 'shapeISO']];
     
     for (const [id, region] of Object.entries(regions)) {
@@ -316,7 +317,7 @@ export default function GameMap({
   }, []);
 
   // Handle left-click on region
-  const handleMapClick = useCallback((e: any) => {
+  const handleMapClick = useCallback((e: MapLayerMouseEvent) => {
     const features = e.features;
     if (features && features.length > 0) {
       const regionId = features[0].properties?.shapeISO;
@@ -340,7 +341,7 @@ export default function GameMap({
   }, [selectedRegion, regions, playerFaction, onRegionSelect, onUnitSelect]);
 
   // Handle right-click on region (context menu for unit movement)
-  const handleContextMenu = useCallback((e: any) => {
+  const handleContextMenu = useCallback((e: MapLayerMouseEvent) => {
     e.preventDefault();
     const features = e.features;
     if (features && features.length > 0) {
@@ -365,7 +366,7 @@ export default function GameMap({
   // Calculate unit markers
   const unitMarkers = useMemo(() => {
     return Object.entries(regions)
-      .filter(([_, region]) => region.divisions.length > 0)
+      .filter(([, region]) => region.divisions.length > 0)
       .map(([regionId, region]) => {
         const centroid = regionCentroids[regionId];
         if (!centroid) return null;
@@ -478,21 +479,24 @@ export default function GameMap({
   const interactiveLayerIds = useMemo(() => ['regions-fill'], []);
 
   // Memoize paint properties to prevent layer re-creation
+  // MapLibre expressions require complex types that don't match react-map-gl's FillPaint/LinePaint
   const fillPaint = useMemo(() => ({
-    'fill-color': fillColorExpression as any,
-    'fill-opacity': fillOpacityExpression as any,
-  }), [fillColorExpression, fillOpacityExpression]);
+    'fill-color': fillColorExpression,
+    'fill-opacity': fillOpacityExpression,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any), [fillColorExpression, fillOpacityExpression]);
 
   const linePaint = useMemo(() => ({
-    'line-color': lineColorExpression as any,
-    'line-width': lineWidthExpression as any,
+    'line-color': lineColorExpression,
+    'line-width': lineWidthExpression,
     'line-dasharray': [
       'case',
       ['boolean', ['feature-state', 'theaterFrontline'], false],
       ['literal', [4, 2]],
       ['literal', [1, 0]]
-    ] as any,
-  }), [lineColorExpression, lineWidthExpression]);
+    ],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any), [lineColorExpression, lineWidthExpression]);
 
   return (
     <div className="relative h-full w-full">
@@ -507,7 +511,6 @@ export default function GameMap({
         mapStyle={mapStyle}
         minZoom={2}
         maxZoom={8}
-        cursor={cursor}
         interactiveLayerIds={interactiveLayerIds}
         onClick={handleMapClick}
         onContextMenu={handleContextMenu}
