@@ -243,7 +243,6 @@ export default function MainScreen({
               onClick={() => setShowTreasuryDetails(!showTreasuryDetails)}
               className="rounded-lg border border-amber-600/50 bg-stone-800/80 px-4 py-2 transition-colors hover:bg-stone-800"
             >
-              <div className="text-xs text-stone-400">Treasury</div>
               <div className="flex items-center gap-2">
                 <span className="text-lg font-bold text-amber-400">${money}</span>
                 <span className={`text-xs ${income >= 0 ? "text-green-400" : "text-red-400"}`}>
