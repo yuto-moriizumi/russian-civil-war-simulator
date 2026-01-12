@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, ActiveCombat, ArmyGroup, Theater } from '../types/game';
+import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, NotificationItem, ActiveCombat, ArmyGroup, Theater } from '../types/game';
 import SpeedControl from '../components/SpeedControl';
 import CombatPopup from '../components/CombatPopup';
 import EventsModal from '../components/EventsModal';
 import TheaterPanel from '../components/TheaterPanel';
+import NotificationToast from '../components/NotificationToast';
 import { countFactionUnits } from '../utils/mapUtils';
 
 // Dynamic import for GameMap to avoid SSR issues with MapLibre
@@ -35,6 +36,7 @@ interface MainScreenProps {
   selectedUnitRegion: string | null;
   mapDataLoaded: boolean;
   gameEvents: GameEvent[];
+  notifications: NotificationItem[];
   // Theater and Army Groups props
   theaters: Theater[];
   armyGroups: ArmyGroup[];
@@ -55,6 +57,7 @@ interface MainScreenProps {
   selectedCombatId: string | null;
   isEventsModalOpen: boolean;
   onCloseEvents: () => void;
+  onDismissNotification: (notificationId: string) => void;
   // Theater and Army Groups action props
   onSelectTheater: (theaterId: string | null) => void;
   onCreateArmyGroup: (name: string, regionIds: string[], theaterId?: string | null) => void;
@@ -81,6 +84,7 @@ export default function MainScreen({
   selectedUnitRegion,
   mapDataLoaded,
   gameEvents,
+  notifications,
   theaters,
   armyGroups,
   selectedGroupId,
@@ -100,6 +104,7 @@ export default function MainScreen({
   selectedCombatId,
   isEventsModalOpen,
   onCloseEvents,
+  onDismissNotification,
   onSelectTheater,
   onCreateArmyGroup,
   onDeleteArmyGroup,
@@ -352,6 +357,13 @@ export default function MainScreen({
         isOpen={isEventsModalOpen}
         onClose={onCloseEvents}
         events={gameEvents}
+      />
+
+      {/* Notification Toasts */}
+      <NotificationToast
+        notifications={notifications}
+        currentGameTime={dateTime}
+        onDismiss={onDismissNotification}
       />
     </div>
   );

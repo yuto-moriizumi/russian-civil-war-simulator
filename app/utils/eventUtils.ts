@@ -1,4 +1,4 @@
-import { FactionId, GameEvent, GameEventType } from '../types/game';
+import { FactionId, GameEvent, GameEventType, NotificationItem } from '../types/game';
 
 // Helper function to create game events
 export function createGameEvent(
@@ -17,6 +17,22 @@ export function createGameEvent(
     timestamp: new Date(timestamp),
     faction,
     regionId,
+  };
+}
+
+// Helper function to create a notification from a game event
+// Notifications auto-dismiss after 6 game hours
+export function createNotification(
+  event: GameEvent,
+  currentGameTime: Date,
+  durationHours: number = 6
+): NotificationItem {
+  const expiresAt = new Date(currentGameTime);
+  expiresAt.setHours(expiresAt.getHours() + durationHours);
+  
+  return {
+    ...event,
+    expiresAt,
   };
 }
 

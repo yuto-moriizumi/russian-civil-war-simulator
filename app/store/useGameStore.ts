@@ -12,6 +12,7 @@ import {
   Movement,
   ActiveCombat,
   GameEvent,
+  NotificationItem,
   ArmyGroup,
   Division
 } from '../types/game';
@@ -19,7 +20,7 @@ import { initialMissions, GAME_START_DATE } from '../data/gameData';
 import { calculateFactionIncome } from '../utils/mapUtils';
 import { createInitialAIState, runAITick } from '../ai/cpuPlayer';
 import { createDivision, createActiveCombat, processCombatRound, shouldProcessCombatRound, validateDivisionArmyGroup } from '../utils/combat';
-import { createGameEvent, getOrdinalSuffix } from '../utils/eventUtils';
+import { createGameEvent, createNotification, getOrdinalSuffix } from '../utils/eventUtils';
 import { findBestMoveTowardEnemy } from '../utils/pathfinding';
 import { detectTheaters } from '../utils/theaterDetection';
 import { generateArmyGroupName } from '../utils/armyGroupNaming';
@@ -58,6 +59,9 @@ interface GameStore extends GameState {
   setSelectedUnitRegion: (regionId: string | null) => void;
   setIsEventsModalOpen: (isOpen: boolean) => void;
   setSelectedCombatId: (combatId: string | null) => void;
+  
+  // Notification Actions
+  dismissNotification: (notificationId: string) => void;
   
   // Game Control Actions
   navigateToScreen: (screen: Screen) => void;
@@ -101,6 +105,7 @@ const initialGameState: GameState = {
   missions: initialMissions,
   movingUnits: [],
   gameEvents: [],
+  notifications: [],
   activeCombats: [],
   theaters: [],
   armyGroups: [],
@@ -143,6 +148,13 @@ export const useGameStore = create<GameStore>()(
       setSelectedUnitRegion: (regionId) => set({ selectedUnitRegion: regionId }),
       setIsEventsModalOpen: (isOpen) => set({ isEventsModalOpen: isOpen }),
       setSelectedCombatId: (combatId) => set({ selectedCombatId: combatId }),
+
+      dismissNotification: (notificationId) => {
+        const { notifications } = get();
+        set({ 
+          notifications: notifications.filter(n => n.id !== notificationId) 
+        });
+      },
 
       navigateToScreen: (screen) => set({ currentScreen: screen }),
       
@@ -196,7 +208,7 @@ export const useGameStore = create<GameStore>()(
         const state = get();
         if (!state.isPlaying) return;
 
-        const { dateTime, selectedCountry, regions, movingUnits, activeCombats, money, aiState, gameEvents, armyGroups } = state;
+        const { dateTime, selectedCountry, regions, movingUnits, activeCombats, money, aiState, gameEvents, notifications, armyGroups } = state;
         
         // Ensure required army groups exist
         let updatedArmyGroups = armyGroups;
@@ -322,6 +334,7 @@ export const useGameStore = create<GameStore>()(
         const updatedCombats: ActiveCombat[] = [];
         const finishedCombats: ActiveCombat[] = [];
         const newCombatEvents: GameEvent[] = [];
+        const newCombatNotifications: NotificationItem[] = [];
 
         activeCombats.forEach(combat => {
           if (combat.isComplete) {
@@ -342,14 +355,17 @@ export const useGameStore = create<GameStore>()(
               const attackerLosses = updatedCombat.initialAttackerCount - updatedCombat.attackerDivisions.length;
               const defenderLosses = updatedCombat.initialDefenderCount - updatedCombat.defenderDivisions.length;
               
-              newCombatEvents.push(createGameEvent(
+              const combatEvent = createGameEvent(
                 attackerWon ? 'region_captured' : 'combat_defeat',
                 attackerWon ? `${updatedCombat.regionName} Captured!` : `Battle for ${updatedCombat.regionName} Lost`,
                 `${updatedCombat.attackerFaction === 'soviet' ? 'Soviet' : 'White'} forces ${attackerWon ? 'captured' : 'failed to capture'} ${updatedCombat.regionName}. Attackers lost ${attackerLosses} divisions. Defenders lost ${defenderLosses} divisions.`,
                 newDate,
                 updatedCombat.attackerFaction,
                 updatedCombat.regionId
-              ));
+              );
+              
+              newCombatEvents.push(combatEvent);
+              newCombatNotifications.push(createNotification(combatEvent, newDate));
             } else {
               updatedCombats.push(updatedCombat);
             }
@@ -362,6 +378,7 @@ export const useGameStore = create<GameStore>()(
         const nextRegions = { ...updatedRegions };
         const nextCombats = [...updatedCombats];
         const nextEvents = [...gameEvents, ...newCombatEvents];
+        const nextNotifications = [...notifications, ...newCombatNotifications];
 
         // Apply Movements
         completedMovements.forEach(movement => {
@@ -382,14 +399,16 @@ export const useGameStore = create<GameStore>()(
                 owner: owner,
                 divisions: divisions,
               };
-              nextEvents.push(createGameEvent(
+              const captureEvent = createGameEvent(
                 'region_captured',
                 `${to.name} Captured!`,
                 `${owner === 'soviet' ? 'Soviet' : 'White'} forces captured the undefended region of ${to.name}.`,
                 newDate,
                 owner,
                 toRegion
-              ));
+              );
+              nextEvents.push(captureEvent);
+              nextNotifications.push(createNotification(captureEvent, newDate));
             } else {
               const newCombat = createActiveCombat(
                 toRegion,
@@ -402,14 +421,16 @@ export const useGameStore = create<GameStore>()(
               );
               nextCombats.push(newCombat);
               nextRegions[toRegion] = { ...to, divisions: [] };
-              nextEvents.push(createGameEvent(
+              const battleEvent = createGameEvent(
                 'combat_victory',
                 `Battle for ${to.name} Begins!`,
                 `${owner === 'soviet' ? 'Soviet' : 'White'} forces (${divisions.length} divisions) are attacking ${to.owner === 'soviet' ? 'Soviet' : 'White'} defenders (${defenderDivisions.length} divisions) at ${to.name}.`,
                 newDate,
                 owner,
                 toRegion
-              ));
+              );
+              nextEvents.push(battleEvent);
+              nextNotifications.push(createNotification(battleEvent, newDate));
             }
           }
         });
@@ -481,6 +502,7 @@ export const useGameStore = create<GameStore>()(
           activeCombats: nextCombats,
           regions: nextRegions,
           gameEvents: nextEvents,
+          notifications: nextNotifications,
           aiState: nextAIState,
           armyGroups: updatedArmyGroups,
         });
@@ -563,6 +585,9 @@ export const useGameStore = create<GameStore>()(
             deploymentTarget
           );
 
+          // Create notification that expires after 6 game hours
+          const newNotification = createNotification(newEvent, dateTime);
+
           const newRegions = {
             ...regions,
             [deploymentTarget]: {
@@ -575,6 +600,7 @@ export const useGameStore = create<GameStore>()(
             money: money - cost,
             regions: newRegions,
             gameEvents: [...gameEvents, newEvent],
+            notifications: [...get().notifications, newNotification],
           });
         }
       },
@@ -625,23 +651,28 @@ export const useGameStore = create<GameStore>()(
           const mission = state.missions.find(m => m.id === missionId);
           if (mission && mission.completed && !mission.claimed) {
             const events = [...state.gameEvents];
+            const notifs = [...state.notifications];
             
-            events.push(createGameEvent(
+            const claimEvent = createGameEvent(
               'mission_claimed',
               `Mission Completed: ${mission.name}`,
               `Reward of $${mission.rewards.money} claimed for completing "${mission.name}".`,
               state.dateTime,
               state.selectedCountry?.id
-            ));
+            );
+            events.push(claimEvent);
+            notifs.push(createNotification(claimEvent, state.dateTime));
             
             if (mission.rewards.gameVictory) {
-              events.push(createGameEvent(
+              const victoryEvent = createGameEvent(
                 'game_victory',
                 'Victory!',
                 `${state.selectedCountry?.name} has achieved total victory in the Russian Civil War!`,
                 state.dateTime,
                 state.selectedCountry?.id
-              ));
+              );
+              events.push(victoryEvent);
+              notifs.push(createNotification(victoryEvent, state.dateTime));
             }
             
             return {
@@ -650,6 +681,7 @@ export const useGameStore = create<GameStore>()(
                 m.id === missionId ? { ...m, claimed: true } : m
               ),
               gameEvents: events,
+              notifications: notifs,
             };
           }
           return state;
@@ -885,6 +917,9 @@ export const useGameStore = create<GameStore>()(
           deploymentTarget
         );
 
+        // Create notification that expires after 6 game hours
+        const newNotification = createNotification(newEvent, dateTime);
+
         const newRegions = {
           ...regions,
           [deploymentTarget]: {
@@ -897,6 +932,7 @@ export const useGameStore = create<GameStore>()(
           money: money - cost,
           regions: newRegions,
           gameEvents: [...gameEvents, newEvent],
+          notifications: [...get().notifications, newNotification],
         });
       },
 

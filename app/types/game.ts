@@ -91,6 +91,10 @@ export interface GameEvent {
   regionId?: string;
 }
 
+export interface NotificationItem extends GameEvent {
+  expiresAt: Date; // Game time when this notification should be dismissed
+}
+
 export interface GameState {
   currentScreen: Screen;
   selectedCountry: Country | null;
@@ -102,6 +106,7 @@ export interface GameState {
   missions: Mission[];
   movingUnits: Movement[];
   gameEvents: GameEvent[];
+  notifications: NotificationItem[]; // Active notifications (auto-dismiss after 6 game hours)
   activeCombats: ActiveCombat[]; // Ongoing battles
   theaters: Theater[]; // Auto-detected theaters for the player
   armyGroups: ArmyGroup[]; // Player's army groups for bulk movement
