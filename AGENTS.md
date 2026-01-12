@@ -60,17 +60,27 @@ All API methods log warnings to the console when operations fail. Use `browser_c
 
 ## Development Server
 
-When starting a dev server, use `$RANDOM` for the PORT number to avoid port conflicts with other worktrees or parallel sessions:
+When starting a dev server, use a specific port range and echo it so you can capture the value. Always wait for the server to be ready before proceeding to browser actions. Use the following pattern to ensure observability and readiness:
 
 ```bash
-PORT=$RANDOM npm run dev
+# Pick a port, echo it for visibility, and start in background
+PORT=$((3000 + RANDOM % 1000)); echo "STARTING_PORT=$PORT"; PORT=$PORT npm run dev &
+
+# Wait for the server to be ready (up to 60s)
+timeout 60s bash -c "until lsof -i :$PORT -t >/dev/null; do sleep 1; done" && echo "Server is ready at http://localhost:$PORT"
 ```
 
 ## Process Management
 
 **Do NOT use `pkill -f node` or similar broad kill commands.** This can terminate unrelated Node.js processes running on the system, including other development servers or tools.
 
-Instead, to stop a development server:
-- Use `Ctrl+C` in the terminal where it's running
-- Use `kill <pid>` with the specific process ID if needed
-- Use `lsof -i :<port>` to find the specific process using a port, then kill that specific PID
+Instead, to stop a development server, use the port number you identified:
+
+```bash
+# Safely kill only the process on your specific port
+kill $(lsof -t -i :$PORT)
+```
+
+Other options:
+- Use `Ctrl+C` if the process is in the foreground
+- Use `kill <pid>` if you have the specific process ID
