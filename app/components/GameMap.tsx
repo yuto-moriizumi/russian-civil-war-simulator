@@ -387,33 +387,6 @@ export default function GameMap({
       .filter(Boolean);
   }, [regions, regionCentroids, selectedUnitRegion, playerFaction]);
 
-  // Calculate moving unit markers
-  const movingUnitMarkers = useMemo(() => {
-    return movingUnits.map((movement) => {
-      const fromCentroid = regionCentroids[movement.fromRegion];
-      const toCentroid = regionCentroids[movement.toRegion];
-      if (!fromCentroid || !toCentroid) return null;
-
-      // Calculate current position based on progress
-      const totalTime = movement.arrivalTime.getTime() - movement.departureTime.getTime();
-      const elapsed = currentDateTime.getTime() - movement.departureTime.getTime();
-      const progress = Math.min(1, Math.max(0, elapsed / totalTime));
-      
-      const currentLng = fromCentroid[0] + (toCentroid[0] - fromCentroid[0]) * progress;
-      const currentLat = fromCentroid[1] + (toCentroid[1] - fromCentroid[1]) * progress;
-
-      const flagUrl = FACTION_FLAGS[movement.owner];
-      
-      return {
-        id: movement.id,
-        movement,
-        longitude: currentLng,
-        latitude: currentLat,
-        flagUrl,
-      };
-    }).filter(Boolean);
-  }, [movingUnits, regionCentroids, currentDateTime]);
-
   // Calculate combat markers
   const combatMarkers = useMemo(() => {
     return activeCombats
@@ -595,60 +568,6 @@ export default function GameMap({
                   }}
                 >
                   {region.divisions.length}
-                </span>
-              </div>
-            </Marker>
-          );
-        })}
-
-        {/* Moving unit markers */}
-        {movingUnitMarkers.map((marker) => {
-          if (!marker) return null;
-          const { id, movement, longitude, latitude, flagUrl } = marker;
-          
-          return (
-            <Marker
-              key={id}
-              longitude={longitude}
-              latitude={latitude}
-              anchor="center"
-            >
-              <div
-                className="moving-unit-marker"
-                style={{
-                  backgroundColor: FACTION_COLORS[movement.owner],
-                  border: '1px dashed #22d3ee',
-                  borderRadius: '50%',
-                  padding: '4px 8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  boxShadow: '0 0 8px rgba(34, 211, 238, 0.5)',
-                  animation: 'pulse 1.5s ease-in-out infinite',
-                }}
-              >
-                {flagUrl ? (
-                  <img
-                    src={flagUrl}
-                    alt={movement.owner}
-                    style={{
-                      width: '14px',
-                      height: '9px',
-                      objectFit: 'cover',
-                      border: '1px solid rgba(0,0,0,0.3)',
-                    }}
-                  />
-                ) : (
-                  <span style={{ fontSize: '12px' }}>&#9632;</span>
-                )}
-                <span
-                  style={{
-                    fontSize: '10px',
-                    fontWeight: 'bold',
-                    color: movement.owner === 'white' ? '#000' : '#fff',
-                  }}
-                >
-                  {movement.divisions.length}
                 </span>
               </div>
             </Marker>
@@ -963,40 +882,7 @@ export default function GameMap({
         </div>
       )}
 
-      {/* Moving units indicator */}
-      {movingUnits.length > 0 && (
-        <div className="absolute right-4 bottom-16 z-10 rounded-lg border border-blue-500 bg-stone-900/95 p-3 min-w-[200px]">
-          <div className="text-sm font-bold text-blue-400 mb-2">
-            Units in Transit ({movingUnits.length})
-          </div>
-          <div className="max-h-40 overflow-y-auto space-y-2">
-            {movingUnits.map((movement) => {
-              const fromRegion = regions[movement.fromRegion];
-              const toRegion = regions[movement.toRegion];
-              const totalTime = movement.arrivalTime.getTime() - movement.departureTime.getTime();
-              const elapsed = currentDateTime.getTime() - movement.departureTime.getTime();
-              const progress = Math.min(100, Math.max(0, (elapsed / totalTime) * 100));
-              
-              return (
-                <div key={movement.id} className="rounded bg-stone-800 p-2">
-                  <div className="text-xs text-stone-300">
-                    {movement.divisions.length} unit(s): {fromRegion?.name || movement.fromRegion} → {toRegion?.name || movement.toRegion}
-                  </div>
-                  <div className="mt-1 h-1 bg-stone-700 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-blue-500 transition-all duration-500"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  <div className="text-xs text-stone-500 mt-1">
-                    Arrives: {movement.arrivalTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
