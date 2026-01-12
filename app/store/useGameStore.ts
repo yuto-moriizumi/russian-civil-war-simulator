@@ -18,7 +18,7 @@ import {
 } from '../types/game';
 import { initialMissions, GAME_START_DATE } from '../data/gameData';
 import { calculateFactionIncome } from '../utils/mapUtils';
-import { createInitialAIState, runAITick } from '../ai/cpuPlayer';
+import { createInitialAIState, createInitialAIArmyGroup, runAITick } from '../ai/cpuPlayer';
 import { createDivision, createActiveCombat, processCombatRound, shouldProcessCombatRound, validateDivisionArmyGroup } from '../utils/combat';
 import { createGameEvent, createNotification, getOrdinalSuffix } from '../utils/eventUtils';
 import { findBestMoveTowardEnemy } from '../utils/pathfinding';
@@ -161,6 +161,10 @@ export const useGameStore = create<GameStore>()(
       selectCountry: (country) => {
         const aiFaction: FactionId = country.id === 'soviet' ? 'white' : 'soviet';
         const factionMissions = initialMissions.filter(m => m.faction === country.id);
+        const currentRegions = get().regions;
+        
+        // Create initial AI army group
+        const initialAIArmyGroup = createInitialAIArmyGroup(aiFaction, currentRegions);
         
         // Reset all game state for a fresh start
         set({
@@ -169,7 +173,7 @@ export const useGameStore = create<GameStore>()(
           currentScreen: 'main',
           missions: factionMissions,
           aiState: createInitialAIState(aiFaction),
-          armyGroups: [], // Start with no army groups
+          armyGroups: [initialAIArmyGroup], // Initialize with AI army group
           // Keep the regions and adjacency from map data (these are static)
           regions: get().regions,
           adjacency: get().adjacency,

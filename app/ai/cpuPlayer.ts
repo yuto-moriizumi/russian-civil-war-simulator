@@ -17,6 +17,23 @@ export function createInitialAIState(factionId: FactionId): AIState {
 }
 
 /**
+ * Creates initial AI army group for a faction
+ */
+export function createInitialAIArmyGroup(factionId: FactionId, regions: RegionState): ArmyGroup {
+  const ownedRegions = getOwnedRegions(regions, factionId);
+  const ownedRegionIds = ownedRegions.map(r => r.id);
+  
+  return {
+    id: `ai-army-group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    name: `${factionId === 'soviet' ? 'Soviet' : 'White'} Army Group`,
+    regionIds: ownedRegionIds,
+    color: '#6B7280',
+    owner: factionId,
+    theaterId: null,
+  };
+}
+
+/**
  * Get all regions owned by a faction
  */
 function getOwnedRegions(regions: RegionState, factionId: FactionId): Region[] {

@@ -45,8 +45,8 @@ export default function TheaterPanel({
   const [editingName, setEditingName] = useState('');
 
   const theaterGroups = selectedTheaterId 
-    ? armyGroups.filter(g => g.theaterId === selectedTheaterId)
-    : armyGroups.filter(g => g.theaterId === null);
+    ? armyGroups.filter(g => g.theaterId === selectedTheaterId && g.owner === playerFaction)
+    : armyGroups.filter(g => g.theaterId === null && g.owner === playerFaction);
 
   const handleStartRename = (group: ArmyGroup) => {
     setEditingGroupId(group.id);
