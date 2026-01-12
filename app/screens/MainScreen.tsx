@@ -115,6 +115,8 @@ export default function MainScreen({
 }: MainScreenProps) {
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);
   const [isArmyGroupsPanelExpanded, setIsArmyGroupsPanelExpanded] = useState(true);
+  const [showTreasuryDetails, setShowTreasuryDetails] = useState(false);
+  const treasuryRef = useRef<HTMLDivElement>(null);
   
   // Store lastSaveTime in a ref to compare and trigger indicator
   const prevSaveTimeRef = useRef<Date | null>(null);
@@ -132,6 +134,20 @@ export default function MainScreen({
       return () => clearTimeout(timer);
     }
   }, [lastSaveTime]);
+
+  // Close treasury details when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (treasuryRef.current && !treasuryRef.current.contains(event.target as Node)) {
+        setShowTreasuryDetails(false);
+      }
+    };
+
+    if (showTreasuryDetails) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showTreasuryDetails]);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -222,18 +238,50 @@ export default function MainScreen({
           </div>
 
           {/* Resources */}
-          <div className="rounded-lg border border-amber-600/50 bg-stone-800/80 px-4 py-2">
-            <div className="text-xs text-stone-400">Treasury</div>
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-amber-400">${money}</span>
-              <div className="flex flex-col text-xs">
-                <span className="text-green-400">+${grossIncome}/h</span>
-                <span className="text-red-400">-${maintenanceCost}/h ({unitCount} units)</span>
-                <span className={income >= 0 ? "text-green-400 font-semibold" : "text-red-400 font-semibold"}>
-                  {income >= 0 ? '+' : ''}${income}/h net
+          <div className="relative" ref={treasuryRef}>
+            <button
+              onClick={() => setShowTreasuryDetails(!showTreasuryDetails)}
+              className="rounded-lg border border-amber-600/50 bg-stone-800/80 px-4 py-2 transition-colors hover:bg-stone-800"
+            >
+              <div className="text-xs text-stone-400">Treasury</div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-bold text-amber-400">${money}</span>
+                <span className={`text-xs ${income >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  {income >= 0 ? '+' : ''}${income}/h
                 </span>
               </div>
-            </div>
+            </button>
+
+            {/* Treasury Details Tooltip */}
+            {showTreasuryDetails && (
+              <div className="absolute left-0 top-full mt-2 z-20 w-64 rounded-lg border border-amber-600/50 bg-stone-900/95 p-3 shadow-xl">
+                <div className="text-xs text-stone-400 mb-2">Treasury Details</div>
+                <div className="flex flex-col gap-1 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-stone-300">Current Balance:</span>
+                    <span className="font-bold text-amber-400">${money}</span>
+                  </div>
+                  <div className="border-t border-stone-700 my-1"></div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-green-400">Gross Income:</span>
+                    <span className="text-green-400">+${grossIncome}/h</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-red-400">Maintenance:</span>
+                    <span className="text-red-400">-${maintenanceCost}/h ({unitCount} units)</span>
+                  </div>
+                  <div className="border-t border-stone-700 my-1"></div>
+                  <div className="flex items-center justify-between">
+                    <span className={income >= 0 ? "text-green-400 font-semibold" : "text-red-400 font-semibold"}>
+                      Net Income:
+                    </span>
+                    <span className={income >= 0 ? "text-green-400 font-semibold" : "text-red-400 font-semibold"}>
+                      {income >= 0 ? '+' : ''}${income}/h
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
