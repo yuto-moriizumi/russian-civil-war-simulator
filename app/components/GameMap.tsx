@@ -150,6 +150,57 @@ export default function GameMap({
     setMapLoaded(true);
   }, []);
 
+  // Set up native MapLibre hover handlers for better performance
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map || !mapLoaded) return;
+
+    const onMouseMove = (e: any) => {
+      if (e.features && e.features.length > 0) {
+        const regionId = e.features[0].properties?.shapeISO;
+        if (regionId && regionId !== hoveredRegionIdRef.current) {
+          // Clear previous hover
+          if (hoveredRegionIdRef.current) {
+            map.setFeatureState(
+              { source: 'regions', id: hoveredRegionIdRef.current },
+              { hover: false }
+            );
+          }
+          // Set new hover
+          map.setFeatureState(
+            { source: 'regions', id: regionId },
+            { hover: true }
+          );
+          hoveredRegionIdRef.current = regionId;
+          setHoveredRegion(regionId);
+          onRegionHover?.(regionId);
+        }
+      }
+      map.getCanvas().style.cursor = 'pointer';
+    };
+
+    const onMouseLeave = () => {
+      map.getCanvas().style.cursor = '';
+      if (hoveredRegionIdRef.current) {
+        map.setFeatureState(
+          { source: 'regions', id: hoveredRegionIdRef.current },
+          { hover: false }
+        );
+        hoveredRegionIdRef.current = null;
+        setHoveredRegion(null);
+        onRegionHover?.(null);
+      }
+    };
+
+    map.on('mousemove', 'regions-fill', onMouseMove);
+    map.on('mouseleave', 'regions-fill', onMouseLeave);
+
+    return () => {
+      map.off('mousemove', 'regions-fill', onMouseMove);
+      map.off('mouseleave', 'regions-fill', onMouseLeave);
+    };
+  }, [mapLoaded, onRegionHover]);
+
   // Update feature states for selected regions, hover, and adjacent regions
   useEffect(() => {
     const map = mapRef.current?.getMap();
@@ -311,51 +362,6 @@ export default function GameMap({
     }
   }, []);
 
-  // Handle mouse move for hover state (more performant than mouseenter/leave)
-  const handleMouseMove = useCallback((e: any) => {
-    const map = mapRef.current?.getMap();
-    if (!map) return;
-    
-    const features = e.features;
-    if (features && features.length > 0) {
-      const regionId = features[0].properties?.shapeISO;
-      if (regionId && regionId !== hoveredRegionIdRef.current) {
-        // Clear previous hover
-        if (hoveredRegionIdRef.current) {
-          map.setFeatureState(
-            { source: 'regions', id: hoveredRegionIdRef.current },
-            { hover: false }
-          );
-        }
-        // Set new hover
-        map.setFeatureState(
-          { source: 'regions', id: regionId },
-          { hover: true }
-        );
-        hoveredRegionIdRef.current = regionId;
-        setHoveredRegion(regionId);
-        onRegionHover?.(regionId);
-        setCursor('pointer');
-      }
-    }
-  }, [onRegionHover]);
-
-  const handleMouseLeave = useCallback(() => {
-    const map = mapRef.current?.getMap();
-    if (!map) return;
-    
-    setCursor('');
-    if (hoveredRegionIdRef.current) {
-      map.setFeatureState(
-        { source: 'regions', id: hoveredRegionIdRef.current },
-        { hover: false }
-      );
-      hoveredRegionIdRef.current = null;
-    }
-    setHoveredRegion(null);
-    onRegionHover?.(null);
-  }, [onRegionHover]);
-
   // Calculate unit markers
   const unitMarkers = useMemo(() => {
     return Object.entries(regions)
@@ -505,8 +511,6 @@ export default function GameMap({
         interactiveLayerIds={interactiveLayerIds}
         onClick={handleMapClick}
         onContextMenu={handleContextMenu}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
         onLoad={handleMapLoad}
       >
         {/* Regions GeoJSON source and layers */}
