@@ -174,13 +174,22 @@ export const createArmyGroupActions = (
       // Check relationship with target region owner
       const targetRegion = newRegions[nextStep];
       if (targetRegion && targetRegion.owner !== selectedCountry.id) {
-        const relationship = relationships.find(
+        // Check if they grant us access/war
+        const theirRelationship = relationships.find(
           r => r.fromFaction === targetRegion.owner && r.toFaction === selectedCountry.id
         );
-        const relationshipType = relationship ? relationship.type : 'neutral';
+        const theyGrantUs = theirRelationship ? theirRelationship.type : 'neutral';
         
-        // Cannot move if neutral (no access and not at war)
-        if (relationshipType === 'neutral') {
+        // Check if we declared war on them
+        const ourRelationship = relationships.find(
+          r => r.fromFaction === selectedCountry.id && r.toFaction === targetRegion.owner
+        );
+        const weDeclared = ourRelationship ? ourRelationship.type : 'neutral';
+        
+        // Can move if they grant us access/war OR we declared war on them
+        const canMove = theyGrantUs !== 'neutral' || weDeclared === 'war';
+        
+        if (!canMove) {
           console.warn(`[ADVANCE] Cannot move to ${targetRegion.name}: No military access or war state with ${targetRegion.owner}`);
           continue;
         }
@@ -370,13 +379,22 @@ export const createArmyGroupActions = (
             // Check relationship with target region owner
             const targetRegion = newRegions[borderRegionId];
             if (targetRegion && targetRegion.owner !== selectedCountry.id) {
-              const relationship = relationships.find(
+              // Check if they grant us access/war
+              const theirRelationship = relationships.find(
                 r => r.fromFaction === targetRegion.owner && r.toFaction === selectedCountry.id
               );
-              const relationshipType = relationship ? relationship.type : 'neutral';
+              const theyGrantUs = theirRelationship ? theirRelationship.type : 'neutral';
               
-              // Cannot move if neutral (no access and not at war)
-              if (relationshipType === 'neutral') {
+              // Check if we declared war on them
+              const ourRelationship = relationships.find(
+                r => r.fromFaction === selectedCountry.id && r.toFaction === targetRegion.owner
+              );
+              const weDeclared = ourRelationship ? ourRelationship.type : 'neutral';
+              
+              // Can move if they grant us access/war OR we declared war on them
+              const canMove = theyGrantUs !== 'neutral' || weDeclared === 'war';
+              
+              if (!canMove) {
                 console.warn(`[DEFEND] Cannot move to ${targetRegion.name}: No military access or war state with ${targetRegion.owner}`);
                 return;
               }

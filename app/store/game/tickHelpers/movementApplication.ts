@@ -44,12 +44,24 @@ export function applyCompletedMovements(
       };
     } else {
       // Enemy region - check relationship type
-      const relationship = context.relationships.find(
+      // Check if they grant us access/war
+      const theirRelationship = context.relationships.find(
         r => r.fromFaction === to.owner && r.toFaction === owner
       );
-      const relationshipType = relationship ? relationship.type : 'neutral';
+      const theyGrantUs = theirRelationship ? theirRelationship.type : 'neutral';
       
-      if (relationshipType === 'military_access') {
+      // Check if we declared war on them
+      const ourRelationship = context.relationships.find(
+        r => r.fromFaction === owner && r.toFaction === to.owner
+      );
+      const weDeclared = ourRelationship ? ourRelationship.type : 'neutral';
+      
+      // Determine the effective relationship
+      // If we declared war, it's war regardless of their stance
+      // If they granted us military access and we didn't declare war, it's military access
+      const effectiveRelationship = weDeclared === 'war' ? 'war' : theyGrantUs;
+      
+      if (effectiveRelationship === 'military_access') {
         // Military access - units can move but no occupation or combat
         // Just add divisions to the region without changing ownership
         nextRegions[toRegion] = {
@@ -58,7 +70,7 @@ export function applyCompletedMovements(
         };
         console.log(`[MILITARY ACCESS] ${divisions.length} ${owner} divisions moved to ${to.name} with military access`);
         
-      } else if (relationshipType === 'war' || relationshipType === 'neutral') {
+      } else if (effectiveRelationship === 'war' || effectiveRelationship === 'neutral') {
         // War state or neutral (hostile) - proceed with combat/occupation logic
         // Check for ongoing combat
         const ongoingCombat = nextCombats.find(c => c.regionId === toRegion && !c.isComplete);
