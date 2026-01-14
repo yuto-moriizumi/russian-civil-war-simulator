@@ -37,7 +37,7 @@ export function createInitialAIArmyGroup(factionId: FactionId, regions: RegionSt
     color: '#6B7280',
     owner: factionId,
     theaterId: null,
-    mode: 'none', // AI doesn't use automatic modes
+    mode: 'advance', // AI automatically advances toward enemies
   };
 }
 
@@ -130,7 +130,7 @@ export function runAITick(
       color: '#6B7280',
       owner: factionId,
       theaterId: null,
-      mode: 'none', // AI doesn't use automatic modes
+      mode: 'advance', // AI automatically advances toward enemies
     };
     
     aiArmyGroup = newArmyGroup;

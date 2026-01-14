@@ -109,7 +109,7 @@ export const createTickActions = (
 
     // Step 9b: Process army group automatic modes (advance/defend)
     // This needs to be done before updating state to ensure actions are queued
-    const armyGroupActionsNeeded = nextArmyGroups.filter(g => g.mode !== 'none' && g.owner === playerFaction);
+    const armyGroupActionsNeeded = nextArmyGroups.filter(g => g.mode !== 'none');
     
     // Update state first so actions have latest data
     set({
@@ -125,7 +125,7 @@ export const createTickActions = (
       armyGroups: nextArmyGroups,
     });
 
-    // Now trigger automatic actions for army groups in advance/defend mode
+    // Now trigger automatic actions for ALL army groups in advance/defend mode (player + AI)
     armyGroupActionsNeeded.forEach(group => {
       if (group.mode === 'advance') {
         get().advanceArmyGroup(group.id);
