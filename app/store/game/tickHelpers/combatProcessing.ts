@@ -1,4 +1,4 @@
-import { ActiveCombat, GameEvent, NotificationItem } from '../../../types/game';
+import { ActiveCombat, GameEvent, NotificationItem, RegionState, Adjacency, Division } from '../../../types/game';
 import { processCombatRound, shouldProcessCombatRound } from '../../../utils/combat';
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 
@@ -7,6 +7,7 @@ interface CombatProcessingResult {
   finishedCombats: ActiveCombat[];
   newCombatEvents: GameEvent[];
   newCombatNotifications: NotificationItem[];
+  retreatingDivisions: { division: Division; toRegionId: string | null }[];
 }
 
 /**
@@ -14,12 +15,15 @@ interface CombatProcessingResult {
  */
 export function processCombats(
   activeCombats: ActiveCombat[],
-  currentDate: Date
+  currentDate: Date,
+  regions: RegionState,
+  adjacency: Adjacency
 ): CombatProcessingResult {
   const updatedCombats: ActiveCombat[] = [];
   const finishedCombats: ActiveCombat[] = [];
   const newCombatEvents: GameEvent[] = [];
   const newCombatNotifications: NotificationItem[] = [];
+  const retreatingDivisions: { division: Division; toRegionId: string | null }[] = [];
 
   activeCombats.forEach(combat => {
     if (combat.isComplete) {
@@ -28,10 +32,17 @@ export function processCombats(
     }
 
     if (shouldProcessCombatRound(combat, currentDate)) {
-      const updatedCombat = processCombatRound({
-        ...combat,
-        lastRoundTime: new Date(currentDate),
-      });
+      const result = processCombatRound(
+        {
+          ...combat,
+          lastRoundTime: new Date(currentDate),
+        },
+        regions,
+        adjacency
+      );
+
+      const updatedCombat = result.combat;
+      retreatingDivisions.push(...result.retreatingDivisions);
 
       if (updatedCombat.isComplete) {
         finishedCombats.push(updatedCombat);
@@ -59,5 +70,5 @@ export function processCombats(
     }
   });
 
-  return { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications };
+  return { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatingDivisions };
 }

@@ -31,7 +31,7 @@ export const createTickActions = (
     const state = get();
     if (!state.isPlaying) return;
 
-    const { dateTime, selectedCountry, regions, movingUnits, activeCombats, money, aiState, gameEvents, notifications, armyGroups } = state;
+    const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, money, aiState, gameEvents, notifications, armyGroups } = state;
     
     // Step 1: Validate divisions (development mode only)
     const { updatedRegions, updatedMovingUnits } = validateDivisions(regions, movingUnits, armyGroups);
@@ -47,7 +47,7 @@ export const createTickActions = (
     const { remainingMovements, completedMovements } = processMovements(updatedMovingUnits, newDate);
 
     // Step 4: Process active combats
-    const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications } = processCombats(activeCombats, newDate);
+    const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatingDivisions } = processCombats(activeCombats, newDate, updatedRegions, adjacency);
 
     // Step 5: Apply completed movements to regions
     let nextRegions: typeof updatedRegions;
@@ -68,6 +68,18 @@ export const createTickActions = (
 
     // Step 6: Apply finished combats to regions
     nextRegions = applyFinishedCombats(finishedCombats, nextRegions);
+
+    // Step 6b: Apply retreating divisions to their destination regions
+    retreatingDivisions.forEach(({ division, toRegionId }) => {
+      if (toRegionId && nextRegions[toRegionId]) {
+        // Add retreating division to the destination region
+        nextRegions[toRegionId] = {
+          ...nextRegions[toRegionId],
+          divisions: [...nextRegions[toRegionId].divisions, division],
+        };
+      }
+      // If toRegionId is null, division is destroyed (no friendly neighbors)
+    });
 
     // Step 7: Regenerate HP for all stationary divisions
     nextRegions = regenerateDivisionHP(nextRegions);
