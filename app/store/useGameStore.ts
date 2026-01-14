@@ -12,6 +12,7 @@ import { createTickActions } from './game/tickActions';
 import { createUnitActions } from './game/unitActions';
 import { createArmyGroupActions } from './game/armyGroupActions';
 import { createProductionActions } from './game/productionActions';
+import { createRelationshipActions } from './game/relationshipActions';
 
 export const useGameStore = create<GameStore>()(
   persist(
@@ -37,6 +38,7 @@ export const useGameStore = create<GameStore>()(
       ...createUnitActions(set, get),
       ...createArmyGroupActions(set, get),
       ...createProductionActions(set, get),
+      ...createRelationshipActions(set, get),
     }),
     {
       name: 'russian-civil-war-save',
@@ -57,6 +59,7 @@ export const useGameStore = create<GameStore>()(
         theaters: state.theaters,
         armyGroups: state.armyGroups,
         productionQueue: state.productionQueue,
+        relationships: state.relationships, // Persist relationships
       }),
       onRehydrateStorage: () => (state) => {
         // Convert date strings back to Date objects after rehydration
