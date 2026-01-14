@@ -76,6 +76,7 @@ interface SerializedProductionQueueItem {
   startTime: string;
   completionTime: string;
   targetRegionId: string | null;
+  armyGroupId: string;
 }
 
 interface SerializedGameState {
@@ -161,9 +162,13 @@ function deserializeGameState(data: SerializedGameState): GameState {
       lastRoundTime: new Date(c.lastRoundTime),
     })),
     productionQueue: (data.productionQueue || []).map((p) => ({
-      ...p,
+      id: p.id,
+      divisionName: p.divisionName,
+      owner: p.owner,
       startTime: new Date(p.startTime),
       completionTime: new Date(p.completionTime),
+      targetRegionId: p.targetRegionId,
+      armyGroupId: p.armyGroupId,
     })),
   };
 }
