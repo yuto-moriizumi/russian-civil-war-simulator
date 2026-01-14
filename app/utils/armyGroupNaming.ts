@@ -76,6 +76,7 @@ function getFirstGroupName(faction: FactionId): string {
     white: 'Volunteer Army',
     soviet: 'Red Army Group',
     finland: 'Finnish Defense Forces',
+    ukraine: 'Ukrainian Army',
     neutral: '1st Army',
     foreign: 'Expeditionary Force',
   };

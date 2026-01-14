@@ -15,6 +15,7 @@ const FACTION_NAMES: Record<FactionId, string> = {
   soviet: 'Soviet Russia',
   white: 'White Army',
   finland: 'Finland',
+  ukraine: 'Ukraine',
   neutral: 'Neutral',
   foreign: 'Foreign',
 };
@@ -39,7 +40,7 @@ export default function RelationshipsPanel({
   onSetRelationship,
 }: RelationshipsPanelProps) {
   // Get all factions except player, neutral, and foreign
-  const otherFactions: FactionId[] = ['soviet', 'white', 'finland'].filter(
+  const otherFactions: FactionId[] = ['soviet', 'white', 'finland', 'ukraine'].filter(
     f => f !== playerFaction
   ) as FactionId[];
 
