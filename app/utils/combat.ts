@@ -284,7 +284,7 @@ export function processCombatRound(
   adjacency: Adjacency
 ): { 
   combat: ActiveCombat; 
-  retreatingDivisions: { division: Division; toRegionId: string | null }[] 
+  retreatingDivisions: { division: Division; toRegionId: string | null; fromRegionId: string }[] 
 } {
   if (combat.isComplete) {
     return { combat, retreatingDivisions: [] };
@@ -319,7 +319,7 @@ export function processCombatRound(
     return sum + calculateDamage(defender, target);
   }, 0);
   
-  const retreatingDivisions: { division: Division; toRegionId: string | null }[] = [];
+  const retreatingDivisions: { division: Division; toRegionId: string | null; fromRegionId: string }[] = [];
   
   // Distribute damage to attacking divisions
   const damagePerAttacker = Math.ceil(defenderTotalDamage / attackerDivisions.length);
@@ -340,7 +340,8 @@ export function processCombatRound(
       );
       retreatingDivisions.push({
         division: result.division,
-        toRegionId: retreatTarget
+        toRegionId: retreatTarget,
+        fromRegionId: combat.regionId
       });
       if (retreatTarget) {
         console.log(`[RETREAT] ${result.division.name} (${result.division.owner}) retreating from ${combat.regionName} to ${regions[retreatTarget]?.name}`);
@@ -369,7 +370,8 @@ export function processCombatRound(
       );
       retreatingDivisions.push({
         division: result.division,
-        toRegionId: retreatTarget
+        toRegionId: retreatTarget,
+        fromRegionId: combat.regionId
       });
       if (retreatTarget) {
         console.log(`[RETREAT] ${result.division.name} (${result.division.owner}) retreating from ${combat.regionName} to ${regions[retreatTarget]?.name}`);
