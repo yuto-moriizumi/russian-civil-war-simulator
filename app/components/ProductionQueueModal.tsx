@@ -2,18 +2,20 @@
 
 import { useState } from 'react';
 import Modal from './Modal';
-import { ProductionQueueItem, RegionState, FactionId } from '../types/game';
+import { ProductionQueueItem, RegionState, FactionId, ArmyGroup } from '../types/game';
 
 interface ProductionQueueModalProps {
   isOpen: boolean;
   onClose: () => void;
   productionQueue: ProductionQueueItem[];
   regions: RegionState;
+  armyGroups: ArmyGroup[];
   playerFaction: FactionId;
   currentDateTime: Date;
   money: number;
   onAddProduction: (divisionName: string, targetRegionId?: string | null) => void;
   onCancelProduction: (productionId: string) => void;
+  viewOnly?: boolean; // Hide the "Add Production" section
 }
 
 const DIVISION_COST = 10;
@@ -23,11 +25,13 @@ export default function ProductionQueueModal({
   onClose,
   productionQueue,
   regions,
+  armyGroups,
   playerFaction,
   currentDateTime,
   money,
   onAddProduction,
   onCancelProduction,
+  viewOnly = false,
 }: ProductionQueueModalProps) {
   const [divisionName, setDivisionName] = useState('');
   const [selectedRegion, setSelectedRegion] = useState<string>('');
@@ -72,53 +76,64 @@ export default function ProductionQueueModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Production Queue" size="lg">
       <div className="space-y-6">
-        {/* Add New Production */}
-        <div className="rounded-lg border border-stone-700 bg-stone-800/50 p-4">
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-300">
-            Start New Production
-          </h3>
-          <div className="space-y-3">
-            <div>
-              <label className="mb-1 block text-xs text-stone-400">Division Name</label>
-              <input
-                type="text"
-                value={divisionName}
-                onChange={(e) => setDivisionName(e.target.value)}
-                placeholder="e.g., 1st Infantry Division"
-                className="w-full rounded border border-stone-600 bg-stone-900 px-3 py-2 text-sm text-stone-200 placeholder-stone-500 focus:border-amber-500 focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs text-stone-400">Deploy To (Optional)</label>
-              <select
-                value={selectedRegion}
-                onChange={(e) => setSelectedRegion(e.target.value)}
-                className="w-full rounded border border-stone-600 bg-stone-900 px-3 py-2 text-sm text-stone-200 focus:border-amber-500 focus:outline-none"
-              >
-                <option value="">Select region (or leave empty)</option>
-                {ownedRegions.map(region => (
-                  <option key={region.id} value={region.id}>
-                    {region.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-stone-400">
-                Cost: <span className="font-semibold text-amber-500">${DIVISION_COST}</span>
-                {' • '}
-                Time: <span className="font-semibold text-stone-300">24 hours</span>
+        {/* Add New Production - Hidden in view-only mode */}
+        {!viewOnly && (
+          <div className="rounded-lg border border-stone-700 bg-stone-800/50 p-4">
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-300">
+              Start New Production
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs text-stone-400">Division Name</label>
+                <input
+                  type="text"
+                  value={divisionName}
+                  onChange={(e) => setDivisionName(e.target.value)}
+                  placeholder="e.g., 1st Infantry Division"
+                  className="w-full rounded border border-stone-600 bg-stone-900 px-3 py-2 text-sm text-stone-200 placeholder-stone-500 focus:border-amber-500 focus:outline-none"
+                />
               </div>
-              <button
-                onClick={handleAddProduction}
-                disabled={money < DIVISION_COST || !divisionName.trim()}
-                className="rounded bg-amber-600 px-4 py-2 text-sm font-semibold text-stone-900 transition-colors hover:bg-amber-500 disabled:cursor-not-allowed disabled:bg-stone-600 disabled:text-stone-400"
-              >
-                Start Production
-              </button>
+              <div>
+                <label className="mb-1 block text-xs text-stone-400">Deploy To (Optional)</label>
+                <select
+                  value={selectedRegion}
+                  onChange={(e) => setSelectedRegion(e.target.value)}
+                  className="w-full rounded border border-stone-600 bg-stone-900 px-3 py-2 text-sm text-stone-200 focus:border-amber-500 focus:outline-none"
+                >
+                  <option value="">Select region (or leave empty)</option>
+                  {ownedRegions.map(region => (
+                    <option key={region.id} value={region.id}>
+                      {region.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-stone-400">
+                  Cost: <span className="font-semibold text-amber-500">${DIVISION_COST}</span>
+                  {' • '}
+                  Time: <span className="font-semibold text-stone-300">24 hours</span>
+                </div>
+                <button
+                  onClick={handleAddProduction}
+                  disabled={money < DIVISION_COST || !divisionName.trim()}
+                  className="rounded bg-amber-600 px-4 py-2 text-sm font-semibold text-stone-900 transition-colors hover:bg-amber-500 disabled:cursor-not-allowed disabled:bg-stone-600 disabled:text-stone-400"
+                >
+                  Start Production
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Info for view-only mode */}
+        {viewOnly && (
+          <div className="rounded-lg border border-blue-900/50 bg-blue-950/30 p-3">
+            <p className="text-xs text-blue-300">
+              <strong>Tip:</strong> Click the <strong>Deploy</strong> button on any army group to add a division to the production queue.
+            </p>
+          </div>
+        )}
 
         {/* Current Production Queue */}
         <div>
@@ -132,39 +147,67 @@ export default function ProductionQueueModal({
             </div>
           ) : (
             <div className="space-y-2">
-              {playerProductions.map(production => {
+              {playerProductions.map((production, index) => {
                 const progress = getProgressPercentage(production);
                 const targetRegionName = production.targetRegionId 
                   ? regions[production.targetRegionId]?.name || 'Unknown'
                   : 'First Available Region';
+                const armyGroup = armyGroups.find(g => g.id === production.armyGroupId);
+                const armyGroupName = armyGroup?.name || 'Unknown Army Group';
+                const isActive = index === 0; // First in queue is actively producing
 
                 return (
                   <div
                     key={production.id}
-                    className="rounded-lg border border-stone-700 bg-stone-800/50 p-4 transition-colors hover:bg-stone-800/70"
+                    className={`rounded-lg border p-4 transition-colors ${
+                      isActive 
+                        ? 'border-amber-600/50 bg-amber-950/20 hover:bg-amber-950/30'
+                        : 'border-stone-700 bg-stone-800/50 hover:bg-stone-800/70'
+                    }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-stone-200">
-                          {production.divisionName}
-                        </h4>
-                        <p className="text-xs text-stone-400">
-                          Deploying to: {targetRegionName}
-                        </p>
-                        <div className="mt-2">
-                          <div className="mb-1 flex items-center justify-between text-xs">
-                            <span className="text-stone-400">
-                              {formatTimeRemaining(production.completionTime)} remaining
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-semibold text-stone-200">
+                            {production.divisionName}
+                          </h4>
+                          {isActive ? (
+                            <span className="rounded bg-amber-600 px-2 py-0.5 text-xs font-semibold text-stone-900">
+                              PRODUCING
                             </span>
-                            <span className="text-stone-300">{Math.round(progress)}%</span>
-                          </div>
-                          <div className="h-2 overflow-hidden rounded-full bg-stone-700">
-                            <div
-                              className="h-full bg-amber-500 transition-all duration-500"
-                              style={{ width: `${progress}%` }}
-                            />
-                          </div>
+                          ) : (
+                            <span className="rounded bg-stone-700 px-2 py-0.5 text-xs font-semibold text-stone-400">
+                              IN QUEUE #{index + 1}
+                            </span>
+                          )}
                         </div>
+                        <p className="mt-1 text-xs text-stone-400">
+                          Army Group: <span className="text-stone-300">{armyGroupName}</span>
+                        </p>
+                        <p className="text-xs text-stone-400">
+                          Deploying to: <span className="text-stone-300">{targetRegionName}</span>
+                        </p>
+                        {isActive && (
+                          <div className="mt-2">
+                            <div className="mb-1 flex items-center justify-between text-xs">
+                              <span className="text-stone-400">
+                                {formatTimeRemaining(production.completionTime)} remaining
+                              </span>
+                              <span className="text-stone-300">{Math.round(progress)}%</span>
+                            </div>
+                            <div className="h-2 overflow-hidden rounded-full bg-stone-700">
+                              <div
+                                className="h-full bg-amber-500 transition-all duration-500"
+                                style={{ width: `${progress}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        {!isActive && (
+                          <p className="mt-2 text-xs text-stone-500">
+                            Waiting for previous production to complete...
+                          </p>
+                        )}
                       </div>
                       <button
                         onClick={() => {

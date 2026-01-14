@@ -9,6 +9,7 @@ import TheaterPanel from '../components/TheaterPanel';
 import NotificationToast from '../components/NotificationToast';
 import TopBar from '../components/TopBar';
 import MissionPanel from '../components/MissionPanel';
+import ProductionQueueModal from '../components/ProductionQueueModal';
 import { countFactionUnits } from '../utils/mapUtils';
 
 // Dynamic import for GameMap to avoid SSR issues with MapLibre
@@ -58,7 +59,11 @@ interface MainScreenProps {
   lastSaveTime?: Date | null;
   selectedCombatId: string | null;
   isEventsModalOpen: boolean;
+  isProductionModalOpen: boolean;
   onCloseEvents: () => void;
+  onOpenProductionQueue: () => void;
+  onCloseProductionQueue: () => void;
+  onCancelProduction: (productionId: string) => void;
   onDismissNotification: (notificationId: string) => void;
   // Theater and Army Groups action props
   onSelectTheater: (theaterId: string | null) => void;
@@ -107,7 +112,11 @@ export default function MainScreen({
   lastSaveTime,
   selectedCombatId,
   isEventsModalOpen,
+  isProductionModalOpen,
   onCloseEvents,
+  onOpenProductionQueue,
+  onCloseProductionQueue,
+  onCancelProduction,
   onDismissNotification,
   onSelectTheater,
   onCreateArmyGroup,
@@ -203,10 +212,12 @@ export default function MainScreen({
         unitCount={unitCount}
         gameEvents={gameEvents}
         showSavedIndicator={showSavedIndicator}
+        productionQueue={productionQueue}
         onTogglePlay={onTogglePlay}
         onChangeSpeed={onChangeSpeed}
         onSaveGame={onSaveGame}
         onOpenEvents={onOpenEvents}
+        onOpenProductionQueue={onOpenProductionQueue}
       />
 
       {/* Mission Panel */}
@@ -252,6 +263,21 @@ export default function MainScreen({
         isOpen={isEventsModalOpen}
         onClose={onCloseEvents}
         events={gameEvents}
+      />
+
+      {/* Production Queue Modal - View Only (no manual adding) */}
+      <ProductionQueueModal
+        isOpen={isProductionModalOpen}
+        onClose={onCloseProductionQueue}
+        productionQueue={productionQueue}
+        regions={regions}
+        armyGroups={armyGroups}
+        playerFaction={country.id}
+        currentDateTime={dateTime}
+        money={money}
+        onAddProduction={() => {}} // Disabled - use Deploy button instead
+        onCancelProduction={onCancelProduction}
+        viewOnly={true}
       />
 
       {/* Notification Toasts */}

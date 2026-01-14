@@ -77,6 +77,7 @@ export const createProductionActions = (
       startTime: now,
       completionTime,
       targetRegionId,
+      armyGroupId,
     };
 
     set((state) => ({

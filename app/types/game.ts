@@ -93,6 +93,7 @@ export interface ProductionQueueItem {
   startTime: Date;                  // When production started
   completionTime: Date;             // When production will complete (24 game hours)
   targetRegionId: string | null;    // Where the division will deploy (null = reserves)
+  armyGroupId: string;              // Which army group requested this division
 }
 
 export type GameEventType = 

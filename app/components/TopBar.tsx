@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import { Country, GameSpeed, GameEvent } from '../types/game';
+import { Country, GameSpeed, GameEvent, ProductionQueueItem } from '../types/game';
 import SpeedControl from './SpeedControl';
 import TreasuryButton from './TreasuryButton';
 
@@ -17,10 +17,12 @@ interface TopBarProps {
   unitCount: number;
   gameEvents: GameEvent[];
   showSavedIndicator: boolean;
+  productionQueue: ProductionQueueItem[];
   onTogglePlay: () => void;
   onChangeSpeed: (speed: GameSpeed) => void;
   onSaveGame: () => void;
   onOpenEvents: () => void;
+  onOpenProductionQueue: () => void;
 }
 
 export default function TopBar({
@@ -35,10 +37,12 @@ export default function TopBar({
   unitCount,
   gameEvents,
   showSavedIndicator,
+  productionQueue,
   onTogglePlay,
   onChangeSpeed,
   onSaveGame,
   onOpenEvents,
+  onOpenProductionQueue,
 }: TopBarProps) {
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -54,6 +58,9 @@ export default function TopBar({
       minute: '2-digit',
     });
   };
+
+  // Count active productions for the player
+  const activeProductions = productionQueue.filter(p => p.owner === country.id).length;
 
   return (
     <div className="relative z-10 flex items-center justify-between border-b border-stone-700 bg-stone-900/90 px-4 py-3">
@@ -107,6 +114,20 @@ export default function TopBar({
           title="Save Game"
         >
           Save
+        </button>
+
+        {/* Production Queue Button */}
+        <button
+          onClick={onOpenProductionQueue}
+          className="relative rounded bg-emerald-700 px-3 py-1 text-stone-200 transition-colors hover:bg-emerald-600"
+          title="Production Queue"
+        >
+          Queue
+          {activeProductions > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-400 text-[10px] font-bold text-black">
+              {activeProductions > 9 ? '9+' : activeProductions}
+            </span>
+          )}
         </button>
 
         {/* Events Button */}
