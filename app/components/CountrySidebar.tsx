@@ -80,14 +80,6 @@ export default function CountrySidebar({
     onSetRelationship(playerFaction, countryId, 'war');
   };
 
-  const handleAutonomyToggle = (isChecked: boolean) => {
-    if (isChecked) {
-      onSetRelationship(playerFaction, countryId, 'autonomy');
-    } else {
-      onSetRelationship(playerFaction, countryId, 'neutral');
-    }
-  };
-
   const playerToTargetStatus = getRelationshipStatus(playerFaction, countryId);
   const targetToPlayerStatus = getRelationshipStatus(countryId, playerFaction);
   const isPlayable = countryId === 'soviet' || countryId === 'white' || countryId === 'finland' || countryId === 'ukraine';
@@ -134,14 +126,14 @@ export default function CountrySidebar({
               <div className="flex items-center justify-between">
                 <span className="text-sm text-stone-300">Your Status:</span>
                 <span className={`px-2 py-1 rounded text-xs font-bold text-white ${RELATIONSHIP_BG[playerToTargetStatus]}`}>
-                  {RELATIONSHIP_LABELS[playerToTargetStatus]}
+                  {playerToTargetStatus === 'autonomy' ? 'Autonomy Master' : RELATIONSHIP_LABELS[playerToTargetStatus]}
                 </span>
               </div>
               
               <div className="text-xs text-stone-400 flex justify-between">
                 <span>They grant you:</span>
                 <span className={`font-bold ${RELATIONSHIP_COLORS[targetToPlayerStatus]}`}>
-                  {RELATIONSHIP_LABELS[targetToPlayerStatus]}
+                  {targetToPlayerStatus === 'autonomy' ? 'Autonomy Servant' : RELATIONSHIP_LABELS[targetToPlayerStatus]}
                 </span>
               </div>
 
@@ -157,20 +149,6 @@ export default function CountrySidebar({
                   />
                   <label htmlFor="grant-access-sidebar" className="text-sm text-stone-300 cursor-pointer">
                     Grant Military Access
-                  </label>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="grant-autonomy-sidebar"
-                    checked={playerToTargetStatus === 'autonomy'}
-                    disabled={playerToTargetStatus === 'war'}
-                    onChange={(e) => handleAutonomyToggle(e.target.checked)}
-                    className="w-4 h-4 text-purple-600 bg-stone-700 border-stone-600 rounded focus:ring-purple-500"
-                  />
-                  <label htmlFor="grant-autonomy-sidebar" className="text-sm text-stone-300 cursor-pointer">
-                    Grant Autonomy (mutual military access)
                   </label>
                 </div>
 
@@ -220,13 +198,13 @@ export default function CountrySidebar({
                     <div className="flex justify-between">
                       <span className="text-stone-500 font-medium">Outward:</span>
                       <span className={`font-bold ${RELATIONSHIP_COLORS[outwardRelation]}`}>
-                        {RELATIONSHIP_LABELS[outwardRelation]}
+                        {outwardRelation === 'autonomy' ? 'Autonomy Master' : RELATIONSHIP_LABELS[outwardRelation]}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-stone-500 font-medium">Inward:</span>
                       <span className={`font-bold ${RELATIONSHIP_COLORS[inwardRelation]}`}>
-                        {RELATIONSHIP_LABELS[inwardRelation]}
+                        {inwardRelation === 'autonomy' ? 'Autonomy Servant' : RELATIONSHIP_LABELS[inwardRelation]}
                       </span>
                     </div>
                   </div>

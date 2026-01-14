@@ -98,15 +98,15 @@ export default function RelationshipsPanel({
                 <span
                   className={`px-2 py-1 rounded text-xs font-bold text-white ${RELATIONSHIP_COLORS[ourStatus]}`}
                 >
-                  {RELATIONSHIP_LABELS[ourStatus]}
+                  {ourStatus === 'autonomy' ? 'Autonomy Master' : RELATIONSHIP_LABELS[ourStatus]}
                 </span>
               </div>
 
               <div className="space-y-2 text-xs">
                 <div className="text-stone-400">
                   <span className="font-semibold">They grant us:</span>{' '}
-                  <span className={`font-bold ${theirStatus === 'war' ? 'text-red-400' : theirStatus === 'military_access' ? 'text-blue-400' : 'text-gray-400'}`}>
-                    {RELATIONSHIP_LABELS[theirStatus]}
+                  <span className={`font-bold ${theirStatus === 'war' ? 'text-red-400' : theirStatus === 'military_access' ? 'text-blue-400' : theirStatus === 'autonomy' ? 'text-purple-400' : 'text-gray-400'}`}>
+                    {theirStatus === 'autonomy' ? 'Autonomy Servant' : RELATIONSHIP_LABELS[theirStatus]}
                   </span>
                 </div>
 
@@ -116,7 +116,7 @@ export default function RelationshipsPanel({
                       type="checkbox"
                       id={`military-access-${faction}`}
                       checked={ourStatus === 'military_access' || ourStatus === 'war'}
-                      disabled={ourStatus === 'war'}
+                      disabled={ourStatus === 'war' || ourStatus === 'autonomy'}
                       onChange={(e) => handleMilitaryAccessToggle(faction, e.target.checked)}
                       className="w-4 h-4 text-blue-600 bg-stone-700 border-stone-600 rounded focus:ring-blue-500"
                     />
@@ -127,19 +127,25 @@ export default function RelationshipsPanel({
 
                   <button
                     onClick={() => handleDeclareWar(faction)}
-                    disabled={ourStatus === 'war'}
+                    disabled={ourStatus === 'war' || ourStatus === 'autonomy' || theirStatus === 'autonomy'}
                     className={`w-full font-bold py-2 px-3 rounded transition-colors ${
                       ourStatus === 'war'
                         ? 'bg-red-900/50 text-red-400 cursor-not-allowed border border-red-800'
+                        : (ourStatus === 'autonomy' || theirStatus === 'autonomy')
+                        ? 'bg-stone-800 text-stone-500 cursor-not-allowed border border-stone-700'
                         : 'bg-red-700 hover:bg-red-600 text-white'
                     }`}
                   >
-                    {ourStatus === 'war' ? '⚔ At War' : '⚔ Declare War'}
+                    {ourStatus === 'war' 
+                      ? '⚔ At War' 
+                      : (ourStatus === 'autonomy' || theirStatus === 'autonomy')
+                      ? '⚔ Cannot Declare War (Autonomy)'
+                      : '⚔ Declare War'}
                   </button>
                 </div>
 
                 <div className="mt-2 pt-2 border-t border-stone-700 text-stone-400">
-                  {ourStatus === 'military_access' && (
+                  {(ourStatus === 'military_access' || ourStatus === 'autonomy') && (
                     <p>✓ They can move through your territory without combat</p>
                   )}
                   {ourStatus === 'war' && (
@@ -160,6 +166,7 @@ export default function RelationshipsPanel({
             <li><span className="text-gray-400">Neutral:</span> No troop movement allowed</li>
             <li><span className="text-blue-400">Military Access:</span> Troops can move, no occupation</li>
             <li><span className="text-red-400">War:</span> Troops can move and occupy regions</li>
+            <li><span className="text-purple-400">Autonomy:</span> Master/Servant bond with mutual access and no war</li>
           </ul>
         </div>
       </div>
