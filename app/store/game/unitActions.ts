@@ -149,19 +149,27 @@ export const createUnitActions = (
     const targetOwner = to.owner;
     if (targetOwner !== selectedCountry.id) {
       // Moving to another faction's territory
-      const relationship = relationships.find(
+      // Check if they grant us access/war
+      const theirRelationship = relationships.find(
         r => r.fromFaction === targetOwner && r.toFaction === selectedCountry.id
       );
-      const relationshipType = relationship ? relationship.type : 'neutral';
+      const theyGrantUs = theirRelationship ? theirRelationship.type : 'neutral';
       
-      // Cannot move if neutral (no access and not at war)
-      if (relationshipType === 'neutral') {
+      // Check if we declared war on them
+      const ourRelationship = relationships.find(
+        r => r.fromFaction === selectedCountry.id && r.toFaction === targetOwner
+      );
+      const weDeclared = ourRelationship ? ourRelationship.type : 'neutral';
+      
+      // Can move if:
+      // 1. They grant us military access or war, OR
+      // 2. We declared war on them
+      const canMove = theyGrantUs !== 'neutral' || weDeclared === 'war';
+      
+      if (!canMove) {
         console.warn(`Cannot move to ${to.name}: No military access or war state with ${targetOwner}`);
         return;
       }
-      
-      // Can move with military_access or war
-      // War will trigger combat/occupation, access will not
     }
     
     const divisionsToMove = from.divisions.slice(0, count);

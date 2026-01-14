@@ -54,12 +54,24 @@ export default function RelationshipsPanel({
     return ourRelation ? ourRelation.type : 'neutral';
   };
 
-  const handleRelationshipChange = (targetFaction: FactionId, newType: RelationshipType) => {
-    onSetRelationship(playerFaction, targetFaction, newType);
+  const handleMilitaryAccessToggle = (targetFaction: FactionId, isChecked: boolean) => {
+    const currentStatus = getOurRelationshipStatus(targetFaction);
+    // If checking military access and currently at war, keep war
+    // If checking military access and currently neutral, set to military access
+    // If unchecking military access, set to neutral
+    if (isChecked && currentStatus !== 'war') {
+      onSetRelationship(playerFaction, targetFaction, 'military_access');
+    } else if (!isChecked && currentStatus === 'military_access') {
+      onSetRelationship(playerFaction, targetFaction, 'neutral');
+    }
+  };
+
+  const handleDeclareWar = (targetFaction: FactionId) => {
+    onSetRelationship(playerFaction, targetFaction, 'war');
   };
 
   return (
-    <div className="absolute top-20 right-4 bg-stone-800 border border-stone-700 rounded-lg p-4 shadow-xl max-w-md z-10">
+    <div className="absolute top-20 left-4 bg-stone-800 border border-stone-700 rounded-lg p-4 shadow-xl max-w-md z-10">
       <div className="mb-3">
         <h2 className="text-lg font-bold text-stone-100">Diplomatic Relations</h2>
         <p className="text-xs text-stone-400 mt-1">
@@ -77,9 +89,9 @@ export default function RelationshipsPanel({
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold text-stone-100">{FACTION_NAMES[faction]}</h3>
                 <span
-                  className={`px-2 py-1 rounded text-xs font-bold text-white ${RELATIONSHIP_COLORS[theirStatus]}`}
+                  className={`px-2 py-1 rounded text-xs font-bold text-white ${RELATIONSHIP_COLORS[ourStatus]}`}
                 >
-                  {RELATIONSHIP_LABELS[theirStatus]}
+                  {RELATIONSHIP_LABELS[ourStatus]}
                 </span>
               </div>
 
@@ -91,17 +103,32 @@ export default function RelationshipsPanel({
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="text-stone-400 font-semibold">We grant them:</span>
-                  <select
-                    value={ourStatus}
-                    onChange={(e) => handleRelationshipChange(faction, e.target.value as RelationshipType)}
-                    className="bg-stone-800 border border-stone-600 rounded px-2 py-1 text-stone-200 text-xs"
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id={`military-access-${faction}`}
+                      checked={ourStatus === 'military_access' || ourStatus === 'war'}
+                      disabled={ourStatus === 'war'}
+                      onChange={(e) => handleMilitaryAccessToggle(faction, e.target.checked)}
+                      className="w-4 h-4 text-blue-600 bg-stone-700 border-stone-600 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor={`military-access-${faction}`} className="text-stone-300 font-semibold">
+                      Grant Military Access
+                    </label>
+                  </div>
+
+                  <button
+                    onClick={() => handleDeclareWar(faction)}
+                    disabled={ourStatus === 'war'}
+                    className={`w-full font-bold py-2 px-3 rounded transition-colors ${
+                      ourStatus === 'war'
+                        ? 'bg-red-900/50 text-red-400 cursor-not-allowed border border-red-800'
+                        : 'bg-red-700 hover:bg-red-600 text-white'
+                    }`}
                   >
-                    <option value="neutral">Neutral</option>
-                    <option value="military_access">Military Access</option>
-                    <option value="war">War</option>
-                  </select>
+                    {ourStatus === 'war' ? '⚔ At War' : '⚔ Declare War'}
+                  </button>
                 </div>
 
                 <div className="mt-2 pt-2 border-t border-stone-700 text-stone-400">
