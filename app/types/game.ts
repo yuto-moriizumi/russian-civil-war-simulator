@@ -180,6 +180,9 @@ export interface Theater {
   owner: FactionId;                // Which faction owns this theater
 }
 
+// Army Group operational mode for automatic unit control
+export type ArmyGroupMode = 'none' | 'advance' | 'defend';
+
 // Army Group for coordinated unit movement (now assigned to a theater)
 export interface ArmyGroup {
   id: string;                      // Unique identifier
@@ -188,6 +191,7 @@ export interface ArmyGroup {
   color: string;                   // Visual identifier (#hex color)
   owner: FactionId;                // Which faction owns this group
   theaterId: string | null;        // Theater this group belongs to (if any)
+  mode: ArmyGroupMode;             // Operational mode: none, advance (auto-attack), or defend (auto-defend)
 }
 
 // Game API interface for programmatic control (useful for AI agents and testing)
@@ -209,6 +213,7 @@ export interface GameAPI {
   getArmyGroups: () => ArmyGroup[];
   advanceArmyGroup: (groupId: string) => void;
   defendArmyGroup: (groupId: string) => void;
+  setArmyGroupMode: (groupId: string, mode: ArmyGroupMode) => void;
   deployToArmyGroup: (groupId: string) => void;
   deleteArmyGroup: (groupId: string) => void;
   // Theater methods

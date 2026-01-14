@@ -52,6 +52,7 @@ export function useGameAPI() {
       getArmyGroups: () => state.armyGroups,
       advanceArmyGroup: (groupId) => state.advanceArmyGroup(groupId),
       defendArmyGroup: (groupId) => state.defendArmyGroup(groupId),
+      setArmyGroupMode: (groupId, mode) => state.setArmyGroupMode(groupId, mode),
       deployToArmyGroup: (groupId) => state.deployToArmyGroup(groupId),
       deleteArmyGroup: (groupId) => state.deleteArmyGroup(groupId),
 

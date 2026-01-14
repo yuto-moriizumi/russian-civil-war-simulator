@@ -17,6 +17,7 @@ interface ArmyGroupsPanelProps {
   onSelectGroup: (groupId: string | null) => void;
   onAdvanceGroup: (groupId: string) => void;
   onDefendGroup: (groupId: string) => void;
+  onSetGroupMode: (groupId: string, mode: 'none' | 'advance' | 'defend') => void;
 }
 
 export default function ArmyGroupsPanel({
@@ -32,6 +33,7 @@ export default function ArmyGroupsPanel({
   onSelectGroup,
   onAdvanceGroup,
   onDefendGroup,
+  onSetGroupMode,
 }: ArmyGroupsPanelProps) {
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
@@ -133,30 +135,46 @@ export default function ArmyGroupsPanel({
                       </span>
                     )}
 
-                    {/* Advance button */}
+                    {/* Advance Mode Toggle */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onAdvanceGroup(group.id);
+                        // Toggle between 'advance' and 'none'
+                        const newMode = group.mode === 'advance' ? 'none' : 'advance';
+                        onSetGroupMode(group.id, newMode);
                       }}
                       disabled={unitCount === 0}
-                      className="rounded bg-green-700 px-2 py-0.5 text-xs font-semibold text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
-                      title="Advance all units toward enemy"
+                      className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                        group.mode === 'advance'
+                          ? 'bg-green-600 text-white hover:bg-green-700'
+                          : 'bg-green-900/30 text-green-400 hover:bg-green-800/50'
+                      }`}
+                      title={group.mode === 'advance' 
+                        ? 'Auto-advance mode active (click to disable)' 
+                        : 'Enable auto-advance mode (continuously advance toward enemy)'}
                     >
-                      Advance
+                      {group.mode === 'advance' ? '✓ Advance' : 'Advance'}
                     </button>
 
-                    {/* Defend button */}
+                    {/* Defend Mode Toggle */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onDefendGroup(group.id);
+                        // Toggle between 'defend' and 'none'
+                        const newMode = group.mode === 'defend' ? 'none' : 'defend';
+                        onSetGroupMode(group.id, newMode);
                       }}
                       disabled={unitCount === 0}
-                      className="rounded bg-orange-700 px-2 py-0.5 text-xs font-semibold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
-                      title="Move units to defensive positions (border regions)"
+                      className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                        group.mode === 'defend'
+                          ? 'bg-orange-600 text-white hover:bg-orange-700'
+                          : 'bg-orange-900/30 text-orange-400 hover:bg-orange-800/50'
+                      }`}
+                      title={group.mode === 'defend' 
+                        ? 'Auto-defend mode active (click to disable)' 
+                        : 'Enable auto-defend mode (continuously position units at borders)'}
                     >
-                      Defend
+                      {group.mode === 'defend' ? '✓ Defend' : 'Defend'}
                     </button>
 
                     {/* Delete button */}
@@ -178,9 +196,9 @@ export default function ArmyGroupsPanel({
 
           {/* Help text */}
           <div className="mt-3 text-xs text-stone-500">
-            Click <strong>Advance</strong> to move all units toward the nearest enemy.
-            Click <strong>Defend</strong> to position units at border regions.
-            <strong>Double-click</strong> a group name to rename it.
+            Toggle <strong>Advance</strong> mode to automatically move units toward enemies every game tick.
+            Toggle <strong>Defend</strong> mode to automatically position units at border regions.
+            Modes are mutually exclusive. <strong>Double-click</strong> a group name to rename it.
           </div>
         </div>
       )}
