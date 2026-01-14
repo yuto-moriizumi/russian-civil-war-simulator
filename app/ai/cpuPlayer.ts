@@ -1,5 +1,4 @@
-import { AIState, FactionId, RegionState, Region, Division, ActiveCombat, Movement, ArmyGroup } from '../types/game';
-import { createDivision } from '../utils/combat';
+import { AIState, FactionId, RegionState, Region, ActiveCombat, Movement, ArmyGroup, ProductionQueueItem } from '../types/game';
 import { calculateFactionIncome } from '../utils/mapUtils';
 
 // Cost to create one division
@@ -60,18 +59,40 @@ function pickRandomRegion(regionList: Region[]): Region | null {
 /**
  * Generate a unique division name for the AI
  */
-function generateAIDivisionName(factionId: FactionId, regions: RegionState): string {
+function generateAIDivisionName(factionId: FactionId, regions: RegionState, productionQueue: ProductionQueueItem[], offset: number = 0): string {
   const prefixMap: Record<string, string> = {
     soviet: 'Red Guard',
     white: 'White Guard',
     finland: 'Finnish Guard',
   };
   const prefix = prefixMap[factionId] || 'Guard';
+  
   // Count existing divisions owned by this faction
   const existingCount = Object.values(regions).reduce((acc, region) => 
     acc + region.divisions.filter(d => d.owner === factionId).length, 0
   );
-  return `${prefix} ${existingCount + 1}st Division`;
+  
+  // Count divisions in production for this faction
+  const productionCount = productionQueue.filter(p => p.owner === factionId).length;
+  
+  const totalCount = existingCount + productionCount + offset;
+  
+  // Simple ordinal suffix
+  const n = totalCount + 1;
+  const suffix = (n % 10 === 1 && n % 100 !== 11) ? 'st' :
+                 (n % 10 === 2 && n % 100 !== 12) ? 'nd' :
+                 (n % 10 === 3 && n % 100 !== 13) ? 'rd' : 'th';
+                 
+  return `${prefix} ${n}${suffix} Division`;
+}
+
+/**
+ * AI production request - describes a division to be added to the production queue
+ */
+export interface AIProductionRequest {
+  divisionName: string;
+  targetRegionId: string;
+  armyGroupId: string;
 }
 
 /**
@@ -79,7 +100,7 @@ function generateAIDivisionName(factionId: FactionId, regions: RegionState): str
  */
 export interface AIActions {
   divisionsCreated: number;
-  deployments: { regionId: string; divisions: Division[] }[];
+  productionRequests: AIProductionRequest[];
   updatedAIState: AIState;
   newArmyGroup?: ArmyGroup; // New army group created by AI if needed
 }
@@ -87,7 +108,7 @@ export interface AIActions {
 /**
  * Run AI logic for one tick (1 game hour)
  * - Earns income based on controlled regions (using region values/weights) minus unit maintenance costs
- * - Creates divisions if it has enough money and deploys them immediately to random owned regions
+ * - Adds divisions to the production queue if it has enough money
  * 
  * @param armyGroups - All army groups in the game
  */
@@ -96,7 +117,8 @@ export function runAITick(
   regions: RegionState,
   armyGroups: ArmyGroup[],
   activeCombats: ActiveCombat[] = [],
-  movingUnits: Movement[] = []
+  movingUnits: Movement[] = [],
+  productionQueue: ProductionQueueItem[] = []
 ): AIActions {
   const { factionId } = aiState;
   let { money } = aiState;
@@ -136,8 +158,8 @@ export function runAITick(
     aiArmyGroup = newArmyGroup;
   }
   
-  // 4. Create divisions and deploy them immediately
-  const deployments: { regionId: string; divisions: Division[] }[] = [];
+  // 4. Create production requests
+  const productionRequests: AIProductionRequest[] = [];
   const ownedRegions = getOwnedRegions(regions, factionId);
   
   // Filter out regions with active combat
@@ -152,7 +174,7 @@ export function runAITick(
     // No regions available to deploy to
     return {
       divisionsCreated: 0,
-      deployments: [],
+      productionRequests: [],
       updatedAIState: {
         factionId,
         money,
@@ -162,37 +184,30 @@ export function runAITick(
     };
   }
   
+  // AI limit: don't spend ALL money at once if income is low, 
+  // but for now we follow the existing logic of spending what we have.
   while (money >= DIVISION_COST) {
     money -= DIVISION_COST;
     
-    // Create division assigned to AI's army group
-    const newDivision = createDivision(
-      factionId,
-      generateAIDivisionName(factionId, regions),
-      aiArmyGroup.id
-    );
-    
-    // Deploy to random region
+    // Pick target region
     const targetRegion = pickRandomRegion(availableRegions);
     if (!targetRegion) break;
     
-    // Find existing deployment to this region or create new one
-    const existingDeployment = deployments.find(d => d.regionId === targetRegion.id);
-    if (existingDeployment) {
-      existingDeployment.divisions.push(newDivision);
-    } else {
-      deployments.push({
-        regionId: targetRegion.id,
-        divisions: [newDivision],
-      });
-    }
+    productionRequests.push({
+      divisionName: generateAIDivisionName(factionId, regions, productionQueue, divisionsCreated),
+      targetRegionId: targetRegion.id,
+      armyGroupId: aiArmyGroup.id,
+    });
     
     divisionsCreated += 1;
+    
+    // Limit AI to starting at most 2 divisions per tick to avoid massive queue build-up
+    if (divisionsCreated >= 2) break;
   }
   
   return {
     divisionsCreated,
-    deployments,
+    productionRequests,
     updatedAIState: {
       factionId,
       money,
