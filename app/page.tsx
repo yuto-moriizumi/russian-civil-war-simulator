@@ -107,6 +107,8 @@ function MainScreenView() {
       selectedGroupId={state.selectedGroupId}
       selectedTheaterId={state.selectedTheaterId}
       relationships={state.relationships}
+      selectedCountryId={state.selectedCountryId}
+      isCountrySidebarOpen={state.isCountrySidebarOpen}
       onTogglePlay={state.togglePlay}
       onChangeSpeed={state.setGameSpeed}
       onOpenMissions={state.openMissions}
@@ -135,6 +137,8 @@ function MainScreenView() {
       onSetArmyGroupMode={state.setArmyGroupMode}
       onDeployToArmyGroup={state.deployToArmyGroup}
       onSetRelationship={state.setRelationship}
+      onCountrySelect={state.setSelectedCountryId}
+      onSidebarOpen={state.setIsCountrySidebarOpen}
     />
   );
 }

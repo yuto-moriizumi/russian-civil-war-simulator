@@ -25,6 +25,8 @@ export interface GameStore extends GameState {
   selectedGroupId: string | null; // Currently selected army group
   selectedTheaterId: string | null; // Currently selected theater
   isProductionModalOpen: boolean; // Production queue modal state
+  selectedCountryId: FactionId | null; // Country for the country sidebar
+  isCountrySidebarOpen: boolean; // Country sidebar state
 
   // Actions
   setRegions: (regions: RegionState) => void;
@@ -35,6 +37,8 @@ export interface GameStore extends GameState {
   setIsEventsModalOpen: (isOpen: boolean) => void;
   setSelectedCombatId: (combatId: string | null) => void;
   setIsProductionModalOpen: (isOpen: boolean) => void;
+  setSelectedCountryId: (countryId: FactionId | null) => void;
+  setIsCountrySidebarOpen: (isOpen: boolean) => void;
   
   // Notification Actions
   dismissNotification: (notificationId: string) => void;

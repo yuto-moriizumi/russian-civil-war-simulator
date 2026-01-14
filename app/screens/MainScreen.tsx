@@ -11,6 +11,7 @@ import TopBar from '../components/TopBar';
 import MissionPanel from '../components/MissionPanel';
 import ProductionQueuePanel from '../components/ProductionQueuePanel';
 import RelationshipsPanel from '../components/RelationshipsPanel';
+import CountrySidebar from '../components/CountrySidebar';
 import { countFactionUnits } from '../utils/mapUtils';
 
 // Dynamic import for GameMap to avoid SSR issues with MapLibre
@@ -47,6 +48,8 @@ interface MainScreenProps {
   selectedGroupId: string | null;
   selectedTheaterId: string | null;
   relationships: Relationship[];
+  selectedCountryId: FactionId | null;
+  isCountrySidebarOpen: boolean;
   onTogglePlay: () => void;
   onChangeSpeed: (speed: GameSpeed) => void;
   onOpenMissions: () => void;
@@ -76,6 +79,8 @@ interface MainScreenProps {
   onSelectArmyGroup: (groupId: string | null) => void;
   onSetArmyGroupMode: (groupId: string, mode: 'none' | 'advance' | 'defend') => void;
   onDeployToArmyGroup: (groupId: string) => void;
+  onCountrySelect: (factionId: FactionId | null) => void;
+  onSidebarOpen: (isOpen: boolean) => void;
 }
 
 export default function MainScreen({
@@ -101,6 +106,8 @@ export default function MainScreen({
   selectedGroupId,
   selectedTheaterId,
   relationships,
+  selectedCountryId,
+  isCountrySidebarOpen,
   onTogglePlay,
   onChangeSpeed,
   onOpenMissions,
@@ -129,6 +136,8 @@ export default function MainScreen({
   onSetArmyGroupMode,
   onDeployToArmyGroup,
   onSetRelationship,
+  onCountrySelect,
+  onSidebarOpen,
 }: MainScreenProps) {
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);
   const [isArmyGroupsPanelExpanded, setIsArmyGroupsPanelExpanded] = useState(true);
@@ -176,14 +185,24 @@ export default function MainScreen({
 
   const handleOpenProductionQueue = () => {
     setShowRelationshipsPanel(false);
+    onSidebarOpen(false);
     onOpenProductionQueue();
   };
 
   const handleToggleRelationships = () => {
     if (!showRelationshipsPanel) {
       onCloseProductionQueue();
+      onSidebarOpen(false);
     }
     setShowRelationshipsPanel(!showRelationshipsPanel);
+  };
+
+  const handleCountrySelect = (factionId: FactionId | null) => {
+    if (factionId) {
+      setShowRelationshipsPanel(false);
+      onCloseProductionQueue();
+    }
+    onCountrySelect(factionId);
   };
 
   return (
@@ -208,6 +227,8 @@ export default function MainScreen({
             onDeployUnit={onDeployUnit}
             onMoveUnits={onMoveUnits}
             onSelectCombat={onSelectCombat}
+            onCountrySelect={handleCountrySelect}
+            onSidebarOpen={onSidebarOpen}
           />
         ) : (
           <div 
@@ -259,6 +280,18 @@ export default function MainScreen({
         relationships={relationships}
         onSetRelationship={onSetRelationship}
       />
+
+      {/* Country Sidebar */}
+      {selectedCountryId && (
+        <CountrySidebar
+          isOpen={isCountrySidebarOpen}
+          onClose={() => onSidebarOpen(false)}
+          countryId={selectedCountryId}
+          playerFaction={country.id}
+          relationships={relationships}
+          onSetRelationship={onSetRelationship}
+        />
+      )}
 
       {/* Production Queue Panel */}
       <ProductionQueuePanel

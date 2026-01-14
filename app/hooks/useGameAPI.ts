@@ -75,6 +75,12 @@ export function useGameAPI() {
       getRelationships: () => state.relationships,
       setRelationship: (fromFaction, toFaction, type) => state.setRelationship(fromFaction, toFaction, type),
       getRelationship: (fromFaction, toFaction) => state.getRelationship(fromFaction, toFaction),
+      
+      // Country sidebar
+      openCountrySidebar: (factionId) => {
+        state.setSelectedCountryId(factionId);
+        state.setIsCountrySidebarOpen(factionId !== null);
+      },
     };
 
     return () => {

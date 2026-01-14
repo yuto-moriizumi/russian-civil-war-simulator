@@ -31,6 +31,8 @@ export const useGameStore = create<GameStore>()(
       selectedGroupId: null,
       selectedTheaterId: null,
       isProductionModalOpen: false,
+      selectedCountryId: null,
+      isCountrySidebarOpen: false,
 
       // Compose all actions from separate modules
       ...createBasicActions(set, get),
