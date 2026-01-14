@@ -110,11 +110,36 @@ export const createProductionActions = (
       return;
     }
 
+    // Check if we're canceling the first (active) item
+    const isFirstItem = state.productionQueue[0]?.id === productionId;
+
     // Refund 50% of the cost
     const refund = Math.floor(DIVISION_COST / 2);
 
+    // Filter out the cancelled production
+    const filteredQueue = state.productionQueue.filter(p => p.id !== productionId);
+
+    // If we cancelled the first item and there are more items, reset the timing of the new first item
+    let updatedQueue = filteredQueue;
+    if (isFirstItem && filteredQueue.length > 0) {
+      const now = state.dateTime;
+      const newCompletionTime = new Date(now.getTime() + PRODUCTION_TIME_HOURS * 60 * 60 * 1000);
+      
+      updatedQueue = filteredQueue.map((item, index) => {
+        if (index === 0) {
+          // Reset timing for the new first item
+          return {
+            ...item,
+            startTime: now,
+            completionTime: newCompletionTime,
+          };
+        }
+        return item;
+      });
+    }
+
     set((state) => ({
-      productionQueue: state.productionQueue.filter(p => p.id !== productionId),
+      productionQueue: updatedQueue,
       money: state.money + refund,
       gameEvents: [
         ...state.gameEvents,
