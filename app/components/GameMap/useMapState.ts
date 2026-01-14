@@ -12,6 +12,8 @@ interface UseMapStateProps {
   adjacency: Adjacency;
   theaters: Theater[];
   selectedTheaterId: string | null;
+  selectedGroupId: string | null;
+  armyGroups: Array<{ id: string; theaterId: string | null }>;
   onRegionHover?: (regionId: string | null) => void;
 }
 
@@ -23,6 +25,8 @@ export function useMapState({
   adjacency,
   theaters,
   selectedTheaterId,
+  selectedGroupId,
+  armyGroups,
   onRegionHover,
 }: UseMapStateProps) {
   const hoveredRegionIdRef = useRef<string | null>(null);
@@ -88,8 +92,17 @@ export function useMapState({
     map.removeFeatureState({ source: 'regions' });
 
     // Set theater frontline highlights (lowest priority)
-    if (selectedTheaterId) {
-      const theater = theaters.find(t => t.id === selectedTheaterId);
+    // Highlight theater if either directly selected OR if a selected army group belongs to it
+    let theaterToHighlight = selectedTheaterId;
+    if (!theaterToHighlight && selectedGroupId) {
+      const selectedGroup = armyGroups.find(g => g.id === selectedGroupId);
+      if (selectedGroup?.theaterId) {
+        theaterToHighlight = selectedGroup.theaterId;
+      }
+    }
+    
+    if (theaterToHighlight) {
+      const theater = theaters.find(t => t.id === theaterToHighlight);
       if (theater) {
         for (const regionId of theater.frontlineRegions) {
           map.setFeatureState(
@@ -135,7 +148,7 @@ export function useMapState({
         { hover: true }
       );
     }
-  }, [selectedRegion, selectedUnitRegion, adjacency, mapLoaded, selectedTheaterId, theaters, mapRef]);
+  }, [selectedRegion, selectedUnitRegion, adjacency, mapLoaded, selectedTheaterId, selectedGroupId, armyGroups, theaters, mapRef]);
 
   return {
     hoveredRegion,
