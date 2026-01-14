@@ -11,7 +11,6 @@ import {
   Division,
   ArmyGroup,
   Theater,
-  ProductionQueueItem,
   Relationship,
 } from '../types/game';
 

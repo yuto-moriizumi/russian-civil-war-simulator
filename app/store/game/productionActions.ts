@@ -1,7 +1,5 @@
 import { GameStore } from './types';
-import { ProductionQueueItem, ArmyGroup } from '../../types/game';
-import { generateArmyGroupName } from '../../utils/armyGroupNaming';
-import { ARMY_GROUP_COLORS } from './initialState';
+import { ProductionQueueItem } from '../../types/game';
 import { getOrdinalSuffix } from '../../utils/eventUtils';
 
 const DIVISION_COST = 10; // Cost to produce a division

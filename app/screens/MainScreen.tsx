@@ -74,8 +74,6 @@ interface MainScreenProps {
   onDeleteArmyGroup: (groupId: string) => void;
   onRenameArmyGroup: (groupId: string, name: string) => void;
   onSelectArmyGroup: (groupId: string | null) => void;
-  onAdvanceArmyGroup: (groupId: string) => void;
-  onDefendArmyGroup: (groupId: string) => void;
   onSetArmyGroupMode: (groupId: string, mode: 'none' | 'advance' | 'defend') => void;
   onDeployToArmyGroup: (groupId: string) => void;
 }
@@ -128,8 +126,6 @@ export default function MainScreen({
   onDeleteArmyGroup,
   onRenameArmyGroup,
   onSelectArmyGroup,
-  onAdvanceArmyGroup,
-  onDefendArmyGroup,
   onSetArmyGroupMode,
   onDeployToArmyGroup,
   onSetRelationship,
@@ -262,8 +258,6 @@ export default function MainScreen({
           onDeleteGroup={onDeleteArmyGroup}
           onRenameGroup={onRenameArmyGroup}
           onSelectGroup={onSelectArmyGroup}
-          onAdvanceGroup={onAdvanceArmyGroup}
-          onDefendGroup={onDefendArmyGroup}
           onSetGroupMode={onSetArmyGroupMode}
           onDeployToGroup={onDeployToArmyGroup}
         />

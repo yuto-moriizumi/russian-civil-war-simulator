@@ -132,8 +132,6 @@ function MainScreenView() {
       onDeleteArmyGroup={state.deleteArmyGroup}
       onRenameArmyGroup={state.renameArmyGroup}
       onSelectArmyGroup={state.selectArmyGroup}
-      onAdvanceArmyGroup={state.advanceArmyGroup}
-      onDefendArmyGroup={state.defendArmyGroup}
       onSetArmyGroupMode={state.setArmyGroupMode}
       onDeployToArmyGroup={state.deployToArmyGroup}
       onSetRelationship={state.setRelationship}

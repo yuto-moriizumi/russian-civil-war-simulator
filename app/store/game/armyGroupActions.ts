@@ -1,5 +1,5 @@
 import { Movement, ArmyGroup, ArmyGroupMode } from '../../types/game';
-import { findBestMoveTowardEnemy, findBestDefensiveMove } from '../../utils/pathfinding';
+import { findBestMoveTowardEnemy } from '../../utils/pathfinding';
 import { detectTheaters } from '../../utils/theaterDetection';
 import { generateArmyGroupName } from '../../utils/armyGroupNaming';
 import { ARMY_GROUP_COLORS } from './initialState';

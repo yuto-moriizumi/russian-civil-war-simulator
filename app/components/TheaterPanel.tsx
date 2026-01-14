@@ -19,8 +19,6 @@ interface TheaterPanelProps {
   onDeleteGroup: (groupId: string) => void;
   onRenameGroup: (groupId: string, name: string) => void;
   onSelectGroup: (groupId: string | null) => void;
-  onAdvanceGroup: (groupId: string) => void;
-  onDefendGroup: (groupId: string) => void;
   onSetGroupMode: (groupId: string, mode: 'none' | 'advance' | 'defend') => void;
   onDeployToGroup: (groupId: string) => void;
 }
@@ -40,8 +38,6 @@ export default function TheaterPanel({
   onDeleteGroup,
   onRenameGroup,
   onSelectGroup,
-  onAdvanceGroup,
-  onDefendGroup,
   onSetGroupMode,
   onDeployToGroup,
 }: TheaterPanelProps) {

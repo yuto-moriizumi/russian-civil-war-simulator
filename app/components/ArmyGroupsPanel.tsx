@@ -15,8 +15,6 @@ interface ArmyGroupsPanelProps {
   onDeleteGroup: (groupId: string) => void;
   onRenameGroup: (groupId: string, name: string) => void;
   onSelectGroup: (groupId: string | null) => void;
-  onAdvanceGroup: (groupId: string) => void;
-  onDefendGroup: (groupId: string) => void;
   onSetGroupMode: (groupId: string, mode: 'none' | 'advance' | 'defend') => void;
 }
 
@@ -31,8 +29,6 @@ export default function ArmyGroupsPanel({
   onDeleteGroup,
   onRenameGroup,
   onSelectGroup,
-  onAdvanceGroup,
-  onDefendGroup,
   onSetGroupMode,
 }: ArmyGroupsPanelProps) {
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
