@@ -134,20 +134,34 @@ export default function MainScreen({
   const [isArmyGroupsPanelExpanded, setIsArmyGroupsPanelExpanded] = useState(true);
   const [showRelationshipsPanel, setShowRelationshipsPanel] = useState(false);
   
-  // Store lastSaveTime in a ref to compare and trigger indicator
-  const prevSaveTimeRef = useRef<Date | null>(null);
+  // Store lastSaveTime timestamp in a ref to compare and trigger indicator
+  // Initialize with current lastSaveTime to avoid showing indicator on mount
+  const prevSaveTimeRef = useRef<number | null>(lastSaveTime?.getTime() || null);
 
   // Show "Saved!" indicator when lastSaveTime changes
   // This setState is intentional - we need to show a UI indicator in response to prop change
   useEffect(() => {
-    if (lastSaveTime && lastSaveTime !== prevSaveTimeRef.current) {
-      prevSaveTimeRef.current = lastSaveTime;
-      // Using requestAnimationFrame to schedule the state update outside the effect body
-      requestAnimationFrame(() => {
-        setShowSavedIndicator(true);
-      });
-      const timer = setTimeout(() => setShowSavedIndicator(false), 2000);
-      return () => clearTimeout(timer);
+    const currentSaveTime = lastSaveTime?.getTime() || null;
+    
+    // Only trigger if save time actually changed (compare timestamps, not object references)
+    if (currentSaveTime && currentSaveTime !== prevSaveTimeRef.current) {
+      prevSaveTimeRef.current = currentSaveTime;
+      
+      // Only show the indicator if the save happened in the last 5 seconds
+      // to avoid showing it on mount for old rehydrated saves
+      const isRecent = (Date.now() - currentSaveTime) < 5000;
+      
+      if (isRecent) {
+        // Schedule state update to avoid synchronous setState in effect
+        const showTimer = setTimeout(() => {
+          setShowSavedIndicator(true);
+        }, 0);
+        const hideTimer = setTimeout(() => setShowSavedIndicator(false), 2000);
+        return () => {
+          clearTimeout(showTimer);
+          clearTimeout(hideTimer);
+        };
+      }
     }
   }, [lastSaveTime]);
 
