@@ -81,6 +81,10 @@ export function useGameAPI() {
         state.setSelectedCountryId(factionId);
         state.setIsCountrySidebarOpen(factionId !== null);
       },
+
+      // Map mode
+      setMapMode: (mode) => state.setMapMode(mode),
+      getMapMode: () => state.mapMode,
     };
 
     return () => {

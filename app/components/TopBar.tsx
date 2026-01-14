@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import { Country, GameSpeed, GameEvent, ProductionQueueItem } from '../types/game';
+import { Country, GameSpeed, GameEvent, ProductionQueueItem, MapMode } from '../types/game';
 import SpeedControl from './SpeedControl';
 import TreasuryButton from './TreasuryButton';
 
@@ -18,11 +18,13 @@ interface TopBarProps {
   gameEvents: GameEvent[];
   showSavedIndicator: boolean;
   productionQueue: ProductionQueueItem[];
+  mapMode: MapMode;
   onTogglePlay: () => void;
   onChangeSpeed: (speed: GameSpeed) => void;
   onSaveGame: () => void;
   onOpenEvents: () => void;
   onOpenProductionQueue: () => void;
+  onSetMapMode: (mode: MapMode) => void;
 }
 
 export default function TopBar({
@@ -38,11 +40,13 @@ export default function TopBar({
   gameEvents,
   showSavedIndicator,
   productionQueue,
+  mapMode,
   onTogglePlay,
   onChangeSpeed,
   onSaveGame,
   onOpenEvents,
   onOpenProductionQueue,
+  onSetMapMode,
 }: TopBarProps) {
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -116,6 +120,32 @@ export default function TopBar({
             </span>
           )}
         </button>
+
+        {/* Map Mode Selector */}
+        <div className="flex rounded border border-stone-600 bg-stone-800/80 overflow-hidden">
+          <button
+            onClick={() => onSetMapMode('country')}
+            className={`px-3 py-1 text-xs transition-colors ${
+              mapMode === 'country'
+                ? 'bg-blue-600 text-white font-semibold'
+                : 'text-stone-300 hover:bg-stone-700'
+            }`}
+            title="Country Map - Colors by faction"
+          >
+            Country
+          </button>
+          <button
+            onClick={() => onSetMapMode('diplomacy')}
+            className={`px-3 py-1 text-xs transition-colors ${
+              mapMode === 'diplomacy'
+                ? 'bg-blue-600 text-white font-semibold'
+                : 'text-stone-300 hover:bg-stone-700'
+            }`}
+            title="Diplomacy Map - Colors by relationship"
+          >
+            Diplomacy
+          </button>
+        </div>
       </div>
 
       {/* Right Side: Date/Time and Speed Controls */}

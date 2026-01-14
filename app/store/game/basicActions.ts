@@ -1,4 +1,4 @@
-import { FactionId, Screen, Region, Adjacency, Country, GameSpeed, GameState, RegionState, AIState } from '../../types/game';
+import { FactionId, Screen, Region, Adjacency, Country, GameSpeed, GameState, RegionState, AIState, MapMode } from '../../types/game';
 import { initialMissions } from '../../data/gameData';
 import { createInitialAIState, createInitialAIArmyGroup } from '../../ai/cpuPlayer';
 import { createGameEvent, createNotification } from '../../utils/eventUtils';
@@ -170,4 +170,6 @@ export const createBasicActions = (
       currentScreen: 'main',
     });
   },
+
+  setMapMode: (mode: MapMode) => set({ mapMode: mode }),
 });

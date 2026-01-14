@@ -8,7 +8,8 @@ import {
   GameSpeed,
   ArmyGroupMode,
   FactionId,
-  RelationshipType
+  RelationshipType,
+  MapMode
 } from '../../types/game';
 
 export interface GameStore extends GameState {
@@ -79,6 +80,9 @@ export interface GameStore extends GameState {
   // Relationship Actions
   setRelationship: (fromFaction: FactionId, toFaction: FactionId, type: RelationshipType) => void;
   getRelationship: (fromFaction: FactionId, toFaction: FactionId) => RelationshipType;
+  
+  // Map Mode Actions
+  setMapMode: (mode: MapMode) => void;
   
   // Persistence Actions
   saveGame: () => void;

@@ -32,4 +32,5 @@ export const initialGameState: GameState = {
   relationships: [
     { fromFaction: 'white', toFaction: 'ukraine', type: 'autonomy' }
   ], // Initially no relationships (all neutral)
+  mapMode: 'country', // Default map mode
 };

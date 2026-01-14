@@ -62,6 +62,7 @@ export const useGameStore = create<GameStore>()(
         armyGroups: state.armyGroups,
         productionQueue: state.productionQueue,
         relationships: state.relationships, // Persist relationships
+        mapMode: state.mapMode, // Persist map mode
       }),
       onRehydrateStorage: () => (state) => {
         // Convert date strings back to Date objects after rehydration

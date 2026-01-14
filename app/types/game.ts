@@ -124,6 +124,9 @@ export interface NotificationItem extends GameEvent {
   expiresAt: Date; // Game time when this notification should be dismissed
 }
 
+// Map mode types for different map visualizations
+export type MapMode = 'country' | 'diplomacy';
+
 // Relationship types between countries
 export type RelationshipType = 'neutral' | 'military_access' | 'war' | 'autonomy';
 
@@ -151,6 +154,7 @@ export interface GameState {
   armyGroups: ArmyGroup[]; // Player's army groups for bulk movement
   productionQueue: ProductionQueueItem[]; // Queue of divisions being produced (per faction)
   relationships: Relationship[]; // Diplomatic/military relationships between factions
+  mapMode: MapMode; // Current map visualization mode
 }
 
 // AI State for CPU-controlled factions
@@ -255,6 +259,9 @@ export interface GameAPI {
   getRelationship: (fromFaction: FactionId, toFaction: FactionId) => RelationshipType;
   // Country sidebar
   openCountrySidebar: (factionId: FactionId | null) => void;
+  // Map mode
+  setMapMode: (mode: MapMode) => void;
+  getMapMode: () => MapMode;
 }
 
 // Declare global window.gameAPI
