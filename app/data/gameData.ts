@@ -25,6 +25,12 @@ export const countries: Country[] = [
     flag: '/images/flags/finland.svg',
     color: '#003580',
   },
+  {
+    id: 'ukraine',
+    name: 'Ukraine',
+    flag: '/images/flags/ukraine.svg',
+    color: '#0057B7',
+  },
 ];
 
 // Soviet Mission Tree
@@ -291,5 +297,92 @@ const finnishMissions: Mission[] = [
   },
 ];
 
+// Ukrainian Mission Tree
+const ukrainianMissions: Mission[] = [
+  {
+    id: 'ukraine_independence',
+    faction: 'ukraine',
+    name: 'Ukrainian People\'s Republic',
+    description: 'Establish the Ukrainian People\'s Republic and secure independence',
+    completed: false,
+    claimed: false,
+    rewards: { money: 100 },
+    prerequisites: [],
+    available: [
+      { type: 'hasUnits', count: 5 }, // Recruit initial defense forces
+    ],
+  },
+  {
+    id: 'ukraine_consolidate',
+    faction: 'ukraine',
+    name: 'Consolidate Control',
+    description: 'Secure control over Ukrainian territories and establish government authority',
+    completed: false,
+    claimed: false,
+    rewards: { money: 200 },
+    prerequisites: ['ukraine_independence'],
+    available: [
+      { type: 'controlRegion', regionId: 'UA-30' }, // Control Kyiv
+      { type: 'controlRegionCount', count: 15 }, // Control significant Ukrainian territory
+    ],
+  },
+  {
+    id: 'ukraine_rada',
+    faction: 'ukraine',
+    name: 'Strengthen the Rada',
+    description: 'Build up the Central Rada\'s authority and military capacity',
+    completed: false,
+    claimed: false,
+    rewards: { money: 150 },
+    prerequisites: ['ukraine_independence'],
+    available: [
+      { type: 'hasMoney', amount: 500 }, // Demonstrate financial stability
+      { type: 'hasUnits', count: 10 }, // Build military strength
+    ],
+  },
+  {
+    id: 'ukraine_resist',
+    faction: 'ukraine',
+    name: 'Resist Foreign Invasion',
+    description: 'Defend Ukrainian independence against Bolshevik and White forces',
+    completed: false,
+    claimed: false,
+    rewards: { money: 300 },
+    prerequisites: ['ukraine_consolidate', 'ukraine_rada'],
+    available: [
+      { type: 'combatVictories', count: 3 }, // Win battles against invaders
+      { type: 'controlRegionCount', count: 20 }, // Hold significant territory
+    ],
+  },
+  {
+    id: 'ukraine_donbas',
+    faction: 'ukraine',
+    name: 'Secure the Donbas',
+    description: 'Control the industrial heartland of the Donbas region',
+    completed: false,
+    claimed: false,
+    rewards: { money: 250 },
+    prerequisites: ['ukraine_resist'],
+    available: [
+      { type: 'controlRegions', regionIds: ['UA-14', 'UA-12'] }, // Control Donetsk and Dnipropetrovsk
+      { type: 'hasUnits', count: 15 }, // Strong military
+    ],
+  },
+  {
+    id: 'ukraine_victory',
+    faction: 'ukraine',
+    name: 'Independent and Free',
+    description: 'Secure full Ukrainian independence and control all Ukrainian territories',
+    completed: false,
+    claimed: false,
+    rewards: { money: 500, gameVictory: true },
+    prerequisites: ['ukraine_donbas'],
+    available: [
+      { type: 'allRegionsControlled', countryIso3: 'UKR' }, // Control all Ukrainian regions
+      { type: 'hasUnits', count: 20 }, // Strong military presence
+    ],
+  },
+];
+
 // Combined missions for both factions
-export const initialMissions: Mission[] = [...sovietMissions, ...whiteMissions, ...finnishMissions];
+export const initialMissions: Mission[] = [...sovietMissions, ...whiteMissions, ...finnishMissions, ...ukrainianMissions];

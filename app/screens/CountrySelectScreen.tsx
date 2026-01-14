@@ -65,7 +65,13 @@ export default function CountrySelectScreen({ onSelectCountry, onBack }: Country
               <p className="text-center text-sm text-stone-400">
                 {country.id === 'soviet' 
                   ? 'Lead the Bolshevik revolution and establish the world\'s first socialist state.'
-                  : 'Defend the provisional government and fight for a democratic Russia.'
+                  : country.id === 'white'
+                  ? 'Defend the provisional government and fight for a democratic Russia.'
+                  : country.id === 'finland'
+                  ? 'Secure Finnish independence and protect the nation from foreign threats.'
+                  : country.id === 'ukraine'
+                  ? 'Establish the Ukrainian People\'s Republic and defend independence from all invaders.'
+                  : 'Choose your side in the civil war.'
                 }
               </p>
 

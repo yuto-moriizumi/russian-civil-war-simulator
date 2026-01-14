@@ -98,7 +98,7 @@ export const initialRegionOwnership: Record<string, FactionId> = {
   'RU-VLG': 'white',   // Vologda Oblast
 
   // Central Russia (non-Soviet)
-  'RU-BRY': 'white',   // Bryansk Oblast
+  'RU-BRY': 'ukraine',   // Bryansk Oblast
   'RU-ORL': 'white',   // Oryol Oblast
   'RU-LIP': 'white',   // Lipetsk Oblast
   'RU-TAM': 'white',   // Tambov Oblast
@@ -172,35 +172,35 @@ export const initialRegionOwnership: Record<string, FactionId> = {
   'RU-KGD': 'soviet',   // Kaliningrad Oblast
 
   // ============================================
-  // UKRAINE (White-controlled)
+  // UKRAINE (Ukrainian People's Republic)
   // ============================================
-  'UA-05': 'white',  // Vinnytsia Oblast
-  'UA-07': 'white',  // Volyn Oblast
-  'UA-09': 'white',  // Luhansk Oblast
-  'UA-12': 'white',  // Dnipropetrovsk Oblast
-  'UA-14': 'white',  // Donetsk Oblast
-  'UA-18': 'white',  // Zhytomyr Oblast
-  'UA-21': 'white',  // Zakarpattia Oblast
-  'UA-23': 'white',  // Zaporizhzhia Oblast
-  'UA-26': 'white',  // Ivano-Frankivsk Oblast
-  'UA-30': 'white',  // Kyiv (city)
-  'UA-32': 'white',  // Kyiv Oblast
-  'UA-35': 'white',  // Kirovohrad Oblast
-  'UA-40': 'white',  // Sevastopol (city)
-  'UA-43': 'white',  // Crimea
-  'UA-46': 'white',  // Lviv Oblast
-  'UA-48': 'white',  // Mykolaiv Oblast
-  'UA-51': 'white',  // Odesa Oblast
-  'UA-53': 'white',  // Poltava Oblast
-  'UA-56': 'white',  // Rivne Oblast
-  'UA-59': 'white',  // Sumy Oblast
-  'UA-61': 'white',  // Ternopil Oblast
-  'UA-63': 'white',  // Kharkiv Oblast
-  'UA-65': 'white',  // Kherson Oblast
-  'UA-68': 'white',  // Khmelnytskyi Oblast
-  'UA-71': 'white',  // Cherkasy Oblast
-  'UA-74': 'white',  // Chernihiv Oblast
-  'UA-77': 'white',  // Chernivtsi Oblast
+  'UA-05': 'ukraine',  // Vinnytsia Oblast
+  'UA-07': 'ukraine',  // Volyn Oblast
+  'UA-09': 'ukraine',  // Luhansk Oblast
+  'UA-12': 'ukraine',  // Dnipropetrovsk Oblast
+  'UA-14': 'ukraine',  // Donetsk Oblast
+  'UA-18': 'ukraine',  // Zhytomyr Oblast
+  'UA-21': 'ukraine',  // Zakarpattia Oblast
+  'UA-23': 'ukraine',  // Zaporizhzhia Oblast
+  'UA-26': 'ukraine',  // Ivano-Frankivsk Oblast
+  'UA-30': 'ukraine',  // Kyiv (city)
+  'UA-32': 'ukraine',  // Kyiv Oblast
+  'UA-35': 'ukraine',  // Kirovohrad Oblast
+  'UA-40': 'ukraine',  // Sevastopol (city)
+  'UA-43': 'ukraine',  // Crimea
+  'UA-46': 'ukraine',  // Lviv Oblast
+  'UA-48': 'ukraine',  // Mykolaiv Oblast
+  'UA-51': 'ukraine',  // Odesa Oblast
+  'UA-53': 'ukraine',  // Poltava Oblast
+  'UA-56': 'ukraine',  // Rivne Oblast
+  'UA-59': 'ukraine',  // Sumy Oblast
+  'UA-61': 'ukraine',  // Ternopil Oblast
+  'UA-63': 'ukraine',  // Kharkiv Oblast
+  'UA-65': 'ukraine',  // Kherson Oblast
+  'UA-68': 'ukraine',  // Khmelnytskyi Oblast
+  'UA-71': 'ukraine',  // Cherkasy Oblast
+  'UA-74': 'ukraine',  // Chernihiv Oblast
+  'UA-77': 'ukraine',  // Chernivtsi Oblast
 
   // ============================================
   // BELARUS (Soviet/German-controlled)
