@@ -78,6 +78,7 @@ export const createUnitActions = (
             color: ARMY_GROUP_COLORS[0],
             owner: selectedCountry.id,
             theaterId: null,
+            mode: 'none',
           };
           
           set({ armyGroups: [...armyGroups, newGroup], selectedGroupId: newGroupId });
