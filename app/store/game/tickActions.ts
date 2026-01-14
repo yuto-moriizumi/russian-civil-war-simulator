@@ -31,7 +31,7 @@ export const createTickActions = (
     const state = get();
     if (!state.isPlaying) return;
 
-    const { dateTime, selectedCountry, regions, movingUnits, activeCombats, money, aiStates, gameEvents, notifications, armyGroups } = state;
+    const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, money, aiStates, gameEvents, notifications, armyGroups } = state;
     
     // Step 1: Validate divisions (development mode only)
     const { updatedRegions, updatedMovingUnits } = validateDivisions(regions, movingUnits, armyGroups);
@@ -47,7 +47,7 @@ export const createTickActions = (
     const { remainingMovements, completedMovements } = processMovements(updatedMovingUnits, newDate);
 
     // Step 4: Process active combats
-    const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications } = processCombats(activeCombats, newDate);
+    const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements } = processCombats(activeCombats, newDate, updatedRegions, adjacency);
 
     // Step 5: Apply completed movements to regions
     let nextRegions: typeof updatedRegions;
@@ -68,6 +68,9 @@ export const createTickActions = (
 
     // Step 6: Apply finished combats to regions
     nextRegions = applyFinishedCombats(finishedCombats, nextRegions);
+
+    // Step 6b: Add retreat movements to the moving units list
+    const nextMovingUnits = [...remainingMovements, ...retreatMovements];
 
     // Step 7: Regenerate HP for all stationary divisions
     nextRegions = regenerateDivisionHP(nextRegions);
@@ -102,14 +105,14 @@ export const createTickActions = (
     }
 
     // Step 9: Sync army group territories with actual division locations
-    nextArmyGroups = syncArmyGroupTerritories(nextArmyGroups, nextRegions, remainingMovements);
+    nextArmyGroups = syncArmyGroupTerritories(nextArmyGroups, nextRegions, nextMovingUnits);
 
     // Step 10: Update game state
     set({
       dateTime: newDate,
       money: newMoney,
       income: playerIncome,
-      movingUnits: remainingMovements,
+      movingUnits: nextMovingUnits,
       activeCombats: nextCombats,
       regions: nextRegions,
       gameEvents: nextEvents,

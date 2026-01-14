@@ -127,6 +127,7 @@ function MainScreenView() {
       onRenameArmyGroup={state.renameArmyGroup}
       onSelectArmyGroup={state.selectArmyGroup}
       onAdvanceArmyGroup={state.advanceArmyGroup}
+      onDefendArmyGroup={state.defendArmyGroup}
       onDeployToArmyGroup={state.deployToArmyGroup}
     />
   );

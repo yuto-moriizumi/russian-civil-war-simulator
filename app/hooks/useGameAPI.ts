@@ -51,6 +51,7 @@ export function useGameAPI() {
       createArmyGroup: (name, regionIds, theaterId) => state.createArmyGroup(name, regionIds, theaterId),
       getArmyGroups: () => state.armyGroups,
       advanceArmyGroup: (groupId) => state.advanceArmyGroup(groupId),
+      defendArmyGroup: (groupId) => state.defendArmyGroup(groupId),
       deployToArmyGroup: (groupId) => state.deployToArmyGroup(groupId),
       deleteArmyGroup: (groupId) => state.deleteArmyGroup(groupId),
 

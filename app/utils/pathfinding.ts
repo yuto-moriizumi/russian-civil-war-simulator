@@ -109,6 +109,95 @@ export function findBestMoveTowardEnemy(
 }
 
 /**
+ * Find all friendly border regions that are adjacent to enemy territory.
+ * These are regions that need defending.
+ */
+export function findFriendlyBorderRegions(
+  regions: RegionState,
+  adjacency: Adjacency,
+  playerFaction: FactionId
+): string[] {
+  const borderRegions: string[] = [];
+
+  for (const [regionId, region] of Object.entries(regions)) {
+    if (!region || region.owner !== playerFaction) continue;
+
+    const neighbors = adjacency[regionId] || [];
+    const hasEnemyNeighbor = neighbors.some(neighborId => {
+      const neighbor = regions[neighborId];
+      return neighbor && neighbor.owner !== playerFaction && neighbor.owner !== 'neutral';
+    });
+
+    if (hasEnemyNeighbor) {
+      borderRegions.push(regionId);
+    }
+  }
+
+  return borderRegions;
+}
+
+/**
+ * Find the best defensive move for a unit in a region.
+ * Strategy:
+ * 1. If already at a border region (adjacent to enemy), stay put
+ * 2. Otherwise, move toward the nearest friendly border region
+ * Returns the adjacent region ID to move to, or null if should stay/no valid move exists.
+ */
+export function findBestDefensiveMove(
+  regionId: string,
+  regions: RegionState,
+  adjacency: Adjacency,
+  playerFaction: FactionId
+): string | null {
+  const currentRegion = regions[regionId];
+  if (!currentRegion || currentRegion.owner !== playerFaction) return null;
+
+  // Check if already at a border region (adjacent to enemy)
+  const neighbors = adjacency[regionId] || [];
+  const hasEnemyNeighbor = neighbors.some(neighborId => {
+    const neighbor = regions[neighborId];
+    return neighbor && neighbor.owner !== playerFaction && neighbor.owner !== 'neutral';
+  });
+
+  // If at a border, stay put to defend
+  if (hasEnemyNeighbor) return null;
+
+  // Find all friendly border regions
+  const borderRegions = findFriendlyBorderRegions(regions, adjacency, playerFaction);
+  if (borderRegions.length === 0) return null;
+
+  // Find the nearest border region using BFS
+  const visited = new Set<string>();
+  const queue: { id: string; firstStep: string | null }[] = [{ id: regionId, firstStep: null }];
+  visited.add(regionId);
+
+  while (queue.length > 0) {
+    const { id: currentId, firstStep } = queue.shift()!;
+    const currentNeighbors = adjacency[currentId] || [];
+
+    for (const neighborId of currentNeighbors) {
+      if (visited.has(neighborId)) continue;
+      visited.add(neighborId);
+
+      const neighbor = regions[neighborId];
+      // Only move through friendly territory
+      if (!neighbor || neighbor.owner !== playerFaction) continue;
+
+      const nextFirstStep = firstStep || neighborId;
+
+      // Check if this neighbor is a border region
+      if (borderRegions.includes(neighborId)) {
+        return nextFirstStep;
+      }
+
+      queue.push({ id: neighborId, firstStep: nextFirstStep });
+    }
+  }
+
+  return null;
+}
+
+/**
  * Calculate the total number of divisions assigned to a specific army group.
  * This counts divisions by their armyGroupId field, including in-transit divisions.
  */

@@ -1,4 +1,4 @@
-import { Division, CombatResult, FactionId, ActiveCombat, ArmyGroup } from '../types/game';
+import { Division, CombatResult, FactionId, ActiveCombat, ArmyGroup, RegionState, Adjacency } from '../types/game';
 
 /**
  * Generate a unique ID for a new division
@@ -86,17 +86,29 @@ export function calculateDamage(attacker: Division, defender: Division): number 
 }
 
 /**
- * Apply damage to a division and return the updated division
- * Returns null if the division is destroyed (hp <= 0)
+ * Result of applying damage to a division
  */
-export function applyDamage(division: Division, damage: number): Division | null {
+export type DamageResult = 
+  | { type: 'survived'; division: Division }
+  | { type: 'retreating'; division: Division };
+
+/**
+ * Apply damage to a division and return the result
+ * - If hp > 0: division survives normally
+ * - If hp <= 0: division is marked for retreat
+ */
+export function applyDamage(division: Division, damage: number): DamageResult {
   const newHp = division.hp - damage;
   if (newHp <= 0) {
-    return null; // Division is destroyed
+    // Division HP reached 0 - mark for retreat
+    return { 
+      type: 'retreating', 
+      division: { ...division, hp: 0 } 
+    };
   }
   return {
-    ...division,
-    hp: newHp,
+    type: 'survived',
+    division: { ...division, hp: newHp }
   };
 }
 
@@ -146,15 +158,19 @@ export function resolveCombat(
     
     // Distribute damage to attacking divisions
     const damagePerAttacker = Math.ceil(defenderTotalDamage / attackerDivisions.length);
-    attackerDivisions = attackerDivisions
-      .map(div => applyDamage(div, damagePerAttacker))
-      .filter((div): div is Division => div !== null);
+    const attackerResults = attackerDivisions.map(div => applyDamage(div, damagePerAttacker));
+    attackerDivisions = attackerResults
+      .filter(result => result.type === 'survived')
+      .map(result => result.division);
     
     // Distribute damage to defending divisions
     const damagePerDefender = Math.ceil(attackerTotalDamage / defenderDivisions.length);
-    defenderDivisions = defenderDivisions
-      .map(div => applyDamage(div, damagePerDefender))
-      .filter((div): div is Division => div !== null);
+    const defenderResults = defenderDivisions.map(div => applyDamage(div, damagePerDefender));
+    defenderDivisions = defenderResults
+      .filter(result => result.type === 'survived')
+      .map(result => result.division);
+    // Note: Retreating divisions are lost in resolveCombat (instant resolution)
+    // Retreat logic only applies to active combats processed over time
   }
   
   const attackerCasualties = initialAttackerCount - attackerDivisions.length;
@@ -260,11 +276,18 @@ export function createActiveCombat(
 
 /**
  * Process a single combat round for an active combat
- * Returns the updated combat state
+ * Returns the updated combat state and any divisions that retreated
  */
-export function processCombatRound(combat: ActiveCombat): ActiveCombat {
+export function processCombatRound(
+  combat: ActiveCombat,
+  regions: RegionState,
+  adjacency: Adjacency
+): { 
+  combat: ActiveCombat; 
+  retreatingDivisions: { division: Division; toRegionId: string | null; fromRegionId: string }[] 
+} {
   if (combat.isComplete) {
-    return combat;
+    return { combat, retreatingDivisions: [] };
   }
   
   let attackerDivisions = combat.attackerDivisions.map(d => ({ ...d }));
@@ -273,10 +296,13 @@ export function processCombatRound(combat: ActiveCombat): ActiveCombat {
   // If either side has no divisions, combat is over
   if (attackerDivisions.length === 0 || defenderDivisions.length === 0) {
     return {
-      ...combat,
-      isComplete: true,
-      victor: attackerDivisions.length > 0 ? combat.attackerFaction : 
-              defenderDivisions.length > 0 ? combat.defenderFaction : null,
+      combat: {
+        ...combat,
+        isComplete: true,
+        victor: attackerDivisions.length > 0 ? combat.attackerFaction : 
+                defenderDivisions.length > 0 ? combat.defenderFaction : null,
+      },
+      retreatingDivisions: []
     };
   }
   
@@ -293,17 +319,67 @@ export function processCombatRound(combat: ActiveCombat): ActiveCombat {
     return sum + calculateDamage(defender, target);
   }, 0);
   
+  const retreatingDivisions: { division: Division; toRegionId: string | null; fromRegionId: string }[] = [];
+  
   // Distribute damage to attacking divisions
   const damagePerAttacker = Math.ceil(defenderTotalDamage / attackerDivisions.length);
-  attackerDivisions = attackerDivisions
-    .map(div => applyDamage(div, damagePerAttacker))
-    .filter((div): div is Division => div !== null);
+  const attackerResults = attackerDivisions.map(div => applyDamage(div, damagePerAttacker));
+  
+  // Process attacker results - handle retreats
+  attackerDivisions = [];
+  attackerResults.forEach(result => {
+    if (result.type === 'survived') {
+      attackerDivisions.push(result.division);
+    } else {
+      // Division needs to retreat
+      const retreatTarget = findRetreatDestination(
+        combat.regionId, 
+        result.division.owner, 
+        regions, 
+        adjacency
+      );
+      retreatingDivisions.push({
+        division: result.division,
+        toRegionId: retreatTarget,
+        fromRegionId: combat.regionId
+      });
+      if (retreatTarget) {
+        console.log(`[RETREAT] ${result.division.name} (${result.division.owner}) retreating from ${combat.regionName} to ${regions[retreatTarget]?.name}`);
+      } else {
+        console.log(`[DESTROYED] ${result.division.name} (${result.division.owner}) destroyed in ${combat.regionName} (no retreat available)`);
+      }
+    }
+  });
   
   // Distribute damage to defending divisions
   const damagePerDefender = Math.ceil(attackerTotalDamage / defenderDivisions.length);
-  defenderDivisions = defenderDivisions
-    .map(div => applyDamage(div, damagePerDefender))
-    .filter((div): div is Division => div !== null);
+  const defenderResults = defenderDivisions.map(div => applyDamage(div, damagePerDefender));
+  
+  // Process defender results - handle retreats
+  defenderDivisions = [];
+  defenderResults.forEach(result => {
+    if (result.type === 'survived') {
+      defenderDivisions.push(result.division);
+    } else {
+      // Division needs to retreat
+      const retreatTarget = findRetreatDestination(
+        combat.regionId, 
+        result.division.owner, 
+        regions, 
+        adjacency
+      );
+      retreatingDivisions.push({
+        division: result.division,
+        toRegionId: retreatTarget,
+        fromRegionId: combat.regionId
+      });
+      if (retreatTarget) {
+        console.log(`[RETREAT] ${result.division.name} (${result.division.owner}) retreating from ${combat.regionName} to ${regions[retreatTarget]?.name}`);
+      } else {
+        console.log(`[DESTROYED] ${result.division.name} (${result.division.owner}) destroyed in ${combat.regionName} (no retreat available)`);
+      }
+    }
+  });
   
   const newRound = combat.currentRound + 1;
   const combatEnded = 
@@ -332,6 +408,7 @@ export function processCombatRound(combat: ActiveCombat): ActiveCombat {
     defenderHp: getTotalHp(defenderDivisions),
     attackerDamageDealt: attackerTotalDamage,
     defenderDamageDealt: defenderTotalDamage,
+    retreats: retreatingDivisions.length,
   });
   
   if (combatEnded) {
@@ -348,13 +425,43 @@ export function processCombatRound(combat: ActiveCombat): ActiveCombat {
   }
   
   return {
-    ...combat,
-    attackerDivisions,
-    defenderDivisions,
-    currentRound: newRound,
-    isComplete: combatEnded,
-    victor,
+    combat: {
+      ...combat,
+      attackerDivisions,
+      defenderDivisions,
+      currentRound: newRound,
+      isComplete: combatEnded,
+      victor,
+    },
+    retreatingDivisions
   };
+}
+
+/**
+ * Find a valid retreat destination for a division
+ * Returns a region ID if a valid retreat exists, null if the division should be destroyed
+ */
+function findRetreatDestination(
+  combatRegionId: string,
+  divisionOwner: FactionId,
+  regions: RegionState,
+  adjacency: Adjacency
+): string | null {
+  const adjacentRegionIds = adjacency[combatRegionId] || [];
+  
+  // Filter to friendly regions
+  const friendlyNeighbors = adjacentRegionIds.filter(regionId => {
+    const region = regions[regionId];
+    return region && region.owner === divisionOwner;
+  });
+  
+  if (friendlyNeighbors.length === 0) {
+    return null; // No friendly neighbors - division is destroyed
+  }
+  
+  // Pick a random friendly neighbor
+  const randomIndex = Math.floor(Math.random() * friendlyNeighbors.length);
+  return friendlyNeighbors[randomIndex];
 }
 
 /**
