@@ -10,7 +10,8 @@ import {
   applyFinishedCombats, 
   regenerateDivisionHP, 
   syncArmyGroupTerritories, 
-  checkAndCompleteMissions 
+  checkAndCompleteMissions,
+  processProductionQueue
 } from './tickHelpers';
 
 /**
@@ -31,34 +32,65 @@ export const createTickActions = (
     const state = get();
     if (!state.isPlaying) return;
 
-    const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, money, aiStates, gameEvents, notifications, armyGroups } = state;
+    const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, money, aiStates, gameEvents, notifications, armyGroups, productionQueue } = state;
     
     // Step 1: Validate divisions (development mode only)
     const { updatedRegions, updatedMovingUnits } = validateDivisions(regions, movingUnits, armyGroups);
     
-    // Step 2: Calculate income and advance time
+    // Step 2: Process production queue
+    const { remainingProductions, updatedRegions: regionsAfterProduction, completedProductions } = processProductionQueue(
+      productionQueue,
+      dateTime,
+      updatedRegions
+    );
+    
+    // Create events for completed productions
+    const productionEvents = completedProductions
+      .filter(p => p.owner === selectedCountry?.id) // Only show events for player
+      .map(p => ({
+        id: `event-${Date.now()}-${p.id}`,
+        type: 'production_completed' as const,
+        timestamp: dateTime,
+        title: 'Production Complete',
+        description: `${p.divisionName} has been produced and deployed.`,
+        faction: p.owner,
+      }));
+    
+    const productionNotifications = completedProductions
+      .filter(p => p.owner === selectedCountry?.id)
+      .map(p => ({
+        id: `notif-${Date.now()}-${p.id}`,
+        type: 'production_completed' as const,
+        timestamp: dateTime,
+        title: 'Production Complete',
+        description: `${p.divisionName} has been produced and deployed.`,
+        faction: p.owner,
+        expiresAt: new Date(dateTime.getTime() + 6 * 60 * 60 * 1000), // 6 hours
+      }));
+    
+    // Step 3: Calculate income and advance time
     const playerFaction = selectedCountry?.id;
-    const playerIncome = playerFaction ? calculateFactionIncome(updatedRegions, playerFaction, updatedMovingUnits) : 0;
+    const playerIncome = playerFaction ? calculateFactionIncome(regionsAfterProduction, playerFaction, updatedMovingUnits) : 0;
     const newDate = new Date(dateTime);
     newDate.setHours(newDate.getHours() + 1);
     const newMoney = money + playerIncome;
     
-    // Step 3: Process unit movements
+    // Step 4: Process unit movements
     const { remainingMovements, completedMovements } = processMovements(updatedMovingUnits, newDate);
 
-    // Step 4: Process active combats
-    const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements } = processCombats(activeCombats, newDate, updatedRegions, adjacency);
+    // Step 5: Process active combats
+    const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements } = processCombats(activeCombats, newDate, regionsAfterProduction, adjacency);
 
-    // Step 5: Apply completed movements to regions
-    let nextRegions: typeof updatedRegions;
+    // Step 6: Apply completed movements to regions
+    let nextRegions: typeof regionsAfterProduction;
     const { nextCombats, nextEvents, nextNotifications } = (() => {
       const result = applyCompletedMovements(
         completedMovements,
         {
-          regions: updatedRegions,
+          regions: regionsAfterProduction,
           combats: updatedCombats,
-          events: [...gameEvents, ...newCombatEvents],
-          notifications: [...notifications, ...newCombatNotifications],
+          events: [...gameEvents, ...newCombatEvents, ...productionEvents],
+          notifications: [...notifications, ...newCombatNotifications, ...productionNotifications],
         },
         newDate
       );
@@ -119,6 +151,7 @@ export const createTickActions = (
       notifications: nextNotifications,
       aiStates: nextAIStates, // Updated AI states
       armyGroups: nextArmyGroups,
+      productionQueue: remainingProductions, // Update production queue
     });
     
     // Step 11: Check and auto-complete missions

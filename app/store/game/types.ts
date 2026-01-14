@@ -21,6 +21,7 @@ export interface GameStore extends GameState {
   lastSaveTime: Date | null;
   selectedGroupId: string | null; // Currently selected army group
   selectedTheaterId: string | null; // Currently selected theater
+  isProductionModalOpen: boolean; // Production queue modal state
 
   // Actions
   setRegions: (regions: RegionState) => void;
@@ -30,6 +31,7 @@ export interface GameStore extends GameState {
   setSelectedUnitRegion: (regionId: string | null) => void;
   setIsEventsModalOpen: (isOpen: boolean) => void;
   setSelectedCombatId: (combatId: string | null) => void;
+  setIsProductionModalOpen: (isOpen: boolean) => void;
   
   // Notification Actions
   dismissNotification: (notificationId: string) => void;
@@ -47,6 +49,10 @@ export interface GameStore extends GameState {
   moveUnits: (fromRegion: string, toRegion: string, count: number) => void;
   claimMission: (missionId: string) => void;
   openMissions: () => void;
+  
+  // Production Queue Actions
+  addToProductionQueue: (armyGroupId: string) => void;
+  cancelProduction: (productionId: string) => void;
   
   // Theater Actions
   detectAndUpdateTheaters: () => void;

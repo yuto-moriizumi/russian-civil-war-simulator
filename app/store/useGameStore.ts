@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Movement, ActiveCombat, GameEvent } from '../types/game';
+import { Movement, ActiveCombat, GameEvent, ProductionQueueItem } from '../types/game';
 
 // Internal imports
 import { GameStore } from './game/types';
@@ -11,6 +11,7 @@ import { createBasicActions } from './game/basicActions';
 import { createTickActions } from './game/tickActions';
 import { createUnitActions } from './game/unitActions';
 import { createArmyGroupActions } from './game/armyGroupActions';
+import { createProductionActions } from './game/productionActions';
 
 export const useGameStore = create<GameStore>()(
   persist(
@@ -28,12 +29,14 @@ export const useGameStore = create<GameStore>()(
       lastSaveTime: null,
       selectedGroupId: null,
       selectedTheaterId: null,
+      isProductionModalOpen: false,
 
       // Compose all actions from separate modules
       ...createBasicActions(set, get),
       ...createTickActions(set, get),
       ...createUnitActions(set, get),
       ...createArmyGroupActions(set, get),
+      ...createProductionActions(set, get),
     }),
     {
       name: 'russian-civil-war-save',
@@ -53,6 +56,7 @@ export const useGameStore = create<GameStore>()(
         lastSaveTime: state.lastSaveTime,
         theaters: state.theaters,
         armyGroups: state.armyGroups,
+        productionQueue: state.productionQueue,
       }),
       onRehydrateStorage: () => (state) => {
         // Convert date strings back to Date objects after rehydration
@@ -84,6 +88,14 @@ export const useGameStore = create<GameStore>()(
             state.gameEvents = state.gameEvents.map((e: GameEvent) => ({
               ...e,
               timestamp: new Date(e.timestamp),
+            }));
+          }
+          // Convert dates in productionQueue
+          if (state.productionQueue) {
+            state.productionQueue = state.productionQueue.map((p: ProductionQueueItem) => ({
+              ...p,
+              startTime: new Date(p.startTime),
+              completionTime: new Date(p.completionTime),
             }));
           }
           

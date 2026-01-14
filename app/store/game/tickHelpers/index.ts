@@ -12,3 +12,4 @@ export { applyCompletedMovements, applyFinishedCombats } from './movementApplica
 export { regenerateDivisionHP } from './hpRegeneration';
 export { syncArmyGroupTerritories } from './armyGroupSync';
 export { checkAndCompleteMissions } from './missionCompletion';
+export { processProductionQueue } from './productionProcessing';

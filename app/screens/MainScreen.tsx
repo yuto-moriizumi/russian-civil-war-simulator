@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, NotificationItem, ActiveCombat, ArmyGroup, Theater } from '../types/game';
+import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, NotificationItem, ActiveCombat, ArmyGroup, Theater, ProductionQueueItem } from '../types/game';
 import CombatPopup from '../components/CombatPopup';
 import EventsModal from '../components/EventsModal';
 import TheaterPanel from '../components/TheaterPanel';
@@ -38,6 +38,7 @@ interface MainScreenProps {
   mapDataLoaded: boolean;
   gameEvents: GameEvent[];
   notifications: NotificationItem[];
+  productionQueue: ProductionQueueItem[];
   // Theater and Army Groups props
   theaters: Theater[];
   armyGroups: ArmyGroup[];
@@ -87,6 +88,7 @@ export default function MainScreen({
   mapDataLoaded,
   gameEvents,
   notifications,
+  productionQueue,
   theaters,
   armyGroups,
   selectedGroupId,
