@@ -24,12 +24,14 @@ const RELATIONSHIP_COLORS: Record<RelationshipType, string> = {
   neutral: 'bg-gray-600',
   military_access: 'bg-blue-600',
   war: 'bg-red-600',
+  autonomy: 'bg-purple-600',
 };
 
 const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
   neutral: 'Neutral',
   military_access: 'Military Access',
   war: 'War',
+  autonomy: 'Autonomy',
 };
 
 export default function RelationshipsPanel({

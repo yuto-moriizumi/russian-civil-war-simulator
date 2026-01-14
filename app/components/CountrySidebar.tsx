@@ -27,18 +27,21 @@ const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
   neutral: 'Neutral',
   military_access: 'Military Access',
   war: 'War',
+  autonomy: 'Autonomy',
 };
 
 const RELATIONSHIP_COLORS: Record<RelationshipType, string> = {
   neutral: 'text-stone-400',
   military_access: 'text-blue-400',
   war: 'text-red-400',
+  autonomy: 'text-purple-400',
 };
 
 const RELATIONSHIP_BG: Record<RelationshipType, string> = {
   neutral: 'bg-stone-700',
   military_access: 'bg-blue-600',
   war: 'bg-red-600',
+  autonomy: 'bg-purple-600',
 };
 
 export default function CountrySidebar({
@@ -75,6 +78,14 @@ export default function CountrySidebar({
 
   const handleDeclareWar = () => {
     onSetRelationship(playerFaction, countryId, 'war');
+  };
+
+  const handleAutonomyToggle = (isChecked: boolean) => {
+    if (isChecked) {
+      onSetRelationship(playerFaction, countryId, 'autonomy');
+    } else {
+      onSetRelationship(playerFaction, countryId, 'neutral');
+    }
   };
 
   const playerToTargetStatus = getRelationshipStatus(playerFaction, countryId);
@@ -140,7 +151,7 @@ export default function CountrySidebar({
                     type="checkbox"
                     id="grant-access-sidebar"
                     checked={playerToTargetStatus === 'military_access' || playerToTargetStatus === 'war'}
-                    disabled={playerToTargetStatus === 'war'}
+                    disabled={playerToTargetStatus === 'war' || playerToTargetStatus === 'autonomy'}
                     onChange={(e) => handleMilitaryAccessToggle(e.target.checked)}
                     className="w-4 h-4 text-blue-600 bg-stone-700 border-stone-600 rounded focus:ring-blue-500"
                   />
@@ -149,16 +160,36 @@ export default function CountrySidebar({
                   </label>
                 </div>
 
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="grant-autonomy-sidebar"
+                    checked={playerToTargetStatus === 'autonomy'}
+                    disabled={playerToTargetStatus === 'war'}
+                    onChange={(e) => handleAutonomyToggle(e.target.checked)}
+                    className="w-4 h-4 text-purple-600 bg-stone-700 border-stone-600 rounded focus:ring-purple-500"
+                  />
+                  <label htmlFor="grant-autonomy-sidebar" className="text-sm text-stone-300 cursor-pointer">
+                    Grant Autonomy (mutual military access)
+                  </label>
+                </div>
+
                 <button
                   onClick={handleDeclareWar}
-                  disabled={playerToTargetStatus === 'war'}
+                  disabled={playerToTargetStatus === 'war' || playerToTargetStatus === 'autonomy' || targetToPlayerStatus === 'autonomy'}
                   className={`w-full font-bold py-2 px-3 rounded transition-colors ${
                     playerToTargetStatus === 'war'
                       ? 'bg-red-900/50 text-red-400 cursor-not-allowed border border-red-800'
+                      : (playerToTargetStatus === 'autonomy' || targetToPlayerStatus === 'autonomy')
+                      ? 'bg-stone-800 text-stone-500 cursor-not-allowed border border-stone-700'
                       : 'bg-red-700 hover:bg-red-600 text-white'
                   }`}
                 >
-                  {playerToTargetStatus === 'war' ? '⚔ At War' : '⚔ Declare War'}
+                  {playerToTargetStatus === 'war' 
+                    ? '⚔ At War' 
+                    : (playerToTargetStatus === 'autonomy' || targetToPlayerStatus === 'autonomy')
+                    ? '⚔ Cannot Declare War (Autonomy)'
+                    : '⚔ Declare War'}
                 </button>
               </div>
             </div>

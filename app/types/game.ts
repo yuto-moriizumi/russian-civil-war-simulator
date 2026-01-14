@@ -124,7 +124,7 @@ export interface NotificationItem extends GameEvent {
 }
 
 // Relationship types between countries
-export type RelationshipType = 'neutral' | 'military_access' | 'war';
+export type RelationshipType = 'neutral' | 'military_access' | 'war' | 'autonomy';
 
 // Represents a diplomatic/military relationship between two factions
 export interface Relationship {

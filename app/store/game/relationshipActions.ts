@@ -24,6 +24,36 @@ export const createRelationshipActions = (
       return;
     }
     
+    // Check for autonomy relationships - cannot declare war
+    if (type === 'war') {
+      // Check if either direction has an autonomy relationship
+      const hasAutonomy = relationships.some(
+        r => ((r.fromFaction === fromFaction && r.toFaction === toFaction) ||
+              (r.fromFaction === toFaction && r.toFaction === fromFaction)) &&
+             r.type === 'autonomy'
+      );
+      
+      if (hasAutonomy) {
+        console.warn('Cannot declare war on a faction with autonomy relationship');
+        return;
+      }
+    }
+    
+    // Check if trying to set autonomy when at war
+    if (type === 'autonomy') {
+      // Check if either direction has a war relationship
+      const atWar = relationships.some(
+        r => ((r.fromFaction === fromFaction && r.toFaction === toFaction) ||
+              (r.fromFaction === toFaction && r.toFaction === fromFaction)) &&
+             r.type === 'war'
+      );
+      
+      if (atWar) {
+        console.warn('Cannot establish autonomy relationship while at war');
+        return;
+      }
+    }
+    
     // Check if relationship already exists
     const existingIndex = relationships.findIndex(
       r => r.fromFaction === fromFaction && r.toFaction === toFaction
