@@ -85,6 +85,17 @@ export interface Movement {
   owner: FactionId;
 }
 
+// Production queue item - represents a division being produced
+export interface ProductionQueueItem {
+  id: string;                       // Unique identifier
+  divisionName: string;             // Name of the division being produced
+  owner: FactionId;                 // Which faction is producing this
+  startTime: Date;                  // When production started
+  completionTime: Date;             // When production will complete (24 game hours)
+  targetRegionId: string | null;    // Where the division will deploy (null = reserves)
+  armyGroupId: string;              // Which army group requested this division
+}
+
 export type GameEventType = 
   | 'combat_victory'
   | 'combat_defeat'
@@ -92,6 +103,8 @@ export type GameEventType =
   | 'region_lost'
   | 'unit_created'
   | 'unit_deployed'
+  | 'production_started'
+  | 'production_completed'
   | 'mission_completed'
   | 'mission_claimed'
   | 'game_victory';
@@ -125,6 +138,7 @@ export interface GameState {
   activeCombats: ActiveCombat[]; // Ongoing battles
   theaters: Theater[]; // Auto-detected theaters for the player
   armyGroups: ArmyGroup[]; // Player's army groups for bulk movement
+  productionQueue: ProductionQueueItem[]; // Queue of divisions being produced (per faction)
 }
 
 // AI State for CPU-controlled factions
@@ -219,6 +233,10 @@ export interface GameAPI {
   // Theater methods
   getTheaters: () => Theater[];
   selectTheater: (theaterId: string) => void;
+  // Production queue methods
+  addToProductionQueue: (armyGroupId: string) => boolean;
+  getProductionQueue: () => ProductionQueueItem[];
+  cancelProduction: (productionId: string) => boolean;
 }
 
 // Declare global window.gameAPI

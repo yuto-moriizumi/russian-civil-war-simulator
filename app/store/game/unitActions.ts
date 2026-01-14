@@ -174,62 +174,7 @@ export const createUnitActions = (
   },
 
   deployToArmyGroup: (groupId: string) => {
-    const { money, selectedCountry, dateTime, gameEvents, regions, armyGroups } = get();
-    const cost = 10;
-    
-    if (money < cost || !selectedCountry) return;
-    
-    const group = armyGroups.find(g => g.id === groupId);
-    if (!group) return;
-    
-    // Find valid regions in this army group
-    const validRegions = group.regionIds.filter(id => {
-      const region = regions[id];
-      return region && region.owner === selectedCountry.id;
-    });
-    
-    if (validRegions.length === 0) {
-      console.warn('No valid regions in army group for deployment');
-      return;
-    }
-    
-    // Pick a random region in the group
-    const deploymentTarget = validRegions[Math.floor(Math.random() * validRegions.length)];
-    
-    // Count existing divisions to generate unique name
-    const existingDivisions = Object.values(regions).reduce((acc, region) => 
-      acc + region.divisions.filter(d => d.owner === selectedCountry.id).length, 0
-    );
-    const divisionNumber = existingDivisions + 1;
-    const divisionName = `${selectedCountry.id === 'soviet' ? 'Red' : 'White'} Guard ${divisionNumber}${getOrdinalSuffix(divisionNumber)} Division`;
-    const newDivision = createDivision(selectedCountry.id, divisionName, groupId);
-    
-    const targetRegion = regions[deploymentTarget];
-    const newEvent = createGameEvent(
-      'unit_deployed',
-      `Division Deployed to ${group.name}`,
-      `${divisionName} has been trained for $${cost} and deployed to ${targetRegion.name} (${group.name}).`,
-      dateTime,
-      selectedCountry.id,
-      deploymentTarget
-    );
-
-    // Create notification that expires after 6 game hours
-    const newNotification = createNotification(newEvent, dateTime);
-
-    const newRegions = {
-      ...regions,
-      [deploymentTarget]: {
-        ...targetRegion,
-        divisions: [...targetRegion.divisions, newDivision],
-      },
-    };
-
-    set({
-      money: money - cost,
-      regions: newRegions,
-      gameEvents: [...gameEvents, newEvent],
-      notifications: [...get().notifications, newNotification],
-    });
+    // Call the production queue action instead of instant deployment
+    get().addToProductionQueue(groupId);
   },
 });

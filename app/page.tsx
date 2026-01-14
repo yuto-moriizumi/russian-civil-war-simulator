@@ -101,6 +101,7 @@ function MainScreenView() {
       mapDataLoaded={state.mapDataLoaded}
       gameEvents={state.gameEvents}
       notifications={state.notifications}
+      productionQueue={state.productionQueue}
       theaters={state.theaters}
       armyGroups={state.armyGroups}
       selectedGroupId={state.selectedGroupId}
@@ -119,7 +120,11 @@ function MainScreenView() {
       lastSaveTime={state.lastSaveTime}
       selectedCombatId={state.selectedCombatId}
       isEventsModalOpen={state.isEventsModalOpen}
+      isProductionModalOpen={state.isProductionModalOpen}
       onCloseEvents={() => state.setIsEventsModalOpen(false)}
+      onOpenProductionQueue={() => state.setIsProductionModalOpen(true)}
+      onCloseProductionQueue={() => state.setIsProductionModalOpen(false)}
+      onCancelProduction={state.cancelProduction}
       onDismissNotification={state.dismissNotification}
       onSelectTheater={state.selectTheater}
       onCreateArmyGroup={state.createArmyGroup}

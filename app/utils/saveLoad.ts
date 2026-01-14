@@ -11,6 +11,7 @@ import {
   Division,
   ArmyGroup,
   Theater,
+  ProductionQueueItem,
 } from '../types/game';
 
 const STORAGE_KEY = 'rcw-save';
@@ -68,6 +69,16 @@ interface SerializedActiveCombat {
   victor: FactionId | null;
 }
 
+interface SerializedProductionQueueItem {
+  id: string;
+  divisionName: string;
+  owner: FactionId;
+  startTime: string;
+  completionTime: string;
+  targetRegionId: string | null;
+  armyGroupId: string;
+}
+
 interface SerializedGameState {
   currentScreen: Screen;
   selectedCountry: Country | null;
@@ -83,6 +94,7 @@ interface SerializedGameState {
   activeCombats: SerializedActiveCombat[];
   armyGroups: ArmyGroup[];
   theaters: Theater[];
+  productionQueue: SerializedProductionQueueItem[];
 }
 
 interface SaveData {
@@ -117,6 +129,11 @@ function serializeGameState(state: GameState): SerializedGameState {
       startTime: c.startTime.toISOString(),
       lastRoundTime: c.lastRoundTime.toISOString(),
     })),
+    productionQueue: state.productionQueue.map((p) => ({
+      ...p,
+      startTime: p.startTime.toISOString(),
+      completionTime: p.completionTime.toISOString(),
+    })),
   };
 }
 
@@ -143,6 +160,15 @@ function deserializeGameState(data: SerializedGameState): GameState {
       ...c,
       startTime: new Date(c.startTime),
       lastRoundTime: new Date(c.lastRoundTime),
+    })),
+    productionQueue: (data.productionQueue || []).map((p) => ({
+      id: p.id,
+      divisionName: p.divisionName,
+      owner: p.owner,
+      startTime: new Date(p.startTime),
+      completionTime: new Date(p.completionTime),
+      targetRegionId: p.targetRegionId,
+      armyGroupId: p.armyGroupId,
     })),
   };
 }

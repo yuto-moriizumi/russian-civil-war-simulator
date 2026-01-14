@@ -59,6 +59,17 @@ export function useGameAPI() {
       // Theater API methods
       getTheaters: () => state.theaters,
       selectTheater: (theaterId) => state.selectTheater(theaterId),
+
+      // Production Queue API methods
+      addToProductionQueue: (armyGroupId) => {
+        state.addToProductionQueue(armyGroupId);
+        return true;
+      },
+      getProductionQueue: () => state.productionQueue,
+      cancelProduction: (productionId) => {
+        state.cancelProduction(productionId);
+        return true;
+      },
     };
 
     return () => {
