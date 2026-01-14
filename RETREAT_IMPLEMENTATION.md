@@ -45,16 +45,17 @@ function findRetreatDestination(
 
 #### Modified: `processCombats()`
 - Now accepts `regions` and `adjacency` parameters
-- Returns `retreatingDivisions` in the result
+- Returns `retreatMovements` (Movement objects) in the result
 - Passes region data to `processCombatRound()`
+- Creates Movement objects for retreating divisions with 3-hour travel time
 
 ### 3. `app/store/game/tickActions.ts`
 
 #### Modified: `tick()`
 - Extracts `adjacency` from game state
 - Passes `regions` and `adjacency` to `processCombats()`
-- Handles retreating divisions by adding them to destination regions
-- Step 6b: Applies retreating divisions after finished combats
+- Adds retreat movements to the movingUnits list
+- Step 6b: Retreat movements are added to game state for visual tracking
 
 ## Behavior
 
@@ -62,9 +63,15 @@ function findRetreatDestination(
 1. **Check Adjacent Regions**: System looks for adjacent regions using adjacency data
 2. **Filter Friendly Regions**: Only regions owned by the same faction are considered
 3. **Random Selection**: If friendly neighbors exist, picks one at random
-4. **Retreat or Destroy**:
-   - If friendly neighbor exists: Division retreats there with 0 HP
-   - If no friendly neighbor: Division is destroyed
+4. **Create Retreat Movement**:
+   - If friendly neighbor exists: Creates a Movement object with 3-hour travel time
+   - Division travels to destination over time (visible on map)
+   - If no friendly neighbor: Division is destroyed immediately
+
+### Retreat Movement Details:
+- **Travel Time**: 3 hours (faster than normal 6-hour movements)
+- **Visibility**: Retreating divisions appear as moving units on the map
+- **HP**: Divisions retreat with 0 HP and can regenerate upon arrival if stationary
 
 ### Console Logging:
 - `[RETREAT]`: When a division successfully retreats
@@ -85,8 +92,9 @@ To test the retreat mechanic:
    - `[COMBAT PROGRESS]` messages showing retreat counts
 
 3. **Verify**: After combat:
-   - Check that retreated divisions appear in adjacent friendly regions
-   - Verify divisions without friendly neighbors are removed
+   - Check that retreated divisions appear as moving units on the map
+   - Verify they arrive at adjacent friendly regions after 3 hours
+   - Verify divisions without friendly neighbors are removed immediately
 
 ## Edge Cases Handled
 
