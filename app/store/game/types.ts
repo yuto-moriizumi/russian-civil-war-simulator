@@ -5,7 +5,9 @@ import {
   AIState, 
   Screen, 
   Country, 
-  GameSpeed
+  GameSpeed,
+  FactionId,
+  RelationshipType
 } from '../../types/game';
 
 export interface GameStore extends GameState {
@@ -60,6 +62,10 @@ export interface GameStore extends GameState {
   advanceArmyGroup: (groupId: string) => void;
   defendArmyGroup: (groupId: string) => void;
   deployToArmyGroup: (groupId: string) => void;
+  
+  // Relationship Actions
+  setRelationship: (fromFaction: FactionId, toFaction: FactionId, type: RelationshipType) => void;
+  getRelationship: (fromFaction: FactionId, toFaction: FactionId) => RelationshipType;
   
   // Persistence Actions
   saveGame: () => void;

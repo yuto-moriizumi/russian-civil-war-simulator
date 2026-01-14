@@ -11,6 +11,7 @@ import {
   Division,
   ArmyGroup,
   Theater,
+  Relationship,
 } from '../types/game';
 
 const STORAGE_KEY = 'rcw-save';
@@ -83,6 +84,7 @@ interface SerializedGameState {
   activeCombats: SerializedActiveCombat[];
   armyGroups: ArmyGroup[];
   theaters: Theater[];
+  relationships: Relationship[];
 }
 
 interface SaveData {
@@ -144,6 +146,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       startTime: new Date(c.startTime),
       lastRoundTime: new Date(c.lastRoundTime),
     })),
+    relationships: data.relationships || [], // Default to empty array if not present
   };
 }
 

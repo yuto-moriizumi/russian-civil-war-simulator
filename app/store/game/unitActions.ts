@@ -137,11 +137,31 @@ export const createUnitActions = (
   },
 
   moveUnits: (fromRegion: string, toRegion: string, count: number) => {
-    const { adjacency, regions, selectedCountry, dateTime, movingUnits } = get();
+    const { adjacency, regions, selectedCountry, dateTime, movingUnits, relationships } = get();
     if (!adjacency[fromRegion]?.includes(toRegion)) return;
     
     const from = regions[fromRegion];
+    const to = regions[toRegion];
     if (!from || from.divisions.length < count || !selectedCountry || from.owner !== selectedCountry.id) return;
+    
+    // Check relationship with target region owner
+    const targetOwner = to.owner;
+    if (targetOwner !== selectedCountry.id) {
+      // Moving to another faction's territory
+      const relationship = relationships.find(
+        r => r.fromFaction === targetOwner && r.toFaction === selectedCountry.id
+      );
+      const relationshipType = relationship ? relationship.type : 'neutral';
+      
+      // Cannot move if neutral (no access and not at war)
+      if (relationshipType === 'neutral') {
+        console.warn(`Cannot move to ${to.name}: No military access or war state with ${targetOwner}`);
+        return;
+      }
+      
+      // Can move with military_access or war
+      // War will trigger combat/occupation, access will not
+    }
     
     const divisionsToMove = from.divisions.slice(0, count);
     const travelTimeHours = 6;

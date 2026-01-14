@@ -110,6 +110,16 @@ export interface NotificationItem extends GameEvent {
   expiresAt: Date; // Game time when this notification should be dismissed
 }
 
+// Relationship types between countries
+export type RelationshipType = 'neutral' | 'military_access' | 'war';
+
+// Represents a diplomatic/military relationship between two factions
+export interface Relationship {
+  fromFaction: FactionId;  // The faction granting access/declaring war
+  toFaction: FactionId;    // The faction receiving access/being declared war on
+  type: RelationshipType;  // Type of relationship
+}
+
 export interface GameState {
   currentScreen: Screen;
   selectedCountry: Country | null;
@@ -125,6 +135,7 @@ export interface GameState {
   activeCombats: ActiveCombat[]; // Ongoing battles
   theaters: Theater[]; // Auto-detected theaters for the player
   armyGroups: ArmyGroup[]; // Player's army groups for bulk movement
+  relationships: Relationship[]; // Diplomatic/military relationships between factions
 }
 
 // AI State for CPU-controlled factions
@@ -214,6 +225,10 @@ export interface GameAPI {
   // Theater methods
   getTheaters: () => Theater[];
   selectTheater: (theaterId: string) => void;
+  // Relationship methods
+  getRelationships: () => Relationship[];
+  setRelationship: (fromFaction: FactionId, toFaction: FactionId, type: RelationshipType) => void;
+  getRelationship: (fromFaction: FactionId, toFaction: FactionId) => RelationshipType;
 }
 
 // Declare global window.gameAPI

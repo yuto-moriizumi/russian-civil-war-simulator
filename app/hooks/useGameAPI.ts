@@ -58,6 +58,11 @@ export function useGameAPI() {
       // Theater API methods
       getTheaters: () => state.theaters,
       selectTheater: (theaterId) => state.selectTheater(theaterId),
+
+      // Relationship API methods
+      getRelationships: () => state.relationships,
+      setRelationship: (fromFaction, toFaction, type) => state.setRelationship(fromFaction, toFaction, type),
+      getRelationship: (fromFaction, toFaction) => state.getRelationship(fromFaction, toFaction),
     };
 
     return () => {
