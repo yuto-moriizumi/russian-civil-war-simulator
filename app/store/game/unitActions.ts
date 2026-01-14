@@ -161,10 +161,14 @@ export const createUnitActions = (
       );
       const weDeclared = ourRelationship ? ourRelationship.type : 'neutral';
       
+      // Check for autonomy relationship (grants mutual military access)
+      const hasAutonomy = theyGrantUs === 'autonomy' || weDeclared === 'autonomy';
+      
       // Can move if:
       // 1. They grant us military access or war, OR
-      // 2. We declared war on them
-      const canMove = theyGrantUs !== 'neutral' || weDeclared === 'war';
+      // 2. We declared war on them, OR
+      // 3. Either side has autonomy relationship (mutual military access)
+      const canMove = theyGrantUs !== 'neutral' || weDeclared === 'war' || hasAutonomy;
       
       if (!canMove) {
         console.warn(`Cannot move to ${to.name}: No military access or war state with ${targetOwner}`);

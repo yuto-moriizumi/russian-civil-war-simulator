@@ -27,18 +27,21 @@ const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
   neutral: 'Neutral',
   military_access: 'Military Access',
   war: 'War',
+  autonomy: 'Autonomy',
 };
 
 const RELATIONSHIP_COLORS: Record<RelationshipType, string> = {
   neutral: 'text-stone-400',
   military_access: 'text-blue-400',
   war: 'text-red-400',
+  autonomy: 'text-purple-400',
 };
 
 const RELATIONSHIP_BG: Record<RelationshipType, string> = {
   neutral: 'bg-stone-700',
   military_access: 'bg-blue-600',
   war: 'bg-red-600',
+  autonomy: 'bg-purple-600',
 };
 
 export default function CountrySidebar({
@@ -120,18 +123,33 @@ export default function CountrySidebar({
               Diplomacy
             </h3>
             <div className="bg-stone-900 rounded-lg border border-stone-700 p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-stone-300">Your Status:</span>
-                <span className={`px-2 py-1 rounded text-xs font-bold text-white ${RELATIONSHIP_BG[playerToTargetStatus]}`}>
-                  {RELATIONSHIP_LABELS[playerToTargetStatus]}
-                </span>
-              </div>
-              
-              <div className="text-xs text-stone-400 flex justify-between">
-                <span>They grant you:</span>
-                <span className={`font-bold ${RELATIONSHIP_COLORS[targetToPlayerStatus]}`}>
-                  {RELATIONSHIP_LABELS[targetToPlayerStatus]}
-                </span>
+              <div className="text-sm space-y-2">
+                <div className="flex flex-col gap-1">
+                  <div className="text-stone-400 text-xs">Relationship status:</div>
+                  <div className="text-stone-100">
+                    {playerToTargetStatus === 'autonomy' && (
+                      <span className="text-purple-400 font-bold">This country is an Autonomy Servant to you.</span>
+                    )}
+                    {targetToPlayerStatus === 'autonomy' && (
+                      <span className="text-purple-400 font-bold">This country is your Autonomy Master.</span>
+                    )}
+                    {(playerToTargetStatus === 'war' || targetToPlayerStatus === 'war') && (
+                      <span className="text-red-400 font-bold">You are at war with this country.</span>
+                    )}
+                    {playerToTargetStatus === 'military_access' && targetToPlayerStatus === 'military_access' && (
+                      <span className="text-blue-400 font-bold">You have mutual military access.</span>
+                    )}
+                    {playerToTargetStatus === 'military_access' && targetToPlayerStatus !== 'military_access' && targetToPlayerStatus !== 'war' && (
+                      <span className="text-blue-400 font-bold">You grant military access to this country.</span>
+                    )}
+                    {playerToTargetStatus !== 'military_access' && playerToTargetStatus !== 'war' && targetToPlayerStatus === 'military_access' && (
+                      <span className="text-blue-400 font-bold">This country grants military access to you.</span>
+                    )}
+                    {playerToTargetStatus === 'neutral' && targetToPlayerStatus === 'neutral' && (
+                      <span className="text-stone-500 font-bold">You are currently neutral towards each other.</span>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="pt-2 space-y-3">
@@ -140,7 +158,7 @@ export default function CountrySidebar({
                     type="checkbox"
                     id="grant-access-sidebar"
                     checked={playerToTargetStatus === 'military_access' || playerToTargetStatus === 'war'}
-                    disabled={playerToTargetStatus === 'war'}
+                    disabled={playerToTargetStatus === 'war' || playerToTargetStatus === 'autonomy'}
                     onChange={(e) => handleMilitaryAccessToggle(e.target.checked)}
                     className="w-4 h-4 text-blue-600 bg-stone-700 border-stone-600 rounded focus:ring-blue-500"
                   />
@@ -151,14 +169,20 @@ export default function CountrySidebar({
 
                 <button
                   onClick={handleDeclareWar}
-                  disabled={playerToTargetStatus === 'war'}
+                  disabled={playerToTargetStatus === 'war' || targetToPlayerStatus === 'war' || playerToTargetStatus === 'autonomy' || targetToPlayerStatus === 'autonomy'}
                   className={`w-full font-bold py-2 px-3 rounded transition-colors ${
-                    playerToTargetStatus === 'war'
+                    (playerToTargetStatus === 'war' || targetToPlayerStatus === 'war')
                       ? 'bg-red-900/50 text-red-400 cursor-not-allowed border border-red-800'
+                      : (playerToTargetStatus === 'autonomy' || targetToPlayerStatus === 'autonomy')
+                      ? 'bg-stone-800 text-stone-500 cursor-not-allowed border border-stone-700'
                       : 'bg-red-700 hover:bg-red-600 text-white'
                   }`}
                 >
-                  {playerToTargetStatus === 'war' ? '⚔ At War' : '⚔ Declare War'}
+                  {playerToTargetStatus === 'war' || targetToPlayerStatus === 'war'
+                    ? '⚔ At War' 
+                    : (playerToTargetStatus === 'autonomy' || targetToPlayerStatus === 'autonomy')
+                    ? '⚔ Cannot Declare War (Autonomy)'
+                    : '⚔ Declare War'}
                 </button>
               </div>
             </div>
@@ -189,13 +213,13 @@ export default function CountrySidebar({
                     <div className="flex justify-between">
                       <span className="text-stone-500 font-medium">Outward:</span>
                       <span className={`font-bold ${RELATIONSHIP_COLORS[outwardRelation]}`}>
-                        {RELATIONSHIP_LABELS[outwardRelation]}
+                        {outwardRelation === 'autonomy' ? 'Autonomy Master' : RELATIONSHIP_LABELS[outwardRelation]}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-stone-500 font-medium">Inward:</span>
                       <span className={`font-bold ${RELATIONSHIP_COLORS[inwardRelation]}`}>
-                        {RELATIONSHIP_LABELS[inwardRelation]}
+                        {inwardRelation === 'autonomy' ? 'Autonomy Servant' : RELATIONSHIP_LABELS[inwardRelation]}
                       </span>
                     </div>
                   </div>

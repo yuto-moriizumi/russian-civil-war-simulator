@@ -20,6 +20,7 @@ const eventIcons: Record<GameEventType, string> = {
   production_completed: '',
   mission_completed: '',
   mission_claimed: '',
+  war_declared: '⚔️',
   game_victory: '',
 };
 
@@ -34,6 +35,7 @@ const eventColors: Record<GameEventType, string> = {
   production_completed: 'text-emerald-400 border-emerald-600/50 bg-emerald-900/20',
   mission_completed: 'text-purple-400 border-purple-600/50 bg-purple-900/20',
   mission_claimed: 'text-amber-400 border-amber-600/50 bg-amber-900/20',
+  war_declared: 'text-red-400 border-red-600/50 bg-red-900/20',
   game_victory: 'text-yellow-400 border-yellow-600/50 bg-yellow-900/20',
 };
 

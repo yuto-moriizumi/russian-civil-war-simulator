@@ -56,12 +56,21 @@ export function applyCompletedMovements(
       );
       const weDeclared = ourRelationship ? ourRelationship.type : 'neutral';
       
-      // Determine the effective relationship
-      // If we declared war, it's war regardless of their stance
-      // If they granted us military access and we didn't declare war, it's military access
-      const effectiveRelationship = weDeclared === 'war' ? 'war' : theyGrantUs;
+      // Check for autonomy relationship (bidirectional)
+      const hasAutonomy = theyGrantUs === 'autonomy' || weDeclared === 'autonomy';
       
-      if (effectiveRelationship === 'military_access') {
+      // Determine the effective relationship
+      // Autonomy grants mutual military access
+      // If we declared war, it's war regardless of their stance (unless autonomy prevents it)
+      // If they granted us military access and we didn't declare war, it's military access
+      let effectiveRelationship = weDeclared === 'war' ? 'war' : theyGrantUs;
+      
+      // Override: autonomy grants military access
+      if (hasAutonomy) {
+        effectiveRelationship = 'military_access';
+      }
+      
+      if (effectiveRelationship === 'military_access' || effectiveRelationship === 'autonomy') {
         // Military access - units can move but no occupation or combat
         // Just add divisions to the region without changing ownership
         nextRegions[toRegion] = {

@@ -205,8 +205,11 @@ export const createArmyGroupActions = (
         );
         const weDeclared = ourRelationship ? ourRelationship.type : 'neutral';
         
-        // Can move if they grant us access/war OR we declared war on them
-        const canMove = theyGrantUs !== 'neutral' || weDeclared === 'war';
+        // Check for autonomy relationship (grants mutual military access)
+        const hasAutonomy = theyGrantUs === 'autonomy' || weDeclared === 'autonomy';
+        
+        // Can move if they grant us access/war OR we declared war on them OR autonomy
+        const canMove = theyGrantUs !== 'neutral' || weDeclared === 'war' || hasAutonomy;
         
         if (!canMove) {
           console.warn(`[ADVANCE] Cannot move to ${targetRegion.name}: No military access or war state with ${targetRegion.owner}`);
@@ -410,8 +413,11 @@ export const createArmyGroupActions = (
               );
               const weDeclared = ourRelationship ? ourRelationship.type : 'neutral';
               
-              // Can move if they grant us access/war OR we declared war on them
-              const canMove = theyGrantUs !== 'neutral' || weDeclared === 'war';
+              // Check for autonomy relationship (grants mutual military access)
+              const hasAutonomy = theyGrantUs === 'autonomy' || weDeclared === 'autonomy';
+              
+              // Can move if they grant us access/war OR we declared war on them OR autonomy
+              const canMove = theyGrantUs !== 'neutral' || weDeclared === 'war' || hasAutonomy;
               
               if (!canMove) {
                 console.warn(`[DEFEND] Cannot move to ${targetRegion.name}: No military access or war state with ${targetRegion.owner}`);
