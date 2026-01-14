@@ -1,8 +1,16 @@
-import type { RegionState } from '../../types/game';
+import type { RegionState, FactionId, MapMode } from '../../types/game';
 import { FACTION_COLORS } from '../../utils/mapUtils';
 
+// Colors for diplomacy map mode
+const DIPLOMACY_COLORS = {
+  player: '#3B82F6',      // Blue - Your country
+  autonomy: '#10B981',    // Green - Autonomy/allied countries
+  enemy: '#EF4444',       // Red - Enemy countries
+  neutral: '#9CA3AF',     // Gray - Neutral countries
+};
+
 /**
- * Build color expression for region fill based on ownership
+ * Build color expression for region fill based on ownership (country map mode)
  */
 export function createFillColorExpression(regions: RegionState) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -16,6 +24,68 @@ export function createFillColorExpression(regions: RegionState) {
   expression.push(FACTION_COLORS.neutral);
   
   return expression;
+}
+
+/**
+ * Build color expression for region fill based on diplomatic relationships (diplomacy map mode)
+ */
+export function createDiplomacyFillColorExpression(
+  regions: RegionState,
+  playerFaction: FactionId,
+  getRelationship: (from: FactionId, to: FactionId) => string
+) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const expression: any[] = ['match', ['get', 'shapeISO']];
+  
+  for (const [id, region] of Object.entries(regions)) {
+    const owner = region.owner;
+    let color: string;
+    
+    if (owner === playerFaction) {
+      // Your country
+      color = DIPLOMACY_COLORS.player;
+    } else if (owner === 'neutral' || owner === 'foreign') {
+      // Neutral territories
+      color = DIPLOMACY_COLORS.neutral;
+    } else {
+      // Check relationship (check both directions for mutual status like war or hierarchical like autonomy)
+      const relForward = getRelationship(playerFaction, owner);
+      const relBackward = getRelationship(owner, playerFaction);
+      
+      if (relForward === 'autonomy' || relBackward === 'autonomy') {
+        color = DIPLOMACY_COLORS.autonomy;
+      } else if (relForward === 'war' || relBackward === 'war') {
+        color = DIPLOMACY_COLORS.enemy;
+      } else {
+        // neutral or military_access
+        color = DIPLOMACY_COLORS.neutral;
+      }
+    }
+    
+    expression.push(id, color);
+  }
+  
+  // Default color for unmatched regions
+  expression.push(DIPLOMACY_COLORS.neutral);
+  
+  return expression;
+}
+
+/**
+ * Build the appropriate fill color expression based on map mode
+ */
+export function createMapModeFillColorExpression(
+  mapMode: MapMode,
+  regions: RegionState,
+  playerFaction: FactionId | undefined,
+  getRelationship: (from: FactionId, to: FactionId) => string
+) {
+  if (mapMode === 'diplomacy' && playerFaction) {
+    return createDiplomacyFillColorExpression(regions, playerFaction, getRelationship);
+  }
+  
+  // Default to country map mode
+  return createFillColorExpression(regions);
 }
 
 /**

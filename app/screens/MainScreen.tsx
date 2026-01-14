@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, NotificationItem, ActiveCombat, ArmyGroup, Theater, ProductionQueueItem, Relationship, RelationshipType, FactionId } from '../types/game';
+import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, NotificationItem, ActiveCombat, ArmyGroup, Theater, ProductionQueueItem, Relationship, RelationshipType, FactionId, MapMode } from '../types/game';
 import CombatPopup from '../components/CombatPopup';
 import EventsModal from '../components/EventsModal';
 import TheaterPanel from '../components/TheaterPanel';
@@ -49,6 +49,8 @@ interface MainScreenProps {
   relationships: Relationship[];
   selectedCountryId: FactionId | null;
   isCountrySidebarOpen: boolean;
+  mapMode: MapMode;
+  getRelationship: (fromFaction: FactionId, toFaction: FactionId) => RelationshipType;
   onTogglePlay: () => void;
   onChangeSpeed: (speed: GameSpeed) => void;
   onOpenMissions: () => void;
@@ -81,6 +83,7 @@ interface MainScreenProps {
   onAssignTheater: (groupId: string, theaterId: string | null) => void;
   onCountrySelect: (factionId: FactionId | null) => void;
   onSidebarOpen: (isOpen: boolean) => void;
+  onSetMapMode: (mode: MapMode) => void;
 }
 
 export default function MainScreen({
@@ -108,6 +111,8 @@ export default function MainScreen({
   relationships,
   selectedCountryId,
   isCountrySidebarOpen,
+  mapMode,
+  getRelationship,
   onTogglePlay,
   onChangeSpeed,
   onOpenMissions,
@@ -139,6 +144,7 @@ export default function MainScreen({
   onAssignTheater,
   onCountrySelect,
   onSidebarOpen,
+  onSetMapMode,
 }: MainScreenProps) {
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);
   
@@ -213,6 +219,8 @@ export default function MainScreen({
             selectedTheaterId={selectedTheaterId}
             selectedGroupId={selectedGroupId}
             armyGroups={armyGroups}
+            mapMode={mapMode}
+            getRelationship={getRelationship}
             onRegionSelect={onRegionSelect}
             onUnitSelect={onUnitSelect}
             onDeployUnit={onDeployUnit}
@@ -255,11 +263,13 @@ export default function MainScreen({
         gameEvents={gameEvents}
         showSavedIndicator={showSavedIndicator}
         productionQueue={productionQueue}
+        mapMode={mapMode}
         onTogglePlay={onTogglePlay}
         onChangeSpeed={onChangeSpeed}
         onSaveGame={onSaveGame}
         onOpenEvents={onOpenEvents}
         onOpenProductionQueue={handleOpenProductionQueue}
+        onSetMapMode={onSetMapMode}
       />
 
       {/* Country Sidebar */}

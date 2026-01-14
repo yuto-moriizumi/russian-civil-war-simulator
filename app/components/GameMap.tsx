@@ -4,14 +4,14 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import Map, { MapRef, Source, Layer, NavigationControl } from 'react-map-gl/maplibre';
 import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { RegionState, Adjacency, FactionId, Movement, ActiveCombat, Theater, ArmyGroup } from '../types/game';
+import { RegionState, Adjacency, FactionId, Movement, ActiveCombat, Theater, ArmyGroup, MapMode, RelationshipType } from '../types/game';
 import { getAdjacentRegions } from '../utils/mapUtils';
 import { useRegionCentroids } from './GameMap/mapHooks';
 import { UnitMarker, MovingUnitMarker, CombatMarker } from './GameMap/MapMarkers';
 import { RegionTooltip, RegionInfoPanel } from './GameMap/RegionPanels';
 import { useMapState } from './GameMap/useMapState';
 import {
-  createFillColorExpression,
+  createMapModeFillColorExpression,
   createLineColorExpression,
   createLineWidthExpression,
   createFillOpacityExpression,
@@ -39,6 +39,8 @@ interface GameMapProps {
   selectedTheaterId: string | null;
   selectedGroupId: string | null;
   armyGroups: ArmyGroup[];
+  mapMode: MapMode;
+  getRelationship: (fromFaction: FactionId, toFaction: FactionId) => RelationshipType;
   onRegionSelect: (regionId: string | null) => void;
   onUnitSelect: (regionId: string | null) => void;
   onRegionHover?: (regionId: string | null) => void;
@@ -63,6 +65,8 @@ export default function GameMap({
   selectedTheaterId,
   selectedGroupId,
   armyGroups,
+  mapMode,
+  getRelationship,
   onRegionSelect,
   onUnitSelect,
   onRegionHover,
@@ -131,7 +135,10 @@ export default function GameMap({
   }, []);
 
   // Map style expressions
-  const fillColorExpression = useMemo(() => createFillColorExpression(regions), [regions]);
+  const fillColorExpression = useMemo(() => 
+    createMapModeFillColorExpression(mapMode, regions, playerFaction, getRelationship), 
+    [mapMode, regions, playerFaction, getRelationship]
+  );
   const lineColorExpression = useMemo(() => createLineColorExpression(), []);
   const lineWidthExpression = useMemo(() => createLineWidthExpression(), []);
   const fillOpacityExpression = useMemo(() => createFillOpacityExpression(), []);

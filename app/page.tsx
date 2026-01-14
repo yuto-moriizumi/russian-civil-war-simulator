@@ -109,6 +109,8 @@ function MainScreenView() {
       relationships={state.relationships}
       selectedCountryId={state.selectedCountryId}
       isCountrySidebarOpen={state.isCountrySidebarOpen}
+      mapMode={state.mapMode}
+      getRelationship={state.getRelationship}
       onTogglePlay={state.togglePlay}
       onChangeSpeed={state.setGameSpeed}
       onOpenMissions={state.openMissions}
@@ -140,6 +142,7 @@ function MainScreenView() {
       onSetRelationship={state.setRelationship}
       onCountrySelect={state.setSelectedCountryId}
       onSidebarOpen={state.setIsCountrySidebarOpen}
+      onSetMapMode={state.setMapMode}
     />
   );
 }

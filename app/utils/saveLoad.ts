@@ -12,6 +12,7 @@ import {
   ArmyGroup,
   Theater,
   Relationship,
+  MapMode,
 } from '../types/game';
 
 const STORAGE_KEY = 'rcw-save';
@@ -96,6 +97,7 @@ interface SerializedGameState {
   theaters: Theater[];
   productionQueue: SerializedProductionQueueItem[];
   relationships: Relationship[];
+  mapMode: MapMode;
 }
 
 interface SaveData {
@@ -172,6 +174,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       armyGroupId: p.armyGroupId,
     })),
     relationships: data.relationships || [], // Default to empty array if not present
+    mapMode: data.mapMode || 'country', // Default to country map mode
   };
 }
 
