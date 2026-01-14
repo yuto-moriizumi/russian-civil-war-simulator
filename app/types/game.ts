@@ -208,6 +208,7 @@ export interface GameAPI {
   createArmyGroup: (name: string, regionIds: string[], theaterId?: string | null) => void;
   getArmyGroups: () => ArmyGroup[];
   advanceArmyGroup: (groupId: string) => void;
+  defendArmyGroup: (groupId: string) => void;
   deployToArmyGroup: (groupId: string) => void;
   deleteArmyGroup: (groupId: string) => void;
   // Theater methods

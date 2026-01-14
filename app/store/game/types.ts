@@ -58,6 +58,7 @@ export interface GameStore extends GameState {
   renameArmyGroup: (groupId: string, name: string) => void;
   selectArmyGroup: (groupId: string | null) => void;
   advanceArmyGroup: (groupId: string) => void;
+  defendArmyGroup: (groupId: string) => void;
   deployToArmyGroup: (groupId: string) => void;
   
   // Persistence Actions
