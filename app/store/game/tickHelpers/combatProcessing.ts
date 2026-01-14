@@ -1,6 +1,6 @@
 import { ActiveCombat, GameEvent, NotificationItem, RegionState, Adjacency, Movement } from '../../../types/game';
 import { processCombatRound, shouldProcessCombatRound } from '../../../utils/combat';
-import { createGameEvent, createNotification } from '../../../utils/eventUtils';
+import { createGameEvent } from '../../../utils/eventUtils';
 
 interface CombatProcessingResult {
   updatedCombats: ActiveCombat[];
