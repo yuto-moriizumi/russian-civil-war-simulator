@@ -114,6 +114,11 @@ export const createRelationshipActions = (
     
     let nextRelationships = applyRelationshipChange(startRelationships, fromFaction, toFaction, type);
 
+    // War is mutual
+    if (type === 'war') {
+      nextRelationships = applyRelationshipChange(nextRelationships, toFaction, fromFaction, 'war');
+    }
+
     // Cascading war declarations for autonomy
     if (type === 'war') {
       // 1. If Master declares war, Servant also declares war on the target
@@ -135,7 +140,10 @@ export const createRelationshipActions = (
           );
           newEvents.push(event);
           newNotifications.push(createNotification(event, dateTime));
+          
+          // Make it mutual between Servant and Target
           nextRelationships = applyRelationshipChange(nextRelationships, s.toFaction, toFaction, 'war');
+          nextRelationships = applyRelationshipChange(nextRelationships, toFaction, s.toFaction, 'war');
         }
       });
 
@@ -158,7 +166,10 @@ export const createRelationshipActions = (
           );
           newEvents.push(event);
           newNotifications.push(createNotification(event, dateTime));
+          
+          // Make it mutual between Servant and Aggressor
           nextRelationships = applyRelationshipChange(nextRelationships, s.toFaction, fromFaction, 'war');
+          nextRelationships = applyRelationshipChange(nextRelationships, fromFaction, s.toFaction, 'war');
         }
       });
     }

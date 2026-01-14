@@ -133,16 +133,16 @@ export default function CountrySidebar({
                     {targetToPlayerStatus === 'autonomy' && (
                       <span className="text-purple-400 font-bold">This country is your Autonomy Master.</span>
                     )}
-                    {playerToTargetStatus === 'war' && (
+                    {(playerToTargetStatus === 'war' || targetToPlayerStatus === 'war') && (
                       <span className="text-red-400 font-bold">You are at war with this country.</span>
                     )}
                     {playerToTargetStatus === 'military_access' && targetToPlayerStatus === 'military_access' && (
                       <span className="text-blue-400 font-bold">You have mutual military access.</span>
                     )}
-                    {playerToTargetStatus === 'military_access' && targetToPlayerStatus !== 'military_access' && (
+                    {playerToTargetStatus === 'military_access' && targetToPlayerStatus !== 'military_access' && targetToPlayerStatus !== 'war' && (
                       <span className="text-blue-400 font-bold">You grant military access to this country.</span>
                     )}
-                    {playerToTargetStatus !== 'military_access' && targetToPlayerStatus === 'military_access' && (
+                    {playerToTargetStatus !== 'military_access' && playerToTargetStatus !== 'war' && targetToPlayerStatus === 'military_access' && (
                       <span className="text-blue-400 font-bold">This country grants military access to you.</span>
                     )}
                     {playerToTargetStatus === 'neutral' && targetToPlayerStatus === 'neutral' && (
@@ -169,16 +169,16 @@ export default function CountrySidebar({
 
                 <button
                   onClick={handleDeclareWar}
-                  disabled={playerToTargetStatus === 'war' || playerToTargetStatus === 'autonomy' || targetToPlayerStatus === 'autonomy'}
+                  disabled={playerToTargetStatus === 'war' || targetToPlayerStatus === 'war' || playerToTargetStatus === 'autonomy' || targetToPlayerStatus === 'autonomy'}
                   className={`w-full font-bold py-2 px-3 rounded transition-colors ${
-                    playerToTargetStatus === 'war'
+                    (playerToTargetStatus === 'war' || targetToPlayerStatus === 'war')
                       ? 'bg-red-900/50 text-red-400 cursor-not-allowed border border-red-800'
                       : (playerToTargetStatus === 'autonomy' || targetToPlayerStatus === 'autonomy')
                       ? 'bg-stone-800 text-stone-500 cursor-not-allowed border border-stone-700'
                       : 'bg-red-700 hover:bg-red-600 text-white'
                   }`}
                 >
-                  {playerToTargetStatus === 'war' 
+                  {playerToTargetStatus === 'war' || targetToPlayerStatus === 'war'
                     ? '⚔ At War' 
                     : (playerToTargetStatus === 'autonomy' || targetToPlayerStatus === 'autonomy')
                     ? '⚔ Cannot Declare War (Autonomy)'
