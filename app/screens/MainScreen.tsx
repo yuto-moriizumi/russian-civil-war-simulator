@@ -9,7 +9,7 @@ import TheaterPanel from '../components/TheaterPanel';
 import NotificationToast from '../components/NotificationToast';
 import TopBar from '../components/TopBar';
 import MissionPanel from '../components/MissionPanel';
-import ProductionQueueModal from '../components/ProductionQueueModal';
+import ProductionQueuePanel from '../components/ProductionQueuePanel';
 import RelationshipsPanel from '../components/RelationshipsPanel';
 import { countFactionUnits } from '../utils/mapUtils';
 
@@ -160,6 +160,18 @@ export default function MainScreen({
     ? activeCombats.find(c => c.id === selectedCombatId) 
     : null;
 
+  const handleOpenProductionQueue = () => {
+    setShowRelationshipsPanel(false);
+    onOpenProductionQueue();
+  };
+
+  const handleToggleRelationships = () => {
+    if (!showRelationshipsPanel) {
+      onCloseProductionQueue();
+    }
+    setShowRelationshipsPanel(!showRelationshipsPanel);
+  };
+
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       {/* Map Background */}
@@ -221,18 +233,33 @@ export default function MainScreen({
         onChangeSpeed={onChangeSpeed}
         onSaveGame={onSaveGame}
         onOpenEvents={onOpenEvents}
-        onOpenProductionQueue={onOpenProductionQueue}
-        onToggleRelationships={() => setShowRelationshipsPanel(!showRelationshipsPanel)}
+        onOpenProductionQueue={handleOpenProductionQueue}
+        onToggleRelationships={handleToggleRelationships}
       />
 
       {/* Relationships Panel */}
-      {showRelationshipsPanel && (
-        <RelationshipsPanel
-          playerFaction={country.id}
-          relationships={relationships}
-          onSetRelationship={onSetRelationship}
-        />
-      )}
+      <RelationshipsPanel
+        isOpen={showRelationshipsPanel}
+        onClose={() => setShowRelationshipsPanel(false)}
+        playerFaction={country.id}
+        relationships={relationships}
+        onSetRelationship={onSetRelationship}
+      />
+
+      {/* Production Queue Panel */}
+      <ProductionQueuePanel
+        isOpen={isProductionModalOpen}
+        onClose={onCloseProductionQueue}
+        productionQueue={productionQueue}
+        regions={regions}
+        armyGroups={armyGroups}
+        playerFaction={country.id}
+        currentDateTime={dateTime}
+        money={money}
+        onAddProduction={() => {}} // Disabled - use Deploy button instead
+        onCancelProduction={onCancelProduction}
+        viewOnly={true}
+      />
 
       {/* Mission Panel */}
       <MissionPanel
@@ -276,21 +303,6 @@ export default function MainScreen({
         isOpen={isEventsModalOpen}
         onClose={onCloseEvents}
         events={gameEvents}
-      />
-
-      {/* Production Queue Modal - View Only (no manual adding) */}
-      <ProductionQueueModal
-        isOpen={isProductionModalOpen}
-        onClose={onCloseProductionQueue}
-        productionQueue={productionQueue}
-        regions={regions}
-        armyGroups={armyGroups}
-        playerFaction={country.id}
-        currentDateTime={dateTime}
-        money={money}
-        onAddProduction={() => {}} // Disabled - use Deploy button instead
-        onCancelProduction={onCancelProduction}
-        viewOnly={true}
       />
 
       {/* Notification Toasts */}

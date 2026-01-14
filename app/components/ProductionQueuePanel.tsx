@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import Modal from './Modal';
 import { ProductionQueueItem, RegionState, FactionId, ArmyGroup } from '../types/game';
+import SidebarPanel from './SidebarPanel';
 
-interface ProductionQueueModalProps {
+interface ProductionQueuePanelProps {
   isOpen: boolean;
   onClose: () => void;
   productionQueue: ProductionQueueItem[];
@@ -20,7 +20,7 @@ interface ProductionQueueModalProps {
 
 const DIVISION_COST = 10;
 
-export default function ProductionQueueModal({
+export default function ProductionQueuePanel({
   isOpen,
   onClose,
   productionQueue,
@@ -32,7 +32,7 @@ export default function ProductionQueueModal({
   onAddProduction,
   onCancelProduction,
   viewOnly = false,
-}: ProductionQueueModalProps) {
+}: ProductionQueuePanelProps) {
   const [divisionName, setDivisionName] = useState('');
   const [selectedRegion, setSelectedRegion] = useState<string>('');
 
@@ -74,11 +74,17 @@ export default function ProductionQueueModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Production Queue" size="lg">
+    <SidebarPanel
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Production Queue"
+      subtitle="Manage your military production"
+      side="left"
+    >
       <div className="space-y-6">
         {/* Add New Production - Hidden in view-only mode */}
         {!viewOnly && (
-          <div className="rounded-lg border border-stone-700 bg-stone-800/50 p-4">
+          <div className="rounded-lg border border-stone-700 bg-stone-900/50 p-4">
             <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-300">
               Start New Production
             </h3>
@@ -112,14 +118,14 @@ export default function ProductionQueueModal({
                 <div className="text-sm text-stone-400">
                   Cost: <span className="font-semibold text-amber-500">${DIVISION_COST}</span>
                   {' • '}
-                  Time: <span className="font-semibold text-stone-300">24 hours</span>
+                  Time: <span className="font-semibold text-stone-300">24h</span>
                 </div>
                 <button
                   onClick={handleAddProduction}
                   disabled={money < DIVISION_COST || !divisionName.trim()}
                   className="rounded bg-amber-600 px-4 py-2 text-sm font-semibold text-stone-900 transition-colors hover:bg-amber-500 disabled:cursor-not-allowed disabled:bg-stone-600 disabled:text-stone-400"
                 >
-                  Start Production
+                  Start
                 </button>
               </div>
             </div>
@@ -142,8 +148,8 @@ export default function ProductionQueueModal({
           </h3>
           
           {playerProductions.length === 0 ? (
-            <div className="rounded-lg border border-stone-700 bg-stone-800/30 p-6 text-center">
-              <p className="text-stone-400">No active productions</p>
+            <div className="rounded-lg border border-stone-700 bg-stone-900/30 p-6 text-center">
+              <p className="text-stone-400 text-sm">No active productions</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -159,43 +165,39 @@ export default function ProductionQueueModal({
                 return (
                   <div
                     key={production.id}
-                    className={`rounded-lg border p-4 transition-colors ${
+                    className={`rounded-lg border p-3 transition-colors ${
                       isActive 
                         ? 'border-amber-600/50 bg-amber-950/20 hover:bg-amber-950/30'
-                        : 'border-stone-700 bg-stone-800/50 hover:bg-stone-800/70'
+                        : 'border-stone-700 bg-stone-900/50 hover:bg-stone-800/70'
                     }`}
                   >
                     <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-stone-200">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-semibold text-stone-200 text-sm truncate">
                             {production.divisionName}
                           </h4>
-                          {isActive ? (
-                            <span className="rounded bg-amber-600 px-2 py-0.5 text-xs font-semibold text-stone-900">
+                          {isActive && (
+                            <span className="shrink-0 rounded bg-amber-600 px-1.5 py-0.5 text-[10px] font-bold text-stone-900 uppercase">
                               PRODUCING
-                            </span>
-                          ) : (
-                            <span className="rounded bg-stone-700 px-2 py-0.5 text-xs font-semibold text-stone-400">
-                              IN QUEUE #{index + 1}
                             </span>
                           )}
                         </div>
-                        <p className="mt-1 text-xs text-stone-400">
+                        <p className="text-[11px] text-stone-400 truncate">
                           Army Group: <span className="text-stone-300">{armyGroupName}</span>
                         </p>
-                        <p className="text-xs text-stone-400">
+                        <p className="text-[11px] text-stone-400 truncate">
                           Deploying to: <span className="text-stone-300">{targetRegionName}</span>
                         </p>
                         {isActive && (
                           <div className="mt-2">
-                            <div className="mb-1 flex items-center justify-between text-xs">
+                            <div className="mb-1 flex items-center justify-between text-[10px]">
                               <span className="text-stone-400">
                                 {formatTimeRemaining(production.completionTime)} remaining
                               </span>
                               <span className="text-stone-300">{Math.round(progress)}%</span>
                             </div>
-                            <div className="h-2 overflow-hidden rounded-full bg-stone-700">
+                            <div className="h-1.5 overflow-hidden rounded-full bg-stone-700">
                               <div
                                 className="h-full bg-amber-500 transition-all duration-500"
                                 style={{ width: `${progress}%` }}
@@ -204,8 +206,8 @@ export default function ProductionQueueModal({
                           </div>
                         )}
                         {!isActive && (
-                          <p className="mt-2 text-xs text-stone-500">
-                            Waiting for previous production to complete...
+                          <p className="mt-1 text-[10px] text-stone-500 italic">
+                            Waiting in queue #{index + 1}...
                           </p>
                         )}
                       </div>
@@ -215,9 +217,12 @@ export default function ProductionQueueModal({
                             onCancelProduction(production.id);
                           }
                         }}
-                        className="ml-4 rounded bg-red-900/50 px-3 py-1 text-xs text-red-300 transition-colors hover:bg-red-900"
+                        className="ml-2 shrink-0 rounded bg-red-900/30 p-1.5 text-red-400 transition-colors hover:bg-red-900/50"
+                        title="Cancel production"
                       >
-                        Cancel
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                       </button>
                     </div>
                   </div>
@@ -228,13 +233,13 @@ export default function ProductionQueueModal({
         </div>
 
         {/* Info */}
-        <div className="rounded-lg border border-blue-900/50 bg-blue-950/30 p-3">
-          <p className="text-xs text-blue-300">
-            <strong>Note:</strong> Each division costs ${DIVISION_COST} and takes 24 game hours to produce. 
-            You can cancel production for a 50% refund. Completed divisions will automatically deploy to the selected region.
+        <div className="rounded-lg border border-blue-900/50 bg-blue-950/20 p-3">
+          <p className="text-[11px] text-blue-300">
+            <strong>Note:</strong> Each division costs $10 and takes 24 game hours. 
+            Cancel for 50% refund. Completed divisions deploy automatically.
           </p>
         </div>
       </div>
-    </Modal>
+    </SidebarPanel>
   );
 }

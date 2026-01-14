@@ -1,8 +1,11 @@
 'use client';
 
 import { FactionId, Relationship, RelationshipType } from '../types/game';
+import SidebarPanel from './SidebarPanel';
 
 interface RelationshipsPanelProps {
+  isOpen: boolean;
+  onClose: () => void;
   playerFaction: FactionId;
   relationships: Relationship[];
   onSetRelationship: (fromFaction: FactionId, toFaction: FactionId, type: RelationshipType) => void;
@@ -29,6 +32,8 @@ const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
 };
 
 export default function RelationshipsPanel({
+  isOpen,
+  onClose,
   playerFaction,
   relationships,
   onSetRelationship,
@@ -71,14 +76,13 @@ export default function RelationshipsPanel({
   };
 
   return (
-    <div className="absolute top-20 left-4 bg-stone-800 border border-stone-700 rounded-lg p-4 shadow-xl max-w-md z-10">
-      <div className="mb-3">
-        <h2 className="text-lg font-bold text-stone-100">Diplomatic Relations</h2>
-        <p className="text-xs text-stone-400 mt-1">
-          Manage your relationships with other factions
-        </p>
-      </div>
-
+    <SidebarPanel
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Diplomatic Relations"
+      subtitle="Manage your relationships with other factions"
+      side="left"
+    >
       <div className="space-y-3">
         {otherFactions.map(faction => {
           const theirStatus = getRelationshipStatus(faction);
@@ -146,16 +150,16 @@ export default function RelationshipsPanel({
             </div>
           );
         })}
-      </div>
 
-      <div className="mt-3 p-2 bg-stone-900 rounded text-xs text-stone-400">
-        <p className="font-semibold mb-1">Relationship Types:</p>
-        <ul className="space-y-1 ml-2">
-          <li><span className="text-gray-400">Neutral:</span> No troop movement allowed</li>
-          <li><span className="text-blue-400">Military Access:</span> Troops can move, no occupation</li>
-          <li><span className="text-red-400">War:</span> Troops can move and occupy regions</li>
-        </ul>
+        <div className="mt-3 p-2 bg-stone-900 rounded text-xs text-stone-400">
+          <p className="font-semibold mb-1">Relationship Types:</p>
+          <ul className="space-y-1 ml-2">
+            <li><span className="text-gray-400">Neutral:</span> No troop movement allowed</li>
+            <li><span className="text-blue-400">Military Access:</span> Troops can move, no occupation</li>
+            <li><span className="text-red-400">War:</span> Troops can move and occupy regions</li>
+          </ul>
+        </div>
       </div>
-    </div>
+    </SidebarPanel>
   );
 }
