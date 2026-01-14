@@ -18,6 +18,7 @@ const FACTION_NAMES: Record<FactionId, string> = {
   soviet: 'Soviet Russia',
   white: 'White Army',
   finland: 'Finland',
+  ukraine: 'Ukraine',
   neutral: 'Neutral',
   foreign: 'Foreign',
 };
@@ -78,7 +79,7 @@ export default function CountrySidebar({
 
   const playerToTargetStatus = getRelationshipStatus(playerFaction, countryId);
   const targetToPlayerStatus = getRelationshipStatus(countryId, playerFaction);
-  const isPlayable = countryId === 'soviet' || countryId === 'white' || countryId === 'finland';
+  const isPlayable = countryId === 'soviet' || countryId === 'white' || countryId === 'finland' || countryId === 'ukraine';
 
   return (
     <SidebarPanel

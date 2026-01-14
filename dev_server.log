@@ -1,0 +1,30 @@
+
+> russian-civil-war-simulator@0.1.0 dev
+> next dev
+
+▲ Next.js 16.1.1 (Turbopack)
+- Local:         http://localhost:3353
+- Network:       http://10.255.255.254:3353
+
+✓ Starting...
+✓ Ready in 554ms
+ GET / 200 in 336ms (compile: 238ms, render: 98ms)
+ GET / 200 in 25ms (compile: 3ms, render: 22ms)
+✓ Compiled in 289ms
+✓ Compiled in 26ms
+✓ Compiled in 24ms
+✓ Compiled in 26ms
+✓ Compiled in 24ms
+✓ Compiled in 21ms
+✓ Compiled in 22ms
+✓ Compiled in 20ms
+✓ Compiled in 20ms
+✓ Compiled in 26ms
+✓ Compiled in 26ms
+✓ Compiled in 19ms
+✓ Compiled in 20ms
+✓ Compiled in 21ms
+✓ Compiled in 17ms
+✓ Compiled in 16ms
+✓ Compiled in 25ms
+✓ Compiled in 20ms

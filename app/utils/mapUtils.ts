@@ -4,8 +4,9 @@ import { initialRegionOwnership, regionValues } from '../data/map';
 // Faction colors for map display
 export const FACTION_COLORS: Record<FactionId, string> = {
   soviet: '#CC0000',      // Red
-  white: '#FFFFFF',       // White
-  finland: '#003580',     // Blue (Finnish national color)
+  white: '#0d3b0d',       // Very Dark Green (White Army)
+  finland: '#FFFFFF',     // White (Finnish white guard color)
+  ukraine: '#0057B7',     // Blue (Ukrainian national color)
   neutral: '#808080',     // Gray
   foreign: '#4A90D9',     // Blue
 };
