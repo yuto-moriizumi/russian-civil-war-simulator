@@ -349,6 +349,9 @@ export const createArmyGroupActions = (
           sourceRegions.forEach(sourceRegionId => {
             if (!sourceRegionId) return;
             
+            // Skip if source and destination are the same
+            if (sourceRegionId === borderRegionId) return;
+            
             const divsFromSource = divisionsToAdd.filter(d => {
               const original = allGroupDivisions.find(item => item.regionId === sourceRegionId);
               return original?.divisions.some(div => div.id === d.id);
