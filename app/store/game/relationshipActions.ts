@@ -1,6 +1,8 @@
-import { FactionId, Relationship, RelationshipType } from '../../types/game';
+import { FactionId, Relationship, RelationshipType, GameEvent, NotificationItem } from '../../types/game';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
+import { createGameEvent, createNotification } from '../../utils/eventUtils';
+import { countries } from '../../data/gameData';
 
 /**
  * Defines actions related to managing relationships between factions:
@@ -16,13 +18,23 @@ export const createRelationshipActions = (
    * Set or update relationship between two factions
    */
   setRelationship: (fromFaction: FactionId, toFaction: FactionId, type: RelationshipType) => {
-    const { relationships: startRelationships } = get();
+    const { relationships: startRelationships, dateTime, gameEvents, notifications } = get();
     
     // Don't allow setting relationship with self
     if (fromFaction === toFaction) {
       console.warn('Cannot set relationship with self');
       return;
     }
+
+    const getFactionName = (id: FactionId) => countries.find(c => c.id === id)?.name || id;
+    const newEvents: GameEvent[] = [];
+    const newNotifications: NotificationItem[] = [];
+
+    // Helper to get current status from startRelationships
+    const getCurrentStatus = (from: FactionId, to: FactionId): RelationshipType => {
+      const rel = startRelationships.find(r => r.fromFaction === from && r.toFaction === to);
+      return rel ? rel.type : 'neutral';
+    };
     
     // Helper to apply a single relationship change to a list
     const applyRelationshipChange = (
@@ -84,6 +96,19 @@ export const createRelationshipActions = (
         return;
       }
     }
+
+    // Check if this is a new war declaration
+    if (type === 'war' && getCurrentStatus(fromFaction, toFaction) !== 'war') {
+      const event = createGameEvent(
+        'war_declared',
+        'War Declared!',
+        `${getFactionName(fromFaction)} has declared war on ${getFactionName(toFaction)}!`,
+        dateTime,
+        fromFaction
+      );
+      newEvents.push(event);
+      newNotifications.push(createNotification(event, dateTime));
+    }
     
     let nextRelationships = applyRelationshipChange(startRelationships, fromFaction, toFaction, type);
 
@@ -94,8 +119,19 @@ export const createRelationshipActions = (
         r => r.fromFaction === fromFaction && r.type === 'autonomy'
       );
       servantsOfAggressor.forEach(s => {
-        // Servant declares war on the same target
-        nextRelationships = applyRelationshipChange(nextRelationships, s.toFaction, toFaction, 'war');
+        // Servant declares war on the same target if not already at war
+        if (getCurrentStatus(s.toFaction, toFaction) !== 'war') {
+          const event = createGameEvent(
+            'war_declared',
+            'Joint War Declared',
+            `${getFactionName(s.toFaction)} joins their Master (${getFactionName(fromFaction)}) in war against ${getFactionName(toFaction)}!`,
+            dateTime,
+            s.toFaction
+          );
+          newEvents.push(event);
+          newNotifications.push(createNotification(event, dateTime));
+          nextRelationships = applyRelationshipChange(nextRelationships, s.toFaction, toFaction, 'war');
+        }
       });
 
       // 2. If Master is declared war upon, Servant declares war on the aggressor
@@ -103,12 +139,27 @@ export const createRelationshipActions = (
         r => r.fromFaction === toFaction && r.type === 'autonomy'
       );
       servantsOfDefender.forEach(s => {
-        // Servant declares war on the aggressor to defend Master
-        nextRelationships = applyRelationshipChange(nextRelationships, s.toFaction, fromFaction, 'war');
+        // Servant declares war on the aggressor to defend Master if not already at war
+        if (getCurrentStatus(s.toFaction, fromFaction) !== 'war') {
+          const event = createGameEvent(
+            'war_declared',
+            'Defensive War Joined',
+            `${getFactionName(s.toFaction)} joins their Master (${getFactionName(toFaction)}) to defend against ${getFactionName(fromFaction)}!`,
+            dateTime,
+            s.toFaction
+          );
+          newEvents.push(event);
+          newNotifications.push(createNotification(event, dateTime));
+          nextRelationships = applyRelationshipChange(nextRelationships, s.toFaction, fromFaction, 'war');
+        }
       });
     }
     
-    set({ relationships: nextRelationships });
+    set({ 
+      relationships: nextRelationships,
+      gameEvents: [...gameEvents, ...newEvents],
+      notifications: [...notifications, ...newNotifications]
+    });
   },
   
   /**
