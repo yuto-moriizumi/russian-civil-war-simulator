@@ -10,7 +10,6 @@ import NotificationToast from '../components/NotificationToast';
 import TopBar from '../components/TopBar';
 import MissionPanel from '../components/MissionPanel';
 import ProductionQueuePanel from '../components/ProductionQueuePanel';
-import RelationshipsPanel from '../components/RelationshipsPanel';
 import CountrySidebar from '../components/CountrySidebar';
 import { countFactionUnits } from '../utils/mapUtils';
 
@@ -141,7 +140,6 @@ export default function MainScreen({
 }: MainScreenProps) {
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);
   const [isArmyGroupsPanelExpanded, setIsArmyGroupsPanelExpanded] = useState(true);
-  const [showRelationshipsPanel, setShowRelationshipsPanel] = useState(false);
   
   // Store lastSaveTime timestamp in a ref to compare and trigger indicator
   // Initialize with current lastSaveTime to avoid showing indicator on mount
@@ -184,22 +182,12 @@ export default function MainScreen({
     : null;
 
   const handleOpenProductionQueue = () => {
-    setShowRelationshipsPanel(false);
     onSidebarOpen(false);
     onOpenProductionQueue();
   };
 
-  const handleToggleRelationships = () => {
-    if (!showRelationshipsPanel) {
-      onCloseProductionQueue();
-      onSidebarOpen(false);
-    }
-    setShowRelationshipsPanel(!showRelationshipsPanel);
-  };
-
   const handleCountrySelect = (factionId: FactionId | null) => {
     if (factionId) {
-      setShowRelationshipsPanel(false);
       onCloseProductionQueue();
     }
     onCountrySelect(factionId);
@@ -269,16 +257,6 @@ export default function MainScreen({
         onSaveGame={onSaveGame}
         onOpenEvents={onOpenEvents}
         onOpenProductionQueue={handleOpenProductionQueue}
-        onToggleRelationships={handleToggleRelationships}
-      />
-
-      {/* Relationships Panel */}
-      <RelationshipsPanel
-        isOpen={showRelationshipsPanel}
-        onClose={() => setShowRelationshipsPanel(false)}
-        playerFaction={country.id}
-        relationships={relationships}
-        onSetRelationship={onSetRelationship}
       />
 
       {/* Country Sidebar */}
