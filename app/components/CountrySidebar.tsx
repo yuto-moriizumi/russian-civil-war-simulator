@@ -123,18 +123,33 @@ export default function CountrySidebar({
               Diplomacy
             </h3>
             <div className="bg-stone-900 rounded-lg border border-stone-700 p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-stone-300">Your Status:</span>
-                <span className={`px-2 py-1 rounded text-xs font-bold text-white ${RELATIONSHIP_BG[playerToTargetStatus]}`}>
-                  {playerToTargetStatus === 'autonomy' ? 'Autonomy Master' : RELATIONSHIP_LABELS[playerToTargetStatus]}
-                </span>
-              </div>
-              
-              <div className="text-xs text-stone-400 flex justify-between">
-                <span>They grant you:</span>
-                <span className={`font-bold ${RELATIONSHIP_COLORS[targetToPlayerStatus]}`}>
-                  {targetToPlayerStatus === 'autonomy' ? 'Autonomy Servant' : RELATIONSHIP_LABELS[targetToPlayerStatus]}
-                </span>
+              <div className="text-sm space-y-2">
+                <div className="flex flex-col gap-1">
+                  <div className="text-stone-400 text-xs">Relationship status:</div>
+                  <div className="text-stone-100">
+                    {playerToTargetStatus === 'autonomy' && (
+                      <span className="text-purple-400 font-bold">You are the Autonomy Master of this country.</span>
+                    )}
+                    {targetToPlayerStatus === 'autonomy' && (
+                      <span className="text-purple-400 font-bold">This country is an Autonomy Servant to you.</span>
+                    )}
+                    {playerToTargetStatus === 'war' && (
+                      <span className="text-red-400 font-bold">You are at war with this country.</span>
+                    )}
+                    {playerToTargetStatus === 'military_access' && targetToPlayerStatus === 'military_access' && (
+                      <span className="text-blue-400 font-bold">You have mutual military access.</span>
+                    )}
+                    {playerToTargetStatus === 'military_access' && targetToPlayerStatus !== 'military_access' && (
+                      <span className="text-blue-400 font-bold">You grant military access to this country.</span>
+                    )}
+                    {playerToTargetStatus !== 'military_access' && targetToPlayerStatus === 'military_access' && (
+                      <span className="text-blue-400 font-bold">This country grants military access to you.</span>
+                    )}
+                    {playerToTargetStatus === 'neutral' && targetToPlayerStatus === 'neutral' && (
+                      <span className="text-stone-500 font-bold">You are currently neutral towards each other.</span>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="pt-2 space-y-3">
