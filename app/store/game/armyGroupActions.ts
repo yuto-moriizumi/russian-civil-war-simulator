@@ -229,4 +229,181 @@ export const createArmyGroupActions = (
       });
     }
   },
+
+  defendArmyGroup: (groupId: string) => {
+    const state = get();
+    const { armyGroups, regions, adjacency, selectedCountry, dateTime, movingUnits, selectedUnitRegion, theaters } = state;
+    
+    const group = armyGroups.find(g => g.id === groupId);
+    if (!group || !selectedCountry) return;
+
+    const newMovements: Movement[] = [];
+    const newRegions = { ...regions };
+    const movedRegions = new Set<string>();
+    const targetRegions = new Set<string>();
+
+    // Find the theater this group belongs to
+    const theater = group.theaterId ? theaters.find(t => t.id === group.theaterId) : null;
+    
+    // Find border regions in this theater (or all friendly border regions if no theater)
+    const allBorderRegions: string[] = [];
+    for (const [regionId, region] of Object.entries(newRegions)) {
+      if (!region || region.owner !== selectedCountry.id) continue;
+      
+      // If there's a theater, only consider regions in that theater
+      if (theater && !theater.frontlineRegions.includes(regionId)) continue;
+      
+      const neighbors = adjacency[regionId] || [];
+      const hasEnemyNeighbor = neighbors.some(neighborId => {
+        const neighbor = newRegions[neighborId];
+        return neighbor && neighbor.owner !== selectedCountry.id && neighbor.owner !== 'neutral';
+      });
+      
+      if (hasEnemyNeighbor) {
+        allBorderRegions.push(regionId);
+      }
+    }
+
+    if (allBorderRegions.length === 0) return; // No borders to defend
+
+    // Count current divisions at each border region (including this group's divisions)
+    const borderDivisionCounts = new Map<string, number>();
+    allBorderRegions.forEach(regionId => {
+      const region = newRegions[regionId];
+      const groupDivisions = region.divisions.filter(d => d.armyGroupId === groupId).length;
+      borderDivisionCounts.set(regionId, groupDivisions);
+    });
+
+    // Find all divisions belonging to this army group
+    const allGroupDivisions: { regionId: string; divisions: typeof regions[string]['divisions'] }[] = [];
+    Object.keys(newRegions).forEach(regionId => {
+      const region = newRegions[regionId];
+      if (!region || region.owner !== selectedCountry.id) return;
+      const divisionsInGroup = region.divisions.filter(d => d.armyGroupId === groupId);
+      if (divisionsInGroup.length > 0) {
+        allGroupDivisions.push({ regionId, divisions: divisionsInGroup });
+      }
+    });
+
+    // Calculate total divisions and target count per border region
+    const totalDivisions = allGroupDivisions.reduce((sum, item) => sum + item.divisions.length, 0);
+    const targetPerBorder = Math.floor(totalDivisions / allBorderRegions.length);
+    const remainder = totalDivisions % allBorderRegions.length;
+
+    // Distribute divisions evenly across border regions
+    // First, collect divisions from regions that need to send them
+    const divisionsToRedistribute: typeof regions[string]['divisions'] = [];
+    
+    allGroupDivisions.forEach(({ regionId, divisions }) => {
+      const isBorder = allBorderRegions.includes(regionId);
+      const currentCount = borderDivisionCounts.get(regionId) || 0;
+      
+      if (isBorder) {
+        // If this border has more than target, take the excess
+        const excess = currentCount - targetPerBorder;
+        if (excess > 0) {
+          const divisionsToTake = divisions.slice(0, excess);
+          divisionsToRedistribute.push(...divisionsToTake);
+          
+          // Update the region to remove these divisions
+          const remainingDivisions = newRegions[regionId].divisions.filter(
+            d => !divisionsToTake.some(dt => dt.id === d.id)
+          );
+          newRegions[regionId] = { ...newRegions[regionId], divisions: remainingDivisions };
+          borderDivisionCounts.set(regionId, currentCount - excess);
+        }
+      } else {
+        // Not at border, send all divisions
+        divisionsToRedistribute.push(...divisions);
+        
+        // Remove divisions from this region
+        const remainingDivisions = newRegions[regionId].divisions.filter(d => d.armyGroupId !== groupId);
+        newRegions[regionId] = { ...newRegions[regionId], divisions: remainingDivisions };
+        movedRegions.add(regionId);
+      }
+    });
+
+    // Now distribute divisions to border regions that need them
+    let divisionIndex = 0;
+    allBorderRegions.forEach((borderRegionId, index) => {
+      const currentCount = borderDivisionCounts.get(borderRegionId) || 0;
+      const targetCount = targetPerBorder + (index < remainder ? 1 : 0);
+      const needed = targetCount - currentCount;
+      
+      if (needed > 0 && divisionIndex < divisionsToRedistribute.length) {
+        const divisionsToAdd = divisionsToRedistribute.slice(divisionIndex, divisionIndex + needed);
+        divisionIndex += needed;
+        
+        if (divisionsToAdd.length > 0) {
+          // Find the best source region for these divisions
+          const sourceRegions = new Set(
+            divisionsToAdd.map(d => {
+              for (const { regionId, divisions } of allGroupDivisions) {
+                if (divisions.some(div => div.id === d.id)) return regionId;
+              }
+              return null;
+            }).filter(Boolean)
+          );
+          
+          // Create movements from each source region
+          sourceRegions.forEach(sourceRegionId => {
+            if (!sourceRegionId) return;
+            
+            const divsFromSource = divisionsToAdd.filter(d => {
+              const original = allGroupDivisions.find(item => item.regionId === sourceRegionId);
+              return original?.divisions.some(div => div.id === d.id);
+            });
+            
+            if (divsFromSource.length === 0) return;
+            
+            // Check if already moving from this region
+            const groupAlreadyMoving = movingUnits.some(m => 
+              m.fromRegion === sourceRegionId && 
+              m.divisions.some(d => d.armyGroupId === groupId)
+            );
+            if (groupAlreadyMoving) return;
+            
+            const travelTimeHours = 6;
+            const arrivalTime = new Date(dateTime);
+            arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
+
+            const newMovement: Movement = {
+              id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${sourceRegionId}`,
+              fromRegion: sourceRegionId,
+              toRegion: borderRegionId,
+              divisions: divsFromSource,
+              departureTime: new Date(dateTime),
+              arrivalTime,
+              owner: selectedCountry.id,
+            };
+
+            newMovements.push(newMovement);
+            movedRegions.add(sourceRegionId);
+            targetRegions.add(borderRegionId);
+          });
+        }
+      }
+    });
+
+    if (newMovements.length > 0 || movedRegions.size > 0) {
+      // Clear selectedUnitRegion if it was in a region that had units moved
+      const shouldClearSelection = selectedUnitRegion && movedRegions.has(selectedUnitRegion);
+      
+      // Update army groups to include target regions immediately
+      const updatedArmyGroups = armyGroups.map(g => {
+        if (g.id === groupId) {
+          const newRegionIds = new Set([...g.regionIds, ...Array.from(targetRegions)]);
+          return { ...g, regionIds: Array.from(newRegionIds) };
+        }
+        return g;
+      });
+
+      set({
+        regions: newRegions,
+        movingUnits: [...movingUnits, ...newMovements],
+        armyGroups: updatedArmyGroups,
+        ...(shouldClearSelection && { selectedUnitRegion: null }),
+      });
+    }
+  },
 });

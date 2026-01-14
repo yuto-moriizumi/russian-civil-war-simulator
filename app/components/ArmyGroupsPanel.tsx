@@ -16,6 +16,7 @@ interface ArmyGroupsPanelProps {
   onRenameGroup: (groupId: string, name: string) => void;
   onSelectGroup: (groupId: string | null) => void;
   onAdvanceGroup: (groupId: string) => void;
+  onDefendGroup: (groupId: string) => void;
 }
 
 export default function ArmyGroupsPanel({
@@ -30,6 +31,7 @@ export default function ArmyGroupsPanel({
   onRenameGroup,
   onSelectGroup,
   onAdvanceGroup,
+  onDefendGroup,
 }: ArmyGroupsPanelProps) {
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
@@ -144,6 +146,19 @@ export default function ArmyGroupsPanel({
                       Advance
                     </button>
 
+                    {/* Defend button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDefendGroup(group.id);
+                      }}
+                      disabled={unitCount === 0}
+                      className="rounded bg-orange-700 px-2 py-0.5 text-xs font-semibold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+                      title="Move units to defensive positions (border regions)"
+                    >
+                      Defend
+                    </button>
+
                     {/* Delete button */}
                     <button
                       onClick={(e) => {
@@ -164,6 +179,7 @@ export default function ArmyGroupsPanel({
           {/* Help text */}
           <div className="mt-3 text-xs text-stone-500">
             Click <strong>Advance</strong> to move all units toward the nearest enemy.
+            Click <strong>Defend</strong> to position units at border regions.
             <strong>Double-click</strong> a group name to rename it.
           </div>
         </div>

@@ -66,6 +66,7 @@ interface MainScreenProps {
   onRenameArmyGroup: (groupId: string, name: string) => void;
   onSelectArmyGroup: (groupId: string | null) => void;
   onAdvanceArmyGroup: (groupId: string) => void;
+  onDefendArmyGroup: (groupId: string) => void;
   onDeployToArmyGroup: (groupId: string) => void;
 }
 
@@ -112,6 +113,7 @@ export default function MainScreen({
   onRenameArmyGroup,
   onSelectArmyGroup,
   onAdvanceArmyGroup,
+  onDefendArmyGroup,
   onDeployToArmyGroup,
 }: MainScreenProps) {
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);
@@ -230,6 +232,7 @@ export default function MainScreen({
           onRenameGroup={onRenameArmyGroup}
           onSelectGroup={onSelectArmyGroup}
           onAdvanceGroup={onAdvanceArmyGroup}
+          onDefendGroup={onDefendArmyGroup}
           onDeployToGroup={onDeployToArmyGroup}
         />
       </div>

@@ -20,6 +20,7 @@ interface TheaterPanelProps {
   onRenameGroup: (groupId: string, name: string) => void;
   onSelectGroup: (groupId: string | null) => void;
   onAdvanceGroup: (groupId: string) => void;
+  onDefendGroup: (groupId: string) => void;
   onDeployToGroup: (groupId: string) => void;
 }
 
@@ -39,6 +40,7 @@ export default function TheaterPanel({
   onRenameGroup,
   onSelectGroup,
   onAdvanceGroup,
+  onDefendGroup,
   onDeployToGroup,
 }: TheaterPanelProps) {
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
@@ -246,6 +248,19 @@ export default function TheaterPanel({
                                   Advance
                                 </button>
 
+                                {/* Defend button */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDefendGroup(group.id);
+                                  }}
+                                  disabled={unitCount === 0}
+                                  className="rounded bg-orange-700 px-2 py-0.5 text-xs font-semibold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                  title="Move units to defensive positions (border regions)"
+                                >
+                                  Defend
+                                </button>
+
                                 {/* Delete button */}
                                 <button
                                   onClick={(e) => {
@@ -309,6 +324,14 @@ export default function TheaterPanel({
                             className="rounded bg-green-700 px-2 py-0.5 text-xs font-semibold text-white hover:bg-green-600 disabled:opacity-50"
                           >
                             Advance
+                          </button>
+                          <button
+                            onClick={() => onDefendGroup(group.id)}
+                            disabled={unitCount === 0}
+                            className="rounded bg-orange-700 px-2 py-0.5 text-xs font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
+                            title="Move units to defensive positions (border regions)"
+                          >
+                            Defend
                           </button>
                           <button
                             onClick={() => onDeleteGroup(group.id)}
