@@ -57,12 +57,12 @@ export function createFillOpacityExpression() {
   return [
     'case',
     ['boolean', ['feature-state', 'selected'], false],
-    0.9,
+    0.95,
     ['boolean', ['feature-state', 'hover'], false],
-    0.8,
+    0.9,
     ['boolean', ['feature-state', 'adjacent'], false],
-    0.7,
-    0.6
+    0.85,
+    0.8
   ];
 }
 
@@ -112,7 +112,7 @@ export function createMapStyle() {
         id: 'background',
         type: 'background' as const,
         paint: {
-          'background-color': '#1a2e1a',
+          'background-color': '#808080',
         },
       },
     ],

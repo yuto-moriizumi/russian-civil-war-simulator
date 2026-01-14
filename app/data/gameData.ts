@@ -17,13 +17,13 @@ export const countries: Country[] = [
     id: 'white',
     name: 'White Army',
     flag: '/images/flags/white.svg',
-    color: '#FFFFFF',
+    color: '#0d3b0d',
   },
   {
     id: 'finland',
     name: 'Finland',
     flag: '/images/flags/finland.svg',
-    color: '#003580',
+    color: '#FFFFFF',
   },
   {
     id: 'ukraine',
