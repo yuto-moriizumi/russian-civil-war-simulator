@@ -91,32 +91,6 @@ export default function TopBar({
           maintenanceCost={maintenanceCost}
           unitCount={unitCount}
         />
-      </div>
-
-      {/* Right Side: Date/Time and Speed Controls */}
-      <div className="flex items-stretch gap-4">
-        {/* Date/Time */}
-        <div className="flex flex-col justify-center rounded-lg border border-stone-600 bg-stone-800/80 px-4 py-2">
-          <div className="text-sm font-semibold text-white">{formatDate(dateTime)}</div>
-          <div className="text-xs text-stone-400">{formatTime(dateTime)}</div>
-        </div>
-
-        {/* Speed Controls */}
-        <SpeedControl
-          isPlaying={isPlaying}
-          gameSpeed={gameSpeed}
-          onTogglePlay={onTogglePlay}
-          onChangeSpeed={onChangeSpeed}
-        />
-
-        {/* Save Button */}
-        <button
-          onClick={onSaveGame}
-          className="rounded bg-amber-700 px-3 py-1 text-stone-200 transition-colors hover:bg-amber-600"
-          title="Save Game"
-        >
-          Save
-        </button>
 
         {/* Production Queue Button */}
         <button
@@ -155,6 +129,32 @@ export default function TopBar({
             Relations
           </button>
         )}
+      </div>
+
+      {/* Right Side: Date/Time and Speed Controls */}
+      <div className="flex items-stretch gap-4">
+        {/* Date/Time */}
+        <div className="flex flex-col justify-center rounded-lg border border-stone-600 bg-stone-800/80 px-4 py-2">
+          <div className="text-sm font-semibold text-white">{formatDate(dateTime)}</div>
+          <div className="text-xs text-stone-400">{formatTime(dateTime)}</div>
+        </div>
+
+        {/* Speed Controls */}
+        <SpeedControl
+          isPlaying={isPlaying}
+          gameSpeed={gameSpeed}
+          onTogglePlay={onTogglePlay}
+          onChangeSpeed={onChangeSpeed}
+        />
+
+        {/* Save Button */}
+        <button
+          onClick={onSaveGame}
+          className="rounded bg-amber-700 px-3 py-1 text-stone-200 transition-colors hover:bg-amber-600"
+          title="Save Game"
+        >
+          Save
+        </button>
 
         {/* Saved Indicator */}
         {showSavedIndicator && (
