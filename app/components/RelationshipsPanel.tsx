@@ -106,7 +106,7 @@ export default function RelationshipsPanel({
                 <div className="text-stone-400">
                   <span className="font-semibold">They grant us:</span>{' '}
                   <span className={`font-bold ${theirStatus === 'war' ? 'text-red-400' : theirStatus === 'military_access' ? 'text-blue-400' : theirStatus === 'autonomy' ? 'text-purple-400' : 'text-gray-400'}`}>
-                    {theirStatus === 'autonomy' ? 'Autonomy Servant' : RELATIONSHIP_LABELS[theirStatus]}
+                    {theirStatus === 'autonomy' ? 'Autonomy Master' : RELATIONSHIP_LABELS[theirStatus]}
                   </span>
                 </div>
 

@@ -30,7 +30,6 @@ export const initialGameState: GameState = {
   armyGroups: [],
   productionQueue: [],
   relationships: [
-    { fromFaction: 'white', toFaction: 'ukraine', type: 'autonomy' },
-    { fromFaction: 'ukraine', toFaction: 'white', type: 'autonomy' }
+    { fromFaction: 'white', toFaction: 'ukraine', type: 'autonomy' }
   ], // Initially no relationships (all neutral)
 };

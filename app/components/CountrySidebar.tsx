@@ -128,10 +128,10 @@ export default function CountrySidebar({
                   <div className="text-stone-400 text-xs">Relationship status:</div>
                   <div className="text-stone-100">
                     {playerToTargetStatus === 'autonomy' && (
-                      <span className="text-purple-400 font-bold">You are the Autonomy Master of this country.</span>
+                      <span className="text-purple-400 font-bold">This country is an Autonomy Servant to you.</span>
                     )}
                     {targetToPlayerStatus === 'autonomy' && (
-                      <span className="text-purple-400 font-bold">This country is an Autonomy Servant to you.</span>
+                      <span className="text-purple-400 font-bold">This country is your Autonomy Master.</span>
                     )}
                     {playerToTargetStatus === 'war' && (
                       <span className="text-red-400 font-bold">You are at war with this country.</span>
