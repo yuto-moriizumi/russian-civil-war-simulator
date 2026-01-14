@@ -145,7 +145,7 @@ export const createArmyGroupActions = (
 
   advanceArmyGroup: (groupId: string) => {
     const state = get();
-    const { armyGroups, regions, adjacency, selectedCountry, dateTime, movingUnits, selectedUnitRegion } = state;
+    const { armyGroups, regions, adjacency, selectedCountry, dateTime, movingUnits, selectedUnitRegion, relationships } = state;
     
     const group = armyGroups.find(g => g.id === groupId);
     if (!group || !selectedCountry) return;
@@ -170,6 +170,21 @@ export const createArmyGroupActions = (
       // Find the best move toward an enemy
       const nextStep = findBestMoveTowardEnemy(regionId, newRegions, adjacency, selectedCountry.id);
       if (!nextStep) continue;
+
+      // Check relationship with target region owner
+      const targetRegion = newRegions[nextStep];
+      if (targetRegion && targetRegion.owner !== selectedCountry.id) {
+        const relationship = relationships.find(
+          r => r.fromFaction === targetRegion.owner && r.toFaction === selectedCountry.id
+        );
+        const relationshipType = relationship ? relationship.type : 'neutral';
+        
+        // Cannot move if neutral (no access and not at war)
+        if (relationshipType === 'neutral') {
+          console.warn(`[ADVANCE] Cannot move to ${targetRegion.name}: No military access or war state with ${targetRegion.owner}`);
+          continue;
+        }
+      }
 
       // Check if divisions from THIS specific group are already moving from this region
       const groupAlreadyMoving = movingUnits.some(m => 
@@ -232,7 +247,7 @@ export const createArmyGroupActions = (
 
   defendArmyGroup: (groupId: string) => {
     const state = get();
-    const { armyGroups, regions, adjacency, selectedCountry, dateTime, movingUnits, selectedUnitRegion, theaters } = state;
+    const { armyGroups, regions, adjacency, selectedCountry, dateTime, movingUnits, selectedUnitRegion, theaters, relationships } = state;
     
     const group = armyGroups.find(g => g.id === groupId);
     if (!group || !selectedCountry) return;
@@ -351,6 +366,21 @@ export const createArmyGroupActions = (
             
             // Skip if source and destination are the same
             if (sourceRegionId === borderRegionId) return;
+            
+            // Check relationship with target region owner
+            const targetRegion = newRegions[borderRegionId];
+            if (targetRegion && targetRegion.owner !== selectedCountry.id) {
+              const relationship = relationships.find(
+                r => r.fromFaction === targetRegion.owner && r.toFaction === selectedCountry.id
+              );
+              const relationshipType = relationship ? relationship.type : 'neutral';
+              
+              // Cannot move if neutral (no access and not at war)
+              if (relationshipType === 'neutral') {
+                console.warn(`[DEFEND] Cannot move to ${targetRegion.name}: No military access or war state with ${targetRegion.owner}`);
+                return;
+              }
+            }
             
             const divsFromSource = divisionsToAdd.filter(d => {
               const original = allGroupDivisions.find(item => item.regionId === sourceRegionId);
