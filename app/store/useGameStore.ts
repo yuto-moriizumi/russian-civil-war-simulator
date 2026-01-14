@@ -22,7 +22,7 @@ export const useGameStore = create<GameStore>()(
       selectedRegion: null,
       selectedUnitRegion: null,
       mapDataLoaded: false,
-      aiState: null,
+      aiStates: [], // Initialize with empty array for multiple AI states
       isEventsModalOpen: false,
       selectedCombatId: null,
       lastSaveTime: null,
@@ -49,7 +49,7 @@ export const useGameStore = create<GameStore>()(
         gameEvents: state.gameEvents,
         activeCombats: state.activeCombats,
         regions: state.regions,
-        aiState: state.aiState,
+        aiStates: state.aiStates, // Persist AI states
         lastSaveTime: state.lastSaveTime,
         theaters: state.theaters,
         armyGroups: state.armyGroups,

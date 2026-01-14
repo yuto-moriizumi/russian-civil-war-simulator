@@ -23,9 +23,16 @@ export function createInitialAIArmyGroup(factionId: FactionId, regions: RegionSt
   const ownedRegions = getOwnedRegions(regions, factionId);
   const ownedRegionIds = ownedRegions.map(r => r.id);
   
+  const nameMap: Record<string, string> = {
+    soviet: 'Soviet Army Group',
+    white: 'White Army Group',
+    finland: 'Finnish Army Group',
+  };
+  const name = nameMap[factionId] || 'Army Group';
+  
   return {
     id: `ai-army-group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    name: `${factionId === 'soviet' ? 'Soviet' : 'White'} Army Group`,
+    name,
     regionIds: ownedRegionIds,
     color: '#6B7280',
     owner: factionId,
@@ -53,7 +60,12 @@ function pickRandomRegion(regionList: Region[]): Region | null {
  * Generate a unique division name for the AI
  */
 function generateAIDivisionName(factionId: FactionId, regions: RegionState): string {
-  const prefix = factionId === 'white' ? 'White Guard' : 'Red Guard';
+  const prefixMap: Record<string, string> = {
+    soviet: 'Red Guard',
+    white: 'White Guard',
+    finland: 'Finnish Guard',
+  };
+  const prefix = prefixMap[factionId] || 'Guard';
   // Count existing divisions owned by this faction
   const existingCount = Object.values(regions).reduce((acc, region) => 
     acc + region.divisions.filter(d => d.owner === factionId).length, 0
@@ -103,9 +115,16 @@ export function runAITick(
     const ownedRegions = getOwnedRegions(regions, factionId);
     const ownedRegionIds = ownedRegions.map(r => r.id);
     
+    const nameMap: Record<string, string> = {
+      soviet: 'Soviet Army Group',
+      white: 'White Army Group',
+      finland: 'Finnish Army Group',
+    };
+    const name = nameMap[factionId] || 'Army Group';
+    
     newArmyGroup = {
       id: `ai-army-group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      name: `${factionId === 'soviet' ? 'Soviet' : 'White'} Army Group`,
+      name,
       regionIds: ownedRegionIds,
       color: '#6B7280',
       owner: factionId,

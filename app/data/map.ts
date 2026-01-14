@@ -214,27 +214,27 @@ export const initialRegionOwnership: Record<string, FactionId> = {
   'BY-VI': 'soviet',   // Vitebsk Region
 
   // ============================================
-  // FINLAND (White-controlled)
+  // FINLAND (Independent)
   // ============================================
-  'FI-01': 'white',   // Åland
-  'FI-02': 'white',   // South Karelia
-  'FI-03': 'white',   // Southern Ostrobothnia
-  'FI-04': 'white',   // Southern Savonia
-  'FI-05': 'white',   // Kainuu
-  'FI-06': 'white',   // Tavastia Proper
-  'FI-07': 'white',   // Central Ostrobothnia
-  'FI-08': 'white',   // Central Finland
-  'FI-09': 'white',   // Kymenlaakso
-  'FI-10': 'white',   // Lapland
-  'FI-11': 'white',   // Pirkanmaa
-  'FI-12': 'white',   // Ostrobothnia
-  'FI-13': 'white',   // North Karelia
-  'FI-14': 'white',   // Northern Ostrobothnia
-  'FI-15': 'white',   // Northern Savonia
-  'FI-16': 'white',   // Päijänne Tavastia
-  'FI-17': 'white',   // Satakunta
-  'FI-18': 'white',   // Uusimaa (Helsinki)
-  'FI-19': 'white',   // Southwest Finland
+  'FI-01': 'finland',   // Åland
+  'FI-02': 'finland',   // South Karelia
+  'FI-03': 'finland',   // Southern Ostrobothnia
+  'FI-04': 'finland',   // Southern Savonia
+  'FI-05': 'finland',   // Kainuu
+  'FI-06': 'finland',   // Tavastia Proper
+  'FI-07': 'finland',   // Central Ostrobothnia
+  'FI-08': 'finland',   // Central Finland
+  'FI-09': 'finland',   // Kymenlaakso
+  'FI-10': 'finland',   // Lapland
+  'FI-11': 'finland',   // Pirkanmaa
+  'FI-12': 'finland',   // Ostrobothnia
+  'FI-13': 'finland',   // North Karelia
+  'FI-14': 'finland',   // Northern Ostrobothnia
+  'FI-15': 'finland',   // Northern Savonia
+  'FI-16': 'finland',   // Päijänne Tavastia
+  'FI-17': 'finland',   // Satakunta
+  'FI-18': 'finland',   // Uusimaa (Helsinki)
+  'FI-19': 'finland',   // Southwest Finland
 
   // ============================================
   // ESTONIA (Soviet/German-controlled)
