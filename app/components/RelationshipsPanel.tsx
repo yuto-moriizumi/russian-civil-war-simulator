@@ -59,7 +59,7 @@ export default function RelationshipsPanel({
   };
 
   return (
-    <div className="absolute top-20 right-4 bg-stone-800 border border-stone-700 rounded-lg p-4 shadow-xl max-w-md z-10">
+    <div className="absolute top-20 left-4 bg-stone-800 border border-stone-700 rounded-lg p-4 shadow-xl max-w-md z-10">
       <div className="mb-3">
         <h2 className="text-lg font-bold text-stone-100">Diplomatic Relations</h2>
         <p className="text-xs text-stone-400 mt-1">
