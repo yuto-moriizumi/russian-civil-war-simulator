@@ -11,9 +11,7 @@ interface TheaterPanelProps {
   playerFaction: FactionId;
   selectedTheaterId: string | null;
   selectedGroupId: string | null;
-  isExpanded: boolean;
   movingUnits: Movement[];
-  onToggleExpanded: () => void;
   onSelectTheater: (theaterId: string | null) => void;
   onCreateGroup: (name: string, regionIds: string[], theaterId: string | null) => void;
   onDeleteGroup: (groupId: string) => void;
@@ -21,6 +19,7 @@ interface TheaterPanelProps {
   onSelectGroup: (groupId: string | null) => void;
   onSetGroupMode: (groupId: string, mode: 'none' | 'advance' | 'defend') => void;
   onDeployToGroup: (groupId: string) => void;
+  onAssignTheater: (groupId: string, theaterId: string | null) => void;
 }
 
 export default function TheaterPanel({
@@ -30,9 +29,7 @@ export default function TheaterPanel({
   playerFaction,
   selectedTheaterId,
   selectedGroupId,
-  isExpanded,
   movingUnits,
-  onToggleExpanded,
   onSelectTheater,
   onCreateGroup,
   onDeleteGroup,
@@ -40,13 +37,13 @@ export default function TheaterPanel({
   onSelectGroup,
   onSetGroupMode,
   onDeployToGroup,
+  onAssignTheater,
 }: TheaterPanelProps) {
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
 
-  const theaterGroups = selectedTheaterId 
-    ? armyGroups.filter(g => g.theaterId === selectedTheaterId && g.owner === playerFaction)
-    : armyGroups.filter(g => g.theaterId === null && g.owner === playerFaction);
+  // Get all player's army groups
+  const playerGroups = armyGroups.filter(g => g.owner === playerFaction);
 
   const handleStartRename = (group: ArmyGroup) => {
     setEditingGroupId(group.id);
@@ -70,321 +67,165 @@ export default function TheaterPanel({
     }
   };
 
-  const handleCreateGroupForTheater = (theater: Theater) => {
-    // Select the theater first
-    onSelectTheater(theater.id);
-    // Get all valid frontline regions in this theater
-    const validRegions: string[] = [];
-    theater.frontlineRegions.forEach(regionId => {
-      const region = regions[regionId];
-      if (region && region.owner === playerFaction) {
-        validRegions.push(regionId);
-      }
-    });
-    // Create the group if we have valid regions
-    if (validRegions.length > 0) {
-      onCreateGroup('', validRegions, theater.id);
-    }
-  };
-
   return (
-    <div className="border-t border-stone-700 bg-stone-900/95">
-      {/* Header - always visible */}
-      <div
-        className="flex cursor-pointer items-center justify-between px-4 py-2 hover:bg-stone-800/50"
-        onClick={onToggleExpanded}
-      >
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-bold tracking-wider text-stone-400">
-            THEATERS OF OPERATION
-          </span>
-          <span className="rounded bg-stone-700 px-2 py-0.5 text-xs text-stone-300">
-            {theaters.length} {theaters.length === 1 ? 'Theater' : 'Theaters'}
-          </span>
-        </div>
-        <span className="text-stone-400">
-          {isExpanded ? '▼' : '▲'}
-        </span>
-      </div>
+    <div className="flex items-end gap-1 overflow-x-auto pb-4 px-4 scrollbar-hide select-none">
+      {/* Group cards by theater if desired, but for now we'll just list them horizontally */}
+      {playerGroups.map((group) => {
+        const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerFaction, group.id, movingUnits);
+        const validRegions = group.regionIds.filter(id => {
+          const region = regions[id];
+          return region && region.owner === playerFaction;
+        }).length;
+        const isGroupSelected = selectedGroupId === group.id;
 
-      {/* Expanded content */}
-      {isExpanded && (
-        <div className="border-t border-stone-700 px-4 py-3">
-          {/* Theaters list */}
-          {theaters.length === 0 ? (
-            <div className="py-4 text-center text-sm text-stone-500">
-              No active theaters detected. Deploy units near enemy borders to establish theaters of operation.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {theaters.map((theater) => {
-                const isSelected = selectedTheaterId === theater.id;
-                const groups = armyGroups.filter(g => g.theaterId === theater.id);
+        return (
+          <div
+            key={group.id}
+            className={`group relative flex w-36 flex-col border shadow-2xl transition-all duration-200 cursor-pointer overflow-hidden ${
+              isGroupSelected
+                ? 'border-amber-500 bg-stone-800 ring-2 ring-amber-500/30'
+                : 'border-stone-700 bg-stone-900/90 hover:border-stone-500 hover:bg-stone-800'
+            }`}
+            onClick={() => {
+              onSelectGroup(isGroupSelected ? null : group.id);
+              if (!isGroupSelected) {
+                onSelectTheater(group.theaterId);
+              }
+            }}
+          >
+            {/* Color stripe at top */}
+            <div className="h-1.5 w-full shrink-0" style={{ backgroundColor: group.color }} />
 
-                return (
-                  <div
-                    key={theater.id}
-                    className={`rounded border transition-colors ${
-                      isSelected
-                        ? 'border-amber-500 bg-stone-800'
-                        : 'border-stone-600 bg-stone-800/50 hover:border-stone-500'
-                    }`}
-                  >
-                    {/* Theater header */}
-                    <div
-                      className="flex cursor-pointer items-center justify-between p-3"
-                      onClick={() => onSelectTheater(isSelected ? null : theater.id)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="text-lg">🎖️</div>
-                        <div>
-                          <div className="font-semibold text-white">{theater.name}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCreateGroupForTheater(theater);
-                          }}
-                          className="rounded bg-green-700 px-2 py-1 text-xs font-semibold text-white transition-colors hover:bg-green-600"
-                          title="Create new army group in this theater"
-                        >
-                          + Create Group
-                        </button>
-                        {groups.length > 0 && (
-                          <span className="rounded bg-green-700 px-2 py-0.5 text-xs text-white">
-                            {groups.length} {groups.length === 1 ? 'Group' : 'Groups'}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Army groups in this theater */}
-                    {groups.length > 0 && (
-                      <div className="border-t border-stone-700 p-3">
-                        <div className="mb-2 text-xs font-semibold text-stone-400">Army Groups:</div>
-                        <div className="flex flex-wrap gap-2">
-                          {groups.map((group) => {
-                            const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerFaction, group.id, movingUnits);
-                            const validRegions = group.regionIds.filter(id => {
-                              const region = regions[id];
-                              return region && region.owner === playerFaction;
-                            }).length;
-                            const isGroupSelected = selectedGroupId === group.id;
-
-                            return (
-                              <div
-                                key={group.id}
-                                className={`flex items-center gap-2 rounded border p-2 transition-colors ${
-                                  isGroupSelected
-                                    ? 'border-white bg-stone-700'
-                                    : 'border-stone-600 bg-stone-800 hover:border-stone-500'
-                                }`}
-                                onClick={() => onSelectGroup(isGroupSelected ? null : group.id)}
-                              >
-                                {/* Color indicator */}
-                                <div
-                                  className="h-4 w-4 rounded"
-                                  style={{ backgroundColor: group.color }}
-                                />
-
-                                {/* Group name */}
-                                {editingGroupId === group.id ? (
-                                  <input
-                                    type="text"
-                                    value={editingName}
-                                    onChange={(e) => setEditingName(e.target.value)}
-                                    onKeyDown={handleKeyDown}
-                                    onBlur={handleFinishRename}
-                                    autoFocus
-                                    className="w-24 rounded border border-stone-500 bg-stone-700 px-1 py-0.5 text-sm text-white focus:outline-none"
-                                    onClick={(e) => e.stopPropagation()}
-                                  />
-                                ) : (
-                                  <span
-                                    className="cursor-pointer text-sm font-semibold text-white"
-                                    onDoubleClick={(e) => {
-                                      e.stopPropagation();
-                                      handleStartRename(group);
-                                    }}
-                                    title="Double-click to rename"
-                                  >
-                                    {group.name}
-                                  </span>
-                                )}
-
-                                {/* Stats */}
-                                <div className="flex items-center gap-1 text-xs text-stone-400">
-                                  <span title="Regions">{validRegions}R</span>
-                                  <span>|</span>
-                                  <span title="Divisions">{unitCount}D</span>
-                                </div>
-
-                                {/* Deploy button */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDeployToGroup(group.id);
-                                  }}
-                                  className="rounded bg-blue-700 px-2 py-0.5 text-xs font-semibold text-white transition-colors hover:bg-blue-600"
-                                  title="Create and deploy unit to this group ($10)"
-                                >
-                                  Deploy
-                                </button>
-
-                                {/* Advance Mode Toggle */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const newMode = group.mode === 'advance' ? 'none' : 'advance';
-                                    onSetGroupMode(group.id, newMode);
-                                  }}
-                                  disabled={unitCount === 0}
-                                  className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-                                    group.mode === 'advance'
-                                      ? 'bg-green-600 text-white hover:bg-green-700'
-                                      : 'bg-green-900/30 text-green-400 hover:bg-green-800/50'
-                                  }`}
-                                  title={group.mode === 'advance' 
-                                    ? 'Auto-advance mode active (click to disable)' 
-                                    : 'Enable auto-advance mode'}
-                                >
-                                  {group.mode === 'advance' ? '✓ Advance' : 'Advance'}
-                                </button>
-
-                                {/* Defend Mode Toggle */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const newMode = group.mode === 'defend' ? 'none' : 'defend';
-                                    onSetGroupMode(group.id, newMode);
-                                  }}
-                                  disabled={unitCount === 0}
-                                  className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-                                    group.mode === 'defend'
-                                      ? 'bg-orange-600 text-white hover:bg-orange-700'
-                                      : 'bg-orange-900/30 text-orange-400 hover:bg-orange-800/50'
-                                  }`}
-                                  title={group.mode === 'defend' 
-                                    ? 'Auto-defend mode active (click to disable)' 
-                                    : 'Enable auto-defend mode'}
-                                >
-                                  {group.mode === 'defend' ? '✓ Defend' : 'Defend'}
-                                </button>
-
-                                {/* Delete button */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDeleteGroup(group.id);
-                                  }}
-                                  className="rounded bg-red-900/50 px-1.5 py-0.5 text-xs text-red-400 transition-colors hover:bg-red-800 hover:text-red-300"
-                                  title="Delete group"
-                                >
-                                  ✕
-                                </button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-
-              {/* Unassigned army groups */}
-              {theaterGroups.length > 0 && selectedTheaterId === null && (
-                <div className="rounded border border-stone-600 bg-stone-800/50 p-3">
-                  <div className="mb-2 text-xs font-semibold text-stone-400">Unassigned Army Groups:</div>
-                  <div className="flex flex-wrap gap-2">
-                    {theaterGroups.map((group) => {
-                      const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerFaction, group.id, movingUnits);
-                      const validRegions = group.regionIds.filter(id => {
-                        const region = regions[id];
-                        return region && region.owner === playerFaction;
-                      }).length;
-                      const isGroupSelected = selectedGroupId === group.id;
-
-                      return (
-                        <div
-                          key={group.id}
-                          className={`flex items-center gap-2 rounded border p-2 ${
-                            isGroupSelected
-                              ? 'border-white bg-stone-700'
-                              : 'border-stone-600 bg-stone-800'
-                          }`}
-                        >
-                          <div className="h-4 w-4 rounded" style={{ backgroundColor: group.color }} />
-                          <span className="text-sm font-semibold text-white">{group.name}</span>
-                          <div className="flex items-center gap-1 text-xs text-stone-400">
-                            <span>{validRegions}R</span>
-                            <span>|</span>
-                            <span>{unitCount}D</span>
-                          </div>
-                          <button
-                            onClick={() => onDeployToGroup(group.id)}
-                            className="rounded bg-blue-700 px-2 py-0.5 text-xs font-semibold text-white hover:bg-blue-600"
-                            title="Create and deploy unit to this group ($10)"
-                          >
-                            Deploy
-                          </button>
-                          <button
-                            onClick={() => {
-                              const newMode = group.mode === 'advance' ? 'none' : 'advance';
-                              onSetGroupMode(group.id, newMode);
-                            }}
-                            disabled={unitCount === 0}
-                            className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-                              group.mode === 'advance'
-                                ? 'bg-green-600 text-white hover:bg-green-700'
-                                : 'bg-green-900/30 text-green-400 hover:bg-green-800/50'
-                            }`}
-                            title={group.mode === 'advance' ? 'Auto-advance active' : 'Enable auto-advance'}
-                          >
-                            {group.mode === 'advance' ? '✓ Advance' : 'Advance'}
-                          </button>
-                          <button
-                            onClick={() => {
-                              const newMode = group.mode === 'defend' ? 'none' : 'defend';
-                              onSetGroupMode(group.id, newMode);
-                            }}
-                            disabled={unitCount === 0}
-                            className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-                              group.mode === 'defend'
-                                ? 'bg-orange-600 text-white hover:bg-orange-700'
-                                : 'bg-orange-900/30 text-orange-400 hover:bg-orange-800/50'
-                            }`}
-                            title={group.mode === 'defend' ? 'Auto-defend active' : 'Enable auto-defend'}
-                          >
-                            {group.mode === 'defend' ? '✓ Defend' : 'Defend'}
-                          </button>
-                          <button
-                            onClick={() => onDeleteGroup(group.id)}
-                            className="rounded bg-red-900/50 px-1.5 py-0.5 text-xs text-red-400 hover:bg-red-800"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+            {/* Header: Name & Delete */}
+            <div className="flex h-7 items-center justify-between border-b border-stone-800 bg-stone-950/60 px-2 shrink-0">
+              {editingGroupId === group.id ? (
+                <input
+                  type="text"
+                  value={editingName}
+                  onChange={(e) => setEditingName(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  onBlur={handleFinishRename}
+                  autoFocus
+                  className="w-full bg-stone-950 text-[10px] text-white outline-none"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <span
+                  className="truncate text-[11px] font-bold text-stone-300 uppercase tracking-tighter"
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    handleStartRename(group);
+                  }}
+                  title="Double-click to rename"
+                >
+                  {group.name}
+                </span>
               )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteGroup(group.id);
+                }}
+                className="text-stone-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-500"
+              >
+                <span className="text-[10px]">✕</span>
+              </button>
             </div>
-          )}
 
-          {/* Help text */}
-          <div className="mt-3 text-xs text-stone-500">
-            <strong>Theaters</strong> are auto-detected frontline regions facing enemies.
-            Click <strong>&quot;+ Create Group&quot;</strong> on a theater to instantly create an army group with an auto-generated name.
-            <strong>Double-click</strong> a group name to rename it.
-            <br />
-            <strong>Tip:</strong> New units are automatically deployed to the selected army group or region.
+            {/* Theater selection */}
+            <div className="border-b border-stone-800 px-1 py-0.5 shrink-0">
+              <select
+                value={group.theaterId || ''}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  const theaterId = e.target.value || null;
+                  onAssignTheater(group.id, theaterId);
+                  onSelectTheater(theaterId);
+                }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full bg-transparent text-[10px] text-center font-bold text-stone-500 uppercase tracking-tighter outline-none cursor-pointer appearance-none hover:text-stone-300"
+              >
+                <option value="" className="bg-stone-900 text-stone-300">No Theater</option>
+                {theaters.map((theater) => (
+                  <option key={theater.id} value={theater.id} className="bg-stone-900 text-stone-300">
+                    {theater.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Main Action Area: Attack & Defend (Large) */}
+            <div className="flex h-16 divide-x divide-stone-800 border-b border-stone-800 shrink-0">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const newMode = group.mode === 'advance' ? 'none' : 'advance';
+                  onSetGroupMode(group.id, newMode);
+                }}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${
+                  group.mode === 'advance' 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-stone-900/40 text-stone-600 hover:bg-green-900/20 hover:text-green-500'
+                }`}
+                title="Advance Mode"
+              >
+                <span className="text-xl">➔</span>
+                <span className="text-[10px] font-black">ATTACK</span>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const newMode = group.mode === 'defend' ? 'none' : 'defend';
+                  onSetGroupMode(group.id, newMode);
+                }}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${
+                  group.mode === 'defend' 
+                    ? 'bg-orange-600 text-white' 
+                    : 'bg-stone-900/40 text-stone-600 hover:bg-orange-900/20 hover:text-orange-500'
+                }`}
+                title="Defend Mode"
+              >
+                <span className="text-xl">🛡️</span>
+                <span className="text-[10px] font-black">DEFEND</span>
+              </button>
+            </div>
+
+            {/* Division Count Area */}
+            <div className="flex h-8 items-center justify-center bg-stone-950/40 shrink-0">
+              <div className="text-[10px] font-black tracking-tight text-white">
+                <span className={unitCount > 0 ? 'text-amber-400' : 'text-stone-500'}>
+                  {unitCount}
+                </span>
+                <span className="text-[10px] opacity-30 ml-1">DIVISIONS</span>
+              </div>
+            </div>
+
+            {/* Deploy button at bottom */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeployToGroup(group.id);
+              }}
+              className="w-full bg-blue-700 py-2 text-[10px] font-black text-white hover:bg-blue-600 transition-colors shrink-0"
+            >
+              DEPLOY
+            </button>
           </div>
-        </div>
-      )}
-    </div>
+        );
+      })}
+
+      {/* Add New Group Button - Large Plus */}
+      <button
+        onClick={() => {
+          onCreateGroup('', [], theaters[0]?.id || null);
+        }}
+        className="flex h-44 w-36 flex-col items-center justify-center border-2 border-dashed border-stone-700 bg-stone-900/40 text-stone-600 transition-all hover:border-stone-500 hover:bg-stone-800/60 hover:text-stone-400"
+        title="Create New Army Group"
+      >
+        <span className="text-4xl font-light">+</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest mt-2">New Group</span>
+      </button>
+
+      </div>
   );
 }

@@ -136,6 +136,7 @@ function MainScreenView() {
       onSelectArmyGroup={state.selectArmyGroup}
       onSetArmyGroupMode={state.setArmyGroupMode}
       onDeployToArmyGroup={state.deployToArmyGroup}
+      onAssignTheater={state.assignTheaterToGroup}
       onSetRelationship={state.setRelationship}
       onCountrySelect={state.setSelectedCountryId}
       onSidebarOpen={state.setIsCountrySidebarOpen}
