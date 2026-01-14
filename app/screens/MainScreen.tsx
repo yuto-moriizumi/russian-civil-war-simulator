@@ -303,11 +303,9 @@ export default function MainScreen({
           armyGroups={armyGroups}
           regions={regions}
           playerFaction={country.id}
-          selectedTheaterId={selectedTheaterId}
           selectedGroupId={selectedGroupId}
           movingUnits={movingUnits}
           productionQueue={productionQueue}
-          onSelectTheater={onSelectTheater}
           onCreateGroup={onCreateArmyGroup}
           onDeleteGroup={onDeleteArmyGroup}
           onRenameGroup={onRenameArmyGroup}

@@ -9,7 +9,6 @@ interface TheaterPanelProps {
   armyGroups: ArmyGroup[];
   regions: RegionState;
   playerFaction: FactionId;
-  selectedTheaterId: string | null;
   selectedGroupId: string | null;
   movingUnits: Movement[];
   productionQueue: ProductionQueueItem[];
