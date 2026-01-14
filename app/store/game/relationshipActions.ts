@@ -16,7 +16,7 @@ export const createRelationshipActions = (
    * Set or update relationship between two factions
    */
   setRelationship: (fromFaction: FactionId, toFaction: FactionId, type: RelationshipType) => {
-    const { relationships } = get();
+    const { relationships: startRelationships } = get();
     
     // Don't allow setting relationship with self
     if (fromFaction === toFaction) {
@@ -24,10 +24,42 @@ export const createRelationshipActions = (
       return;
     }
     
-    // Check for autonomy relationships - cannot declare war
+    // Helper to apply a single relationship change to a list
+    const applyRelationshipChange = (
+      rels: Relationship[], 
+      from: FactionId, 
+      to: FactionId, 
+      newType: RelationshipType
+    ): Relationship[] => {
+      if (from === to) return rels;
+
+      const existingIndex = rels.findIndex(
+        r => r.fromFaction === from && r.toFaction === to
+      );
+      
+      if (newType === 'neutral') {
+        if (existingIndex !== -1) {
+          return [
+            ...rels.slice(0, existingIndex),
+            ...rels.slice(existingIndex + 1)
+          ];
+        }
+        return rels;
+      } else {
+        const newRel: Relationship = { fromFaction: from, toFaction: to, type: newType };
+        if (existingIndex !== -1) {
+          const updated = [...rels];
+          updated[existingIndex] = newRel;
+          return updated;
+        } else {
+          return [...rels, newRel];
+        }
+      }
+    };
+
+    // Check for autonomy relationships - cannot declare war on each other
     if (type === 'war') {
-      // Check if either direction has an autonomy relationship
-      const hasAutonomy = relationships.some(
+      const hasAutonomy = startRelationships.some(
         r => ((r.fromFaction === fromFaction && r.toFaction === toFaction) ||
               (r.fromFaction === toFaction && r.toFaction === fromFaction)) &&
              r.type === 'autonomy'
@@ -41,8 +73,7 @@ export const createRelationshipActions = (
     
     // Check if trying to set autonomy when at war
     if (type === 'autonomy') {
-      // Check if either direction has a war relationship
-      const atWar = relationships.some(
+      const atWar = startRelationships.some(
         r => ((r.fromFaction === fromFaction && r.toFaction === toFaction) ||
               (r.fromFaction === toFaction && r.toFaction === fromFaction)) &&
              r.type === 'war'
@@ -54,42 +85,30 @@ export const createRelationshipActions = (
       }
     }
     
-    // Check if relationship already exists
-    const existingIndex = relationships.findIndex(
-      r => r.fromFaction === fromFaction && r.toFaction === toFaction
-    );
-    
-    let newRelationships: Relationship[];
-    
-    if (type === 'neutral') {
-      // Remove the relationship entry if setting to neutral
-      if (existingIndex !== -1) {
-        newRelationships = [
-          ...relationships.slice(0, existingIndex),
-          ...relationships.slice(existingIndex + 1)
-        ];
-      } else {
-        return; // Already neutral (no entry exists)
-      }
-    } else {
-      // Create or update relationship
-      const newRelationship: Relationship = {
-        fromFaction,
-        toFaction,
-        type
-      };
-      
-      if (existingIndex !== -1) {
-        // Update existing relationship
-        newRelationships = [...relationships];
-        newRelationships[existingIndex] = newRelationship;
-      } else {
-        // Add new relationship
-        newRelationships = [...relationships, newRelationship];
-      }
+    let nextRelationships = applyRelationshipChange(startRelationships, fromFaction, toFaction, type);
+
+    // Cascading war declarations for autonomy
+    if (type === 'war') {
+      // 1. If Master declares war, Servant also declares war on the target
+      const servantsOfAggressor = startRelationships.filter(
+        r => r.fromFaction === fromFaction && r.type === 'autonomy'
+      );
+      servantsOfAggressor.forEach(s => {
+        // Servant declares war on the same target
+        nextRelationships = applyRelationshipChange(nextRelationships, s.toFaction, toFaction, 'war');
+      });
+
+      // 2. If Master is declared war upon, Servant declares war on the aggressor
+      const servantsOfDefender = startRelationships.filter(
+        r => r.fromFaction === toFaction && r.type === 'autonomy'
+      );
+      servantsOfDefender.forEach(s => {
+        // Servant declares war on the aggressor to defend Master
+        nextRelationships = applyRelationshipChange(nextRelationships, s.toFaction, fromFaction, 'war');
+      });
     }
     
-    set({ relationships: newRelationships });
+    set({ relationships: nextRelationships });
   },
   
   /**

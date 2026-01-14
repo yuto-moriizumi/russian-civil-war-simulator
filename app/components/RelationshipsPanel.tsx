@@ -166,7 +166,7 @@ export default function RelationshipsPanel({
             <li><span className="text-gray-400">Neutral:</span> No troop movement allowed</li>
             <li><span className="text-blue-400">Military Access:</span> Troops can move, no occupation</li>
             <li><span className="text-red-400">War:</span> Troops can move and occupy regions</li>
-            <li><span className="text-purple-400">Autonomy:</span> Master/Servant bond with mutual access and no war</li>
+            <li><span className="text-purple-400">Autonomy:</span> Master/Servant bond with mutual access, no mutual war, and joint defense/offense</li>
           </ul>
         </div>
       </div>
