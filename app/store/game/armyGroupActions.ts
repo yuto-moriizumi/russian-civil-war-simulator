@@ -1,5 +1,5 @@
 import { Movement, ArmyGroup } from '../../types/game';
-import { findBestMoveTowardEnemy } from '../../utils/pathfinding';
+import { findBestMoveTowardEnemy, findBestDefensiveMove } from '../../utils/pathfinding';
 import { detectTheaters } from '../../utils/theaterDetection';
 import { generateArmyGroupName } from '../../utils/armyGroupNaming';
 import { ARMY_GROUP_COLORS } from './initialState';
@@ -366,6 +366,10 @@ export const createArmyGroupActions = (
             );
             if (groupAlreadyMoving) return;
             
+            // Use findBestDefensiveMove to get the next adjacent step toward the border
+            const nextStep = findBestDefensiveMove(sourceRegionId, newRegions, adjacency, selectedCountry.id);
+            if (!nextStep) return; // No valid adjacent move exists
+            
             const travelTimeHours = 6;
             const arrivalTime = new Date(dateTime);
             arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
@@ -373,7 +377,7 @@ export const createArmyGroupActions = (
             const newMovement: Movement = {
               id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${sourceRegionId}`,
               fromRegion: sourceRegionId,
-              toRegion: borderRegionId,
+              toRegion: nextStep, // Move to adjacent step, not directly to border
               divisions: divsFromSource,
               departureTime: new Date(dateTime),
               arrivalTime,
@@ -382,7 +386,7 @@ export const createArmyGroupActions = (
 
             newMovements.push(newMovement);
             movedRegions.add(sourceRegionId);
-            targetRegions.add(borderRegionId);
+            targetRegions.add(nextStep); // Track the actual target (adjacent region)
           });
         }
       }
