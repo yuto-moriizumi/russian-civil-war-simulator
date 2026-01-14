@@ -93,9 +93,9 @@ export default function RelationshipsPanel({
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold text-stone-100">{FACTION_NAMES[faction]}</h3>
                 <span
-                  className={`px-2 py-1 rounded text-xs font-bold text-white ${RELATIONSHIP_COLORS[theirStatus]}`}
+                  className={`px-2 py-1 rounded text-xs font-bold text-white ${RELATIONSHIP_COLORS[ourStatus]}`}
                 >
-                  {RELATIONSHIP_LABELS[theirStatus]}
+                  {RELATIONSHIP_LABELS[ourStatus]}
                 </span>
               </div>
 
@@ -122,20 +122,17 @@ export default function RelationshipsPanel({
                     </label>
                   </div>
 
-                  {ourStatus !== 'war' && (
-                    <button
-                      onClick={() => handleDeclareWar(faction)}
-                      className="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-2 px-3 rounded transition-colors"
-                    >
-                      ⚔ Declare War
-                    </button>
-                  )}
-
-                  {ourStatus === 'war' && (
-                    <div className="bg-red-900/30 border border-red-700 rounded p-2 text-red-300 font-semibold">
-                      ⚔ At War
-                    </div>
-                  )}
+                  <button
+                    onClick={() => handleDeclareWar(faction)}
+                    disabled={ourStatus === 'war'}
+                    className={`w-full font-bold py-2 px-3 rounded transition-colors ${
+                      ourStatus === 'war'
+                        ? 'bg-red-900/50 text-red-400 cursor-not-allowed border border-red-800'
+                        : 'bg-red-700 hover:bg-red-600 text-white'
+                    }`}
+                  >
+                    {ourStatus === 'war' ? '⚔ At War' : '⚔ Declare War'}
+                  </button>
                 </div>
 
                 <div className="mt-2 pt-2 border-t border-stone-700 text-stone-400">
