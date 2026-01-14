@@ -100,7 +100,7 @@ export function applyCompletedMovements(
               toRegion
             );
             nextEvents.push(reinforcementEvent);
-            nextNotifications.push(createNotification(reinforcementEvent, currentDate));
+            // Notification removed - event still logged in EventsModal
           } else if (owner === ongoingCombat.defenderFaction) {
             // Join the defenders
             const updatedCombat = {
@@ -122,7 +122,7 @@ export function applyCompletedMovements(
               toRegion
             );
             nextEvents.push(reinforcementEvent);
-            nextNotifications.push(createNotification(reinforcementEvent, currentDate));
+            // Notification removed - event still logged in EventsModal
           }
         } else {
           // No ongoing combat - follow standard combat/occupation logic
@@ -166,7 +166,7 @@ export function applyCompletedMovements(
               toRegion
             );
             nextEvents.push(battleEvent);
-            nextNotifications.push(createNotification(battleEvent, currentDate));
+            // Notification removed - event still logged in EventsModal
           }
         }
       }

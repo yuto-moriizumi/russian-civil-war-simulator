@@ -83,7 +83,7 @@ export function processCombats(
         );
         
         newCombatEvents.push(combatEvent);
-        newCombatNotifications.push(createNotification(combatEvent, currentDate));
+        // Notification removed - event still logged in EventsModal
       } else {
         updatedCombats.push(updatedCombat);
       }
