@@ -103,7 +103,7 @@ export const createRelationshipActions = (
       const toName = getFactionName(toFaction);
       const event = createGameEvent(
         'war_declared',
-        `${fromName} vs ${toName}`,
+        `${fromName} declares war against ${toName}`,
         `${fromName} has declared war on ${toName}!`,
         dateTime,
         fromFaction
@@ -128,7 +128,7 @@ export const createRelationshipActions = (
           const targetName = getFactionName(toFaction);
           const event = createGameEvent(
             'war_declared',
-            `${servantName} joins vs ${targetName}`,
+            `${servantName} joins war against ${targetName}`,
             `${servantName} joins their Master (${masterName}) in war against ${targetName}!`,
             dateTime,
             s.toFaction
@@ -151,7 +151,7 @@ export const createRelationshipActions = (
           const aggressorName = getFactionName(fromFaction);
           const event = createGameEvent(
             'war_declared',
-            `${servantName} defends vs ${aggressorName}`,
+            `${servantName} joins defense against ${aggressorName}`,
             `${servantName} joins their Master (${masterName}) to defend against ${aggressorName}!`,
             dateTime,
             s.toFaction
