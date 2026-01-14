@@ -47,6 +47,8 @@ interface MapContextMenuHandlerRefs {
   adjacencyRef: React.MutableRefObject<Adjacency>;
   onMoveUnitsRef: React.MutableRefObject<(fromRegion: string, toRegion: string, count: number) => void>;
   onUnitSelectRef: React.MutableRefObject<(regionId: string | null) => void>;
+  onCountrySelectRef: React.MutableRefObject<(factionId: FactionId | null) => void>;
+  onSidebarOpenRef: React.MutableRefObject<(isOpen: boolean) => void>;
 }
 
 export function createContextMenuHandler({
@@ -55,6 +57,8 @@ export function createContextMenuHandler({
   adjacencyRef,
   onMoveUnitsRef,
   onUnitSelectRef,
+  onCountrySelectRef,
+  onSidebarOpenRef,
 }: MapContextMenuHandlerRefs) {
   return (e: MapLayerMouseEvent) => {
     e.preventDefault();
@@ -63,6 +67,7 @@ export function createContextMenuHandler({
       const targetRegionId = features[0].properties?.shapeISO;
       const currentSelectedUnit = selectedUnitRegionRef.current;
       
+      let moved = false;
       // Check if we have a unit selected and this is an adjacent region
       if (currentSelectedUnit && targetRegionId && targetRegionId !== currentSelectedUnit) {
         const adjacentRegions = getAdjacentRegions(adjacencyRef.current, currentSelectedUnit);
@@ -72,7 +77,18 @@ export function createContextMenuHandler({
             // Move all units (or could use unitsToMove for partial)
             onMoveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.divisions.length);
             onUnitSelectRef.current(null);
+            moved = true;
           }
+        }
+      }
+
+      // Open country sidebar for the target region's owner if not moved
+      // Or maybe always open it? The requirement says "can be opened by right clicking region"
+      if (!moved && targetRegionId) {
+        const targetRegion = regionsRef.current[targetRegionId];
+        if (targetRegion) {
+          onCountrySelectRef.current(targetRegion.owner);
+          onSidebarOpenRef.current(true);
         }
       }
     }

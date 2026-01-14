@@ -252,6 +252,8 @@ export interface GameAPI {
   getRelationships: () => Relationship[];
   setRelationship: (fromFaction: FactionId, toFaction: FactionId, type: RelationshipType) => void;
   getRelationship: (fromFaction: FactionId, toFaction: FactionId) => RelationshipType;
+  // Country sidebar
+  openCountrySidebar: (factionId: FactionId | null) => void;
 }
 
 // Declare global window.gameAPI

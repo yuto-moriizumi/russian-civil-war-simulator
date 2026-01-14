@@ -48,6 +48,12 @@ export const createBasicActions = (
   setIsEventsModalOpen: (isOpen: boolean) => set({ isEventsModalOpen: isOpen }),
   
   setSelectedCombatId: (combatId: string | null) => set({ selectedCombatId: combatId }),
+  
+  setIsProductionModalOpen: (isOpen: boolean) => set({ isProductionModalOpen: isOpen }),
+
+  setSelectedCountryId: (countryId: FactionId | null) => set({ selectedCountryId: countryId }),
+
+  setIsCountrySidebarOpen: (isOpen: boolean) => set({ isCountrySidebarOpen: isOpen }),
 
   dismissNotification: (notificationId: string) => {
     const { notifications } = get();

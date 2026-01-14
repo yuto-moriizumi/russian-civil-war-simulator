@@ -43,6 +43,8 @@ interface GameMapProps {
   onDeployUnit: () => void;
   onMoveUnits: (fromRegion: string, toRegion: string, count: number) => void;
   onSelectCombat: (combatId: string | null) => void;
+  onCountrySelect: (factionId: FactionId | null) => void;
+  onSidebarOpen: (isOpen: boolean) => void;
 }
 
 export default function GameMap({
@@ -63,6 +65,8 @@ export default function GameMap({
   onDeployUnit,
   onMoveUnits,
   onSelectCombat,
+  onCountrySelect,
+  onSidebarOpen,
 }: GameMapProps) {
   const mapRef = useRef<MapRef>(null);
   const selectedUnitRegionRef = useRef<string | null>(null);
@@ -70,6 +74,8 @@ export default function GameMap({
   const adjacencyRef = useRef<Adjacency>(adjacency);
   const onMoveUnitsRef = useRef(onMoveUnits);
   const onUnitSelectRef = useRef(onUnitSelect);
+  const onCountrySelectRef = useRef(onCountrySelect);
+  const onSidebarOpenRef = useRef(onSidebarOpen);
   const [mapLoaded, setMapLoaded] = useState(false);
 
   const regionCentroids = useRegionCentroids();
@@ -105,6 +111,14 @@ export default function GameMap({
   useEffect(() => {
     onUnitSelectRef.current = onUnitSelect;
   }, [onUnitSelect]);
+
+  useEffect(() => {
+    onCountrySelectRef.current = onCountrySelect;
+  }, [onCountrySelect]);
+
+  useEffect(() => {
+    onSidebarOpenRef.current = onSidebarOpen;
+  }, [onSidebarOpen]);
 
   const handleMapLoad = useCallback(() => {
     setMapLoaded(true);
@@ -151,6 +165,7 @@ export default function GameMap({
         const targetRegionId = features[0].properties?.shapeISO;
         const currentSelectedUnit = selectedUnitRegionRef.current;
         
+        let moved = false;
         // Check if we have a unit selected and this is an adjacent region
         if (currentSelectedUnit && targetRegionId && targetRegionId !== currentSelectedUnit) {
           const adjacentRegions = getAdjacentRegions(adjacencyRef.current, currentSelectedUnit);
@@ -160,7 +175,17 @@ export default function GameMap({
               // Move all units (or could use unitsToMove for partial)
               onMoveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.divisions.length);
               onUnitSelectRef.current(null);
+              moved = true;
             }
+          }
+        }
+
+        // Open country sidebar for the target region's owner if not moved
+        if (!moved && targetRegionId) {
+          const targetRegion = regionsRef.current[targetRegionId];
+          if (targetRegion) {
+            onCountrySelectRef.current(targetRegion.owner);
+            onSidebarOpenRef.current(true);
           }
         }
       }
