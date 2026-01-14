@@ -54,10 +54,6 @@ export default function RelationshipsPanel({
     return ourRelation ? ourRelation.type : 'neutral';
   };
 
-  const handleRelationshipChange = (targetFaction: FactionId, newType: RelationshipType) => {
-    onSetRelationship(playerFaction, targetFaction, newType);
-  };
-
   const handleMilitaryAccessToggle = (targetFaction: FactionId, isChecked: boolean) => {
     const currentStatus = getOurRelationshipStatus(targetFaction);
     // If checking military access and currently at war, keep war
