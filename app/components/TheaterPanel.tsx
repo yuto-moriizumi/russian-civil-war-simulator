@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Theater, ArmyGroup, RegionState, FactionId, Movement } from '../types/game';
+import { Theater, ArmyGroup, RegionState, FactionId, Movement, ProductionQueueItem } from '../types/game';
 import { getArmyGroupUnitCount } from '../utils/pathfinding';
 
 interface TheaterPanelProps {
@@ -12,6 +12,7 @@ interface TheaterPanelProps {
   selectedTheaterId: string | null;
   selectedGroupId: string | null;
   movingUnits: Movement[];
+  productionQueue: ProductionQueueItem[];
   onSelectTheater: (theaterId: string | null) => void;
   onCreateGroup: (name: string, regionIds: string[], theaterId: string | null) => void;
   onDeleteGroup: (groupId: string) => void;
@@ -30,6 +31,7 @@ export default function TheaterPanel({
   selectedTheaterId,
   selectedGroupId,
   movingUnits,
+  productionQueue,
   onSelectTheater,
   onCreateGroup,
   onDeleteGroup,
@@ -72,6 +74,7 @@ export default function TheaterPanel({
       {/* Group cards by theater if desired, but for now we'll just list them horizontally */}
       {playerGroups.map((group) => {
         const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerFaction, group.id, movingUnits);
+        const queueCount = productionQueue.filter(p => p.armyGroupId === group.id).length;
         const validRegions = group.regionIds.filter(id => {
           const region = regions[id];
           return region && region.owner === playerFaction;
@@ -197,6 +200,11 @@ export default function TheaterPanel({
                   {unitCount}
                 </span>
                 <span className="text-[10px] opacity-30 ml-1">DIVISIONS</span>
+                {queueCount > 0 && (
+                  <span className="text-blue-400 ml-1">
+                    +{queueCount}
+                  </span>
+                )}
               </div>
             </div>
 
