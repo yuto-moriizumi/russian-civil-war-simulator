@@ -141,7 +141,6 @@ export default function MainScreen({
   onSidebarOpen,
 }: MainScreenProps) {
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);
-  const [isArmyGroupsPanelExpanded, setIsArmyGroupsPanelExpanded] = useState(true);
   
   // Store lastSaveTime timestamp in a ref to compare and trigger indicator
   // Initialize with current lastSaveTime to avoid showing indicator on mount
@@ -304,11 +303,9 @@ export default function MainScreen({
           armyGroups={armyGroups}
           regions={regions}
           playerFaction={country.id}
-          selectedTheaterId={selectedTheaterId}
           selectedGroupId={selectedGroupId}
           movingUnits={movingUnits}
           productionQueue={productionQueue}
-          onSelectTheater={onSelectTheater}
           onCreateGroup={onCreateArmyGroup}
           onDeleteGroup={onDeleteArmyGroup}
           onRenameGroup={onRenameArmyGroup}

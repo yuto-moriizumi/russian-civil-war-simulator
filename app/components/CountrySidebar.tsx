@@ -37,13 +37,6 @@ const RELATIONSHIP_COLORS: Record<RelationshipType, string> = {
   autonomy: 'text-purple-400',
 };
 
-const RELATIONSHIP_BG: Record<RelationshipType, string> = {
-  neutral: 'bg-stone-700',
-  military_access: 'bg-blue-600',
-  war: 'bg-red-600',
-  autonomy: 'bg-purple-600',
-};
-
 export default function CountrySidebar({
   isOpen,
   onClose,

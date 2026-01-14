@@ -120,6 +120,7 @@ export const createArmyGroupActions = (
     set({
       armyGroups: [...armyGroups, newGroup],
       selectedGroupId: newGroup.id,
+      selectedTheaterId: null, // Clear selected theater when creating/selecting a new group
     });
   },
 
@@ -128,6 +129,8 @@ export const createArmyGroupActions = (
     set({
       armyGroups: armyGroups.filter(g => g.id !== groupId),
       selectedGroupId: selectedGroupId === groupId ? null : selectedGroupId,
+      // If the selected group was the one providing the theater highlight, it will naturally clear
+      // We don't necessarily want to clear an explicitly selected theater here
     });
   },
 
@@ -150,7 +153,10 @@ export const createArmyGroupActions = (
   },
 
   selectArmyGroup: (groupId: string | null) => {
-    set({ selectedGroupId: groupId });
+    set({ 
+      selectedGroupId: groupId,
+      selectedTheaterId: null // Clear selected theater when changing/deselecting army groups
+    });
   },
 
   setArmyGroupMode: (groupId: string, mode: ArmyGroupMode) => {

@@ -9,11 +9,9 @@ interface TheaterPanelProps {
   armyGroups: ArmyGroup[];
   regions: RegionState;
   playerFaction: FactionId;
-  selectedTheaterId: string | null;
   selectedGroupId: string | null;
   movingUnits: Movement[];
   productionQueue: ProductionQueueItem[];
-  onSelectTheater: (theaterId: string | null) => void;
   onCreateGroup: (name: string, regionIds: string[], theaterId: string | null) => void;
   onDeleteGroup: (groupId: string) => void;
   onRenameGroup: (groupId: string, name: string) => void;
@@ -28,11 +26,9 @@ export default function TheaterPanel({
   armyGroups,
   regions,
   playerFaction,
-  selectedTheaterId,
   selectedGroupId,
   movingUnits,
   productionQueue,
-  onSelectTheater,
   onCreateGroup,
   onDeleteGroup,
   onRenameGroup,
@@ -75,10 +71,6 @@ export default function TheaterPanel({
       {playerGroups.map((group) => {
         const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerFaction, group.id, movingUnits);
         const queueCount = productionQueue.filter(p => p.armyGroupId === group.id).length;
-        const validRegions = group.regionIds.filter(id => {
-          const region = regions[id];
-          return region && region.owner === playerFaction;
-        }).length;
         const isGroupSelected = selectedGroupId === group.id;
 
         return (
@@ -140,7 +132,6 @@ export default function TheaterPanel({
                   e.stopPropagation();
                   const theaterId = e.target.value || null;
                   onAssignTheater(group.id, theaterId);
-                  onSelectTheater(theaterId);
                 }}
                 onClick={(e) => e.stopPropagation()}
                 className="w-full bg-transparent text-[10px] text-center font-bold text-stone-500 uppercase tracking-tighter outline-none cursor-pointer appearance-none hover:text-stone-300"
