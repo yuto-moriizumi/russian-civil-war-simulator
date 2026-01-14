@@ -106,6 +106,7 @@ function MainScreenView() {
       armyGroups={state.armyGroups}
       selectedGroupId={state.selectedGroupId}
       selectedTheaterId={state.selectedTheaterId}
+      relationships={state.relationships}
       onTogglePlay={state.togglePlay}
       onChangeSpeed={state.setGameSpeed}
       onOpenMissions={state.openMissions}
@@ -135,6 +136,7 @@ function MainScreenView() {
       onDefendArmyGroup={state.defendArmyGroup}
       onSetArmyGroupMode={state.setArmyGroupMode}
       onDeployToArmyGroup={state.deployToArmyGroup}
+      onSetRelationship={state.setRelationship}
     />
   );
 }

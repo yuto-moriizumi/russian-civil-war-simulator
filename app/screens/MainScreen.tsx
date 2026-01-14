@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, NotificationItem, ActiveCombat, ArmyGroup, Theater, ProductionQueueItem } from '../types/game';
+import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, NotificationItem, ActiveCombat, ArmyGroup, Theater, ProductionQueueItem, Relationship, RelationshipType, FactionId } from '../types/game';
 import CombatPopup from '../components/CombatPopup';
 import EventsModal from '../components/EventsModal';
 import TheaterPanel from '../components/TheaterPanel';
@@ -10,6 +10,7 @@ import NotificationToast from '../components/NotificationToast';
 import TopBar from '../components/TopBar';
 import MissionPanel from '../components/MissionPanel';
 import ProductionQueueModal from '../components/ProductionQueueModal';
+import RelationshipsPanel from '../components/RelationshipsPanel';
 import { countFactionUnits } from '../utils/mapUtils';
 
 // Dynamic import for GameMap to avoid SSR issues with MapLibre
@@ -45,6 +46,7 @@ interface MainScreenProps {
   armyGroups: ArmyGroup[];
   selectedGroupId: string | null;
   selectedTheaterId: string | null;
+  relationships: Relationship[];
   onTogglePlay: () => void;
   onChangeSpeed: (speed: GameSpeed) => void;
   onOpenMissions: () => void;
@@ -65,6 +67,7 @@ interface MainScreenProps {
   onCloseProductionQueue: () => void;
   onCancelProduction: (productionId: string) => void;
   onDismissNotification: (notificationId: string) => void;
+  onSetRelationship: (fromFaction: FactionId, toFaction: FactionId, type: RelationshipType) => void;
   // Theater and Army Groups action props
   onSelectTheater: (theaterId: string | null) => void;
   onCreateArmyGroup: (name: string, regionIds: string[], theaterId?: string | null) => void;
@@ -99,6 +102,7 @@ export default function MainScreen({
   armyGroups,
   selectedGroupId,
   selectedTheaterId,
+  relationships,
   onTogglePlay,
   onChangeSpeed,
   onOpenMissions,
@@ -128,9 +132,11 @@ export default function MainScreen({
   onDefendArmyGroup,
   onSetArmyGroupMode,
   onDeployToArmyGroup,
+  onSetRelationship,
 }: MainScreenProps) {
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);
   const [isArmyGroupsPanelExpanded, setIsArmyGroupsPanelExpanded] = useState(true);
+  const [showRelationshipsPanel, setShowRelationshipsPanel] = useState(false);
   
   // Store lastSaveTime in a ref to compare and trigger indicator
   const prevSaveTimeRef = useRef<Date | null>(null);
@@ -220,7 +226,17 @@ export default function MainScreen({
         onSaveGame={onSaveGame}
         onOpenEvents={onOpenEvents}
         onOpenProductionQueue={onOpenProductionQueue}
+        onToggleRelationships={() => setShowRelationshipsPanel(!showRelationshipsPanel)}
       />
+
+      {/* Relationships Panel */}
+      {showRelationshipsPanel && (
+        <RelationshipsPanel
+          playerFaction={country.id}
+          relationships={relationships}
+          onSetRelationship={onSetRelationship}
+        />
+      )}
 
       {/* Mission Panel */}
       <MissionPanel

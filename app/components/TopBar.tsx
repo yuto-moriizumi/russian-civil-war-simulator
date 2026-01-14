@@ -23,6 +23,7 @@ interface TopBarProps {
   onSaveGame: () => void;
   onOpenEvents: () => void;
   onOpenProductionQueue: () => void;
+  onToggleRelationships?: () => void;
 }
 
 export default function TopBar({
@@ -43,6 +44,7 @@ export default function TopBar({
   onSaveGame,
   onOpenEvents,
   onOpenProductionQueue,
+  onToggleRelationships,
 }: TopBarProps) {
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -142,6 +144,17 @@ export default function TopBar({
             </span>
           )}
         </button>
+
+        {/* Relationships Button */}
+        {onToggleRelationships && (
+          <button
+            onClick={onToggleRelationships}
+            className="rounded bg-blue-700 px-3 py-1 text-stone-200 transition-colors hover:bg-blue-600"
+            title="Diplomatic Relations"
+          >
+            Relations
+          </button>
+        )}
 
         {/* Saved Indicator */}
         {showSavedIndicator && (

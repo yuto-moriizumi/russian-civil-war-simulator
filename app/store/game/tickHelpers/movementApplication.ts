@@ -1,4 +1,4 @@
-import { Movement, ActiveCombat, Region, GameEvent, NotificationItem } from '../../../types/game';
+import { Movement, ActiveCombat, Region, GameEvent, NotificationItem, Relationship } from '../../../types/game';
 import { createActiveCombat } from '../../../utils/combat';
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 
@@ -7,6 +7,7 @@ interface MovementApplicationContext {
   combats: ActiveCombat[];
   events: GameEvent[];
   notifications: NotificationItem[];
+  relationships: Relationship[];
 }
 
 interface MovementApplicationResult {
@@ -42,101 +43,119 @@ export function applyCompletedMovements(
         divisions: [...to.divisions, ...divisions],
       };
     } else {
-      // Enemy region - check for ongoing combat
-      const ongoingCombat = nextCombats.find(c => c.regionId === toRegion && !c.isComplete);
+      // Enemy region - check relationship type
+      const relationship = context.relationships.find(
+        r => r.fromFaction === to.owner && r.toFaction === owner
+      );
+      const relationshipType = relationship ? relationship.type : 'neutral';
       
-      if (ongoingCombat) {
-        // There's an ongoing combat - add reinforcements to the appropriate side
-        const combatIndex = nextCombats.findIndex(c => c.id === ongoingCombat.id);
+      if (relationshipType === 'military_access') {
+        // Military access - units can move but no occupation or combat
+        // Just add divisions to the region without changing ownership
+        nextRegions[toRegion] = {
+          ...to,
+          divisions: [...to.divisions, ...divisions],
+        };
+        console.log(`[MILITARY ACCESS] ${divisions.length} ${owner} divisions moved to ${to.name} with military access`);
         
-        if (owner === ongoingCombat.attackerFaction) {
-          // Join the attackers
-          const updatedCombat = {
-            ...ongoingCombat,
-            attackerDivisions: [...ongoingCombat.attackerDivisions, ...divisions],
-            initialAttackerHp: ongoingCombat.initialAttackerHp + divisions.reduce((sum, d) => sum + d.hp, 0),
-            initialAttackerCount: ongoingCombat.initialAttackerCount + divisions.length,
-          };
-          nextCombats[combatIndex] = updatedCombat;
+      } else if (relationshipType === 'war' || relationshipType === 'neutral') {
+        // War state or neutral (hostile) - proceed with combat/occupation logic
+        // Check for ongoing combat
+        const ongoingCombat = nextCombats.find(c => c.regionId === toRegion && !c.isComplete);
+        
+        if (ongoingCombat) {
+          // There's an ongoing combat - add reinforcements to the appropriate side
+          const combatIndex = nextCombats.findIndex(c => c.id === ongoingCombat.id);
           
-          console.log(`[REINFORCEMENTS] ${divisions.length} ${owner} divisions joined the attackers in combat at ${to.name}`);
-          
-          const reinforcementEvent = createGameEvent(
-            'combat_victory',
-            `Reinforcements Arrive!`,
-            `${owner === 'soviet' ? 'Soviet' : 'White'} reinforcements (${divisions.length} divisions) have joined the attack on ${to.name}.`,
-            currentDate,
-            owner,
-            toRegion
-          );
-          nextEvents.push(reinforcementEvent);
-          nextNotifications.push(createNotification(reinforcementEvent, currentDate));
-        } else if (owner === ongoingCombat.defenderFaction) {
-          // Join the defenders
-          const updatedCombat = {
-            ...ongoingCombat,
-            defenderDivisions: [...ongoingCombat.defenderDivisions, ...divisions],
-            initialDefenderHp: ongoingCombat.initialDefenderHp + divisions.reduce((sum, d) => sum + d.hp, 0),
-            initialDefenderCount: ongoingCombat.initialDefenderCount + divisions.length,
-          };
-          nextCombats[combatIndex] = updatedCombat;
-          
-          console.log(`[REINFORCEMENTS] ${divisions.length} ${owner} divisions joined the defenders in combat at ${to.name}`);
-          
-          const reinforcementEvent = createGameEvent(
-            'combat_victory',
-            `Reinforcements Arrive!`,
-            `${owner === 'soviet' ? 'Soviet' : 'White'} reinforcements (${divisions.length} divisions) have arrived to defend ${to.name}.`,
-            currentDate,
-            owner,
-            toRegion
-          );
-          nextEvents.push(reinforcementEvent);
-          nextNotifications.push(createNotification(reinforcementEvent, currentDate));
-        }
-      } else {
-        // No ongoing combat - follow standard logic
-        const defenderDivisions = to.divisions;
-        if (defenderDivisions.length === 0) {
-          // Undefended capture
-          nextRegions[toRegion] = {
-            ...to,
-            owner: owner,
-            divisions: divisions,
-          };
-          const captureEvent = createGameEvent(
-            'region_captured',
-            `${to.name} Captured!`,
-            `${owner === 'soviet' ? 'Soviet' : 'White'} forces captured the undefended region of ${to.name}.`,
-            currentDate,
-            owner,
-            toRegion
-          );
-          nextEvents.push(captureEvent);
-          nextNotifications.push(createNotification(captureEvent, currentDate));
+          if (owner === ongoingCombat.attackerFaction) {
+            // Join the attackers
+            const updatedCombat = {
+              ...ongoingCombat,
+              attackerDivisions: [...ongoingCombat.attackerDivisions, ...divisions],
+              initialAttackerHp: ongoingCombat.initialAttackerHp + divisions.reduce((sum, d) => sum + d.hp, 0),
+              initialAttackerCount: ongoingCombat.initialAttackerCount + divisions.length,
+            };
+            nextCombats[combatIndex] = updatedCombat;
+            
+            console.log(`[REINFORCEMENTS] ${divisions.length} ${owner} divisions joined the attackers in combat at ${to.name}`);
+            
+            const reinforcementEvent = createGameEvent(
+              'combat_victory',
+              `Reinforcements Arrive!`,
+              `${owner === 'soviet' ? 'Soviet' : 'White'} reinforcements (${divisions.length} divisions) have joined the attack on ${to.name}.`,
+              currentDate,
+              owner,
+              toRegion
+            );
+            nextEvents.push(reinforcementEvent);
+            nextNotifications.push(createNotification(reinforcementEvent, currentDate));
+          } else if (owner === ongoingCombat.defenderFaction) {
+            // Join the defenders
+            const updatedCombat = {
+              ...ongoingCombat,
+              defenderDivisions: [...ongoingCombat.defenderDivisions, ...divisions],
+              initialDefenderHp: ongoingCombat.initialDefenderHp + divisions.reduce((sum, d) => sum + d.hp, 0),
+              initialDefenderCount: ongoingCombat.initialDefenderCount + divisions.length,
+            };
+            nextCombats[combatIndex] = updatedCombat;
+            
+            console.log(`[REINFORCEMENTS] ${divisions.length} ${owner} divisions joined the defenders in combat at ${to.name}`);
+            
+            const reinforcementEvent = createGameEvent(
+              'combat_victory',
+              `Reinforcements Arrive!`,
+              `${owner === 'soviet' ? 'Soviet' : 'White'} reinforcements (${divisions.length} divisions) have arrived to defend ${to.name}.`,
+              currentDate,
+              owner,
+              toRegion
+            );
+            nextEvents.push(reinforcementEvent);
+            nextNotifications.push(createNotification(reinforcementEvent, currentDate));
+          }
         } else {
-          // Initiate new combat
-          const newCombat = createActiveCombat(
-            toRegion,
-            to.name,
-            owner,
-            to.owner,
-            divisions,
-            defenderDivisions,
-            currentDate
-          );
-          nextCombats.push(newCombat);
-          nextRegions[toRegion] = { ...to, divisions: [] };
-          const battleEvent = createGameEvent(
-            'combat_victory',
-            `Battle for ${to.name} Begins!`,
-            `${owner === 'soviet' ? 'Soviet' : 'White'} forces (${divisions.length} divisions) are attacking ${to.owner === 'soviet' ? 'Soviet' : 'White'} defenders (${defenderDivisions.length} divisions) at ${to.name}.`,
-            currentDate,
-            owner,
-            toRegion
-          );
-          nextEvents.push(battleEvent);
-          nextNotifications.push(createNotification(battleEvent, currentDate));
+          // No ongoing combat - follow standard combat/occupation logic
+          const defenderDivisions = to.divisions.filter(d => d.owner === to.owner);
+          if (defenderDivisions.length === 0) {
+            // Undefended capture (occupation in war state)
+            nextRegions[toRegion] = {
+              ...to,
+              owner: owner,
+              divisions: divisions,
+            };
+            const captureEvent = createGameEvent(
+              'region_captured',
+              `${to.name} Captured!`,
+              `${owner === 'soviet' ? 'Soviet' : 'White'} forces captured the undefended region of ${to.name}.`,
+              currentDate,
+              owner,
+              toRegion
+            );
+            nextEvents.push(captureEvent);
+            nextNotifications.push(createNotification(captureEvent, currentDate));
+          } else {
+            // Initiate new combat
+            const newCombat = createActiveCombat(
+              toRegion,
+              to.name,
+              owner,
+              to.owner,
+              divisions,
+              defenderDivisions,
+              currentDate
+            );
+            nextCombats.push(newCombat);
+            nextRegions[toRegion] = { ...to, divisions: [] };
+            const battleEvent = createGameEvent(
+              'combat_victory',
+              `Battle for ${to.name} Begins!`,
+              `${owner === 'soviet' ? 'Soviet' : 'White'} forces (${divisions.length} divisions) are attacking ${to.owner === 'soviet' ? 'Soviet' : 'White'} defenders (${defenderDivisions.length} divisions) at ${to.name}.`,
+              currentDate,
+              owner,
+              toRegion
+            );
+            nextEvents.push(battleEvent);
+            nextNotifications.push(createNotification(battleEvent, currentDate));
+          }
         }
       }
     }

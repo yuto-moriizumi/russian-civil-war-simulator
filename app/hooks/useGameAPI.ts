@@ -70,6 +70,11 @@ export function useGameAPI() {
         state.cancelProduction(productionId);
         return true;
       },
+
+      // Relationship API methods
+      getRelationships: () => state.relationships,
+      setRelationship: (fromFaction, toFaction, type) => state.setRelationship(fromFaction, toFaction, type),
+      getRelationship: (fromFaction, toFaction) => state.getRelationship(fromFaction, toFaction),
     };
 
     return () => {

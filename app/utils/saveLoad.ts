@@ -12,6 +12,7 @@ import {
   ArmyGroup,
   Theater,
   ProductionQueueItem,
+  Relationship,
 } from '../types/game';
 
 const STORAGE_KEY = 'rcw-save';
@@ -95,6 +96,7 @@ interface SerializedGameState {
   armyGroups: ArmyGroup[];
   theaters: Theater[];
   productionQueue: SerializedProductionQueueItem[];
+  relationships: Relationship[];
 }
 
 interface SaveData {
@@ -170,6 +172,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       targetRegionId: p.targetRegionId,
       armyGroupId: p.armyGroupId,
     })),
+    relationships: data.relationships || [], // Default to empty array if not present
   };
 }
 

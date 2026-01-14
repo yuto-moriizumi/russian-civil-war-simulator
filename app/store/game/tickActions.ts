@@ -32,7 +32,7 @@ export const createTickActions = (
     const state = get();
     if (!state.isPlaying) return;
 
-    const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, money, aiStates, gameEvents, notifications, armyGroups, productionQueue } = state;
+    const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, money, aiStates, gameEvents, notifications, armyGroups, productionQueue, relationships } = state;
     
     // Step 1: Validate divisions (development mode only)
     const { updatedRegions, updatedMovingUnits } = validateDivisions(regions, movingUnits, armyGroups);
@@ -91,6 +91,7 @@ export const createTickActions = (
           combats: updatedCombats,
           events: [...gameEvents, ...newCombatEvents, ...productionEvents],
           notifications: [...notifications, ...newCombatNotifications, ...productionNotifications],
+          relationships,
         },
         newDate
       );
