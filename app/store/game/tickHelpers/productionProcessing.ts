@@ -82,9 +82,28 @@ export function processProductionQueue(
       }
     }
 
-    // Return remaining queue (without the first item)
+    // Get remaining queue (without the first item)
+    const remainingQueue = productionQueue.slice(1);
+    
+    // If there's a next item in the queue, update its start time to now
+    // and recalculate its completion time to ensure it takes 24 hours from now
+    const updatedQueue = remainingQueue.map((item, index) => {
+      if (index === 0) {
+        // This is the new first item - reset its timing
+        const PRODUCTION_TIME_HOURS = 24;
+        const newCompletionTime = new Date(currentTime.getTime() + PRODUCTION_TIME_HOURS * 60 * 60 * 1000);
+        return {
+          ...item,
+          startTime: currentTime,
+          completionTime: newCompletionTime,
+        };
+      }
+      return item;
+    });
+    
+    // Return updated queue
     return {
-      remainingProductions: productionQueue.slice(1),
+      remainingProductions: updatedQueue,
       updatedRegions,
       completedProductions,
     };
