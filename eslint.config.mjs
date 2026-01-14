@@ -15,6 +15,20 @@ const eslintConfig = defineConfig([
     // Git worktrees directory (generated files)
     ".worktrees/**",
   ]),
+  // Enforce file length guidelines from AGENTS.md
+  {
+    files: ["**/*.ts", "**/*.tsx"],
+    rules: {
+      "max-lines": [
+        "warn", // Use "warn" for gradual adoption
+        {
+          max: 400,
+          skipBlankLines: true,
+          skipComments: true,
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;
