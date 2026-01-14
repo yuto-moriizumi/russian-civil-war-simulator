@@ -58,6 +58,22 @@ export default function RelationshipsPanel({
     onSetRelationship(playerFaction, targetFaction, newType);
   };
 
+  const handleMilitaryAccessToggle = (targetFaction: FactionId, isChecked: boolean) => {
+    const currentStatus = getOurRelationshipStatus(targetFaction);
+    // If checking military access and currently at war, keep war
+    // If checking military access and currently neutral, set to military access
+    // If unchecking military access, set to neutral
+    if (isChecked && currentStatus !== 'war') {
+      onSetRelationship(playerFaction, targetFaction, 'military_access');
+    } else if (!isChecked && currentStatus === 'military_access') {
+      onSetRelationship(playerFaction, targetFaction, 'neutral');
+    }
+  };
+
+  const handleDeclareWar = (targetFaction: FactionId) => {
+    onSetRelationship(playerFaction, targetFaction, 'war');
+  };
+
   return (
     <div className="absolute top-20 left-4 bg-stone-800 border border-stone-700 rounded-lg p-4 shadow-xl max-w-md z-10">
       <div className="mb-3">
@@ -91,17 +107,35 @@ export default function RelationshipsPanel({
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="text-stone-400 font-semibold">We grant them:</span>
-                  <select
-                    value={ourStatus}
-                    onChange={(e) => handleRelationshipChange(faction, e.target.value as RelationshipType)}
-                    className="bg-stone-800 border border-stone-600 rounded px-2 py-1 text-stone-200 text-xs"
-                  >
-                    <option value="neutral">Neutral</option>
-                    <option value="military_access">Military Access</option>
-                    <option value="war">War</option>
-                  </select>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id={`military-access-${faction}`}
+                      checked={ourStatus === 'military_access' || ourStatus === 'war'}
+                      disabled={ourStatus === 'war'}
+                      onChange={(e) => handleMilitaryAccessToggle(faction, e.target.checked)}
+                      className="w-4 h-4 text-blue-600 bg-stone-700 border-stone-600 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor={`military-access-${faction}`} className="text-stone-300 font-semibold">
+                      Grant Military Access
+                    </label>
+                  </div>
+
+                  {ourStatus !== 'war' && (
+                    <button
+                      onClick={() => handleDeclareWar(faction)}
+                      className="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-2 px-3 rounded transition-colors"
+                    >
+                      ⚔ Declare War
+                    </button>
+                  )}
+
+                  {ourStatus === 'war' && (
+                    <div className="bg-red-900/30 border border-red-700 rounded p-2 text-red-300 font-semibold">
+                      ⚔ At War
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-2 pt-2 border-t border-stone-700 text-stone-400">
