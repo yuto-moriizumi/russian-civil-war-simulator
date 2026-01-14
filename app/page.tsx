@@ -133,6 +133,7 @@ function MainScreenView() {
       onSelectArmyGroup={state.selectArmyGroup}
       onAdvanceArmyGroup={state.advanceArmyGroup}
       onDefendArmyGroup={state.defendArmyGroup}
+      onSetArmyGroupMode={state.setArmyGroupMode}
       onDeployToArmyGroup={state.deployToArmyGroup}
     />
   );

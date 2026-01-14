@@ -21,6 +21,7 @@ interface TheaterPanelProps {
   onSelectGroup: (groupId: string | null) => void;
   onAdvanceGroup: (groupId: string) => void;
   onDefendGroup: (groupId: string) => void;
+  onSetGroupMode: (groupId: string, mode: 'none' | 'advance' | 'defend') => void;
   onDeployToGroup: (groupId: string) => void;
 }
 
@@ -41,6 +42,7 @@ export default function TheaterPanel({
   onSelectGroup,
   onAdvanceGroup,
   onDefendGroup,
+  onSetGroupMode,
   onDeployToGroup,
 }: TheaterPanelProps) {
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
@@ -235,30 +237,44 @@ export default function TheaterPanel({
                                   Deploy
                                 </button>
 
-                                {/* Advance button */}
+                                {/* Advance Mode Toggle */}
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    onAdvanceGroup(group.id);
+                                    const newMode = group.mode === 'advance' ? 'none' : 'advance';
+                                    onSetGroupMode(group.id, newMode);
                                   }}
                                   disabled={unitCount === 0}
-                                  className="rounded bg-green-700 px-2 py-0.5 text-xs font-semibold text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
-                                  title="Advance all units toward enemy"
+                                  className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                                    group.mode === 'advance'
+                                      ? 'bg-green-600 text-white hover:bg-green-700'
+                                      : 'bg-green-900/30 text-green-400 hover:bg-green-800/50'
+                                  }`}
+                                  title={group.mode === 'advance' 
+                                    ? 'Auto-advance mode active (click to disable)' 
+                                    : 'Enable auto-advance mode'}
                                 >
-                                  Advance
+                                  {group.mode === 'advance' ? '✓ Advance' : 'Advance'}
                                 </button>
 
-                                {/* Defend button */}
+                                {/* Defend Mode Toggle */}
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    onDefendGroup(group.id);
+                                    const newMode = group.mode === 'defend' ? 'none' : 'defend';
+                                    onSetGroupMode(group.id, newMode);
                                   }}
                                   disabled={unitCount === 0}
-                                  className="rounded bg-orange-700 px-2 py-0.5 text-xs font-semibold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
-                                  title="Move units to defensive positions (border regions)"
+                                  className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                                    group.mode === 'defend'
+                                      ? 'bg-orange-600 text-white hover:bg-orange-700'
+                                      : 'bg-orange-900/30 text-orange-400 hover:bg-orange-800/50'
+                                  }`}
+                                  title={group.mode === 'defend' 
+                                    ? 'Auto-defend mode active (click to disable)' 
+                                    : 'Enable auto-defend mode'}
                                 >
-                                  Defend
+                                  {group.mode === 'defend' ? '✓ Defend' : 'Defend'}
                                 </button>
 
                                 {/* Delete button */}
@@ -319,19 +335,34 @@ export default function TheaterPanel({
                             Deploy
                           </button>
                           <button
-                            onClick={() => onAdvanceGroup(group.id)}
+                            onClick={() => {
+                              const newMode = group.mode === 'advance' ? 'none' : 'advance';
+                              onSetGroupMode(group.id, newMode);
+                            }}
                             disabled={unitCount === 0}
-                            className="rounded bg-green-700 px-2 py-0.5 text-xs font-semibold text-white hover:bg-green-600 disabled:opacity-50"
+                            className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                              group.mode === 'advance'
+                                ? 'bg-green-600 text-white hover:bg-green-700'
+                                : 'bg-green-900/30 text-green-400 hover:bg-green-800/50'
+                            }`}
+                            title={group.mode === 'advance' ? 'Auto-advance active' : 'Enable auto-advance'}
                           >
-                            Advance
+                            {group.mode === 'advance' ? '✓ Advance' : 'Advance'}
                           </button>
                           <button
-                            onClick={() => onDefendGroup(group.id)}
+                            onClick={() => {
+                              const newMode = group.mode === 'defend' ? 'none' : 'defend';
+                              onSetGroupMode(group.id, newMode);
+                            }}
                             disabled={unitCount === 0}
-                            className="rounded bg-orange-700 px-2 py-0.5 text-xs font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
-                            title="Move units to defensive positions (border regions)"
+                            className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                              group.mode === 'defend'
+                                ? 'bg-orange-600 text-white hover:bg-orange-700'
+                                : 'bg-orange-900/30 text-orange-400 hover:bg-orange-800/50'
+                            }`}
+                            title={group.mode === 'defend' ? 'Auto-defend active' : 'Enable auto-defend'}
                           >
-                            Defend
+                            {group.mode === 'defend' ? '✓ Defend' : 'Defend'}
                           </button>
                           <button
                             onClick={() => onDeleteGroup(group.id)}

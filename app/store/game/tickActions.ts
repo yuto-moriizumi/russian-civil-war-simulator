@@ -139,7 +139,11 @@ export const createTickActions = (
     // Step 9: Sync army group territories with actual division locations
     nextArmyGroups = syncArmyGroupTerritories(nextArmyGroups, nextRegions, nextMovingUnits);
 
-    // Step 10: Update game state
+    // Step 9b: Process army group automatic modes (advance/defend)
+    // This needs to be done before updating state to ensure actions are queued
+    const armyGroupActionsNeeded = nextArmyGroups.filter(g => g.mode !== 'none');
+    
+    // Update state first so actions have latest data
     set({
       dateTime: newDate,
       money: newMoney,
@@ -152,6 +156,15 @@ export const createTickActions = (
       aiStates: nextAIStates, // Updated AI states
       armyGroups: nextArmyGroups,
       productionQueue: remainingProductions, // Update production queue
+    });
+
+    // Now trigger automatic actions for ALL army groups in advance/defend mode (player + AI)
+    armyGroupActionsNeeded.forEach(group => {
+      if (group.mode === 'advance') {
+        get().advanceArmyGroup(group.id);
+      } else if (group.mode === 'defend') {
+        get().defendArmyGroup(group.id);
+      }
     });
     
     // Step 11: Check and auto-complete missions

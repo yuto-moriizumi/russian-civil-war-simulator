@@ -5,7 +5,8 @@ import {
   AIState, 
   Screen, 
   Country, 
-  GameSpeed
+  GameSpeed,
+  ArmyGroupMode
 } from '../../types/game';
 
 export interface GameStore extends GameState {
@@ -65,6 +66,7 @@ export interface GameStore extends GameState {
   selectArmyGroup: (groupId: string | null) => void;
   advanceArmyGroup: (groupId: string) => void;
   defendArmyGroup: (groupId: string) => void;
+  setArmyGroupMode: (groupId: string, mode: ArmyGroupMode) => void;
   deployToArmyGroup: (groupId: string) => void;
   
   // Persistence Actions
