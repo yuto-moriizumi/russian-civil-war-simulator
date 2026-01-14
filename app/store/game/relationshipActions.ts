@@ -99,10 +99,12 @@ export const createRelationshipActions = (
 
     // Check if this is a new war declaration
     if (type === 'war' && getCurrentStatus(fromFaction, toFaction) !== 'war') {
+      const fromName = getFactionName(fromFaction);
+      const toName = getFactionName(toFaction);
       const event = createGameEvent(
         'war_declared',
-        'War Declared!',
-        `${getFactionName(fromFaction)} has declared war on ${getFactionName(toFaction)}!`,
+        `${fromName} declares war!`,
+        `${fromName} has declared war on ${toName}!`,
         dateTime,
         fromFaction
       );
@@ -121,10 +123,13 @@ export const createRelationshipActions = (
       servantsOfAggressor.forEach(s => {
         // Servant declares war on the same target if not already at war
         if (getCurrentStatus(s.toFaction, toFaction) !== 'war') {
+          const servantName = getFactionName(s.toFaction);
+          const masterName = getFactionName(fromFaction);
+          const targetName = getFactionName(toFaction);
           const event = createGameEvent(
             'war_declared',
-            'Joint War Declared',
-            `${getFactionName(s.toFaction)} joins their Master (${getFactionName(fromFaction)}) in war against ${getFactionName(toFaction)}!`,
+            `${servantName} joins war`,
+            `${servantName} joins their Master (${masterName}) in war against ${targetName}!`,
             dateTime,
             s.toFaction
           );
@@ -141,10 +146,13 @@ export const createRelationshipActions = (
       servantsOfDefender.forEach(s => {
         // Servant declares war on the aggressor to defend Master if not already at war
         if (getCurrentStatus(s.toFaction, fromFaction) !== 'war') {
+          const servantName = getFactionName(s.toFaction);
+          const masterName = getFactionName(toFaction);
+          const aggressorName = getFactionName(fromFaction);
           const event = createGameEvent(
             'war_declared',
-            'Defensive War Joined',
-            `${getFactionName(s.toFaction)} joins their Master (${getFactionName(toFaction)}) to defend against ${getFactionName(fromFaction)}!`,
+            `${servantName} defends Master`,
+            `${servantName} joins their Master (${masterName}) to defend against ${aggressorName}!`,
             dateTime,
             s.toFaction
           );
