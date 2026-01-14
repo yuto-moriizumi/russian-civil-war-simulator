@@ -305,6 +305,7 @@ export default function MainScreen({
           selectedTheaterId={selectedTheaterId}
           selectedGroupId={selectedGroupId}
           movingUnits={movingUnits}
+          productionQueue={productionQueue}
           onSelectTheater={onSelectTheater}
           onCreateGroup={onCreateArmyGroup}
           onDeleteGroup={onDeleteArmyGroup}
