@@ -91,9 +91,6 @@ export default function TheaterPanel({
             }`}
             onClick={() => {
               onSelectGroup(isGroupSelected ? null : group.id);
-              if (!isGroupSelected) {
-                onSelectTheater(group.theaterId);
-              }
             }}
           >
             {/* Color stripe at top */}

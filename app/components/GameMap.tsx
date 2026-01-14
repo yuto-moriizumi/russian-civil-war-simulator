@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import Map, { MapRef, Source, Layer, NavigationControl } from 'react-map-gl/maplibre';
 import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { RegionState, Adjacency, FactionId, Movement, ActiveCombat, Theater } from '../types/game';
+import { RegionState, Adjacency, FactionId, Movement, ActiveCombat, Theater, ArmyGroup } from '../types/game';
 import { getAdjacentRegions } from '../utils/mapUtils';
 import { useRegionCentroids } from './GameMap/mapHooks';
 import { UnitMarker, MovingUnitMarker, CombatMarker } from './GameMap/MapMarkers';
@@ -37,6 +37,8 @@ interface GameMapProps {
   unitsInReserve: number;
   theaters: Theater[];
   selectedTheaterId: string | null;
+  selectedGroupId: string | null;
+  armyGroups: ArmyGroup[];
   onRegionSelect: (regionId: string | null) => void;
   onUnitSelect: (regionId: string | null) => void;
   onRegionHover?: (regionId: string | null) => void;
@@ -59,6 +61,8 @@ export default function GameMap({
   unitsInReserve,
   theaters,
   selectedTheaterId,
+  selectedGroupId,
+  armyGroups,
   onRegionSelect,
   onUnitSelect,
   onRegionHover,
@@ -88,6 +92,8 @@ export default function GameMap({
     adjacency,
     theaters,
     selectedTheaterId,
+    selectedGroupId,
+    armyGroups,
     onRegionHover,
   });
 
