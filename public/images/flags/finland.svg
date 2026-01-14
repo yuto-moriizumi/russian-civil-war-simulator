@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 22">
+  <!-- White background -->
+  <rect width="36" height="22" fill="#FFFFFF"/>
+  
+  <!-- Blue Nordic cross -->
+  <!-- Vertical bar -->
+  <rect x="11" y="0" width="3" height="22" fill="#003580"/>
+  
+  <!-- Horizontal bar -->
+  <rect x="0" y="9.5" width="36" height="3" fill="#003580"/>
+</svg>

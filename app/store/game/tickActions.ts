@@ -31,7 +31,7 @@ export const createTickActions = (
     const state = get();
     if (!state.isPlaying) return;
 
-    const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, money, aiState, gameEvents, notifications, armyGroups } = state;
+    const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, money, aiStates, gameEvents, notifications, armyGroups } = state;
     
     // Step 1: Validate divisions (development mode only)
     const { updatedRegions, updatedMovingUnits } = validateDivisions(regions, movingUnits, armyGroups);
@@ -75,29 +75,33 @@ export const createTickActions = (
     // Step 7: Regenerate HP for all stationary divisions
     nextRegions = regenerateDivisionHP(nextRegions);
 
-    // Step 8: AI Tick - process AI actions and deployments
-    let nextAIState = aiState;
+    // Step 8: AI Tick - process AI actions and deployments for all AI factions
+    let nextAIStates = aiStates;
     let nextArmyGroups = armyGroups;
-    if (aiState) {
-      const aiActions = runAITick(aiState, nextRegions, armyGroups, nextCombats, remainingMovements);
-      nextAIState = aiActions.updatedAIState;
-      
-      // If AI created a new army group, add it
-      if (aiActions.newArmyGroup) {
-        nextArmyGroups = [...armyGroups, aiActions.newArmyGroup];
-      }
-      
-      // Apply AI deployments
-      if (aiActions.deployments.length > 0) {
-        aiActions.deployments.forEach(deployment => {
-          if (nextRegions[deployment.regionId]) {
-            nextRegions[deployment.regionId] = {
-              ...nextRegions[deployment.regionId],
-              divisions: [...nextRegions[deployment.regionId].divisions, ...deployment.divisions],
-            };
-          }
-        });
-      }
+    if (aiStates.length > 0) {
+      // Process each AI faction
+      nextAIStates = aiStates.map(aiState => {
+        const aiActions = runAITick(aiState, nextRegions, nextArmyGroups, nextCombats, remainingMovements);
+        
+        // If AI created a new army group, add it
+        if (aiActions.newArmyGroup) {
+          nextArmyGroups = [...nextArmyGroups, aiActions.newArmyGroup];
+        }
+        
+        // Apply AI deployments
+        if (aiActions.deployments.length > 0) {
+          aiActions.deployments.forEach(deployment => {
+            if (nextRegions[deployment.regionId]) {
+              nextRegions[deployment.regionId] = {
+                ...nextRegions[deployment.regionId],
+                divisions: [...nextRegions[deployment.regionId].divisions, ...deployment.divisions],
+              };
+            }
+          });
+        }
+        
+        return aiActions.updatedAIState;
+      });
     }
 
     // Step 9: Sync army group territories with actual division locations
@@ -113,7 +117,7 @@ export const createTickActions = (
       regions: nextRegions,
       gameEvents: nextEvents,
       notifications: nextNotifications,
-      aiState: nextAIState,
+      aiStates: nextAIStates, // Updated AI states
       armyGroups: nextArmyGroups,
     });
     

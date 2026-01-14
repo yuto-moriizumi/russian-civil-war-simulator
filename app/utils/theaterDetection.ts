@@ -294,6 +294,7 @@ function getEnemyBasedName(enemyFaction: FactionId, index: number): string {
   const enemyNames: Record<FactionId, string> = {
     white: 'White',
     soviet: 'Soviet',
+    finland: 'Finnish',
     neutral: 'Independent',
     foreign: 'Foreign',
   };

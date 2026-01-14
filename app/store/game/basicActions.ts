@@ -59,12 +59,24 @@ export const createBasicActions = (
   navigateToScreen: (screen: Screen) => set({ currentScreen: screen }),
   
   selectCountry: (country: Country) => {
-    const aiFaction: FactionId = country.id === 'soviet' ? 'white' : 'soviet';
+    // Determine which factions become AI-controlled (all non-player factions)
+    const allFactions: FactionId[] = ['soviet', 'white', 'finland'];
+    const aiFactions = allFactions.filter(faction => faction !== country.id);
+    
     const factionMissions = initialMissions.filter(m => m.faction === country.id);
     const currentRegions = get().regions;
     
-    // Create initial AI army group
-    const initialAIArmyGroup = createInitialAIArmyGroup(aiFaction, currentRegions);
+    // Create initial AI states for all AI factions
+    const aiStates = aiFactions.map(faction => createInitialAIState(faction));
+    
+    // Create initial army groups for all AI factions
+    const aiArmyGroups = aiFactions.map(faction => 
+      createInitialAIArmyGroup(faction, currentRegions)
+    );
+    
+    // Create initial player army group
+    const playerArmyGroup = createInitialAIArmyGroup(country.id, currentRegions);
+    playerArmyGroup.id = `player-army-group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     // Reset all game state for a fresh start
     set({
@@ -72,8 +84,8 @@ export const createBasicActions = (
       selectedCountry: country,
       currentScreen: 'main',
       missions: factionMissions,
-      aiState: createInitialAIState(aiFaction),
-      armyGroups: [initialAIArmyGroup], // Initialize with AI army group
+      aiStates: aiStates, // Multiple AI states
+      armyGroups: [playerArmyGroup, ...aiArmyGroups], // Player + all AI army groups
       // Keep the regions and adjacency from map data (these are static)
       regions: get().regions,
       adjacency: get().adjacency,
@@ -143,11 +155,11 @@ export const createBasicActions = (
     set({ lastSaveTime: new Date() });
   },
 
-  loadGame: (savedData: { gameState: GameState; regions: RegionState; aiState: AIState | null }) => {
+  loadGame: (savedData: { gameState: GameState; regions: RegionState; aiStates: AIState[] }) => {
     set({
       ...savedData.gameState,
       regions: savedData.regions,
-      aiState: savedData.aiState,
+      aiStates: savedData.aiStates,
       isPlaying: false,
       currentScreen: 'main',
     });

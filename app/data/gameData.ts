@@ -19,6 +19,12 @@ export const countries: Country[] = [
     flag: '/images/flags/white.svg',
     color: '#FFFFFF',
   },
+  {
+    id: 'finland',
+    name: 'Finland',
+    flag: '/images/flags/finland.svg',
+    color: '#003580',
+  },
 ];
 
 // Soviet Mission Tree
@@ -197,5 +203,93 @@ const whiteMissions: Mission[] = [
   },
 ];
 
+// Finnish Mission Tree
+const finnishMissions: Mission[] = [
+  {
+    id: 'finland_independence',
+    faction: 'finland',
+    name: 'Declare Independence',
+    description: 'Secure Finnish independence from Russian control',
+    completed: false,
+    claimed: false,
+    rewards: { money: 100 },
+    prerequisites: [],
+    available: [
+      { type: 'hasUnits', count: 3 }, // Recruit initial defense forces
+    ],
+  },
+  {
+    id: 'finland_civil_war',
+    faction: 'finland',
+    name: 'Finnish Civil War',
+    description: 'Defeat the Red Guards and secure the White victory',
+    completed: false,
+    claimed: false,
+    rewards: { money: 200 },
+    prerequisites: ['finland_independence'],
+    available: [
+      { type: 'combatVictories', count: 1 }, // Win at least 1 battle
+      { type: 'controlRegionCount', count: 15 }, // Control most of Finland
+    ],
+  },
+  {
+    id: 'finland_german_aid',
+    faction: 'finland',
+    name: 'German Intervention',
+    description: 'Secure German military support to end the civil war',
+    completed: false,
+    claimed: false,
+    rewards: { money: 150 },
+    prerequisites: ['finland_independence'],
+    available: [
+      { type: 'hasMoney', amount: 400 }, // Demonstrate stability
+      { type: 'dateAfter', date: '1918-04-01' }, // Historical German intervention
+    ],
+  },
+  {
+    id: 'finland_karelian',
+    faction: 'finland',
+    name: 'East Karelian Uprising',
+    description: 'Support the East Karelian uprising against Soviet rule',
+    completed: false,
+    claimed: false,
+    rewards: { money: 250 },
+    prerequisites: ['finland_civil_war', 'finland_german_aid'],
+    available: [
+      { type: 'hasUnits', count: 10 }, // Have sufficient forces
+      { type: 'controlRegion', regionId: 'FI-13' }, // Control North Karelia
+      { type: 'theaterExists', enemyFaction: 'soviet' }, // Border Soviet territory
+    ],
+  },
+  {
+    id: 'finland_greater',
+    faction: 'finland',
+    name: 'Greater Finland',
+    description: 'Expand Finnish borders to include Karelia and Kola Peninsula',
+    completed: false,
+    claimed: false,
+    rewards: { money: 350 },
+    prerequisites: ['finland_karelian'],
+    available: [
+      { type: 'controlRegion', regionId: 'RU-KR' }, // Control Karelia
+      { type: 'hasUnits', count: 15 }, // Strong military
+    ],
+  },
+  {
+    id: 'finland_victory',
+    faction: 'finland',
+    name: 'Secure the North',
+    description: 'Establish Finland as the dominant power in Northern Europe',
+    completed: false,
+    claimed: false,
+    rewards: { money: 500, gameVictory: true },
+    prerequisites: ['finland_greater'],
+    available: [
+      { type: 'controlRegions', regionIds: ['FI-18', 'RU-KR', 'RU-MUR'] }, // Control key regions
+      { type: 'hasUnits', count: 20 }, // Strong military presence
+    ],
+  },
+];
+
 // Combined missions for both factions
-export const initialMissions: Mission[] = [...sovietMissions, ...whiteMissions];
+export const initialMissions: Mission[] = [...sovietMissions, ...whiteMissions, ...finnishMissions];

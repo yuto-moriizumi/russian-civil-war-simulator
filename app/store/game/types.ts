@@ -15,7 +15,7 @@ export interface GameStore extends GameState {
   selectedRegion: string | null;
   selectedUnitRegion: string | null;
   mapDataLoaded: boolean;
-  aiState: AIState | null;
+  aiStates: AIState[]; // Multiple AI states for different factions
   isEventsModalOpen: boolean;
   selectedCombatId: string | null;
   lastSaveTime: Date | null;
@@ -63,5 +63,5 @@ export interface GameStore extends GameState {
   
   // Persistence Actions
   saveGame: () => void;
-  loadGame: (savedData: { gameState: GameState; regions: RegionState; aiState: AIState | null }) => void;
+  loadGame: (savedData: { gameState: GameState; regions: RegionState; aiStates: AIState[] }) => void;
 }

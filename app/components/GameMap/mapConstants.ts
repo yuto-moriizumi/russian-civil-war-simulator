@@ -4,6 +4,7 @@ import { FactionId } from '../../types/game';
 export const FACTION_FLAGS: Record<FactionId, string> = {
   soviet: '/images/flags/soviet.svg',
   white: '/images/flags/white.svg',
+  finland: '/images/flags/finland.svg',
   neutral: '',
   foreign: '',
 };
