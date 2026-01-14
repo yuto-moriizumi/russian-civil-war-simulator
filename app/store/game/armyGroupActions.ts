@@ -99,7 +99,7 @@ export const createArmyGroupActions = (
   // Army Group Actions
   createArmyGroup: (name: string, regionIds: string[], theaterId: string | null = null) => {
     const { armyGroups, selectedCountry } = get();
-    if (!selectedCountry || regionIds.length === 0) return;
+    if (!selectedCountry) return;
 
     // If no name provided, generate one systematically
     const groupName = name.trim() || generateArmyGroupName(
@@ -136,6 +136,15 @@ export const createArmyGroupActions = (
     set({
       armyGroups: armyGroups.map(g => 
         g.id === groupId ? { ...g, name } : g
+      ),
+    });
+  },
+
+  assignTheaterToGroup: (groupId: string, theaterId: string | null) => {
+    const { armyGroups } = get();
+    set({
+      armyGroups: armyGroups.map(g => 
+        g.id === groupId ? { ...g, theaterId } : g
       ),
     });
   },

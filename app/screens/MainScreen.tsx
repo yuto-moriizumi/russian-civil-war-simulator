@@ -79,6 +79,7 @@ interface MainScreenProps {
   onSelectArmyGroup: (groupId: string | null) => void;
   onSetArmyGroupMode: (groupId: string, mode: 'none' | 'advance' | 'defend') => void;
   onDeployToArmyGroup: (groupId: string) => void;
+  onAssignTheater: (groupId: string, theaterId: string | null) => void;
   onCountrySelect: (factionId: FactionId | null) => void;
   onSidebarOpen: (isOpen: boolean) => void;
 }
@@ -128,6 +129,7 @@ export default function MainScreen({
   onCloseProductionQueue,
   onCancelProduction,
   onDismissNotification,
+  onSetRelationship,
   onSelectTheater,
   onCreateArmyGroup,
   onDeleteArmyGroup,
@@ -135,7 +137,7 @@ export default function MainScreen({
   onSelectArmyGroup,
   onSetArmyGroupMode,
   onDeployToArmyGroup,
-  onSetRelationship,
+  onAssignTheater,
   onCountrySelect,
   onSidebarOpen,
 }: MainScreenProps) {
@@ -315,8 +317,8 @@ export default function MainScreen({
         onClaimMission={onClaimMission}
       />
 
-      {/* Theater Panel - now at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 z-10">
+      {/* Theater Panel - now at bottom center */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 w-fit max-w-[95vw]">
         <TheaterPanel
           theaters={theaters}
           armyGroups={armyGroups}
@@ -324,9 +326,7 @@ export default function MainScreen({
           playerFaction={country.id}
           selectedTheaterId={selectedTheaterId}
           selectedGroupId={selectedGroupId}
-          isExpanded={isArmyGroupsPanelExpanded}
           movingUnits={movingUnits}
-          onToggleExpanded={() => setIsArmyGroupsPanelExpanded(!isArmyGroupsPanelExpanded)}
           onSelectTheater={onSelectTheater}
           onCreateGroup={onCreateArmyGroup}
           onDeleteGroup={onDeleteArmyGroup}
@@ -334,6 +334,7 @@ export default function MainScreen({
           onSelectGroup={onSelectArmyGroup}
           onSetGroupMode={onSetArmyGroupMode}
           onDeployToGroup={onDeployToArmyGroup}
+          onAssignTheater={onAssignTheater}
         />
       </div>
 
