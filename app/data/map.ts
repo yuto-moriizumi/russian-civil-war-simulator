@@ -127,8 +127,8 @@ export const initialRegionOwnership: Record<string, FactionId> = {
   'RU-KO': 'white',    // Komi Republic
 
   // Southern Russia / Caucasus
-  'RU-ROS': 'white',   // Rostov Oblast
-  'RU-VGG': 'white',   // Volgograd Oblast
+  'RU-ROS': 'don',   // Rostov Oblast - Don Republic
+  'RU-VGG': 'don',   // Volgograd Oblast - Don Republic
   'RU-AST': 'white',   // Astrakhan Oblast
   'RU-KL': 'white',    // Republic of Kalmykia
   'RU-KDA': 'white',   // Krasnodar Krai

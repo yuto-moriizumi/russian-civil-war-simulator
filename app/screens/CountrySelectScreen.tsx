@@ -71,6 +71,8 @@ export default function CountrySelectScreen({ onSelectCountry, onBack }: Country
                   ? 'Secure Finnish independence and protect the nation from foreign threats.'
                   : country.id === 'ukraine'
                   ? 'Establish the Ukrainian People\'s Republic and defend independence from all invaders.'
+                  : country.id === 'don'
+                  ? 'Lead the Don Cossacks in defending their homeland and autonomy.'
                   : 'Choose your side in the civil war.'
                 }
               </p>

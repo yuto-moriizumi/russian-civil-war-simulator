@@ -1,10 +1,10 @@
 export type Screen = 'title' | 'countrySelect' | 'main' | 'mission';
 
 // Player-selectable factions (subset of FactionId)
-export type CountryId = 'soviet' | 'white' | 'finland' | 'ukraine';
+export type CountryId = 'soviet' | 'white' | 'finland' | 'ukraine' | 'don';
 
 // Faction types for map control
-export type FactionId = 'soviet' | 'white' | 'finland' | 'ukraine' | 'neutral' | 'foreign';
+export type FactionId = 'soviet' | 'white' | 'finland' | 'ukraine' | 'don' | 'neutral' | 'foreign';
 
 export interface Country {
   id: CountryId;
