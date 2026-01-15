@@ -18,7 +18,7 @@ interface TheaterPanelProps {
   onRenameGroup: (groupId: string, name: string) => void;
   onSelectGroup: (groupId: string | null) => void;
   onSetGroupMode: (groupId: string, mode: 'none' | 'advance' | 'defend') => void;
-  onDeployToGroup: (groupId: string) => void;
+  onDeployToGroup: (groupId: string, count?: number) => void;
   onAssignTheater: (groupId: string, theaterId: string | null) => void;
 }
 
@@ -198,24 +198,60 @@ export default function TheaterPanel({
               </div>
             </div>
 
-            {/* Deploy button at bottom */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (canProduce) {
-                  onDeployToGroup(group.id);
-                }
-              }}
-              disabled={!canProduce}
-              className={`w-full py-2 text-[10px] font-black text-white transition-colors shrink-0 ${
-                canProduce
-                  ? 'bg-blue-700 hover:bg-blue-600 cursor-pointer'
-                  : 'bg-stone-700 cursor-not-allowed opacity-50'
-              }`}
-              title={canProduce ? 'Deploy new division' : 'Division cap reached! Capture more states to increase cap.'}
-            >
-              {canProduce ? 'DEPLOY' : 'CAP REACHED'}
-            </button>
+            {/* Deploy buttons at bottom - split into +1, +5, +10 with cap enforcement */}
+            <div className="flex divide-x divide-blue-900 shrink-0">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (canProduce) {
+                    onDeployToGroup(group.id, 1);
+                  }
+                }}
+                disabled={!canProduce}
+                className={`flex-1 py-2 text-[10px] font-black text-white transition-colors ${
+                  canProduce
+                    ? 'bg-blue-700 hover:bg-blue-600 cursor-pointer'
+                    : 'bg-stone-700 cursor-not-allowed opacity-50'
+                }`}
+                title={canProduce ? 'Deploy 1 division' : 'Division cap reached! Capture more states to increase cap.'}
+              >
+                +1
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (canProduce) {
+                    onDeployToGroup(group.id, 5);
+                  }
+                }}
+                disabled={!canProduce}
+                className={`flex-1 py-2 text-[10px] font-black text-white transition-colors ${
+                  canProduce
+                    ? 'bg-blue-700 hover:bg-blue-600 cursor-pointer'
+                    : 'bg-stone-700 cursor-not-allowed opacity-50'
+                }`}
+                title={canProduce ? 'Deploy 5 divisions' : 'Division cap reached! Capture more states to increase cap.'}
+              >
+                +5
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (canProduce) {
+                    onDeployToGroup(group.id, 10);
+                  }
+                }}
+                disabled={!canProduce}
+                className={`flex-1 py-2 text-[10px] font-black text-white transition-colors ${
+                  canProduce
+                    ? 'bg-blue-700 hover:bg-blue-600 cursor-pointer'
+                    : 'bg-stone-700 cursor-not-allowed opacity-50'
+                }`}
+                title={canProduce ? 'Deploy 10 divisions' : 'Division cap reached! Capture more states to increase cap.'}
+              >
+                +10
+              </button>
+            </div>
           </div>
         );
       })}

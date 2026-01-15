@@ -80,7 +80,7 @@ interface MainScreenProps {
   onRenameArmyGroup: (groupId: string, name: string) => void;
   onSelectArmyGroup: (groupId: string | null) => void;
   onSetArmyGroupMode: (groupId: string, mode: 'none' | 'advance' | 'defend') => void;
-  onDeployToArmyGroup: (groupId: string) => void;
+  onDeployToArmyGroup: (groupId: string, count?: number) => void;
   onAssignTheater: (groupId: string, theaterId: string | null) => void;
   onCountrySelect: (factionId: FactionId | null) => void;
   onSidebarOpen: (isOpen: boolean) => void;

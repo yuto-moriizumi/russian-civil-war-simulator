@@ -244,13 +244,13 @@ export interface GameAPI {
   advanceArmyGroup: (groupId: string) => void;
   defendArmyGroup: (groupId: string) => void;
   setArmyGroupMode: (groupId: string, mode: ArmyGroupMode) => void;
-  deployToArmyGroup: (groupId: string) => void;
+  deployToArmyGroup: (groupId: string, count?: number) => void;
   deleteArmyGroup: (groupId: string) => void;
   // Theater methods
   getTheaters: () => Theater[];
   selectTheater: (theaterId: string) => void;
   // Production queue methods
-  addToProductionQueue: (armyGroupId: string) => boolean;
+  addToProductionQueue: (armyGroupId: string, count?: number) => boolean;
   getProductionQueue: (factionId?: FactionId) => ProductionQueueItem[];
   cancelProduction: (productionId: string) => boolean;
   // Relationship methods

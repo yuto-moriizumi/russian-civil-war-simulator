@@ -14,12 +14,19 @@ export const createProductionActions = (
     set(() => ({ isProductionModalOpen: isOpen }));
   },
 
-  addToProductionQueue: (armyGroupId: string) => {
+  addToProductionQueue: (armyGroupId: string, count: number = 1) => {
     const state = get();
     
-    // Check if player has enough money
-    if (state.money < DIVISION_COST) {
-      console.warn('Not enough money to start production');
+    // Check if count is valid
+    if (count < 1) {
+      console.warn('Invalid count for production');
+      return;
+    }
+
+    // Check if player has enough money for all units
+    const totalCost = DIVISION_COST * count;
+    if (state.money < totalCost) {
+      console.warn(`Not enough money to start production. Need $${totalCost}, have $${state.money}`);
       return;
     }
 
@@ -55,14 +62,6 @@ export const createProductionActions = (
       return;
     }
 
-    // Count existing divisions to generate unique name
-    const existingDivisions = Object.values(state.regions).reduce((acc, region) => 
-      acc + region.divisions.filter(d => d.owner === state.selectedCountry!.id).length, 0
-    );
-    const playerQueue = state.productionQueues[state.selectedCountry.id] || [];
-    const divisionNumber = existingDivisions + playerQueue.length + 1;
-    const divisionName = `${divisionNumber}${getOrdinalSuffix(divisionNumber)} Infantry Division`;
-
     // Find a valid region in the army group to deploy to
     const validRegions = armyGroup.regionIds.filter(id => {
       const region = state.regions[id];
@@ -86,25 +85,39 @@ export const createProductionActions = (
       return;
     }
 
-    const now = state.dateTime;
-    const completionTime = new Date(now.getTime() + PRODUCTION_TIME_HOURS * 60 * 60 * 1000);
+    // Count existing divisions to generate unique names
+    const existingDivisions = Object.values(state.regions).reduce((acc, region) => 
+      acc + region.divisions.filter(d => d.owner === state.selectedCountry!.id).length, 0
+    );
+    const playerQueue = state.productionQueues[state.selectedCountry.id] || [];
+    const existingQueueCount = playerQueue.length;
 
-    const newProduction: ProductionQueueItem = {
-      id: `prod-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      divisionName,
-      owner: state.selectedCountry.id,
-      startTime: now,
-      completionTime,
-      targetRegionId,
-      armyGroupId,
-    };
+    // Create multiple production items
+    const newProductions: ProductionQueueItem[] = [];
+    const now = state.dateTime;
+
+    for (let i = 0; i < count; i++) {
+      const divisionNumber = existingDivisions + existingQueueCount + newProductions.length + 1;
+      const divisionName = `${divisionNumber}${getOrdinalSuffix(divisionNumber)} Infantry Division`;
+      const completionTime = new Date(now.getTime() + PRODUCTION_TIME_HOURS * 60 * 60 * 1000);
+
+      newProductions.push({
+        id: `prod-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        divisionName,
+        owner: state.selectedCountry.id,
+        startTime: now,
+        completionTime,
+        targetRegionId,
+        armyGroupId,
+      });
+    }
 
     set((state) => ({
       productionQueues: {
         ...state.productionQueues,
-        [state.selectedCountry!.id]: [...(state.productionQueues[state.selectedCountry!.id] || []), newProduction],
+        [state.selectedCountry!.id]: [...(state.productionQueues[state.selectedCountry!.id] || []), ...newProductions],
       },
-      money: state.money - DIVISION_COST,
+      money: state.money - totalCost,
       gameEvents: [
         ...state.gameEvents,
         {
@@ -112,7 +125,9 @@ export const createProductionActions = (
           type: 'production_started',
           timestamp: now,
           title: 'Production Started',
-          description: `Started production of ${divisionName}. Will complete in 24 hours.`,
+          description: count === 1 
+            ? `Started production of ${newProductions[0].divisionName}. Will complete in 24 hours.`
+            : `Started production of ${count} divisions. First will complete in 24 hours.`,
           faction: state.selectedCountry?.id,
         },
       ],
