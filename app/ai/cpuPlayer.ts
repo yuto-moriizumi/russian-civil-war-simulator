@@ -1,5 +1,6 @@
 import { AIState, FactionId, RegionState, Region, ActiveCombat, Movement, ArmyGroup, ProductionQueueItem } from '../types/game';
 import { calculateFactionIncome } from '../utils/mapUtils';
+import { canProduceDivision, getDivisionCapInfo } from '../utils/divisionCap';
 
 // Cost to create one division
 const DIVISION_COST = 10;
@@ -120,7 +121,8 @@ export function runAITick(
   armyGroups: ArmyGroup[],
   activeCombats: ActiveCombat[] = [],
   movingUnits: Movement[] = [],
-  productionQueue: ProductionQueueItem[] = []
+  productionQueue: ProductionQueueItem[] = [],
+  productionQueues: Record<FactionId, ProductionQueueItem[]> = {} as Record<FactionId, ProductionQueueItem[]>
 ): AIActions {
   const { factionId } = aiState;
   let { money } = aiState;
@@ -190,6 +192,15 @@ export function runAITick(
   // AI limit: don't spend ALL money at once if income is low, 
   // but for now we follow the existing logic of spending what we have.
   while (money >= DIVISION_COST) {
+    // Check division cap before producing
+    if (!canProduceDivision(factionId, regions, movingUnits, productionQueues)) {
+      const capInfo = getDivisionCapInfo(factionId, regions, movingUnits, productionQueues);
+      console.log(
+        `[AI] ${factionId} reached division cap. Current: ${capInfo.current}, In Production: ${capInfo.inProduction}, Cap: ${capInfo.cap}`
+      );
+      break;
+    }
+    
     money -= DIVISION_COST;
     
     // Pick target region
