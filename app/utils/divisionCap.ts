@@ -3,7 +3,19 @@ import { FactionId, RegionState, ProductionQueueItem, Movement, FactionBonuses }
 /**
  * Base divisions per state (configurable)
  */
-export const DIVISIONS_PER_STATE = 2;
+export const DIVISIONS_PER_STATE = 1;
+
+/**
+ * Cap bonuses for major cities
+ * These regions provide additional divisions beyond the base amount
+ */
+export const MAJOR_CITY_CAP_BONUS: Record<string, number> = {
+  'RU-MOW': 2,  // Moscow - +3 total (1 base + 2 bonus)
+  'UA-30': 2,   // Kyiv - +3 total (1 base + 2 bonus)
+  'BY-HM': 2,   // Minsk - +3 total (1 base + 2 bonus)
+  'RU-SPE': 1,  // Saint Petersburg - +2 total (1 base + 1 bonus)
+  'RU-MOS': 1,  // Moscow Oblast - +2 total (1 base + 1 bonus)
+};
 
 /**
  * Calculate the maximum divisions a faction can have based on controlled states
@@ -17,16 +29,25 @@ export function calculateDivisionCap(
   regions: RegionState,
   factionBonuses: FactionBonuses
 ): number {
-  // Count the number of states controlled by this faction
-  const controlledStates = Object.values(regions).filter(
-    region => region.owner === factionId
-  ).length;
+  let totalCap = 0;
 
-  // Base cap: controlled states * divisions per state
-  const baseCap = controlledStates * DIVISIONS_PER_STATE;
-  
-  // Add bonus from missions
-  return baseCap + factionBonuses.divisionCapBonus;
+  // Iterate through all controlled regions
+  Object.entries(regions).forEach(([regionId, region]) => {
+    if (region.owner === factionId) {
+      // Base cap for controlling any state
+      totalCap += DIVISIONS_PER_STATE;
+      
+      // Add bonus for major cities
+      if (MAJOR_CITY_CAP_BONUS[regionId]) {
+        totalCap += MAJOR_CITY_CAP_BONUS[regionId];
+      }
+    }
+  });
+
+  // Add bonus from completed missions
+  totalCap += factionBonuses.divisionCapBonus;
+
+  return totalCap;
 }
 
 /**

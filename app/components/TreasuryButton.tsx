@@ -99,7 +99,10 @@ export default function TreasuryButton({
                 )}
                 <div className="flex items-center justify-between">
                   <span className="text-stone-300">States Controlled:</span>
-                  <span className="text-stone-400">{controlledStates} (×2 = {divisionCap})</span>
+                  <span className="text-stone-400">{controlledStates}</span>
+                </div>
+                <div className="text-xs text-stone-500 mt-1">
+                  +1 per state, +2-3 for major cities
                 </div>
               </>
             )}

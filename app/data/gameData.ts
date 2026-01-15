@@ -31,6 +31,12 @@ export const countries: Country[] = [
     flag: '/images/flags/ukraine.svg',
     color: '#0057B7',
   },
+  {
+    id: 'don',
+    name: 'Don Republic',
+    flag: '/images/flags/don.svg',
+    color: '#FFD700',
+  },
 ];
 
 // Soviet Mission Tree (Offense-focused: Attack > HP > Defence)
@@ -384,5 +390,92 @@ const ukrainianMissions: Mission[] = [
   },
 ];
 
+// Don Republic Mission Tree
+const donMissions: Mission[] = [
+  {
+    id: 'don_independence',
+    faction: 'don',
+    name: 'Don Cossack Independence',
+    description: 'Establish the independent Don Cossack Republic',
+    completed: false,
+    claimed: false,
+    rewards: { money: 100 },
+    prerequisites: [],
+    available: [
+      { type: 'hasUnits', count: 3 }, // Recruit initial Cossack forces
+    ],
+  },
+  {
+    id: 'don_consolidate',
+    faction: 'don',
+    name: 'Unite the Don',
+    description: 'Consolidate control over Don Cossack territories',
+    completed: false,
+    claimed: false,
+    rewards: { money: 150 },
+    prerequisites: ['don_independence'],
+    available: [
+      { type: 'controlRegions', regionIds: ['RU-ROS', 'RU-VGG'] }, // Control both starting regions
+      { type: 'hasUnits', count: 8 }, // Build up forces
+    ],
+  },
+  {
+    id: 'don_ataman',
+    faction: 'don',
+    name: 'Ataman\'s Authority',
+    description: 'Strengthen the Ataman\'s military and political control',
+    completed: false,
+    claimed: false,
+    rewards: { money: 200 },
+    prerequisites: ['don_independence'],
+    available: [
+      { type: 'hasMoney', amount: 400 }, // Demonstrate economic stability
+      { type: 'combatVictories', count: 1 }, // Win a defensive battle
+    ],
+  },
+  {
+    id: 'don_expansion',
+    faction: 'don',
+    name: 'Expand Don Territory',
+    description: 'Secure neighboring territories to protect the Don homeland',
+    completed: false,
+    claimed: false,
+    rewards: { money: 250 },
+    prerequisites: ['don_consolidate', 'don_ataman'],
+    available: [
+      { type: 'controlRegionCount', count: 5 }, // Expand beyond starting regions
+      { type: 'combatVictories', count: 3 }, // Prove military strength
+    ],
+  },
+  {
+    id: 'don_kuban',
+    faction: 'don',
+    name: 'Alliance with Kuban',
+    description: 'Forge alliance with neighboring Kuban Cossacks',
+    completed: false,
+    claimed: false,
+    rewards: { money: 300 },
+    prerequisites: ['don_expansion'],
+    available: [
+      { type: 'controlRegion', regionId: 'RU-KDA' }, // Control Krasnodar Krai (Kuban)
+      { type: 'hasUnits', count: 15 }, // Strong military
+    ],
+  },
+  {
+    id: 'don_victory',
+    faction: 'don',
+    name: 'Don Cossack Supremacy',
+    description: 'Establish the Don Republic as a major power in the South',
+    completed: false,
+    claimed: false,
+    rewards: { money: 500, gameVictory: true },
+    prerequisites: ['don_kuban'],
+    available: [
+      { type: 'controlRegionCount', count: 12 }, // Control significant southern territory
+      { type: 'hasUnits', count: 20 }, // Strong military presence
+    ],
+  },
+];
+
 // Combined missions for both factions
-export const initialMissions: Mission[] = [...sovietMissions, ...whiteMissions, ...finnishMissions, ...ukrainianMissions];
+export const initialMissions: Mission[] = [...sovietMissions, ...whiteMissions, ...finnishMissions, ...ukrainianMissions, ...donMissions];

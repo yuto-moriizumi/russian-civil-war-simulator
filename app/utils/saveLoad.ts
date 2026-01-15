@@ -181,6 +181,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       white: [],
       finland: [],
       ukraine: [],
+      don: [],
       neutral: [],
       foreign: [],
     };
@@ -209,6 +210,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       white: [],
       finland: [],
       ukraine: [],
+      don: [],
       neutral: [],
       foreign: [],
     };
