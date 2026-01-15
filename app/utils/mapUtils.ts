@@ -106,13 +106,13 @@ export function initializeRegionState(
     const props = feature.properties;
     if (!props) continue;
     
-    const id = props.shapeISO || props.id;
+    const id = props.regionId || props.shapeISO || props.id;
     if (!id) continue;
     
     state[id] = {
       id,
       name: props.shapeName || props.name || id,
-      countryIso3: props.shapeGroup || 'UNK',
+      countryIso3: props.countryIso3 || props.shapeGroup || 'UNK',
       owner: defaultOwner,
       divisions: [],
       value: regionValues[id] ?? 1,  // Default value of 1 if not specified
@@ -132,10 +132,10 @@ export function createInitialOwnership(
     const props = feature.properties;
     if (!props) continue;
     
-    const id = props.shapeISO || props.id;
+    const id = props.regionId || props.shapeISO || props.id;
     if (!id) continue;
     
-    const countryIso3 = props.shapeGroup || 'UNK';
+    const countryIso3 = props.countryIso3 || props.shapeGroup || 'UNK';
     
     // Get ownership from master data, default to neutral if not defined
     const owner = initialRegionOwnership[id] ?? 'neutral';
@@ -157,7 +157,7 @@ export function createInitialOwnership(
 export function generateOwnershipColorExpression(
   regions: RegionState
 ): ['match', ['get', string], ...Array<string>] {
-  const expression: ['match', ['get', string], ...Array<string>] = ['match', ['get', 'shapeISO']];
+  const expression: ['match', ['get', string], ...Array<string>] = ['match', ['get', 'regionId']];
   
   for (const [id, region] of Object.entries(regions)) {
     expression.push(id, FACTION_COLORS[region.owner]);

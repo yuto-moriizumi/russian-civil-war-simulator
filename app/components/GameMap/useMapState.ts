@@ -39,7 +39,7 @@ export function useMapState({
 
     const onMouseMove = (e: MapMouseEvent & { features?: GeoJSON.Feature[] }) => {
       if (e.features && e.features.length > 0) {
-        const regionId = e.features[0].properties?.shapeISO;
+        const regionId = e.features[0].properties?.regionId || e.features[0].properties?.shapeISO;
         if (regionId && regionId !== hoveredRegionIdRef.current) {
           // Clear previous hover
           if (hoveredRegionIdRef.current) {

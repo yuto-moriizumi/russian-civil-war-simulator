@@ -154,6 +154,16 @@
       "iso3": "MDA",
       "name": "Moldova",
       "admLevel": "ADM1"
+    },
+    {
+      "iso3": "MKD",
+      "name": "North Macedonia",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "XKX",
+      "name": "Kosovo",
+      "admLevel": "ADM1"
     }
   ],
   "customAdjacency": {

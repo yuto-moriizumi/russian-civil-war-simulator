@@ -77,8 +77,12 @@ export const regionValues: Record<string, number> = {
   // Balkans
   'RO-B': 3,    // Bucharest - Capital
   'BG-22': 3,   // Sofia - Capital
-  'RS-00': 3,   // Belgrade - Capital
-  'GR-AT': 3,   // Athens - Capital
+  'RS-00': 3,    // Belgrade - Capital
+  'GR-AT': 3,    // Athens - Capital
+  
+  // North Macedonia & Kosovo
+  '19869673B29343041094723': 3, // Skopje - Capital
+  '2360587B5118871504069': 3,   // Pristina - Capital
   
   // All other regions default to value 1
 };
@@ -432,6 +436,18 @@ export const initialRegionOwnership: Record<string, FactionId> = {
   'HR-17': 'foreign', 'HR-18': 'foreign', 'HR-19': 'foreign', 'HR-20': 'foreign',
   'HR-21': 'foreign',
   'SI03': 'foreign', 'SI04': 'foreign',
+
+  // ============================================
+  // NORTH MACEDONIA & KOSOVO (Foreign Power)
+  // ============================================
+  '19869673B18118429348634': 'foreign', '19869673B18425588006505': 'foreign',
+  '19869673B2276524487216': 'foreign', '19869673B24262378327284': 'foreign',
+  '19869673B25367051519859': 'foreign', '19869673B29343041094723': 'foreign',
+  '19869673B59759079390778': 'foreign', '19869673B93268339583324': 'foreign',
+  '2360587B11570115914955': 'foreign', '2360587B15813948402025': 'foreign',
+  '2360587B5118871504069': 'foreign', '2360587B74553771763221': 'foreign',
+  '2360587B89959345704230': 'foreign', '2360587B9056373484571': 'foreign',
+  '2360587B95703323116719': 'foreign',
 
   // ============================================
   // MOLDOVA (White/Neutral)
