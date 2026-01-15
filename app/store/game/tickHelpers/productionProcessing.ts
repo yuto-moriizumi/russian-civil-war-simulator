@@ -97,7 +97,23 @@ export function processProductionQueue(
       }
 
       // Store remaining queue for this faction (without the first completed item)
-      remainingQueues[factionId] = factionQueue.slice(1);
+      const remainingItems = factionQueue.slice(1);
+      
+      // Adjust the start time and completion time of the new first item
+      // so it starts from the current time (when the previous item completed)
+      if (remainingItems.length > 0) {
+        const nextItem = remainingItems[0];
+        const productionDuration = nextItem.completionTime.getTime() - nextItem.startTime.getTime();
+        
+        // Update the first item in the remaining queue to start now
+        remainingItems[0] = {
+          ...nextItem,
+          startTime: currentTime,
+          completionTime: new Date(currentTime.getTime() + productionDuration),
+        };
+      }
+      
+      remainingQueues[factionId] = remainingItems;
     } else {
       // No production completed for this faction, keep queue unchanged
       remainingQueues[factionId] = factionQueue;

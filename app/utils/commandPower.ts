@@ -14,7 +14,7 @@ export const COMMAND_POWER_PER_UNIT = 2;
 /**
  * Base command power provided to all factions
  */
-export const BASE_COMMAND_POWER = 4;
+export const BASE_COMMAND_POWER = 2;
 
 /**
  * Cap bonuses for major cities
