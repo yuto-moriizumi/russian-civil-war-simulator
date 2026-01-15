@@ -357,6 +357,7 @@ export const createArmyGroupActions = (
     // Distribute divisions evenly across border regions
     // First, collect divisions from regions that need to send them
     const divisionsToRedistribute: typeof regions[string]['divisions'] = [];
+    const sourceRegionMap = new Map<string, string>(); // divisionId -> regionId
     
     allGroupDivisions.forEach(({ regionId, divisions }) => {
       const isBorder = allBorderRegions.includes(regionId);
@@ -368,22 +369,15 @@ export const createArmyGroupActions = (
         if (excess > 0) {
           const divisionsToTake = divisions.slice(0, excess);
           divisionsToRedistribute.push(...divisionsToTake);
-          
-          // Update the region to remove these divisions
-          const remainingDivisions = newRegions[regionId].divisions.filter(
-            d => !divisionsToTake.some(dt => dt.id === d.id)
-          );
-          newRegions[regionId] = { ...newRegions[regionId], divisions: remainingDivisions };
+          divisionsToTake.forEach(d => sourceRegionMap.set(d.id, regionId));
+          // NOTE: We don't remove from newRegions yet, only when movement is confirmed
           borderDivisionCounts.set(regionId, currentCount - excess);
         }
       } else {
         // Not at border, send all divisions
         divisionsToRedistribute.push(...divisions);
-        
-        // Remove divisions from this region
-        const remainingDivisions = newRegions[regionId].divisions.filter(d => d.armyGroupId !== groupId);
-        newRegions[regionId] = { ...newRegions[regionId], divisions: remainingDivisions };
-        movedRegions.add(regionId);
+        divisions.forEach(d => sourceRegionMap.set(d.id, regionId));
+        // NOTE: We don't remove from newRegions yet
       }
     });
 
@@ -395,24 +389,22 @@ export const createArmyGroupActions = (
       const needed = targetCount - currentCount;
       
       if (needed > 0 && divisionIndex < divisionsToRedistribute.length) {
-        const divisionsToAdd = divisionsToRedistribute.slice(divisionIndex, divisionIndex + needed);
+        const divisionsPlanned = divisionsToRedistribute.slice(divisionIndex, divisionIndex + needed);
         divisionIndex += needed;
         
-        if (divisionsToAdd.length > 0) {
-          // Find the best source region for these divisions
-          const sourceRegions = new Set(
-            divisionsToAdd.map(d => {
-              for (const { regionId, divisions } of allGroupDivisions) {
-                if (divisions.some(div => div.id === d.id)) return regionId;
-              }
-              return null;
-            }).filter(Boolean)
-          );
+        if (divisionsPlanned.length > 0) {
+          // Group by source region to create movements
+          const bySource = new Map<string, typeof regions[string]['divisions']>();
+          divisionsPlanned.forEach(d => {
+            const sourceId = sourceRegionMap.get(d.id);
+            if (sourceId) {
+              if (!bySource.has(sourceId)) bySource.set(sourceId, []);
+              bySource.get(sourceId)!.push(d);
+            }
+          });
           
           // Create movements from each source region
-          sourceRegions.forEach(sourceRegionId => {
-            if (!sourceRegionId) return;
-            
+          bySource.forEach((divsFromSource, sourceRegionId) => {
             // Skip if source and destination are the same
             if (sourceRegionId === borderRegionId) return;
             
@@ -428,22 +420,18 @@ export const createArmyGroupActions = (
             // Check relationship with target region owner
             const targetRegion = newRegions[nextStep];
             if (targetRegion && targetRegion.owner !== factionId) {
-              // Check if they grant us access/war
+              // ... relationship check logic ...
               const theirRelationship = relationships.find(
                 r => r.fromFaction === targetRegion.owner && r.toFaction === factionId
               );
               const theyGrantUs = theirRelationship ? theirRelationship.type : 'neutral';
               
-              // Check if we declared war on them
               const ourRelationship = relationships.find(
                 r => r.fromFaction === factionId && r.toFaction === targetRegion.owner
               );
               const weDeclared = ourRelationship ? ourRelationship.type : 'neutral';
               
-              // Check for autonomy relationship (grants mutual military access)
               const hasAutonomy = theyGrantUs === 'autonomy' || weDeclared === 'autonomy';
-              
-              // Can move if they grant us access/war OR we declared war on them OR autonomy
               const canMove = theyGrantUs !== 'neutral' || weDeclared === 'war' || hasAutonomy;
               
               if (!canMove) {
@@ -452,13 +440,6 @@ export const createArmyGroupActions = (
               }
             }
             
-            const divsFromSource = divisionsToAdd.filter(d => {
-              const original = allGroupDivisions.find(item => item.regionId === sourceRegionId);
-              return original?.divisions.some(div => div.id === d.id);
-            });
-            
-            if (divsFromSource.length === 0) return;
-            
             // Check if already moving from this region
             const groupAlreadyMoving = movingUnits.some(m => 
               m.fromRegion === sourceRegionId && 
@@ -466,7 +447,7 @@ export const createArmyGroupActions = (
             );
             if (groupAlreadyMoving) return;
             
-            // Calculate distance-based travel time to the next adjacent step
+            // SUCCESS: We can move these units. Remove them from region and create movement.
             const { regionCentroids } = get();
             const distanceKm = calculateDistance(sourceRegionId, nextStep, regionCentroids);
             const travelTimeHours = calculateTravelTime(distanceKm, false);
@@ -477,7 +458,7 @@ export const createArmyGroupActions = (
             const newMovement: Movement = {
               id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${sourceRegionId}`,
               fromRegion: sourceRegionId,
-              toRegion: nextStep, // Move to adjacent region on the path
+              toRegion: nextStep,
               divisions: divsFromSource,
               departureTime: new Date(dateTime),
               arrivalTime,
@@ -485,8 +466,19 @@ export const createArmyGroupActions = (
             };
 
             newMovements.push(newMovement);
+            
+            // ONLY NOW update the region state
+            const currentDivsInRegion = newRegions[sourceRegionId].divisions;
+            const remainingDivs = currentDivsInRegion.filter(
+              d => !divsFromSource.some(dfs => dfs.id === d.id)
+            );
+            newRegions[sourceRegionId] = {
+              ...newRegions[sourceRegionId],
+              divisions: remainingDivs
+            };
+            
             movedRegions.add(sourceRegionId);
-            targetRegions.add(nextStep); // Track the actual next step, not the final border
+            targetRegions.add(nextStep);
           });
         }
       }
