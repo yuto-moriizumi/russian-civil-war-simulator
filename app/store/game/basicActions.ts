@@ -97,6 +97,7 @@ export const createBasicActions = (
       regions: get().regions,
       adjacency: get().adjacency,
       mapDataLoaded: get().mapDataLoaded,
+      regionCentroids: get().regionCentroids, // Preserve loaded centroids
     });
     
     // Detect theaters when game starts

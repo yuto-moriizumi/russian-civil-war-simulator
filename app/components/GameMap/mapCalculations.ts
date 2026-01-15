@@ -30,13 +30,19 @@ export function calculateUnitMarkers(
   playerFaction: FactionId
 ): (UnitMarkerData | null)[] {
   // Early return if centroids haven't loaded yet
-  if (Object.keys(regionCentroids).length === 0) return [];
+  if (Object.keys(regionCentroids).length === 0) {
+    console.warn('calculateUnitMarkers: Centroids not loaded yet');
+    return [];
+  }
   
   return Object.entries(regions)
     .filter(([, region]) => region.divisions.length > 0)
     .map(([regionId, region]) => {
       const centroid = regionCentroids[regionId];
-      if (!centroid) return null;
+      if (!centroid) {
+        console.warn(`calculateUnitMarkers: Missing centroid for region ${regionId} (${region.name})`);
+        return null;
+      }
       
       const isSelected = selectedUnitRegion === regionId;
       const isPlayerUnit = region.owner === playerFaction;
