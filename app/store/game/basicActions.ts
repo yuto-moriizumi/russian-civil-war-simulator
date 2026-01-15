@@ -1,7 +1,8 @@
-import { FactionId, Screen, Region, Adjacency, Country, GameSpeed, GameState, RegionState, AIState, MapMode } from '../../types/game';
+import { FactionId, Screen, Region, Adjacency, Country, GameSpeed, GameState, RegionState, AIState, MapMode, Division } from '../../types/game';
 import { initialMissions } from '../../data/gameData';
 import { createInitialAIState, createInitialAIArmyGroup } from '../../ai/cpuPlayer';
 import { createGameEvent, createNotification } from '../../utils/eventUtils';
+import { calculateFactionBonuses, getDivisionStats } from '../../utils/bonusCalculator';
 import { initialGameState } from './initialState';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
@@ -111,16 +112,29 @@ export const createBasicActions = (
   claimMission: (missionId: string) => {
     set((state: GameStore) => {
       const mission = state.missions.find(m => m.id === missionId);
-      if (mission && mission.completed && !mission.claimed) {
+      if (mission && mission.completed && !mission.claimed && state.selectedCountry) {
+        const factionId = state.selectedCountry.id;
         const events = [...state.gameEvents];
         const notifs = [...state.notifications];
+        
+        // Build reward description
+        const rewardParts: string[] = [];
+        if (mission.rewards.attackBonus) rewardParts.push(`+${mission.rewards.attackBonus} Attack`);
+        if (mission.rewards.defenceBonus) rewardParts.push(`+${mission.rewards.defenceBonus} Defence`);
+        if (mission.rewards.hpBonus) rewardParts.push(`+${mission.rewards.hpBonus} HP`);
+        if (mission.rewards.divisionCapBonus) rewardParts.push(`+${mission.rewards.divisionCapBonus} Division Cap`);
+        if (mission.rewards.productionSpeedBonus) {
+          const percentReduction = Math.round(mission.rewards.productionSpeedBonus * 100);
+          rewardParts.push(`+${percentReduction}% Production Speed`);
+        }
+        const rewardDescription = rewardParts.length > 0 ? rewardParts.join(', ') : 'No bonuses';
         
         const claimEvent = createGameEvent(
           'mission_claimed',
           `Mission Completed: ${mission.name}`,
-          `Reward of $${mission.rewards.money} claimed for completing "${mission.name}".`,
+          `Mission "${mission.name}" completed! Bonuses gained: ${rewardDescription}.`,
           state.dateTime,
-          state.selectedCountry?.id
+          factionId
         );
         events.push(claimEvent);
         notifs.push(createNotification(claimEvent, state.dateTime));
@@ -129,19 +143,77 @@ export const createBasicActions = (
           const victoryEvent = createGameEvent(
             'game_victory',
             'Victory!',
-            `${state.selectedCountry?.name} has achieved total victory in the Russian Civil War!`,
+            `${state.selectedCountry.name} has achieved total victory in the Russian Civil War!`,
             state.dateTime,
-            state.selectedCountry?.id
+            factionId
           );
           events.push(victoryEvent);
           notifs.push(createNotification(victoryEvent, state.dateTime));
         }
         
+        // Mark mission as claimed
+        const updatedMissions = state.missions.map(m =>
+          m.id === missionId ? { ...m, claimed: true } : m
+        );
+        
+        // Recalculate faction bonuses
+        const newFactionBonuses = calculateFactionBonuses(updatedMissions, factionId);
+        const newDivisionStats = getDivisionStats(factionId, newFactionBonuses);
+        
+        // Apply bonuses retroactively to ALL existing divisions
+        const updatedRegions: RegionState = {};
+        Object.keys(state.regions).forEach(regionId => {
+          const region = state.regions[regionId];
+          const updatedDivisions = region.divisions.map(div => {
+            if (div.owner === factionId) {
+              // Apply new stats to this faction's divisions
+              return {
+                ...div,
+                attack: newDivisionStats.attack,
+                defence: newDivisionStats.defence,
+                maxHp: newDivisionStats.maxHp,
+                // Keep current HP, but cap it at new maxHp
+                hp: Math.min(div.hp, newDivisionStats.maxHp),
+              };
+            }
+            return div;
+          });
+          
+          updatedRegions[regionId] = {
+            ...region,
+            divisions: updatedDivisions,
+          };
+        });
+        
+        // Also apply bonuses to divisions in transit
+        const updatedMovingUnits = state.movingUnits.map(movement => {
+          if (movement.owner === factionId) {
+            const updatedDivisions = movement.divisions.map(div => ({
+              ...div,
+              attack: newDivisionStats.attack,
+              defence: newDivisionStats.defence,
+              maxHp: newDivisionStats.maxHp,
+              hp: Math.min(div.hp, newDivisionStats.maxHp),
+            }));
+            return {
+              ...movement,
+              divisions: updatedDivisions,
+            };
+          }
+          return movement;
+        });
+        
+        console.log(`[MISSION CLAIMED] ${mission.name} - Applied bonuses to ${factionId} divisions`);
+        console.log(`[BONUSES] Attack: +${newFactionBonuses.attackBonus}, Defence: +${newFactionBonuses.defenceBonus}, HP: +${newFactionBonuses.hpBonus}, Cap: +${newFactionBonuses.divisionCapBonus}, Prod Speed: ${newFactionBonuses.productionSpeedMultiplier.toFixed(2)}x`);
+        
         return {
-          money: state.money + mission.rewards.money,
-          missions: state.missions.map(m =>
-            m.id === missionId ? { ...m, claimed: true } : m
-          ),
+          missions: updatedMissions,
+          factionBonuses: {
+            ...state.factionBonuses,
+            [factionId]: newFactionBonuses,
+          },
+          regions: updatedRegions,
+          movingUnits: updatedMovingUnits,
           gameEvents: events,
           notifications: notifs,
         };

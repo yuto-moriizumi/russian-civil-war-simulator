@@ -2,9 +2,10 @@ import { GameStore } from './types';
 import { ProductionQueueItem } from '../../types/game';
 import { getOrdinalSuffix } from '../../utils/eventUtils';
 import { canProduceDivision, getDivisionCapInfo } from '../../utils/divisionCap';
+import { getBaseProductionTime } from '../../utils/bonusCalculator';
 
 const DIVISION_COST = 10; // Cost to produce a division
-const PRODUCTION_TIME_HOURS = 24; // 24 game hours to produce a division
+const PRODUCTION_TIME_HOURS = 24; // Base production time (can be reduced by bonuses)
 
 export const createProductionActions = (
   set: (fn: (state: GameStore) => Partial<GameStore>) => void,
@@ -41,13 +42,15 @@ export const createProductionActions = (
       state.selectedCountry.id,
       state.regions,
       state.movingUnits,
-      state.productionQueues
+      state.productionQueues,
+      state.factionBonuses[state.selectedCountry.id]
     )) {
       const capInfo = getDivisionCapInfo(
         state.selectedCountry.id,
         state.regions,
         state.movingUnits,
-        state.productionQueues
+        state.productionQueues,
+        state.factionBonuses[state.selectedCountry.id]
       );
       console.warn(
         `Division cap reached! Current: ${capInfo.current}, In Production: ${capInfo.inProduction}, Cap: ${capInfo.cap} (${capInfo.controlledStates} states × 2)`
@@ -95,11 +98,12 @@ export const createProductionActions = (
     // Create multiple production items
     const newProductions: ProductionQueueItem[] = [];
     const now = state.dateTime;
+    const productionTimeHours = getBaseProductionTime(state.factionBonuses[state.selectedCountry.id]);
 
     for (let i = 0; i < count; i++) {
       const divisionNumber = existingDivisions + existingQueueCount + newProductions.length + 1;
       const divisionName = `${divisionNumber}${getOrdinalSuffix(divisionNumber)} Infantry Division`;
-      const completionTime = new Date(now.getTime() + PRODUCTION_TIME_HOURS * 60 * 60 * 1000);
+      const completionTime = new Date(now.getTime() + productionTimeHours * 60 * 60 * 1000);
 
       newProductions.push({
         id: `prod-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,

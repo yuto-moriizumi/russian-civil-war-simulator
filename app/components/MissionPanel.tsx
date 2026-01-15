@@ -48,7 +48,26 @@ export default function MissionPanel({
               )}
             </div>
             <p className="mt-1 text-xs text-stone-400">{mission.description}</p>
-            <div className="mt-2 text-xs text-amber-400">Reward: ${mission.rewards.money}</div>
+            <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]">
+              {mission.rewards.attackBonus && (
+                <span className="text-red-400">⚔️+{mission.rewards.attackBonus}</span>
+              )}
+              {mission.rewards.defenceBonus && (
+                <span className="text-blue-400">🛡️+{mission.rewards.defenceBonus}</span>
+              )}
+              {mission.rewards.hpBonus && (
+                <span className="text-pink-400">❤️+{mission.rewards.hpBonus}</span>
+              )}
+              {mission.rewards.divisionCapBonus && (
+                <span className="text-purple-400">👥+{mission.rewards.divisionCapBonus}</span>
+              )}
+              {mission.rewards.productionSpeedBonus && (
+                <span className="text-yellow-400">⚡{mission.rewards.productionSpeedBonus * 100}%</span>
+              )}
+              {mission.rewards.gameVictory && (
+                <span className="text-amber-400">👑Win</span>
+              )}
+            </div>
           </div>
         ))}
       </div>

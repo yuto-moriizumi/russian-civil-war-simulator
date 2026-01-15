@@ -92,20 +92,43 @@ function MissionNode({ data }: NodeProps<MissionNodeType>) {
 
         {/* Reward */}
         <div
-          className={`mt-3 flex items-center justify-between rounded px-2 py-1 text-xs ${
+          className={`mt-3 rounded px-2 py-1.5 text-xs ${
             mission.claimed ? 'bg-green-900/50' : 'bg-stone-900/50'
           }`}
         >
-          <span className="text-stone-400">Reward:</span>
-          <span
-            className={
-              mission.claimed
-                ? 'text-green-400 line-through'
-                : 'text-amber-400'
-            }
-          >
-            ${mission.rewards.money}
-          </span>
+          <p className="text-stone-400 mb-1">Rewards:</p>
+          <div className="flex flex-wrap gap-1.5 text-[11px]">
+            {mission.rewards.attackBonus && (
+              <span className={mission.claimed ? 'text-green-400 line-through' : 'text-red-400'}>
+                ⚔️ +{mission.rewards.attackBonus} Atk
+              </span>
+            )}
+            {mission.rewards.defenceBonus && (
+              <span className={mission.claimed ? 'text-green-400 line-through' : 'text-blue-400'}>
+                🛡️ +{mission.rewards.defenceBonus} Def
+              </span>
+            )}
+            {mission.rewards.hpBonus && (
+              <span className={mission.claimed ? 'text-green-400 line-through' : 'text-pink-400'}>
+                ❤️ +{mission.rewards.hpBonus} HP
+              </span>
+            )}
+            {mission.rewards.divisionCapBonus && (
+              <span className={mission.claimed ? 'text-green-400 line-through' : 'text-purple-400'}>
+                👥 +{mission.rewards.divisionCapBonus} Cap
+              </span>
+            )}
+            {mission.rewards.productionSpeedBonus && (
+              <span className={mission.claimed ? 'text-green-400 line-through' : 'text-yellow-400'}>
+                ⚡ {mission.rewards.productionSpeedBonus * 100}% Speed
+              </span>
+            )}
+            {mission.rewards.gameVictory && (
+              <span className={mission.claimed ? 'text-green-400 line-through' : 'text-amber-400'}>
+                👑 Victory!
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Claim button */}

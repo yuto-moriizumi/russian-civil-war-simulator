@@ -33,7 +33,7 @@ export const countries: Country[] = [
   },
 ];
 
-// Soviet Mission Tree
+// Soviet Mission Tree (Offense-focused: Attack > HP > Defence)
 const sovietMissions: Mission[] = [
   {
     id: 'soviet_mobilize',
@@ -42,7 +42,7 @@ const sovietMissions: Mission[] = [
     description: 'Recruit your first Red Army units to begin the revolution',
     completed: false,
     claimed: false,
-    rewards: { money: 100 },
+    rewards: { attackBonus: 2 },
     prerequisites: [],
     available: [
       { type: 'hasUnits', count: 5 }, // Recruit at least 5 divisions
@@ -55,7 +55,7 @@ const sovietMissions: Mission[] = [
     description: 'Establish revolutionary tribunals to secure Bolshevik control',
     completed: false,
     claimed: false,
-    rewards: { money: 200 },
+    rewards: { hpBonus: 10, defenceBonus: 1 },
     prerequisites: ['soviet_mobilize'],
     available: [
       { type: 'combatVictories', count: 2 }, // Win at least 2 battles
@@ -69,10 +69,10 @@ const sovietMissions: Mission[] = [
     description: 'Nationalize industry and requisition grain for the war effort',
     completed: false,
     claimed: false,
-    rewards: { money: 150 },
+    rewards: { divisionCapBonus: 3, productionSpeedBonus: 0.15 },
     prerequisites: ['soviet_mobilize'],
     available: [
-      { type: 'hasMoney', amount: 500 }, // Accumulate 500 money
+      { type: 'controlRegionCount', count: 12 }, // Control at least 12 regions
       { type: 'dateAfter', date: '1918-06-01' }, // After June 1918 (historical War Communism start)
     ],
   },
@@ -83,7 +83,7 @@ const sovietMissions: Mission[] = [
     description: 'Defeat White Army forces in multiple engagements',
     completed: false,
     claimed: false,
-    rewards: { money: 300 },
+    rewards: { attackBonus: 3, defenceBonus: 1 },
     prerequisites: ['soviet_terror', 'soviet_economy'],
     available: [
       { type: 'combatVictories', count: 5 }, // Win at least 5 battles
@@ -98,7 +98,7 @@ const sovietMissions: Mission[] = [
     description: 'Push the offensive and liberate key territories',
     completed: false,
     claimed: false,
-    rewards: { money: 400 },
+    rewards: { hpBonus: 20, divisionCapBonus: 3 },
     prerequisites: ['soviet_crush'],
     available: [
       { type: 'controlRegionCount', count: 35 }, // Control at least 35 regions
@@ -113,7 +113,7 @@ const sovietMissions: Mission[] = [
     description: 'Eliminate all White Army resistance and secure Soviet power',
     completed: false,
     claimed: false,
-    rewards: { money: 500, gameVictory: true },
+    rewards: { attackBonus: 5, defenceBonus: 3, gameVictory: true },
     prerequisites: ['soviet_march'],
     available: [
       { type: 'enemyRegionCount', faction: 'white', maxCount: 0 }, // Whites control no regions
@@ -121,7 +121,7 @@ const sovietMissions: Mission[] = [
   },
 ];
 
-// White Army Mission Tree
+// White Army Mission Tree (Defense-focused: Defence > HP > Attack)
 const whiteMissions: Mission[] = [
   {
     id: 'white_rally',
@@ -130,7 +130,7 @@ const whiteMissions: Mission[] = [
     description: 'Gather loyal officers and volunteers to the cause',
     completed: false,
     claimed: false,
-    rewards: { money: 100 },
+    rewards: { defenceBonus: 2 },
     prerequisites: [],
     available: [
       { type: 'hasUnits', count: 5 }, // Recruit at least 5 divisions
@@ -143,11 +143,11 @@ const whiteMissions: Mission[] = [
     description: 'Establish supply lines with Allied nations',
     completed: false,
     claimed: false,
-    rewards: { money: 200 },
+    rewards: { hpBonus: 10, divisionCapBonus: 3 },
     prerequisites: ['white_rally'],
     available: [
-      { type: 'hasMoney', amount: 600 }, // Demonstrate financial stability
       { type: 'controlRegionCount', count: 8 }, // Control at least 8 regions
+      { type: 'hasUnits', count: 8 }, // Demonstrate military strength
     ],
   },
   {
@@ -157,7 +157,7 @@ const whiteMissions: Mission[] = [
     description: 'Re-establish lawful authority in liberated regions',
     completed: false,
     claimed: false,
-    rewards: { money: 150 },
+    rewards: { productionSpeedBonus: 0.15, attackBonus: 1 },
     prerequisites: ['white_rally'],
     available: [
       { type: 'combatVictories', count: 2 }, // Win at least 2 battles
@@ -171,7 +171,7 @@ const whiteMissions: Mission[] = [
     description: 'Achieve decisive victories against Bolshevik forces',
     completed: false,
     claimed: false,
-    rewards: { money: 300 },
+    rewards: { defenceBonus: 3, attackBonus: 2 },
     prerequisites: ['white_foreign', 'white_order'],
     available: [
       { type: 'combatVictories', count: 6 }, // Win at least 6 battles
@@ -186,7 +186,7 @@ const whiteMissions: Mission[] = [
     description: 'Launch the final offensive toward the revolutionary capital',
     completed: false,
     claimed: false,
-    rewards: { money: 400 },
+    rewards: { hpBonus: 20, divisionCapBonus: 3 },
     prerequisites: ['white_break'],
     available: [
       { type: 'controlRegion', regionId: 'RU-LEN' }, // Control Leningrad Oblast (near Petrograd)
@@ -201,7 +201,7 @@ const whiteMissions: Mission[] = [
     description: 'Eliminate Bolshevik resistance and restore Russia',
     completed: false,
     claimed: false,
-    rewards: { money: 500, gameVictory: true },
+    rewards: { attackBonus: 3, defenceBonus: 5, gameVictory: true },
     prerequisites: ['white_petrograd'],
     available: [
       { type: 'enemyRegionCount', faction: 'soviet', maxCount: 0 }, // Soviets control no regions
@@ -209,7 +209,7 @@ const whiteMissions: Mission[] = [
   },
 ];
 
-// Finnish Mission Tree
+// Finnish Mission Tree (Speed & Efficiency: Production > HP > Attack)
 const finnishMissions: Mission[] = [
   {
     id: 'finland_independence',
@@ -218,7 +218,7 @@ const finnishMissions: Mission[] = [
     description: 'Secure Finnish independence from Russian control',
     completed: false,
     claimed: false,
-    rewards: { money: 100 },
+    rewards: { productionSpeedBonus: 0.15 },
     prerequisites: [],
     available: [
       { type: 'hasUnits', count: 3 }, // Recruit initial defense forces
@@ -231,7 +231,7 @@ const finnishMissions: Mission[] = [
     description: 'Defeat the Red Guards and secure the White victory',
     completed: false,
     claimed: false,
-    rewards: { money: 200 },
+    rewards: { hpBonus: 10, attackBonus: 1 },
     prerequisites: ['finland_independence'],
     available: [
       { type: 'combatVictories', count: 1 }, // Win at least 1 battle
@@ -245,10 +245,10 @@ const finnishMissions: Mission[] = [
     description: 'Secure German military support to end the civil war',
     completed: false,
     claimed: false,
-    rewards: { money: 150 },
+    rewards: { divisionCapBonus: 3, defenceBonus: 2 },
     prerequisites: ['finland_independence'],
     available: [
-      { type: 'hasMoney', amount: 400 }, // Demonstrate stability
+      { type: 'hasUnits', count: 6 }, // Demonstrate military capacity
       { type: 'dateAfter', date: '1918-04-01' }, // Historical German intervention
     ],
   },
@@ -259,7 +259,7 @@ const finnishMissions: Mission[] = [
     description: 'Support the East Karelian uprising against Soviet rule',
     completed: false,
     claimed: false,
-    rewards: { money: 250 },
+    rewards: { productionSpeedBonus: 0.20, attackBonus: 2 },
     prerequisites: ['finland_civil_war', 'finland_german_aid'],
     available: [
       { type: 'hasUnits', count: 10 }, // Have sufficient forces
@@ -274,7 +274,7 @@ const finnishMissions: Mission[] = [
     description: 'Expand Finnish borders to include Karelia and Kola Peninsula',
     completed: false,
     claimed: false,
-    rewards: { money: 350 },
+    rewards: { hpBonus: 20, divisionCapBonus: 3 },
     prerequisites: ['finland_karelian'],
     available: [
       { type: 'controlRegion', regionId: 'RU-KR' }, // Control Karelia
@@ -288,7 +288,7 @@ const finnishMissions: Mission[] = [
     description: 'Establish Finland as the dominant power in Northern Europe',
     completed: false,
     claimed: false,
-    rewards: { money: 500, gameVictory: true },
+    rewards: { attackBonus: 3, defenceBonus: 3, gameVictory: true },
     prerequisites: ['finland_greater'],
     available: [
       { type: 'controlRegions', regionIds: ['FI-18', 'RU-KR', 'RU-MUR'] }, // Control key regions
@@ -297,7 +297,7 @@ const finnishMissions: Mission[] = [
   },
 ];
 
-// Ukrainian Mission Tree
+// Ukrainian Mission Tree (Balanced: HP > Balanced Stats)
 const ukrainianMissions: Mission[] = [
   {
     id: 'ukraine_independence',
@@ -306,7 +306,7 @@ const ukrainianMissions: Mission[] = [
     description: 'Establish the Ukrainian People\'s Republic and secure independence',
     completed: false,
     claimed: false,
-    rewards: { money: 100 },
+    rewards: { hpBonus: 10, attackBonus: 1 },
     prerequisites: [],
     available: [
       { type: 'hasUnits', count: 5 }, // Recruit initial defense forces
@@ -319,7 +319,7 @@ const ukrainianMissions: Mission[] = [
     description: 'Secure control over Ukrainian territories and establish government authority',
     completed: false,
     claimed: false,
-    rewards: { money: 200 },
+    rewards: { divisionCapBonus: 3, defenceBonus: 1 },
     prerequisites: ['ukraine_independence'],
     available: [
       { type: 'controlRegion', regionId: 'UA-30' }, // Control Kyiv
@@ -333,11 +333,11 @@ const ukrainianMissions: Mission[] = [
     description: 'Build up the Central Rada\'s authority and military capacity',
     completed: false,
     claimed: false,
-    rewards: { money: 150 },
+    rewards: { productionSpeedBonus: 0.15, attackBonus: 1 },
     prerequisites: ['ukraine_independence'],
     available: [
-      { type: 'hasMoney', amount: 500 }, // Demonstrate financial stability
       { type: 'hasUnits', count: 10 }, // Build military strength
+      { type: 'controlRegionCount', count: 12 }, // Demonstrate territorial control
     ],
   },
   {
@@ -347,7 +347,7 @@ const ukrainianMissions: Mission[] = [
     description: 'Defend Ukrainian independence against Bolshevik and White forces',
     completed: false,
     claimed: false,
-    rewards: { money: 300 },
+    rewards: { attackBonus: 2, defenceBonus: 2 },
     prerequisites: ['ukraine_consolidate', 'ukraine_rada'],
     available: [
       { type: 'combatVictories', count: 3 }, // Win battles against invaders
@@ -361,7 +361,7 @@ const ukrainianMissions: Mission[] = [
     description: 'Control the industrial heartland of the Donbas region',
     completed: false,
     claimed: false,
-    rewards: { money: 250 },
+    rewards: { hpBonus: 20, divisionCapBonus: 3 },
     prerequisites: ['ukraine_resist'],
     available: [
       { type: 'controlRegions', regionIds: ['UA-14', 'UA-12'] }, // Control Donetsk and Dnipropetrovsk
@@ -375,7 +375,7 @@ const ukrainianMissions: Mission[] = [
     description: 'Secure full Ukrainian independence and control all Ukrainian territories',
     completed: false,
     claimed: false,
-    rewards: { money: 500, gameVictory: true },
+    rewards: { attackBonus: 3, defenceBonus: 3, gameVictory: true },
     prerequisites: ['ukraine_donbas'],
     available: [
       { type: 'allRegionsControlled', countryIso3: 'UKR' }, // Control all Ukrainian regions

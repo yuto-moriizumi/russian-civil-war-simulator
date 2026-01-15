@@ -43,6 +43,43 @@ export function countFactionUnits(regions: RegionState, faction: FactionId, movi
   return unitsInRegions + unitsInTransit;
 }
 
+/**
+ * Count units in a specific army group across regions and in transit
+ * @param regionIds - Region IDs that belong to the army group
+ * @param regions - Current region state
+ * @param faction - Faction that owns the army group
+ * @param armyGroupId - ID of the army group
+ * @param movingUnits - Units currently in transit
+ * @returns Total unit count for the army group
+ */
+export function getArmyGroupUnitCount(
+  regionIds: string[],
+  regions: RegionState,
+  faction: FactionId,
+  armyGroupId: string,
+  movingUnits: Movement[] = []
+): number {
+  // Count divisions in regions that belong to this army group
+  const unitsInRegions = regionIds.reduce((count, regionId) => {
+    const region = regions[regionId];
+    if (!region || region.owner !== faction) return count;
+    
+    // Count divisions that belong to this army group
+    const groupDivisions = region.divisions.filter(d => d.armyGroupId === armyGroupId).length;
+    return count + groupDivisions;
+  }, 0);
+  
+  // Count divisions in transit that belong to this army group
+  const unitsInTransit = movingUnits
+    .filter(m => m.owner === faction)
+    .reduce((count, movement) => {
+      const groupDivisions = movement.divisions.filter(d => d.armyGroupId === armyGroupId).length;
+      return count + groupDivisions;
+    }, 0);
+  
+  return unitsInRegions + unitsInTransit;
+}
+
 // Calculate total income from regions controlled by a faction (using region values/weights)
 // minus unit maintenance costs ($1 per unit per hour)
 export function calculateFactionIncome(regions: RegionState, faction: FactionId, movingUnits: Movement[] = []): number {

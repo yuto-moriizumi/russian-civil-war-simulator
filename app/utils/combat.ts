@@ -1,4 +1,5 @@
-import { Division, CombatResult, FactionId, ActiveCombat, ArmyGroup, RegionState, Adjacency } from '../types/game';
+import { Division, CombatResult, FactionId, ActiveCombat, ArmyGroup, RegionState, Adjacency, FactionBonuses } from '../types/game';
+import { getDivisionStats } from './bonusCalculator';
 
 /**
  * Generate a unique ID for a new division
@@ -49,12 +50,13 @@ export function validateDivisionArmyGroup(
 }
 
 /**
- * Create a new division with default stats
+ * Create a new division with default stats (applying faction bonuses)
  */
 export function createDivision(
   owner: FactionId,
   name: string,
   armyGroupId: string,
+  factionBonuses: FactionBonuses,
   options?: {
     hp?: number;
     maxHp?: number;
@@ -62,7 +64,11 @@ export function createDivision(
     defence?: number;
   }
 ): Division {
-  const maxHp = options?.maxHp ?? 100;
+  // Get base stats with bonuses applied
+  const stats = getDivisionStats(owner, factionBonuses);
+  
+  // Allow options to override the bonused stats if needed
+  const maxHp = options?.maxHp ?? stats.maxHp;
   return {
     id: generateDivisionId(),
     name,
@@ -70,8 +76,8 @@ export function createDivision(
     armyGroupId,
     hp: options?.hp ?? maxHp,
     maxHp,
-    attack: options?.attack ?? 20,
-    defence: options?.defence ?? 10,
+    attack: options?.attack ?? stats.attack,
+    defence: options?.defence ?? stats.defence,
   };
 }
 
