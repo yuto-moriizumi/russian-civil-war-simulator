@@ -170,7 +170,7 @@ export const createArmyGroupActions = (
 
   advanceArmyGroup: (groupId: string) => {
     const state = get();
-    const { armyGroups, regions, adjacency, selectedCountry, dateTime, movingUnits, selectedUnitRegion, relationships } = state;
+    const { armyGroups, regions, adjacency, dateTime, movingUnits, selectedUnitRegion, relationships } = state;
     
     const group = armyGroups.find(g => g.id === groupId);
     if (!group) return;
@@ -287,7 +287,7 @@ export const createArmyGroupActions = (
 
   defendArmyGroup: (groupId: string) => {
     const state = get();
-    const { armyGroups, regions, adjacency, selectedCountry, dateTime, movingUnits, selectedUnitRegion, theaters, relationships } = state;
+    const { armyGroups, regions, adjacency, dateTime, movingUnits, selectedUnitRegion, theaters, relationships } = state;
     
     const group = armyGroups.find(g => g.id === groupId);
     if (!group) return;
