@@ -1,5 +1,5 @@
 import { Movement, ArmyGroup, ArmyGroupMode } from '../../types/game';
-import { findBestMoveTowardEnemy } from '../../utils/pathfinding';
+import { findBestMoveTowardEnemy, getNextStepToward } from '../../utils/pathfinding';
 import { detectTheaters } from '../../utils/theaterDetection';
 import { generateArmyGroupName } from '../../utils/armyGroupNaming';
 import { ARMY_GROUP_COLORS } from './initialState';
@@ -416,8 +416,17 @@ export const createArmyGroupActions = (
             // Skip if source and destination are the same
             if (sourceRegionId === borderRegionId) return;
             
+            // Find the next adjacent step toward the border region using pathfinding
+            const nextStep = getNextStepToward(sourceRegionId, borderRegionId, adjacency);
+            
+            // If no valid path exists or already at destination, skip
+            if (!nextStep) {
+              console.warn(`[DEFEND] No valid path from ${sourceRegionId} to ${borderRegionId}`);
+              return;
+            }
+            
             // Check relationship with target region owner
-            const targetRegion = newRegions[borderRegionId];
+            const targetRegion = newRegions[nextStep];
             if (targetRegion && targetRegion.owner !== factionId) {
               // Check if they grant us access/war
               const theirRelationship = relationships.find(
@@ -457,9 +466,9 @@ export const createArmyGroupActions = (
             );
             if (groupAlreadyMoving) return;
             
-            // Calculate distance-based travel time
+            // Calculate distance-based travel time to the next adjacent step
             const { regionCentroids } = get();
-            const distanceKm = calculateDistance(sourceRegionId, borderRegionId, regionCentroids);
+            const distanceKm = calculateDistance(sourceRegionId, nextStep, regionCentroids);
             const travelTimeHours = calculateTravelTime(distanceKm, false);
             
             const arrivalTime = new Date(dateTime);
@@ -468,7 +477,7 @@ export const createArmyGroupActions = (
             const newMovement: Movement = {
               id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${sourceRegionId}`,
               fromRegion: sourceRegionId,
-              toRegion: borderRegionId,
+              toRegion: nextStep, // Move to adjacent region on the path
               divisions: divsFromSource,
               departureTime: new Date(dateTime),
               arrivalTime,
@@ -477,7 +486,7 @@ export const createArmyGroupActions = (
 
             newMovements.push(newMovement);
             movedRegions.add(sourceRegionId);
-            targetRegions.add(borderRegionId);
+            targetRegions.add(nextStep); // Track the actual next step, not the final border
           });
         }
       }
