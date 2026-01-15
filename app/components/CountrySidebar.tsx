@@ -19,6 +19,7 @@ const FACTION_NAMES: Record<FactionId, string> = {
   white: 'White Army',
   finland: 'Finland',
   ukraine: 'Ukraine',
+  don: 'Don Republic',
   neutral: 'Neutral',
   foreign: 'Foreign',
 };
