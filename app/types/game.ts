@@ -132,7 +132,7 @@ export interface NotificationItem extends GameEvent {
 }
 
 // Map mode types for different map visualizations
-export type MapMode = 'country' | 'diplomacy';
+export type MapMode = 'country' | 'diplomacy' | 'value';
 
 // Relationship types between countries
 export type RelationshipType = 'neutral' | 'military_access' | 'war' | 'autonomy';

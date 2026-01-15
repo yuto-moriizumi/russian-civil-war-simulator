@@ -167,6 +167,17 @@ export default function TopBar({
           >
             Diplomacy
           </button>
+          <button
+            onClick={() => onSetMapMode('value')}
+            className={`px-3 py-1 text-xs transition-colors ${
+              mapMode === 'value'
+                ? 'bg-blue-600 text-white font-semibold'
+                : 'text-stone-300 hover:bg-stone-700'
+            }`}
+            title="Value Map - Colors by division cap"
+          >
+            Value
+          </button>
         </div>
       </div>
 
