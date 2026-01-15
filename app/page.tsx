@@ -110,6 +110,7 @@ function MainScreenView() {
       selectedCountryId={state.selectedCountryId}
       isCountrySidebarOpen={state.isCountrySidebarOpen}
       mapMode={state.mapMode}
+      regionCentroids={state.regionCentroids}
       getRelationship={state.getRelationship}
       onTogglePlay={state.togglePlay}
       onChangeSpeed={state.setGameSpeed}

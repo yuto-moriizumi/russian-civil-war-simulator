@@ -6,7 +6,7 @@ import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { RegionState, Adjacency, FactionId, Movement, ActiveCombat, Theater, ArmyGroup, MapMode, RelationshipType } from '../types/game';
 import { getAdjacentRegions } from '../utils/mapUtils';
-import { useRegionCentroids } from './GameMap/mapHooks';
+
 import { UnitMarker, MovingUnitMarker, CombatMarker } from './GameMap/MapMarkers';
 import { RegionTooltip, RegionInfoPanel } from './GameMap/RegionPanels';
 import { useMapState } from './GameMap/useMapState';
@@ -40,6 +40,7 @@ interface GameMapProps {
   selectedGroupId: string | null;
   armyGroups: ArmyGroup[];
   mapMode: MapMode;
+  regionCentroids: Record<string, [number, number]>;
   getRelationship: (fromFaction: FactionId, toFaction: FactionId) => RelationshipType;
   onRegionSelect: (regionId: string | null) => void;
   onUnitSelect: (regionId: string | null) => void;
@@ -66,6 +67,7 @@ export default function GameMap({
   selectedGroupId,
   armyGroups,
   mapMode,
+  regionCentroids,
   getRelationship,
   onRegionSelect,
   onUnitSelect,
@@ -85,8 +87,6 @@ export default function GameMap({
   const onCountrySelectRef = useRef(onCountrySelect);
   const onSidebarOpenRef = useRef(onSidebarOpen);
   const [mapLoaded, setMapLoaded] = useState(false);
-
-  const regionCentroids = useRegionCentroids();
 
   const { hoveredRegion } = useMapState({
     mapRef,

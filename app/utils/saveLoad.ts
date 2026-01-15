@@ -237,6 +237,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
     productionQueues,
     relationships: data.relationships || [], // Default to empty array if not present
     mapMode: data.mapMode || 'country', // Default to country map mode
+    regionCentroids: {}, // Will be re-loaded from map data
   };
 }
 

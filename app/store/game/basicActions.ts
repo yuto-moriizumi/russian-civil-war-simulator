@@ -5,6 +5,7 @@ import { createGameEvent, createNotification } from '../../utils/eventUtils';
 import { initialGameState } from './initialState';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
+import * as turf from '@turf/turf';
 
 /**
  * Defines basic state management actions:
@@ -96,6 +97,7 @@ export const createBasicActions = (
       regions: get().regions,
       adjacency: get().adjacency,
       mapDataLoaded: get().mapDataLoaded,
+      regionCentroids: get().regionCentroids, // Preserve loaded centroids
     });
     
     // Detect theaters when game starts
@@ -172,4 +174,26 @@ export const createBasicActions = (
   },
 
   setMapMode: (mode: MapMode) => set({ mapMode: mode }),
+
+  initializeCentroids: async () => {
+    try {
+      const response = await fetch('/map/regions.geojson');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const geojson = await response.json() as any;
+      
+      const centroids: Record<string, [number, number]> = {};
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      geojson.features.forEach((feature: any) => {
+        const id = feature.properties.shapeISO;
+        const centroid = turf.centroid(feature);
+        const coords = centroid.geometry.coordinates;
+        centroids[id] = [coords[0], coords[1]];
+      });
+      
+      set({ regionCentroids: centroids });
+      console.log(`Loaded ${Object.keys(centroids).length} region centroids`);
+    } catch (error) {
+      console.error('Failed to load region centroids:', error);
+    }
+  },
 });

@@ -155,6 +155,7 @@ export interface GameState {
   productionQueues: Record<FactionId, ProductionQueueItem[]>; // Per-faction production queues
   relationships: Relationship[]; // Diplomatic/military relationships between factions
   mapMode: MapMode; // Current map visualization mode
+  regionCentroids: Record<string, [number, number]>; // Region centroids for distance calculations [longitude, latitude]
 }
 
 // AI State for CPU-controlled factions

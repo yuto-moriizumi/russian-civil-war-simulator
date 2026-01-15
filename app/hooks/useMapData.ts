@@ -7,6 +7,7 @@ export function useMapData() {
   const setAdjacency = useGameStore(state => state.setAdjacency);
   const setMapDataLoaded = useGameStore(state => state.setMapDataLoaded);
   const mapDataLoaded = useGameStore(state => state.mapDataLoaded);
+  const initializeCentroids = useGameStore(state => state.initializeCentroids);
 
   useEffect(() => {
     if (mapDataLoaded) return;
@@ -26,11 +27,14 @@ export function useMapData() {
         setRegions(initialRegions);
         setAdjacency(adjData);
         setMapDataLoaded(true);
+        
+        // Initialize centroids for distance calculations
+        await initializeCentroids();
       } catch (error) {
         console.error('Failed to load map data:', error);
       }
     };
 
     loadMapData();
-  }, [setRegions, setAdjacency, setMapDataLoaded, mapDataLoaded]);
+  }, [setRegions, setAdjacency, setMapDataLoaded, mapDataLoaded, initializeCentroids]);
 }

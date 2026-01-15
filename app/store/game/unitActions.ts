@@ -5,6 +5,7 @@ import { generateArmyGroupName } from '../../utils/armyGroupNaming';
 import { ARMY_GROUP_COLORS } from './initialState';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
+import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 
 /**
  * Defines actions related to unit creation, deployment, and movement:
@@ -177,7 +178,14 @@ export const createUnitActions = (
     }
     
     const divisionsToMove = from.divisions.slice(0, count);
-    const travelTimeHours = 6;
+    
+    // Calculate distance-based travel time
+    const { regionCentroids } = get();
+    const distanceKm = calculateDistance(fromRegion, toRegion, regionCentroids);
+    const travelTimeHours = calculateTravelTime(distanceKm, false);
+    
+    console.log(`Moving from ${from.name} to ${to.name}: ${Math.round(distanceKm)} km, ${travelTimeHours.toFixed(1)} hours (${Math.floor(travelTimeHours / 24)}d ${Math.round(travelTimeHours % 24)}h)`);
+    
     const arrivalTime = new Date(dateTime);
     arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
     
