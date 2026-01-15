@@ -6,7 +6,7 @@ import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { RegionState, Adjacency, FactionId, Movement, ActiveCombat, Theater, ArmyGroup, MapMode, RelationshipType } from '../types/game';
 import { getAdjacentRegions } from '../utils/mapUtils';
-import { useRegionCentroids } from './GameMap/mapHooks';
+
 import { UnitMarker, MovingUnitMarker, CombatMarker } from './GameMap/MapMarkers';
 import { RegionTooltip, RegionInfoPanel } from './GameMap/RegionPanels';
 import { useMapState } from './GameMap/useMapState';

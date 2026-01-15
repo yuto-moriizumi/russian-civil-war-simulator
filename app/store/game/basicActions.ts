@@ -177,9 +177,11 @@ export const createBasicActions = (
   initializeCentroids: async () => {
     try {
       const response = await fetch('/map/regions.geojson');
-      const geojson = await response.json();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const geojson = await response.json() as any;
       
       const centroids: Record<string, [number, number]> = {};
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       geojson.features.forEach((feature: any) => {
         const id = feature.properties.shapeISO;
         const centroid = turf.centroid(feature);
