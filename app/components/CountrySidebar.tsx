@@ -21,7 +21,7 @@ const FACTION_NAMES: Record<FactionId, string> = {
   ukraine: 'Ukraine',
   don: 'Don Republic',
   fswr: "Finnish Socialist Workers' Republic",
-  iskolat: 'Iskolat Soviet Republic',
+  iskolat: 'Iskolat (Latvian Soviet Republic)',
   neutral: 'Neutral',
   foreign: 'Foreign',
 };

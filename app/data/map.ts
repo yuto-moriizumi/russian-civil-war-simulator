@@ -256,9 +256,9 @@ export const initialRegionOwnership: Record<string, FactionId> = {
   'EE-86': 'soviet',   // Võru County
 
   // ============================================
-  // LATVIA (Soviet/German-controlled) - ADM0
+  // LATVIA (Iskolat - Latvian Soviet Government) - ADM0
   // ============================================
-  'LVA': 'soviet',     // Latvia (country)
+  'LVA': 'iskolat',     // Latvia (Iskolat Soviet Republic)
 
   // ============================================
   // LITHUANIA (Soviet/German-controlled)
@@ -322,8 +322,8 @@ export const initialRegionOwnership: Record<string, FactionId> = {
   // ============================================
   // TAJIKISTAN (White-controlled)
   // ============================================
-  'TJ-DU': 'iskolat',   // Dushanbe (city) - Iskolat Soviet Republic capital
-  'TJ-GB': 'iskolat',   // Gorno-Badakhshan - Iskolat Soviet Republic
+  'TJ-DU': 'white',   // Dushanbe (city)
+  'TJ-GB': 'white',   // Gorno-Badakhshan
   'TJ-KT': 'white',   // Khatlon Region
   'TJ-RA': 'white',   // Districts of Republican Subordination
   'TJ-SU': 'white',   // Sughd Region

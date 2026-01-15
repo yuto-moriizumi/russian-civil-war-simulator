@@ -79,7 +79,7 @@ function getFirstGroupName(faction: FactionId): string {
     ukraine: 'Ukrainian Army',
     don: 'Don Cossack Host',
     fswr: 'Red Guard Army Group',
-    iskolat: 'Iskolat Revolutionary Army',
+    iskolat: 'Red Latvian Riflemen',
     neutral: '1st Army',
     foreign: 'Expeditionary Force',
   };

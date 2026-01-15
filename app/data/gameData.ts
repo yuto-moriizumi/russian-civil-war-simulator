@@ -46,7 +46,7 @@ export const countries: Country[] = [
   },
   {
     id: 'iskolat',
-    name: 'Iskolat Soviet Republic',
+    name: 'Iskolat (Latvian Soviet Republic)',
     flag: '/images/flags/iskolat.svg',
     color: '#8B0000',
     selectable: false,
