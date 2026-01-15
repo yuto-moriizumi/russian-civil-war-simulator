@@ -50,6 +50,7 @@ interface MainScreenProps {
   selectedCountryId: FactionId | null;
   isCountrySidebarOpen: boolean;
   mapMode: MapMode;
+  regionCentroids: Record<string, [number, number]>;
   getRelationship: (fromFaction: FactionId, toFaction: FactionId) => RelationshipType;
   onTogglePlay: () => void;
   onChangeSpeed: (speed: GameSpeed) => void;
@@ -112,6 +113,7 @@ export default function MainScreen({
   selectedCountryId,
   isCountrySidebarOpen,
   mapMode,
+  regionCentroids,
   getRelationship,
   onTogglePlay,
   onChangeSpeed,
@@ -220,6 +222,7 @@ export default function MainScreen({
             selectedGroupId={selectedGroupId}
             armyGroups={armyGroups}
             mapMode={mapMode}
+            regionCentroids={regionCentroids}
             getRelationship={getRelationship}
             onRegionSelect={onRegionSelect}
             onUnitSelect={onUnitSelect}

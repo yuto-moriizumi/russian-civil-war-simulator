@@ -29,6 +29,9 @@ export function calculateUnitMarkers(
   selectedUnitRegion: string | null,
   playerFaction: FactionId
 ): (UnitMarkerData | null)[] {
+  // Early return if centroids haven't loaded yet
+  if (Object.keys(regionCentroids).length === 0) return [];
+  
   return Object.entries(regions)
     .filter(([, region]) => region.divisions.length > 0)
     .map(([regionId, region]) => {
@@ -57,6 +60,9 @@ export function calculateMovingUnitMarkers(
   regionCentroids: Record<string, [number, number]>,
   currentDateTime: Date
 ): (MovingUnitMarkerData | null)[] {
+  // Early return if centroids haven't loaded yet
+  if (Object.keys(regionCentroids).length === 0) return [];
+  
   return movingUnits.map((movement) => {
     const fromCentroid = regionCentroids[movement.fromRegion];
     const toCentroid = regionCentroids[movement.toRegion];
@@ -86,6 +92,9 @@ export function calculateCombatMarkers(
   activeCombats: ActiveCombat[],
   regionCentroids: Record<string, [number, number]>
 ): (CombatMarkerData | null)[] {
+  // Early return if centroids haven't loaded yet
+  if (Object.keys(regionCentroids).length === 0) return [];
+  
   return activeCombats
     .filter(combat => !combat.isComplete)
     .map((combat) => {
