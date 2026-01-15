@@ -33,7 +33,7 @@ export default function SpeedControl({
 
       {/* Speed Buttons */}
       <div className="flex gap-1">
-        {([1, 2, 4, 8, 16] as GameSpeed[]).map((speed) => (
+        {([1, 2, 4, 16, 64] as GameSpeed[]).map((speed) => (
           <button
             key={speed}
             onClick={() => onChangeSpeed(speed)}
