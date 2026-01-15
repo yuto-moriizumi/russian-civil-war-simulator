@@ -215,7 +215,7 @@ export default function TheaterPanel({
                     ? 'bg-blue-700 hover:bg-blue-600 cursor-pointer'
                     : 'bg-stone-700 cursor-not-allowed opacity-50'
                 }`}
-                title={canProduce ? 'Deploy 1 division' : 'Division cap reached! Capture more states to increase cap.'}
+                title={canProduce ? 'Deploy 1 division' : 'Command power cap reached! Capture more states to increase cap.'}
               >
                 +1
               </button>
@@ -232,7 +232,7 @@ export default function TheaterPanel({
                     ? 'bg-blue-700 hover:bg-blue-600 cursor-pointer'
                     : 'bg-stone-700 cursor-not-allowed opacity-50'
                 }`}
-                title={canProduce ? 'Deploy 5 divisions' : 'Division cap reached! Capture more states to increase cap.'}
+                title={canProduce ? 'Deploy 5 divisions' : 'Command power cap reached! Capture more states to increase cap.'}
               >
                 +5
               </button>
@@ -249,7 +249,7 @@ export default function TheaterPanel({
                     ? 'bg-blue-700 hover:bg-blue-600 cursor-pointer'
                     : 'bg-stone-700 cursor-not-allowed opacity-50'
                 }`}
-                title={canProduce ? 'Deploy 10 divisions' : 'Division cap reached! Capture more states to increase cap.'}
+                title={canProduce ? 'Deploy 10 divisions' : 'Command power cap reached! Capture more states to increase cap.'}
               >
                 +10
               </button>

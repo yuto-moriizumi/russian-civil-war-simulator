@@ -88,7 +88,7 @@ export default function TreasuryButton({
                 <div className="border-t border-stone-700 my-1"></div>
                 <div className="text-xs text-stone-400 mb-1">Command Power</div>
                 <div className="flex items-center justify-between">
-                  <span className="text-stone-300">Active Divisions:</span>
+                  <span className="text-stone-300">Active Units:</span>
                   <span className="text-blue-400 font-semibold">{unitCount} / {divisionCap}</span>
                 </div>
                 {inProduction !== undefined && inProduction > 0 && (
