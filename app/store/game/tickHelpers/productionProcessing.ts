@@ -1,4 +1,5 @@
-import { ProductionQueueItem, RegionState, Division, FactionId } from '../../../types/game';
+import { ProductionQueueItem, RegionState, Division, FactionId, FactionBonuses } from '../../../types/game';
+import { getDivisionStats } from '../../../utils/bonusCalculator';
 
 /**
  * Process per-faction production queues and complete the FIRST production from each faction's queue.
@@ -6,12 +7,14 @@ import { ProductionQueueItem, RegionState, Division, FactionId } from '../../../
  * @param productionQueues - Per-faction production queues
  * @param currentTime - Current game time
  * @param regions - Current region state
+ * @param factionBonuses - Per-faction bonuses from missions
  * @returns Updated per-faction queues, regions, and completed production events
  */
 export function processProductionQueue(
   productionQueues: Record<FactionId, ProductionQueueItem[]>,
   currentTime: Date,
-  regions: RegionState
+  regions: RegionState,
+  factionBonuses: Record<FactionId, FactionBonuses>
 ): {
   remainingProductions: Record<FactionId, ProductionQueueItem[]>;
   updatedRegions: RegionState;
@@ -32,16 +35,20 @@ export function processProductionQueue(
       const production = factionQueue[0];
       completedProductions.push(production);
 
-      // Create the division
+      // Get division stats with faction bonuses applied
+      const bonuses = factionBonuses[production.owner];
+      const divisionStats = getDivisionStats(production.owner, bonuses);
+
+      // Create the division with bonuses
       const newDivision: Division = {
         id: `div-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         name: production.divisionName,
         owner: production.owner,
         armyGroupId: production.armyGroupId,
-        hp: 100,
-        maxHp: 100,
-        attack: 10,
-        defence: 10,
+        hp: divisionStats.hp,
+        maxHp: divisionStats.maxHp,
+        attack: divisionStats.attack,
+        defence: divisionStats.defence,
       };
 
       // Deploy to target region if specified and valid

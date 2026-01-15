@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, NotificationItem, ActiveCombat, ArmyGroup, Theater, ProductionQueueItem, Relationship, RelationshipType, FactionId, MapMode } from '../types/game';
+import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, NotificationItem, ActiveCombat, ArmyGroup, Theater, ProductionQueueItem, Relationship, RelationshipType, FactionId, MapMode, FactionBonuses } from '../types/game';
 import CombatPopup from '../components/CombatPopup';
 import EventsModal from '../components/EventsModal';
 import TheaterPanel from '../components/TheaterPanel';
@@ -42,6 +42,7 @@ interface MainScreenProps {
   gameEvents: GameEvent[];
   notifications: NotificationItem[];
   productionQueue: Record<FactionId, ProductionQueueItem[]>;
+  factionBonuses: Record<FactionId, FactionBonuses>;
   // Theater and Army Groups props
   theaters: Theater[];
   armyGroups: ArmyGroup[];
@@ -106,6 +107,7 @@ export default function MainScreen({
   gameEvents,
   notifications,
   productionQueue,
+  factionBonuses,
   theaters,
   armyGroups,
   selectedGroupId,
@@ -192,7 +194,8 @@ export default function MainScreen({
     country.id,
     regions,
     movingUnits,
-    productionQueue
+    productionQueue,
+    factionBonuses[country.id]
   );
 
   const selectedCombat = selectedCombatId 
@@ -331,6 +334,7 @@ export default function MainScreen({
           selectedGroupId={selectedGroupId}
           movingUnits={movingUnits}
           productionQueue={productionQueue}
+          factionBonuses={factionBonuses[country.id]}
           onCreateGroup={onCreateArmyGroup}
           onDeleteGroup={onDeleteArmyGroup}
           onRenameGroup={onRenameArmyGroup}

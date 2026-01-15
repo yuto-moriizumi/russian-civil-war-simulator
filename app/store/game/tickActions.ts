@@ -43,7 +43,8 @@ export const createTickActions = (
     const { remainingProductions, updatedRegions: regionsAfterProduction, completedProductions } = processProductionQueue(
       productionQueues,
       dateTime,
-      updatedRegions
+      updatedRegions,
+      state.factionBonuses
     );
     
     // Create events for completed productions
@@ -132,7 +133,16 @@ export const createTickActions = (
     if (aiStates.length > 0) {
       // Process each AI faction
       nextAIStates = aiStates.map(aiState => {
-        const aiActions = runAITick(aiState, nextRegions, nextArmyGroups, nextCombats, remainingMovements, nextProductionQueues[aiState.factionId] || [], nextProductionQueues);
+        const aiActions = runAITick(
+          aiState, 
+          nextRegions, 
+          nextArmyGroups, 
+          nextCombats, 
+          remainingMovements, 
+          nextProductionQueues[aiState.factionId] || [], 
+          nextProductionQueues,
+          state.factionBonuses[aiState.factionId]
+        );
         
         // If AI created a new army group, add it
         if (aiActions.newArmyGroup) {

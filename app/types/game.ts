@@ -59,6 +59,16 @@ export type MissionCondition =
   | { type: 'theaterExists'; enemyFaction: FactionId }             // Have at least one theater facing enemy
   | { type: 'armyGroupCount'; count: number };                     // Have at least N army groups
 
+// Mission rewards interface
+export interface MissionRewards {
+  attackBonus?: number;           // +2, +3, +5 attack bonus
+  defenceBonus?: number;           // +1, +2, +3 defence bonus
+  hpBonus?: number;                // +10, +20, +30 HP bonus
+  divisionCapBonus?: number;       // +3 flat division cap increase
+  productionSpeedBonus?: number;   // 0.15, 0.20 (15%, 20% production time reduction)
+  gameVictory?: boolean;           // Triggers victory condition
+}
+
 export interface Mission {
   id: string;
   faction: CountryId;
@@ -66,10 +76,7 @@ export interface Mission {
   description: string;
   completed: boolean;
   claimed: boolean;
-  rewards: {
-    money: number;
-    gameVictory?: boolean;
-  };
+  rewards: MissionRewards;
   prerequisites: string[];
   available?: MissionCondition[]; // All conditions must be met (AND) for mission to auto-complete
   // position removed - computed automatically by dagre layout
@@ -157,6 +164,16 @@ export interface ScheduledEvent {
   triggered: boolean; // Track if event has already been triggered
 }
 
+// Faction bonuses from completed missions
+export interface FactionBonuses {
+  attackBonus: number;               // Total attack bonus from missions
+  defenceBonus: number;              // Total defence bonus from missions
+  hpBonus: number;                   // Total HP bonus from missions
+  maxHpBonus: number;                // Total max HP bonus from missions
+  divisionCapBonus: number;          // Total division cap bonus from missions
+  productionSpeedMultiplier: number; // Production speed multiplier (1.0 = normal, 0.8 = 20% faster)
+}
+
 export interface GameState {
   currentScreen: Screen;
   selectedCountry: Country | null;
@@ -177,6 +194,7 @@ export interface GameState {
   mapMode: MapMode; // Current map visualization mode
   regionCentroids: Record<string, [number, number]>; // Region centroids for distance calculations [longitude, latitude]
   scheduledEvents: ScheduledEvent[]; // Scheduled historical events
+  factionBonuses: Record<FactionId, FactionBonuses>; // Per-faction bonuses from claimed missions
 }
 
 // AI State for CPU-controlled factions

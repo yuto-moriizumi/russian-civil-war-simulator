@@ -18,7 +18,7 @@ export const createUnitActions = (
   get: StoreApi<GameStore>['getState']
 ) => ({
   createInfantry: () => {
-    const { money, selectedCountry, dateTime, gameEvents, regions, selectedGroupId, armyGroups, selectedRegion } = get();
+    const { money, selectedCountry, dateTime, gameEvents, regions, selectedGroupId, armyGroups, selectedRegion, factionBonuses } = get();
     const cost = 10;
     
     if (money >= cost && selectedCountry) {
@@ -101,7 +101,12 @@ export const createUnitActions = (
       );
       const divisionNumber = existingDivisions + 1;
       const divisionName = `${selectedCountry.id === 'soviet' ? 'Red' : 'White'} Guard ${divisionNumber}${getOrdinalSuffix(divisionNumber)} Division`;
-      const newDivision = createDivision(selectedCountry.id, divisionName, targetGroupId);
+      const newDivision = createDivision(
+        selectedCountry.id, 
+        divisionName, 
+        targetGroupId,
+        factionBonuses[selectedCountry.id]
+      );
       
       const targetRegion = regions[deploymentTarget];
       const newEvent = createGameEvent(

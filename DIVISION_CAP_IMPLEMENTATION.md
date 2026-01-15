@@ -6,11 +6,16 @@ Successfully implemented a division cap system for the Russian Civil War Simulat
 
 ## Formula
 
-**Division Cap = Controlled States × 2**
+**Division Cap = Controlled States × 1 (base cap per state)**
+
+**Each unit consumes 2 division cap**
 
 For example:
-- 5 states controlled = 10 divisions max
-- 10 states controlled = 20 divisions max
+- 5 states controlled = 5 division cap = 2 units max (2.5 units, rounded down)
+- 10 states controlled = 10 division cap = 5 units max
+- 20 states controlled = 20 division cap = 10 units max
+
+**Note**: Major cities provide additional division cap bonuses (e.g., Moscow provides +2 bonus cap)
 
 ## Changes Made
 
@@ -18,9 +23,9 @@ For example:
 
 Created a new utility module with the following functions:
 
-- `calculateDivisionCap()` - Calculates max divisions based on controlled states
-- `countCurrentDivisions()` - Counts divisions in regions and in transit
-- `countDivisionsInProduction()` - Counts divisions in the production queue
+- `calculateDivisionCap()` - Calculates max division cap based on controlled states
+- `countCurrentDivisions()` - Counts division cap consumed by units in regions and in transit (each unit consumes 2 cap)
+- `countDivisionsInProduction()` - Counts division cap consumed by units in production queue (each unit consumes 2 cap)
 - `canProduceDivision()` - Checks if a faction can produce more divisions
 - `getDivisionCapInfo()` - Returns detailed cap information for UI display
 
@@ -61,13 +66,14 @@ Created a new utility module with the following functions:
 
 ## Configuration
 
-The cap multiplier is configurable in `app/utils/divisionCap.ts`:
+The cap values are configurable in `app/utils/divisionCap.ts`:
 
 ```typescript
-export const DIVISIONS_PER_STATE = 2;
+export const DIVISIONS_PER_STATE = 1;  // Cap provided per state controlled
+export const DIVISION_CAP_PER_UNIT = 2; // Cap consumed by each unit
 ```
 
-Change this value to adjust the cap formula.
+Change these values to adjust the cap formula and unit cost.
 
 ## Testing
 
@@ -89,10 +95,11 @@ Change this value to adjust the cap formula.
 
 ## How It Works
 
-1. **Cap Calculation**: The game counts how many regions/states each faction controls and multiplies by 2
-2. **Production Check**: When attempting to produce a division, the game checks if (current divisions + in production) < cap
-3. **UI Feedback**: The treasury tooltip shows the current cap and how many divisions are active/in production
-4. **Visual Cues**: Deploy buttons are disabled with "CAP REACHED" text when the limit is hit
+1. **Cap Calculation**: The game counts how many regions/states each faction controls and multiplies by DIVISIONS_PER_STATE (1) to get total division cap
+2. **Unit Cost**: Each unit (division) consumes DIVISION_CAP_PER_UNIT (2) division cap slots
+3. **Production Check**: When attempting to produce a division, the game checks if (cap consumed by current units + cap consumed by units in production) < total cap
+4. **UI Feedback**: The treasury tooltip shows the current cap and how many divisions are active/in production
+5. **Visual Cues**: Deploy buttons are disabled with "CAP REACHED" text when the limit is hit
 
 ## Strategic Impact
 

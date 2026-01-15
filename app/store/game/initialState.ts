@@ -1,6 +1,7 @@
 import { GameState } from '../../types/game';
 import { initialMissions, GAME_START_DATE } from '../../data/gameData';
 import { scheduledEvents } from '../../data/scheduledEvents';
+import { getInitialFactionBonuses } from '../../utils/bonusCalculator';
 
 // Predefined colors for army groups
 export const ARMY_GROUP_COLORS = [
@@ -44,4 +45,13 @@ export const initialGameState: GameState = {
   mapMode: 'country', // Default map mode
   regionCentroids: {}, // Will be loaded asynchronously
   scheduledEvents: scheduledEvents, // Historical events
+  factionBonuses: {
+    soviet: getInitialFactionBonuses(),
+    white: getInitialFactionBonuses(),
+    finland: getInitialFactionBonuses(),
+    ukraine: getInitialFactionBonuses(),
+    don: getInitialFactionBonuses(),
+    neutral: getInitialFactionBonuses(),
+    foreign: getInitialFactionBonuses(),
+  },
 };
