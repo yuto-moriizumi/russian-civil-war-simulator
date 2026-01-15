@@ -44,6 +44,13 @@ export const countries: Country[] = [
     color: '#CC0000',
     selectable: false,
   },
+  {
+    id: 'iskolat',
+    name: 'Iskolat (Latvian Soviet Republic)',
+    flag: '/images/flags/iskolat.svg',
+    color: '#8B0000',
+    selectable: false,
+  },
 ];
 
 // Soviet Mission Tree (Offense-focused: Attack > HP > Defence)

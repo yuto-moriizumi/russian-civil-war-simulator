@@ -256,9 +256,9 @@ export const initialRegionOwnership: Record<string, FactionId> = {
   'EE-86': 'soviet',   // Võru County
 
   // ============================================
-  // LATVIA (Soviet/German-controlled) - ADM0
+  // LATVIA (Iskolat - Latvian Soviet Government) - ADM0
   // ============================================
-  'LVA': 'soviet',     // Latvia (country)
+  'LVA': 'iskolat',     // Latvia (Iskolat Soviet Republic)
 
   // ============================================
   // LITHUANIA (Soviet/German-controlled)

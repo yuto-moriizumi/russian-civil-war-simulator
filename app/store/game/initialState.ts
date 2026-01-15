@@ -35,11 +35,13 @@ export const initialGameState: GameState = {
     ukraine: [],
     don: [],
     fswr: [],
+    iskolat: [],
     neutral: [],
     foreign: [],
   },
   relationships: [
-    { fromFaction: 'white', toFaction: 'ukraine', type: 'autonomy' }
+    { fromFaction: 'white', toFaction: 'ukraine', type: 'autonomy' },
+    { fromFaction: 'soviet', toFaction: 'iskolat', type: 'autonomy' }
   ], // Initially no relationships (all neutral)
   mapMode: 'country', // Default map mode
   regionCentroids: {}, // Will be loaded asynchronously
@@ -51,6 +53,7 @@ export const initialGameState: GameState = {
     ukraine: getInitialFactionBonuses(),
     don: getInitialFactionBonuses(),
     fswr: getInitialFactionBonuses(),
+    iskolat: getInitialFactionBonuses(),
     neutral: getInitialFactionBonuses(),
     foreign: getInitialFactionBonuses(),
   },

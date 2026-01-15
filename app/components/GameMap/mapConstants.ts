@@ -8,6 +8,7 @@ export const FACTION_FLAGS: Record<FactionId, string> = {
   ukraine: '/images/flags/ukraine.svg',
   don: '/images/flags/don.svg',
   fswr: '/images/flags/fswr.svg',
+  iskolat: '/images/flags/iskolat.svg',
   neutral: '',
   foreign: '',
 };
