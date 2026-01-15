@@ -1,11 +1,8 @@
 import { GameStore } from './types';
 import { ProductionQueueItem } from '../../types/game';
 import { getOrdinalSuffix } from '../../utils/eventUtils';
-import { canProduceDivision, getCommandPowerInfo } from '../../utils/commandPower';
+import { getCommandPowerInfo, COMMAND_POWER_PER_UNIT } from '../../utils/commandPower';
 import { getBaseProductionTime } from '../../utils/bonusCalculator';
-
-const DIVISION_COST = 10; // Cost to produce a division
-const PRODUCTION_TIME_HOURS = 24; // Base production time (can be reduced by bonuses)
 
 export const createProductionActions = (
   set: (fn: (state: GameStore) => Partial<GameStore>) => void,
@@ -24,38 +21,37 @@ export const createProductionActions = (
       return;
     }
 
-    // Check if player has enough money for all units
-    const totalCost = DIVISION_COST * count;
-    if (state.money < totalCost) {
-      console.warn(`Not enough money to start production. Need $${totalCost}, have $${state.money}`);
-      return;
-    }
-
     // Check if player has selected a country
     if (!state.selectedCountry) {
       console.warn('No country selected');
       return;
     }
 
-    // Check command power
-    if (!canProduceDivision(
+    // Calculate how many divisions we can actually produce based on cap
+    const capInfo = getCommandPowerInfo(
       state.selectedCountry.id,
       state.regions,
       state.movingUnits,
       state.productionQueues,
       state.factionBonuses[state.selectedCountry.id]
-    )) {
-      const capInfo = getCommandPowerInfo(
-        state.selectedCountry.id,
-        state.regions,
-        state.movingUnits,
-        state.productionQueues,
-        state.factionBonuses[state.selectedCountry.id]
-      );
+    );
+    
+    // Convert available slots to available divisions (each division costs COMMAND_POWER_PER_UNIT slots)
+    const availableDivisions = Math.floor(capInfo.available / COMMAND_POWER_PER_UNIT);
+    
+    // Clamp count to available capacity
+    const actualCount = Math.min(count, availableDivisions);
+    
+    if (actualCount === 0) {
       console.warn(
         `Command power reached! Current: ${capInfo.current}, In Production: ${capInfo.inProduction}, Cap: ${capInfo.cap} (${capInfo.controlledStates} states × 2)`
       );
       return false;
+    }
+    
+    // Log if we had to reduce the count due to cap
+    if (actualCount < count) {
+      console.log(`Requested ${count} divisions, but only ${actualCount} can be produced due to command power (${availableDivisions} divisions available)`);
     }
 
     // Find the army group
@@ -100,7 +96,7 @@ export const createProductionActions = (
     const now = state.dateTime;
     const productionTimeHours = getBaseProductionTime(state.factionBonuses[state.selectedCountry.id]);
 
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < actualCount; i++) {
       const divisionNumber = existingDivisions + existingQueueCount + newProductions.length + 1;
       const divisionName = `${divisionNumber}${getOrdinalSuffix(divisionNumber)} Infantry Division`;
       const completionTime = new Date(now.getTime() + productionTimeHours * 60 * 60 * 1000);
@@ -121,7 +117,6 @@ export const createProductionActions = (
         ...state.productionQueues,
         [state.selectedCountry!.id]: [...(state.productionQueues[state.selectedCountry!.id] || []), ...newProductions],
       },
-      money: state.money - totalCost,
       gameEvents: [
         ...state.gameEvents,
         {
@@ -129,9 +124,9 @@ export const createProductionActions = (
           type: 'production_started',
           timestamp: now,
           title: 'Production Started',
-          description: count === 1 
-            ? `Started production of ${newProductions[0].divisionName}. Will complete in 24 hours.`
-            : `Started production of ${count} divisions. First will complete in 24 hours.`,
+          description: actualCount === 1 
+            ? `Started production of ${newProductions[0].divisionName}. Will complete in ${productionTimeHours} hours.`
+            : `Started production of ${actualCount} divisions. First will complete in ${productionTimeHours} hours.`,
           faction: state.selectedCountry?.id,
         },
       ],
@@ -164,9 +159,6 @@ export const createProductionActions = (
     // Check if we're canceling the first (active) item
     const isFirstItem = playerQueue[0]?.id === productionId;
 
-    // Refund 50% of the cost
-    const refund = Math.floor(DIVISION_COST / 2);
-
     // Filter out the cancelled production
     const filteredQueue = playerQueue.filter(p => p.id !== productionId);
 
@@ -178,7 +170,6 @@ export const createProductionActions = (
         ...state.productionQueues,
         [state.selectedCountry!.id]: filteredQueue,
       },
-      money: state.money + refund,
       gameEvents: [
         ...state.gameEvents,
         {
@@ -186,7 +177,7 @@ export const createProductionActions = (
           type: 'production_started', // Reusing event type
           timestamp: state.dateTime,
           title: 'Production Canceled',
-          description: `Canceled production of ${production.divisionName}. Refunded $${refund}.`,
+          description: `Canceled production of ${production.divisionName}.`,
           faction: state.selectedCountry?.id,
         },
       ],

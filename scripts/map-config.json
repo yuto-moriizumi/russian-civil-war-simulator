@@ -78,7 +78,10 @@
   ],
   "customAdjacency": {
     "FI-01": ["FI-19"],
-    "FI-19": ["FI-01"]
+    "FI-19": ["FI-01"],
+    "EE-39": ["EE-74", "EE-57"],
+    "EE-74": ["EE-39", "EE-57"],
+    "EE-57": ["EE-39", "EE-74"]
   },
   "output": {
     "geojson": "../public/map/regions.geojson",

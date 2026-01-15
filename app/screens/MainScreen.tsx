@@ -29,8 +29,6 @@ interface MainScreenProps {
   dateTime: Date;
   isPlaying: boolean;
   gameSpeed: GameSpeed;
-  money: number;
-  income: number;
   missions: Mission[];
   movingUnits: Movement[];
   activeCombats: ActiveCombat[];
@@ -94,8 +92,6 @@ export default function MainScreen({
   dateTime,
   isPlaying,
   gameSpeed,
-  money,
-  income,
   missions,
   movingUnits,
   activeCombats,
@@ -187,7 +183,7 @@ export default function MainScreen({
   // Calculate unit count and maintenance costs
   const unitCount = countFactionUnits(regions, country.id, movingUnits);
   const maintenanceCost = unitCount; // $1 per unit per hour
-  const grossIncome = income + maintenanceCost; // Calculate gross income before maintenance
+  const grossIncome = 0; // No longer used
 
   // Calculate command power info
   const commandPowerInfo = getCommandPowerInfo(
@@ -270,8 +266,6 @@ export default function MainScreen({
         dateTime={dateTime}
         isPlaying={isPlaying}
         gameSpeed={gameSpeed}
-        money={money}
-        income={income}
         grossIncome={grossIncome}
         maintenanceCost={maintenanceCost}
         unitCount={unitCount}
@@ -311,7 +305,6 @@ export default function MainScreen({
         armyGroups={armyGroups}
         playerFaction={country.id}
         currentDateTime={dateTime}
-        money={money}
         onAddProduction={() => {}} // Disabled - use Deploy button instead
         onCancelProduction={onCancelProduction}
         viewOnly={true}
