@@ -41,6 +41,11 @@ export const scheduledEvents: ScheduledEvent[] = [
         newOwner: 'fswr',
       },
       {
+        type: 'transferRegion',
+        regionId: 'FI-06', // Tavastia Proper
+        newOwner: 'fswr',
+      },
+      {
         type: 'declareWar',
         fromFaction: 'fswr',
         toFaction: 'finland',
