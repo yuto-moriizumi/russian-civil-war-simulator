@@ -8,6 +8,7 @@ import {
   Mission,
   FactionId,
   GameEventType,
+  ProductionQueueItem,
   Division,
   ArmyGroup,
   Theater,
@@ -152,11 +153,11 @@ function serializeGameState(state: GameState): SerializedGameState {
 // Deserialize GameState (convert ISO strings back to Date objects)
 function deserializeGameState(data: SerializedGameState): GameState {
   // Handle backward compatibility: convert old productionQueue to new productionQueues format
-  let productionQueues: Record<FactionId, any[]>;
+  let productionQueues: Record<FactionId, ProductionQueueItem[]>;
   
   if (data.productionQueues) {
     // New format: per-faction queues
-    productionQueues = {} as Record<FactionId, any[]>;
+    productionQueues = {} as Record<FactionId, ProductionQueueItem[]>;
     const factionIds = Object.keys(data.productionQueues) as FactionId[];
     
     for (const factionId of factionIds) {
