@@ -88,9 +88,7 @@ export const createTickActions = (
       scheduledEvents,
       newDate,
       regionsAfterProduction,
-      relationships,
-      gameEvents,
-      notifications
+      relationships
     );
     
     // Step 4: Process unit movements

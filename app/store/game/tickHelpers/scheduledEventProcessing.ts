@@ -9,9 +9,7 @@ export function processScheduledEvents(
   scheduledEvents: ScheduledEvent[],
   currentDate: Date,
   regions: Record<string, Region>,
-  relationships: Relationship[],
-  existingEvents: GameEvent[],
-  existingNotifications: NotificationItem[]
+  relationships: Relationship[]
 ): {
   updatedScheduledEvents: ScheduledEvent[];
   updatedRegions: Record<string, Region>;
@@ -21,7 +19,7 @@ export function processScheduledEvents(
 } {
   const dateString = formatDateToYYYYMMDD(currentDate);
   
-  let updatedRegions = { ...regions };
+  const updatedRegions = { ...regions };
   let updatedRelationships = [...relationships];
   const newEvents: GameEvent[] = [];
   const newNotifications: NotificationItem[] = [];
