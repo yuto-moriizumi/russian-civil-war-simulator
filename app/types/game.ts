@@ -137,6 +137,26 @@ export interface Relationship {
   type: RelationshipType;  // Type of relationship
 }
 
+// Scheduled events that trigger on specific dates
+export interface ScheduledEventAction {
+  type: 'transferRegion' | 'declareWar';
+  // For transferRegion
+  regionId?: string;
+  newOwner?: FactionId;
+  // For declareWar
+  fromFaction?: FactionId;
+  toFaction?: FactionId;
+}
+
+export interface ScheduledEvent {
+  id: string;
+  date: string; // YYYY-MM-DD format
+  title: string;
+  description: string;
+  actions: ScheduledEventAction[];
+  triggered: boolean; // Track if event has already been triggered
+}
+
 export interface GameState {
   currentScreen: Screen;
   selectedCountry: Country | null;
@@ -156,6 +176,7 @@ export interface GameState {
   relationships: Relationship[]; // Diplomatic/military relationships between factions
   mapMode: MapMode; // Current map visualization mode
   regionCentroids: Record<string, [number, number]>; // Region centroids for distance calculations [longitude, latitude]
+  scheduledEvents: ScheduledEvent[]; // Scheduled historical events
 }
 
 // AI State for CPU-controlled factions

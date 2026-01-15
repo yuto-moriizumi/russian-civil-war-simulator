@@ -1,5 +1,6 @@
 import { GameState } from '../../types/game';
 import { initialMissions, GAME_START_DATE } from '../../data/gameData';
+import { scheduledEvents } from '../../data/scheduledEvents';
 
 // Predefined colors for army groups
 export const ARMY_GROUP_COLORS = [
@@ -42,4 +43,5 @@ export const initialGameState: GameState = {
   ], // Initially no relationships (all neutral)
   mapMode: 'country', // Default map mode
   regionCentroids: {}, // Will be loaded asynchronously
+  scheduledEvents: scheduledEvents, // Historical events
 };
