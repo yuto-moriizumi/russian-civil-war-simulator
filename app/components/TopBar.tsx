@@ -103,6 +103,19 @@ export default function TopBar({
           inProduction={inProduction}
         />
 
+        {/* Division Cap Display */}
+        {divisionCap !== undefined && (
+          <div className="rounded-lg border border-blue-600/50 bg-stone-800/80 px-4 py-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-stone-400">Divisions:</span>
+              <span className="text-lg font-bold text-blue-400">{unitCount} / {divisionCap}</span>
+              {inProduction !== undefined && inProduction > 0 && (
+                <span className="text-xs text-emerald-400">+{inProduction}</span>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Production Queue Button */}
         <button
           onClick={onOpenProductionQueue}
