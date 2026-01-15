@@ -1,7 +1,7 @@
 import { GameStore } from './types';
 import { ProductionQueueItem } from '../../types/game';
 import { getOrdinalSuffix } from '../../utils/eventUtils';
-import { canProduceDivision, getDivisionCapInfo } from '../../utils/divisionCap';
+import { canProduceDivision, getCommandPowerInfo } from '../../utils/commandPower';
 import { getBaseProductionTime } from '../../utils/bonusCalculator';
 
 const DIVISION_COST = 10; // Cost to produce a division
@@ -37,7 +37,7 @@ export const createProductionActions = (
       return;
     }
 
-    // Check division cap
+    // Check command power
     if (!canProduceDivision(
       state.selectedCountry.id,
       state.regions,
@@ -45,7 +45,7 @@ export const createProductionActions = (
       state.productionQueues,
       state.factionBonuses[state.selectedCountry.id]
     )) {
-      const capInfo = getDivisionCapInfo(
+      const capInfo = getCommandPowerInfo(
         state.selectedCountry.id,
         state.regions,
         state.movingUnits,
@@ -53,7 +53,7 @@ export const createProductionActions = (
         state.factionBonuses[state.selectedCountry.id]
       );
       console.warn(
-        `Division cap reached! Current: ${capInfo.current}, In Production: ${capInfo.inProduction}, Cap: ${capInfo.cap} (${capInfo.controlledStates} states × 2)`
+        `Command power reached! Current: ${capInfo.current}, In Production: ${capInfo.inProduction}, Cap: ${capInfo.cap} (${capInfo.controlledStates} states × 2)`
       );
       return false;
     }

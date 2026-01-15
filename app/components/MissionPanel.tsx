@@ -58,8 +58,8 @@ export default function MissionPanel({
               {mission.rewards.hpBonus && (
                 <span className="text-pink-400">❤️+{mission.rewards.hpBonus}</span>
               )}
-              {mission.rewards.divisionCapBonus && (
-                <span className="text-purple-400">👥+{mission.rewards.divisionCapBonus}</span>
+              {mission.rewards.commandPowerBonus && (
+                <span className="text-purple-400">👥+{mission.rewards.commandPowerBonus}</span>
               )}
               {mission.rewards.productionSpeedBonus && (
                 <span className="text-yellow-400">⚡{mission.rewards.productionSpeedBonus * 100}%</span>

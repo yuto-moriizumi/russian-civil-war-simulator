@@ -75,7 +75,7 @@ const sovietMissions: Mission[] = [
     description: 'Nationalize industry and requisition grain for the war effort',
     completed: false,
     claimed: false,
-    rewards: { divisionCapBonus: 3, productionSpeedBonus: 0.15 },
+    rewards: { commandPowerBonus: 3, productionSpeedBonus: 0.15 },
     prerequisites: ['soviet_mobilize'],
     available: [
       { type: 'controlRegionCount', count: 12 }, // Control at least 12 regions
@@ -104,7 +104,7 @@ const sovietMissions: Mission[] = [
     description: 'Push the offensive and liberate key territories',
     completed: false,
     claimed: false,
-    rewards: { hpBonus: 20, divisionCapBonus: 3 },
+    rewards: { hpBonus: 20, commandPowerBonus: 3 },
     prerequisites: ['soviet_crush'],
     available: [
       { type: 'controlRegionCount', count: 35 }, // Control at least 35 regions
@@ -149,7 +149,7 @@ const whiteMissions: Mission[] = [
     description: 'Establish supply lines with Allied nations',
     completed: false,
     claimed: false,
-    rewards: { hpBonus: 10, divisionCapBonus: 3 },
+    rewards: { hpBonus: 10, commandPowerBonus: 3 },
     prerequisites: ['white_rally'],
     available: [
       { type: 'controlRegionCount', count: 8 }, // Control at least 8 regions
@@ -192,7 +192,7 @@ const whiteMissions: Mission[] = [
     description: 'Launch the final offensive toward the revolutionary capital',
     completed: false,
     claimed: false,
-    rewards: { hpBonus: 20, divisionCapBonus: 3 },
+    rewards: { hpBonus: 20, commandPowerBonus: 3 },
     prerequisites: ['white_break'],
     available: [
       { type: 'controlRegion', regionId: 'RU-LEN' }, // Control Leningrad Oblast (near Petrograd)
@@ -251,7 +251,7 @@ const finnishMissions: Mission[] = [
     description: 'Secure German military support to end the civil war',
     completed: false,
     claimed: false,
-    rewards: { divisionCapBonus: 3, defenceBonus: 2 },
+    rewards: { commandPowerBonus: 3, defenceBonus: 2 },
     prerequisites: ['finland_independence'],
     available: [
       { type: 'hasUnits', count: 6 }, // Demonstrate military capacity
@@ -280,7 +280,7 @@ const finnishMissions: Mission[] = [
     description: 'Expand Finnish borders to include Karelia and Kola Peninsula',
     completed: false,
     claimed: false,
-    rewards: { hpBonus: 20, divisionCapBonus: 3 },
+    rewards: { hpBonus: 20, commandPowerBonus: 3 },
     prerequisites: ['finland_karelian'],
     available: [
       { type: 'controlRegion', regionId: 'RU-KR' }, // Control Karelia
@@ -325,7 +325,7 @@ const ukrainianMissions: Mission[] = [
     description: 'Secure control over Ukrainian territories and establish government authority',
     completed: false,
     claimed: false,
-    rewards: { divisionCapBonus: 3, defenceBonus: 1 },
+    rewards: { commandPowerBonus: 3, defenceBonus: 1 },
     prerequisites: ['ukraine_independence'],
     available: [
       { type: 'controlRegion', regionId: 'UA-30' }, // Control Kyiv
@@ -367,7 +367,7 @@ const ukrainianMissions: Mission[] = [
     description: 'Control the industrial heartland of the Donbas region',
     completed: false,
     claimed: false,
-    rewards: { hpBonus: 20, divisionCapBonus: 3 },
+    rewards: { hpBonus: 20, commandPowerBonus: 3 },
     prerequisites: ['ukraine_resist'],
     available: [
       { type: 'controlRegions', regionIds: ['UA-14', 'UA-12'] }, // Control Donetsk and Dnipropetrovsk
@@ -412,7 +412,7 @@ const donMissions: Mission[] = [
     description: 'Consolidate control over Don Cossack territories',
     completed: false,
     claimed: false,
-    rewards: { divisionCapBonus: 3, defenceBonus: 1 },
+    rewards: { commandPowerBonus: 3, defenceBonus: 1 },
     prerequisites: ['don_independence'],
     available: [
       { type: 'controlRegions', regionIds: ['RU-ROS', 'RU-VGG'] }, // Control both starting regions
@@ -454,7 +454,7 @@ const donMissions: Mission[] = [
     description: 'Forge alliance with neighboring Kuban Cossacks',
     completed: false,
     claimed: false,
-    rewards: { hpBonus: 20, divisionCapBonus: 3 },
+    rewards: { hpBonus: 20, commandPowerBonus: 3 },
     prerequisites: ['don_expansion'],
     available: [
       { type: 'controlRegion', regionId: 'RU-KDA' }, // Control Krasnodar Krai (Kuban)

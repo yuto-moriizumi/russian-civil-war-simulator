@@ -6,15 +6,15 @@ import { FactionId, RegionState, ProductionQueueItem, Movement, FactionBonuses }
 export const DIVISIONS_PER_STATE = 1;
 
 /**
- * Division cap consumed per unit (configurable)
- * Each unit will consume this many division cap slots
+ * Command power consumed per unit (configurable)
+ * Each unit will consume this many command power slots
  */
-export const DIVISION_CAP_PER_UNIT = 2;
+export const COMMAND_POWER_PER_UNIT = 2;
 
 /**
- * Base division cap provided to all factions
+ * Base command power provided to all factions
  */
-export const BASE_DIVISION_CAP = 4;
+export const BASE_COMMAND_POWER = 4;
 
 /**
  * Cap bonuses for major cities
@@ -30,17 +30,17 @@ export const MAJOR_CITY_CAP_BONUS: Record<string, number> = {
 
 /**
  * Calculate the maximum divisions a faction can have based on controlled states
- * @param factionId - The faction to calculate cap for
+ * @param factionId - The faction to calculate command power for
  * @param regions - Current region state
  * @param factionBonuses - Faction bonuses from completed missions
- * @returns Maximum number of divisions allowed
+ * @returns Maximum command power allowed
  */
-export function calculateDivisionCap(
+export function calculateCommandPower(
   factionId: FactionId,
   regions: RegionState,
   factionBonuses: FactionBonuses
 ): number {
-  let totalCap = BASE_DIVISION_CAP;
+  let totalCap = BASE_COMMAND_POWER;
 
   // Iterate through all controlled regions
   Object.entries(regions).forEach(([regionId, region]) => {
@@ -56,18 +56,18 @@ export function calculateDivisionCap(
   });
 
   // Add bonus from completed missions
-  totalCap += factionBonuses.divisionCapBonus;
+  totalCap += factionBonuses.commandPowerBonus;
 
   return totalCap;
 }
 
 /**
  * Count current divisions for a faction (in regions + in transit)
- * Each division consumes DIVISION_CAP_PER_UNIT cap slots
+ * Each division consumes COMMAND_POWER_PER_UNIT command power slots
  * @param factionId - The faction to count for
  * @param regions - Current region state
  * @param movements - Current unit movements
- * @returns Total division cap consumed by current divisions
+ * @returns Total command power consumed by current divisions
  */
 export function countCurrentDivisions(
   factionId: FactionId,
@@ -87,24 +87,24 @@ export function countCurrentDivisions(
     return count;
   }, 0);
 
-  // Each division consumes DIVISION_CAP_PER_UNIT cap slots
-  return (divisionsInRegions + divisionsInTransit) * DIVISION_CAP_PER_UNIT;
+  // Each division consumes COMMAND_POWER_PER_UNIT command power slots
+  return (divisionsInRegions + divisionsInTransit) * COMMAND_POWER_PER_UNIT;
 }
 
 /**
  * Count divisions in production queue for a faction
- * Each division consumes DIVISION_CAP_PER_UNIT cap slots
+ * Each division consumes COMMAND_POWER_PER_UNIT command power slots
  * @param factionId - The faction to count for
  * @param productionQueues - Per-faction production queues
- * @returns Division cap consumed by divisions being produced
+ * @returns Command power consumed by divisions being produced
  */
 export function countDivisionsInProduction(
   factionId: FactionId,
   productionQueues: Record<FactionId, ProductionQueueItem[]>
 ): number {
   const queue = productionQueues[factionId] || [];
-  // Each division in production consumes DIVISION_CAP_PER_UNIT cap slots
-  return queue.length * DIVISION_CAP_PER_UNIT;
+  // Each division in production consumes COMMAND_POWER_PER_UNIT command power slots
+  return queue.length * COMMAND_POWER_PER_UNIT;
 }
 
 /**
@@ -123,7 +123,7 @@ export function canProduceDivision(
   productionQueues: Record<FactionId, ProductionQueueItem[]>,
   factionBonuses: FactionBonuses
 ): boolean {
-  const cap = calculateDivisionCap(factionId, regions, factionBonuses);
+  const cap = calculateCommandPower(factionId, regions, factionBonuses);
   const current = countCurrentDivisions(factionId, regions, movements);
   const inProduction = countDivisionsInProduction(factionId, productionQueues);
   
@@ -132,7 +132,7 @@ export function canProduceDivision(
 }
 
 /**
- * Get division cap info for display
+ * Get command power info for display
  * @param factionId - The faction to get info for
  * @param regions - Current region state
  * @param movements - Current unit movements
@@ -140,7 +140,7 @@ export function canProduceDivision(
  * @param factionBonuses - Faction bonuses from completed missions
  * @returns Object with cap, current, inProduction, and available counts
  */
-export function getDivisionCapInfo(
+export function getCommandPowerInfo(
   factionId: FactionId,
   regions: RegionState,
   movements: Movement[],
@@ -154,7 +154,7 @@ export function getDivisionCapInfo(
   available: number;
   controlledStates: number;
 } {
-  const cap = calculateDivisionCap(factionId, regions, factionBonuses);
+  const cap = calculateCommandPower(factionId, regions, factionBonuses);
   const current = countCurrentDivisions(factionId, regions, movements);
   const inProduction = countDivisionsInProduction(factionId, productionQueues);
   const total = current + inProduction;

@@ -72,8 +72,8 @@ export function createDiplomacyFillColorExpression(
 }
 
 /**
- * Build color expression for region fill based on division cap (value map mode)
- * Uses a gradient from dark to bright based on the region's value (division cap)
+ * Build color expression for region fill based on command power (value map mode)
+ * Uses a gradient from dark to bright based on the region's value (command power)
  */
 export function createValueFillColorExpression(regions: RegionState) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

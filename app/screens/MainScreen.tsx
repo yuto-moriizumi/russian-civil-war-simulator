@@ -12,7 +12,7 @@ import MissionPanel from '../components/MissionPanel';
 import ProductionQueuePanel from '../components/ProductionQueuePanel';
 import CountrySidebar from '../components/CountrySidebar';
 import { countFactionUnits } from '../utils/mapUtils';
-import { getDivisionCapInfo } from '../utils/divisionCap';
+import { getCommandPowerInfo } from '../utils/commandPower';
 
 // Dynamic import for GameMap to avoid SSR issues with MapLibre
 const GameMap = dynamic(() => import('../components/GameMap'), {
@@ -189,8 +189,8 @@ export default function MainScreen({
   const maintenanceCost = unitCount; // $1 per unit per hour
   const grossIncome = income + maintenanceCost; // Calculate gross income before maintenance
 
-  // Calculate division cap info
-  const divisionCapInfo = getDivisionCapInfo(
+  // Calculate command power info
+  const commandPowerInfo = getCommandPowerInfo(
     country.id,
     regions,
     movingUnits,
@@ -279,9 +279,9 @@ export default function MainScreen({
         showSavedIndicator={showSavedIndicator}
         productionQueue={productionQueue}
         mapMode={mapMode}
-        divisionCap={divisionCapInfo.cap}
-        controlledStates={divisionCapInfo.controlledStates}
-        inProduction={divisionCapInfo.inProduction}
+        divisionCap={commandPowerInfo.cap}
+        controlledStates={commandPowerInfo.controlledStates}
+        inProduction={commandPowerInfo.inProduction}
         onTogglePlay={onTogglePlay}
         onChangeSpeed={onChangeSpeed}
         onSaveGame={onSaveGame}

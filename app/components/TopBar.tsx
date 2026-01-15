@@ -103,7 +103,7 @@ export default function TopBar({
           inProduction={inProduction}
         />
 
-        {/* Division Cap Display */}
+        {/* Command Power Display */}
         {divisionCap !== undefined && (
           <div className="rounded-lg border border-blue-600/50 bg-stone-800/80 px-4 py-2">
             <div className="flex items-center gap-2">
@@ -174,7 +174,7 @@ export default function TopBar({
                 ? 'bg-blue-600 text-white font-semibold'
                 : 'text-stone-300 hover:bg-stone-700'
             }`}
-            title="Value Map - Colors by division cap"
+            title="Value Map - Colors by command power"
           >
             Value
           </button>

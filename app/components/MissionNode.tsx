@@ -113,9 +113,9 @@ function MissionNode({ data }: NodeProps<MissionNodeType>) {
                 ❤️ +{mission.rewards.hpBonus} HP
               </span>
             )}
-            {mission.rewards.divisionCapBonus && (
+            {mission.rewards.commandPowerBonus && (
               <span className={mission.claimed ? 'text-green-400 line-through' : 'text-purple-400'}>
-                👥 +{mission.rewards.divisionCapBonus} Cap
+                👥 +{mission.rewards.commandPowerBonus} CP
               </span>
             )}
             {mission.rewards.productionSpeedBonus && (

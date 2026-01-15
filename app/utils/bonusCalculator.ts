@@ -35,7 +35,7 @@ export function calculateFactionBonuses(
   let defenceBonus = 0;
   let hpBonus = 0;
   let maxHpBonus = 0;
-  let divisionCapBonus = 0;
+  let commandPowerBonus = 0;
   let productionSpeedMultiplier = 1.0; // 1.0 = normal speed
 
   claimedMissions.forEach(mission => {
@@ -54,8 +54,8 @@ export function calculateFactionBonuses(
       maxHpBonus += rewards.hpBonus; // HP bonus applies to both current and max HP
     }
     
-    if (rewards.divisionCapBonus) {
-      divisionCapBonus += rewards.divisionCapBonus;
+    if (rewards.commandPowerBonus) {
+      commandPowerBonus += rewards.commandPowerBonus;
     }
     
     if (rewards.productionSpeedBonus) {
@@ -70,7 +70,7 @@ export function calculateFactionBonuses(
     defenceBonus,
     hpBonus,
     maxHpBonus,
-    divisionCapBonus,
+    commandPowerBonus,
     productionSpeedMultiplier,
   };
 }
@@ -112,7 +112,7 @@ export function getInitialFactionBonuses(): FactionBonuses {
     defenceBonus: 0,
     hpBonus: 0,
     maxHpBonus: 0,
-    divisionCapBonus: 0,
+    commandPowerBonus: 0,
     productionSpeedMultiplier: 1.0,
   };
 }

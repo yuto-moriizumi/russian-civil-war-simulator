@@ -1,6 +1,6 @@
 import { AIState, FactionId, RegionState, Region, ActiveCombat, Movement, ArmyGroup, ProductionQueueItem, FactionBonuses } from '../types/game';
 import { calculateFactionIncome } from '../utils/mapUtils';
-import { canProduceDivision, getDivisionCapInfo } from '../utils/divisionCap';
+import { canProduceDivision, getCommandPowerInfo } from '../utils/commandPower';
 
 // Cost to create one division
 const DIVISION_COST = 10;
@@ -196,11 +196,11 @@ export function runAITick(
   // AI limit: don't spend ALL money at once if income is low, 
   // but for now we follow the existing logic of spending what we have.
   while (money >= DIVISION_COST) {
-    // Check division cap before producing
+    // Check command power before producing
     if (!canProduceDivision(factionId, regions, movingUnits, productionQueues, factionBonuses)) {
-      const capInfo = getDivisionCapInfo(factionId, regions, movingUnits, productionQueues, factionBonuses);
+      const capInfo = getCommandPowerInfo(factionId, regions, movingUnits, productionQueues, factionBonuses);
       console.log(
-        `[AI] ${factionId} reached division cap. Current: ${capInfo.current}, In Production: ${capInfo.inProduction}, Cap: ${capInfo.cap}`
+        `[AI] ${factionId} reached command power limit. Current: ${capInfo.current}, In Production: ${capInfo.inProduction}, Cap: ${capInfo.cap}`
       );
       break;
     }

@@ -2,7 +2,7 @@
 
 import { RegionState, Adjacency, FactionId, ActiveCombat } from '../../types/game';
 import { FACTION_COLORS, getAdjacentRegions } from '../../utils/mapUtils';
-import { MAJOR_CITY_CAP_BONUS, DIVISIONS_PER_STATE } from '../../utils/divisionCap';
+import { MAJOR_CITY_CAP_BONUS, DIVISIONS_PER_STATE } from '../../utils/commandPower';
 
 interface RegionTooltipProps {
   hoveredRegion: string;
@@ -98,9 +98,9 @@ export function RegionInfoPanel({
           Country: {region.countryIso3}
         </div>
         
-        {/* Division cap contribution */}
+        {/* Command power contribution */}
         <div className="rounded bg-stone-800 p-2 mt-2">
-          <div className="text-xs font-semibold text-stone-300 mb-1">Division Cap Contribution:</div>
+          <div className="text-xs font-semibold text-stone-300 mb-1">Command Power Contribution:</div>
           <div className="space-y-1">
             <div className="flex items-center justify-between text-xs">
               <span className="text-stone-400">Base:</span>
