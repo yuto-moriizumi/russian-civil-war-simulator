@@ -33,6 +33,7 @@ export const initialGameState: GameState = {
     white: [],
     finland: [],
     ukraine: [],
+    don: [],
     neutral: [],
     foreign: [],
   },
