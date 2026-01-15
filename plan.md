@@ -5,7 +5,7 @@ Transform the mission reward system from money-based to gameplay bonuses that pr
 - **Attack Bonus**: Increases division attack power
 - **Defence Bonus**: Increases division defence power
 - **HP Bonus**: Increases division max HP
-- **Division Cap Increase**: Adds extra divisions beyond the base cap
+- **Command Power Increase**: Adds extra divisions beyond the base cap
 - **Production Speed Bonus**: Reduces division production time
 
 ## Design Specifications
@@ -14,7 +14,7 @@ Based on requirements:
 - ✅ **Bonuses apply to ALL divisions** (existing + future)
 - ✅ **Additive stacking** across missions
 - ✅ **Conservative scaling** for balanced progression
-- ✅ **Flat division cap bonuses** (+3 divisions per mission)
+- ✅ **Flat command power bonuses** (+3 divisions per mission)
 - ✅ **Percentage-based production speed** reduction (15-20%)
 - ✅ **Unique faction themes** for distinct playstyles
 
@@ -33,7 +33,7 @@ export interface MissionRewards {
   attackBonus?: number;        // +2, +3, +5
   defenceBonus?: number;        // +1, +2, +3
   hpBonus?: number;             // +10, +20, +30
-  divisionCapBonus?: number;    // +3 flat divisions
+  commandPowerBonus?: number;    // +3 flat divisions
   productionSpeedBonus?: number; // 0.15, 0.20 (15%, 20% reduction)
   gameVictory?: boolean;
 }
@@ -48,7 +48,7 @@ export interface FactionBonuses {
   defenceBonus: number;
   hpBonus: number;
   maxHpBonus: number;
-  divisionCapBonus: number;
+  commandPowerBonus: number;
   productionSpeedMultiplier: number; // 1.0 = normal, 0.8 = 20% faster
 }
 ```
@@ -159,15 +159,15 @@ Add initial `factionBonuses` with zero bonuses for all factions.
 - Replace hardcoded stats with `getDivisionStats(factionId, factionBonuses)`
 - Ensure new divisions get current faction bonuses
 
-### 3.5 Update Division Cap Calculation
+### 3.5 Update Command Power Calculation
 
-**File:** `app/utils/divisionCap.ts`
+**File:** `app/utils/commandPower.ts`
 
-**Function:** `calculateDivisionCap`
+**Function:** `calculateCommandPower`
 
 **Changes:**
 ```typescript
-export function calculateDivisionCap(
+export function calculateCommandPower(
   factionId: FactionId,
   regions: RegionState,
   factionBonuses: FactionBonuses  // NEW PARAMETER
@@ -177,7 +177,7 @@ export function calculateDivisionCap(
   ).length;
   
   const baseCap = controlledStates * DIVISIONS_PER_STATE;
-  const bonusCap = factionBonuses.divisionCapBonus;
+  const bonusCap = factionBonuses.commandPowerBonus;
   
   return baseCap + bonusCap;
 }
@@ -292,7 +292,7 @@ Defence: 11 (+1)
 5. ✏️ `app/store/game/productionActions.ts` - Production time
 6. ✏️ `app/store/game/tickHelpers/productionProcessing.ts` - Division creation
 7. ✏️ `app/utils/combat.ts` - createDivision function
-8. ✏️ `app/utils/divisionCap.ts` - Cap calculation
+8. ✏️ `app/utils/commandPower.ts` - Command power calculation
 9. ✏️ `app/store/game/missionHelpers.ts` - Condition evaluation
 10. ✏️ `app/components/MissionNode.tsx` - Reward display
 11. ✏️ `app/components/MissionPanel.tsx` - Reward display

@@ -82,11 +82,11 @@ export default function TreasuryButton({
               </span>
             </div>
             
-            {/* Division Cap Info */}
+            {/* Command Power Info */}
             {divisionCap !== undefined && controlledStates !== undefined && (
               <>
                 <div className="border-t border-stone-700 my-1"></div>
-                <div className="text-xs text-stone-400 mb-1">Division Cap</div>
+                <div className="text-xs text-stone-400 mb-1">Command Power</div>
                 <div className="flex items-center justify-between">
                   <span className="text-stone-300">Active Divisions:</span>
                   <span className="text-blue-400 font-semibold">{unitCount} / {divisionCap}</span>

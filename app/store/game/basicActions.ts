@@ -122,7 +122,7 @@ export const createBasicActions = (
         if (mission.rewards.attackBonus) rewardParts.push(`+${mission.rewards.attackBonus} Attack`);
         if (mission.rewards.defenceBonus) rewardParts.push(`+${mission.rewards.defenceBonus} Defence`);
         if (mission.rewards.hpBonus) rewardParts.push(`+${mission.rewards.hpBonus} HP`);
-        if (mission.rewards.divisionCapBonus) rewardParts.push(`+${mission.rewards.divisionCapBonus} Division Cap`);
+        if (mission.rewards.commandPowerBonus) rewardParts.push(`+${mission.rewards.commandPowerBonus} Command Power`);
         if (mission.rewards.productionSpeedBonus) {
           const percentReduction = Math.round(mission.rewards.productionSpeedBonus * 100);
           rewardParts.push(`+${percentReduction}% Production Speed`);
@@ -204,7 +204,7 @@ export const createBasicActions = (
         });
         
         console.log(`[MISSION CLAIMED] ${mission.name} - Applied bonuses to ${factionId} divisions`);
-        console.log(`[BONUSES] Attack: +${newFactionBonuses.attackBonus}, Defence: +${newFactionBonuses.defenceBonus}, HP: +${newFactionBonuses.hpBonus}, Cap: +${newFactionBonuses.divisionCapBonus}, Prod Speed: ${newFactionBonuses.productionSpeedMultiplier.toFixed(2)}x`);
+        console.log(`[BONUSES] Attack: +${newFactionBonuses.attackBonus}, Defence: +${newFactionBonuses.defenceBonus}, HP: +${newFactionBonuses.hpBonus}, Command Power: +${newFactionBonuses.commandPowerBonus}, Prod Speed: ${newFactionBonuses.productionSpeedMultiplier.toFixed(2)}x`);
         
         return {
           missions: updatedMissions,
