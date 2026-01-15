@@ -8,6 +8,9 @@ interface TreasuryButtonProps {
   grossIncome: number;
   maintenanceCost: number;
   unitCount: number;
+  divisionCap?: number;
+  controlledStates?: number;
+  inProduction?: number;
 }
 
 export default function TreasuryButton({
@@ -16,6 +19,9 @@ export default function TreasuryButton({
   grossIncome,
   maintenanceCost,
   unitCount,
+  divisionCap,
+  controlledStates,
+  inProduction,
 }: TreasuryButtonProps) {
   const [showTreasuryDetails, setShowTreasuryDetails] = useState(false);
   const treasuryRef = useRef<HTMLDivElement>(null);
@@ -75,6 +81,28 @@ export default function TreasuryButton({
                 {income >= 0 ? '+' : ''}${income}/h
               </span>
             </div>
+            
+            {/* Division Cap Info */}
+            {divisionCap !== undefined && controlledStates !== undefined && (
+              <>
+                <div className="border-t border-stone-700 my-1"></div>
+                <div className="text-xs text-stone-400 mb-1">Division Cap</div>
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-300">Active Divisions:</span>
+                  <span className="text-blue-400 font-semibold">{unitCount} / {divisionCap}</span>
+                </div>
+                {inProduction !== undefined && inProduction > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-stone-300">In Production:</span>
+                    <span className="text-emerald-400">+{inProduction}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-300">States Controlled:</span>
+                  <span className="text-stone-400">{controlledStates} (×2 = {divisionCap})</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

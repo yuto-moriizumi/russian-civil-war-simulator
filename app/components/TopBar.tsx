@@ -19,6 +19,9 @@ interface TopBarProps {
   showSavedIndicator: boolean;
   productionQueue: Record<FactionId, ProductionQueueItem[]>;
   mapMode: MapMode;
+  divisionCap?: number;
+  controlledStates?: number;
+  inProduction?: number;
   onTogglePlay: () => void;
   onChangeSpeed: (speed: GameSpeed) => void;
   onSaveGame: () => void;
@@ -41,6 +44,9 @@ export default function TopBar({
   showSavedIndicator,
   productionQueue,
   mapMode,
+  divisionCap,
+  controlledStates,
+  inProduction,
   onTogglePlay,
   onChangeSpeed,
   onSaveGame,
@@ -92,6 +98,9 @@ export default function TopBar({
           grossIncome={grossIncome}
           maintenanceCost={maintenanceCost}
           unitCount={unitCount}
+          divisionCap={divisionCap}
+          controlledStates={controlledStates}
+          inProduction={inProduction}
         />
 
         {/* Production Queue Button */}

@@ -1,6 +1,7 @@
 import { GameStore } from './types';
 import { ProductionQueueItem } from '../../types/game';
 import { getOrdinalSuffix } from '../../utils/eventUtils';
+import { canProduceDivision, getDivisionCapInfo } from '../../utils/divisionCap';
 
 const DIVISION_COST = 10; // Cost to produce a division
 const PRODUCTION_TIME_HOURS = 24; // 24 game hours to produce a division
@@ -26,6 +27,25 @@ export const createProductionActions = (
     if (!state.selectedCountry) {
       console.warn('No country selected');
       return;
+    }
+
+    // Check division cap
+    if (!canProduceDivision(
+      state.selectedCountry.id,
+      state.regions,
+      state.movingUnits,
+      state.productionQueues
+    )) {
+      const capInfo = getDivisionCapInfo(
+        state.selectedCountry.id,
+        state.regions,
+        state.movingUnits,
+        state.productionQueues
+      );
+      console.warn(
+        `Division cap reached! Current: ${capInfo.current}, In Production: ${capInfo.inProduction}, Cap: ${capInfo.cap} (${capInfo.controlledStates} states × 2)`
+      );
+      return false;
     }
 
     // Find the army group

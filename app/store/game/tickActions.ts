@@ -117,7 +117,7 @@ export const createTickActions = (
     if (aiStates.length > 0) {
       // Process each AI faction
       nextAIStates = aiStates.map(aiState => {
-        const aiActions = runAITick(aiState, nextRegions, nextArmyGroups, nextCombats, remainingMovements, nextProductionQueues[aiState.factionId] || []);
+        const aiActions = runAITick(aiState, nextRegions, nextArmyGroups, nextCombats, remainingMovements, nextProductionQueues[aiState.factionId] || [], nextProductionQueues);
         
         // If AI created a new army group, add it
         if (aiActions.newArmyGroup) {

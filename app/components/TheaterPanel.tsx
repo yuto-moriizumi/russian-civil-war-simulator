@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Theater, ArmyGroup, RegionState, FactionId, Movement, ProductionQueueItem } from '../types/game';
 import { getArmyGroupUnitCount } from '../utils/pathfinding';
+import { canProduceDivision } from '../utils/divisionCap';
 
 interface TheaterPanelProps {
   theaters: Theater[];
@@ -72,6 +73,7 @@ export default function TheaterPanel({
         const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerFaction, group.id, movingUnits);
         const queueCount = (productionQueue[playerFaction] || []).filter(p => p.armyGroupId === group.id).length;
         const isGroupSelected = selectedGroupId === group.id;
+        const canProduce = canProduceDivision(playerFaction, regions, movingUnits, productionQueue);
 
         return (
           <div
@@ -200,11 +202,19 @@ export default function TheaterPanel({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onDeployToGroup(group.id);
+                if (canProduce) {
+                  onDeployToGroup(group.id);
+                }
               }}
-              className="w-full bg-blue-700 py-2 text-[10px] font-black text-white hover:bg-blue-600 transition-colors shrink-0"
+              disabled={!canProduce}
+              className={`w-full py-2 text-[10px] font-black text-white transition-colors shrink-0 ${
+                canProduce
+                  ? 'bg-blue-700 hover:bg-blue-600 cursor-pointer'
+                  : 'bg-stone-700 cursor-not-allowed opacity-50'
+              }`}
+              title={canProduce ? 'Deploy new division' : 'Division cap reached! Capture more states to increase cap.'}
             >
-              DEPLOY
+              {canProduce ? 'DEPLOY' : 'CAP REACHED'}
             </button>
           </div>
         );
