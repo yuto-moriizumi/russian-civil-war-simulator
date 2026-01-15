@@ -12,6 +12,11 @@ export const DIVISIONS_PER_STATE = 1;
 export const DIVISION_CAP_PER_UNIT = 2;
 
 /**
+ * Base division cap provided to all factions
+ */
+export const BASE_DIVISION_CAP = 4;
+
+/**
  * Cap bonuses for major cities
  * These regions provide additional divisions beyond the base amount
  */
@@ -35,7 +40,7 @@ export function calculateDivisionCap(
   regions: RegionState,
   factionBonuses: FactionBonuses
 ): number {
-  let totalCap = 0;
+  let totalCap = BASE_DIVISION_CAP;
 
   // Iterate through all controlled regions
   Object.entries(regions).forEach(([regionId, region]) => {
