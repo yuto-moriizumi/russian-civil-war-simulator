@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600">
+  <!-- Historical RSFSR Flag (1918-1937): Plain red with "РСФСР" in gold -->
+  
+  <!-- Red background -->
+  <rect width="900" height="600" fill="#DA0000"/>
+  
+  <!-- "РСФСР" text in gold (RSFSR in Cyrillic) -->
+  <g transform="translate(50, 80)">
+    <!-- Р (R) -->
+    <text x="0" y="0" font-family="serif" font-size="80" font-weight="bold" fill="#FFD700">РСФСР</text>
+  </g>
+</svg>

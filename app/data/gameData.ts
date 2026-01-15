@@ -37,6 +37,13 @@ export const countries: Country[] = [
     flag: '/images/flags/don.svg',
     color: '#FFD700',
   },
+  {
+    id: 'fswr',
+    name: "Finnish Socialist Workers' Republic",
+    flag: '/images/flags/fswr.svg',
+    color: '#CC0000',
+    selectable: false,
+  },
 ];
 
 // Soviet Mission Tree (Offense-focused: Attack > HP > Defence)

@@ -20,6 +20,7 @@ const FACTION_NAMES: Record<FactionId, string> = {
   finland: 'Finland',
   ukraine: 'Ukraine',
   don: 'Don Republic',
+  fswr: "Finnish Socialist Workers' Republic",
   neutral: 'Neutral',
   foreign: 'Foreign',
 };
@@ -50,7 +51,7 @@ export default function CountrySidebar({
   const countryName = country?.name || FACTION_NAMES[countryId];
 
   // Get relationships from this country to others
-  const otherFactions: FactionId[] = ['soviet', 'white', 'finland', 'ukraine', 'don', 'neutral', 'foreign'].filter(
+  const otherFactions: FactionId[] = ['soviet', 'white', 'finland', 'ukraine', 'don', 'fswr', 'neutral', 'foreign'].filter(
     f => f !== countryId
   ) as FactionId[];
 
@@ -76,7 +77,7 @@ export default function CountrySidebar({
 
   const playerToTargetStatus = getRelationshipStatus(playerFaction, countryId);
   const targetToPlayerStatus = getRelationshipStatus(countryId, playerFaction);
-  const isPlayable = countryId === 'soviet' || countryId === 'white' || countryId === 'finland' || countryId === 'ukraine' || countryId === 'don';
+  const isPlayable = countryId === 'soviet' || countryId === 'white' || countryId === 'finland' || countryId === 'ukraine' || countryId === 'don' || countryId === 'fswr';
 
   return (
     <SidebarPanel

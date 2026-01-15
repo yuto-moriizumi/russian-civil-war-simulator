@@ -27,7 +27,7 @@ export default function CountrySelectScreen({ onSelectCountry, onBack }: Country
 
       {/* Country selection */}
       <div className="relative z-10 flex min-h-[calc(100vh-80px)] flex-col items-center justify-center gap-8 px-4 md:flex-row md:gap-16">
-        {countries.map((country) => (
+        {countries.filter(c => c.selectable !== false).map((country) => (
           <button
             key={country.id}
             onClick={() => onSelectCountry(country)}

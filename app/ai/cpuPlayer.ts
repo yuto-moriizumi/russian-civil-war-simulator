@@ -23,6 +23,7 @@ export function createInitialAIArmyGroup(factionId: FactionId, regions: RegionSt
     finland: 'Finnish Army Group',
     ukraine: 'Ukrainian Army Group',
     don: 'Don Cossack Army Group',
+    fswr: 'Red Guard Army Group',
   };
   const name = nameMap[factionId] || 'Army Group';
   
@@ -63,6 +64,7 @@ function generateAIDivisionName(factionId: FactionId, regions: RegionState, prod
     finland: 'Finnish Guard',
     ukraine: 'Ukrainian Guard',
     don: 'Don Cossack',
+    fswr: 'Red Guard',
   };
   const prefix = prefixMap[factionId] || 'Guard';
   
@@ -136,9 +138,10 @@ export function runAITick(
     const nameMap: Record<string, string> = {
       soviet: 'Soviet Army Group',
       white: 'White Army Group',
-      finland: 'Finnish Army Group',
-      ukraine: 'Ukrainian Army Group',
-    };
+    finland: 'Finnish Army Group',
+    ukraine: 'Ukrainian Army Group',
+    fswr: 'Red Guard Army Group',
+  };
     const name = nameMap[factionId] || 'Army Group';
     
     newArmyGroup = {

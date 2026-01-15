@@ -78,6 +78,7 @@ function getFirstGroupName(faction: FactionId): string {
     finland: 'Finnish Defense Forces',
     ukraine: 'Ukrainian Army',
     don: 'Don Cossack Host',
+    fswr: 'Red Guard Army Group',
     neutral: '1st Army',
     foreign: 'Expeditionary Force',
   };
