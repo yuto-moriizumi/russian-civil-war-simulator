@@ -148,7 +148,7 @@ export default function GameMap({
     (e: MapLayerMouseEvent) => {
       const features = e.features;
       if (features && features.length > 0) {
-        const regionId = features[0].properties?.shapeISO;
+        const regionId = features[0].properties?.regionId || features[0].properties?.shapeISO;
         if (regionId) {
           // If clicking on same region, deselect
           if (regionId === selectedRegion) {
@@ -175,7 +175,7 @@ export default function GameMap({
       e.preventDefault();
       const features = e.features;
       if (features && features.length > 0) {
-        const targetRegionId = features[0].properties?.shapeISO;
+        const targetRegionId = features[0].properties?.regionId || features[0].properties?.shapeISO;
         const currentSelectedUnit = selectedUnitRegionRef.current;
         
         let moved = false;
@@ -257,7 +257,7 @@ export default function GameMap({
           id="regions"
           type="geojson"
           data="/map/regions.geojson"
-          promoteId="shapeISO"
+          promoteId="regionId"
         >
           <Layer id="regions-fill" type="fill" paint={fillPaint} />
           <Layer id="regions-border" type="line" paint={linePaint} />
