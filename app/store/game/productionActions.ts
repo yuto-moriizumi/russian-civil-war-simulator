@@ -96,16 +96,28 @@ export const createProductionActions = (
     const now = state.dateTime;
     const productionTimeHours = getBaseProductionTime(state.factionBonuses[state.selectedCountry.id]);
 
+    // Calculate the start time for the first new production
+    // If queue is empty, start immediately. Otherwise, start after the last item completes.
+    let queueStartTime = now;
+    if (playerQueue.length > 0) {
+      // Find the completion time of the last item in the existing queue
+      const lastItem = playerQueue[playerQueue.length - 1];
+      queueStartTime = lastItem.completionTime;
+    }
+
     for (let i = 0; i < actualCount; i++) {
       const divisionNumber = existingDivisions + existingQueueCount + newProductions.length + 1;
       const divisionName = `${divisionNumber}${getOrdinalSuffix(divisionNumber)} Infantry Division`;
-      const completionTime = new Date(now.getTime() + productionTimeHours * 60 * 60 * 1000);
+      
+      // Each item starts when the previous item completes
+      const itemStartTime = new Date(queueStartTime.getTime() + (i * productionTimeHours * 60 * 60 * 1000));
+      const completionTime = new Date(itemStartTime.getTime() + productionTimeHours * 60 * 60 * 1000);
 
       newProductions.push({
         id: `prod-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         divisionName,
         owner: state.selectedCountry.id,
-        startTime: now,
+        startTime: itemStartTime,
         completionTime,
         targetRegionId,
         armyGroupId,
@@ -162,13 +174,27 @@ export const createProductionActions = (
     // Filter out the cancelled production
     const filteredQueue = playerQueue.filter(p => p.id !== productionId);
 
-    // If we cancelled the first item, the next item automatically starts
-    // No need to reset timing since each item already has its own 24-hour timer
+    // If we cancelled the first item, adjust the new first item's timing to start now
+    const finalQueue = isFirstItem && filteredQueue.length > 0
+      ? (() => {
+          const nextItem = filteredQueue[0];
+          const productionDuration = nextItem.completionTime.getTime() - nextItem.startTime.getTime();
+          
+          return [
+            {
+              ...nextItem,
+              startTime: state.dateTime,
+              completionTime: new Date(state.dateTime.getTime() + productionDuration),
+            },
+            ...filteredQueue.slice(1)
+          ];
+        })()
+      : filteredQueue;
     
     set((state) => ({
       productionQueues: {
         ...state.productionQueues,
-        [state.selectedCountry!.id]: filteredQueue,
+        [state.selectedCountry!.id]: finalQueue,
       },
       gameEvents: [
         ...state.gameEvents,
