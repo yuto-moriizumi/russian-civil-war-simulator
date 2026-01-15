@@ -33,4 +33,5 @@ export const initialGameState: GameState = {
     { fromFaction: 'white', toFaction: 'ukraine', type: 'autonomy' }
   ], // Initially no relationships (all neutral)
   mapMode: 'country', // Default map mode
+  regionCentroids: {}, // Will be loaded asynchronously
 };

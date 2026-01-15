@@ -84,6 +84,9 @@ export interface GameStore extends GameState {
   // Map Mode Actions
   setMapMode: (mode: MapMode) => void;
   
+  // Centroid Initialization
+  initializeCentroids: () => Promise<void>;
+  
   // Persistence Actions
   saveGame: () => void;
   loadGame: (savedData: { gameState: GameState; regions: RegionState; aiStates: AIState[] }) => void;

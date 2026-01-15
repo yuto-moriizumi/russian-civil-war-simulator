@@ -5,6 +5,7 @@ import { generateArmyGroupName } from '../../utils/armyGroupNaming';
 import { ARMY_GROUP_COLORS } from './initialState';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
+import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 
 /**
  * Defines actions related to army group management:
@@ -240,7 +241,12 @@ export const createArmyGroupActions = (
       // Create the movement with only the divisions from this group
       const divisionsToMove = divisionsInGroup;
       const remainingDivisions = region.divisions.filter(d => d.armyGroupId !== groupId);
-      const travelTimeHours = 6;
+      
+      // Calculate distance-based travel time
+      const { regionCentroids } = get();
+      const distanceKm = calculateDistance(regionId, nextStep, regionCentroids);
+      const travelTimeHours = calculateTravelTime(distanceKm, false);
+      
       const arrivalTime = new Date(dateTime);
       arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
 
@@ -451,7 +457,11 @@ export const createArmyGroupActions = (
             );
             if (groupAlreadyMoving) return;
             
-            const travelTimeHours = 6;
+            // Calculate distance-based travel time
+            const { regionCentroids } = get();
+            const distanceKm = calculateDistance(sourceRegionId, borderRegionId, regionCentroids);
+            const travelTimeHours = calculateTravelTime(distanceKm, false);
+            
             const arrivalTime = new Date(dateTime);
             arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
 

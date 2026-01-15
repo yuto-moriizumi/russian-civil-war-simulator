@@ -5,6 +5,7 @@ import { createGameEvent, createNotification } from '../../utils/eventUtils';
 import { initialGameState } from './initialState';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
+import * as turf from '@turf/turf';
 
 /**
  * Defines basic state management actions:
@@ -172,4 +173,24 @@ export const createBasicActions = (
   },
 
   setMapMode: (mode: MapMode) => set({ mapMode: mode }),
+
+  initializeCentroids: async () => {
+    try {
+      const response = await fetch('/map/regions.geojson');
+      const geojson = await response.json();
+      
+      const centroids: Record<string, [number, number]> = {};
+      geojson.features.forEach((feature: any) => {
+        const id = feature.properties.shapeISO;
+        const centroid = turf.centroid(feature);
+        const coords = centroid.geometry.coordinates;
+        centroids[id] = [coords[0], coords[1]];
+      });
+      
+      set({ regionCentroids: centroids });
+      console.log(`Loaded ${Object.keys(centroids).length} region centroids`);
+    } catch (error) {
+      console.error('Failed to load region centroids:', error);
+    }
+  },
 });

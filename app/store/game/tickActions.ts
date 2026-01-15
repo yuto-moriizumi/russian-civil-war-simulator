@@ -33,7 +33,7 @@ export const createTickActions = (
     const state = get();
     if (!state.isPlaying) return;
 
-    const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, money, aiStates, gameEvents, notifications, armyGroups, productionQueue, relationships } = state;
+    const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, money, aiStates, gameEvents, notifications, armyGroups, productionQueue, relationships, regionCentroids } = state;
     
     // Step 1: Validate divisions (development mode only)
     const { updatedRegions, updatedMovingUnits } = validateDivisions(regions, movingUnits, armyGroups);
@@ -80,7 +80,7 @@ export const createTickActions = (
     const { remainingMovements, completedMovements } = processMovements(updatedMovingUnits, newDate);
 
     // Step 5: Process active combats
-    const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements } = processCombats(activeCombats, newDate, regionsAfterProduction, adjacency);
+    const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements } = processCombats(activeCombats, newDate, regionsAfterProduction, adjacency, regionCentroids);
 
     // Step 6: Apply completed movements to regions
     let nextRegions: typeof regionsAfterProduction;

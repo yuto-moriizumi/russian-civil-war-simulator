@@ -1,6 +1,7 @@
 import { ActiveCombat, GameEvent, NotificationItem, RegionState, Adjacency, Movement } from '../../../types/game';
 import { processCombatRound, shouldProcessCombatRound } from '../../../utils/combat';
 import { createGameEvent } from '../../../utils/eventUtils';
+import { calculateDistance, calculateTravelTime } from '../../../utils/distance';
 
 interface CombatProcessingResult {
   updatedCombats: ActiveCombat[];
@@ -17,7 +18,8 @@ export function processCombats(
   activeCombats: ActiveCombat[],
   currentDate: Date,
   regions: RegionState,
-  adjacency: Adjacency
+  adjacency: Adjacency,
+  regionCentroids: Record<string, [number, number]>
 ): CombatProcessingResult {
   const updatedCombats: ActiveCombat[] = [];
   const finishedCombats: ActiveCombat[] = [];
@@ -46,8 +48,10 @@ export function processCombats(
       // Convert retreating divisions to movements
       result.retreatingDivisions.forEach(({ division, toRegionId, fromRegionId }) => {
         if (toRegionId) {
-          // Create a retreat movement (faster than normal movement - 3 hours instead of 6)
-          const travelTimeHours = 3;
+          // Create a retreat movement (faster than normal movement - 2x speed = 8 km/h)
+          const distanceKm = calculateDistance(fromRegionId, toRegionId, regionCentroids);
+          const travelTimeHours = calculateTravelTime(distanceKm, true); // true = retreat speed
+          
           const arrivalTime = new Date(currentDate);
           arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
           
