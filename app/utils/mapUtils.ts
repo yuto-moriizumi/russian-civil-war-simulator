@@ -8,6 +8,7 @@ export const FACTION_COLORS: Record<FactionId, string> = {
   finland: '#FFFFFF',     // White (Finnish white guard color)
   ukraine: '#0057B7',     // Blue (Ukrainian national color)
   don: '#FFD700',         // Gold (Don Republic)
+  fswr: '#CC0000',        // Red (Finnish Socialist Workers' Republic)
   neutral: '#808080',     // Gray
   foreign: '#4A90D9',     // Blue
 };

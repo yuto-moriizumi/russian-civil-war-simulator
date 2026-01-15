@@ -1,16 +1,17 @@
 export type Screen = 'title' | 'countrySelect' | 'main' | 'mission';
 
 // Player-selectable factions (subset of FactionId)
-export type CountryId = 'soviet' | 'white' | 'finland' | 'ukraine' | 'don';
+export type CountryId = 'soviet' | 'white' | 'finland' | 'ukraine' | 'don' | 'fswr';
 
 // Faction types for map control
-export type FactionId = 'soviet' | 'white' | 'finland' | 'ukraine' | 'don' | 'neutral' | 'foreign';
+export type FactionId = 'soviet' | 'white' | 'finland' | 'ukraine' | 'don' | 'fswr' | 'neutral' | 'foreign';
 
 export interface Country {
   id: CountryId;
   name: string;
   flag: string;
   color: string;
+  selectable?: boolean;
 }
 
 // Division represents a military unit with combat stats
