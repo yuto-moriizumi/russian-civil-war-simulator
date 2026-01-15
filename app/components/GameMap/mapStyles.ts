@@ -132,7 +132,7 @@ export function createValueFillColorExpression(regions: RegionState) {
     }
   };
   
-  for (const [id, region] of Object.entries(regions)) {
+  for (const id of Object.keys(regions)) {
     const capContribution = getCapContribution(id);
     const normalized = range > 0 ? (capContribution - minValue) / range : 0.5;
     const color = interpolateColor(normalized);
