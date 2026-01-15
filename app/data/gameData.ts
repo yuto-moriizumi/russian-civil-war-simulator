@@ -399,7 +399,7 @@ const donMissions: Mission[] = [
     description: 'Establish the independent Don Cossack Republic',
     completed: false,
     claimed: false,
-    rewards: { money: 100 },
+    rewards: { hpBonus: 10, attackBonus: 1 },
     prerequisites: [],
     available: [
       { type: 'hasUnits', count: 3 }, // Recruit initial Cossack forces
@@ -412,7 +412,7 @@ const donMissions: Mission[] = [
     description: 'Consolidate control over Don Cossack territories',
     completed: false,
     claimed: false,
-    rewards: { money: 150 },
+    rewards: { divisionCapBonus: 3, defenceBonus: 1 },
     prerequisites: ['don_independence'],
     available: [
       { type: 'controlRegions', regionIds: ['RU-ROS', 'RU-VGG'] }, // Control both starting regions
@@ -426,10 +426,10 @@ const donMissions: Mission[] = [
     description: 'Strengthen the Ataman\'s military and political control',
     completed: false,
     claimed: false,
-    rewards: { money: 200 },
+    rewards: { productionSpeedBonus: 0.15, attackBonus: 1 },
     prerequisites: ['don_independence'],
     available: [
-      { type: 'hasMoney', amount: 400 }, // Demonstrate economic stability
+      { type: 'controlRegionCount', count: 4 }, // Demonstrate control
       { type: 'combatVictories', count: 1 }, // Win a defensive battle
     ],
   },
@@ -440,7 +440,7 @@ const donMissions: Mission[] = [
     description: 'Secure neighboring territories to protect the Don homeland',
     completed: false,
     claimed: false,
-    rewards: { money: 250 },
+    rewards: { attackBonus: 2, defenceBonus: 2 },
     prerequisites: ['don_consolidate', 'don_ataman'],
     available: [
       { type: 'controlRegionCount', count: 5 }, // Expand beyond starting regions
@@ -454,7 +454,7 @@ const donMissions: Mission[] = [
     description: 'Forge alliance with neighboring Kuban Cossacks',
     completed: false,
     claimed: false,
-    rewards: { money: 300 },
+    rewards: { hpBonus: 20, divisionCapBonus: 3 },
     prerequisites: ['don_expansion'],
     available: [
       { type: 'controlRegion', regionId: 'RU-KDA' }, // Control Krasnodar Krai (Kuban)
@@ -468,7 +468,7 @@ const donMissions: Mission[] = [
     description: 'Establish the Don Republic as a major power in the South',
     completed: false,
     claimed: false,
-    rewards: { money: 500, gameVictory: true },
+    rewards: { attackBonus: 3, defenceBonus: 3, gameVictory: true },
     prerequisites: ['don_kuban'],
     available: [
       { type: 'controlRegionCount', count: 12 }, // Control significant southern territory

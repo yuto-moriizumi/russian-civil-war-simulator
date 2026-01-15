@@ -48,6 +48,7 @@ export const initialGameState: GameState = {
     white: getInitialFactionBonuses(),
     finland: getInitialFactionBonuses(),
     ukraine: getInitialFactionBonuses(),
+    don: getInitialFactionBonuses(),
     neutral: getInitialFactionBonuses(),
     foreign: getInitialFactionBonuses(),
   },
