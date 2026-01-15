@@ -11,8 +11,6 @@ export function formatCondition(condition: MissionCondition): string {
       return `Control at least ${condition.count} regions`;
     case 'hasUnits':
       return `Have at least ${condition.count} divisions`;
-    case 'hasMoney':
-      return `Have at least ${condition.amount} money`;
     case 'dateAfter':
       return `Current date is after ${condition.date.replace(/-/g, '/')}`;
     case 'combatVictories':

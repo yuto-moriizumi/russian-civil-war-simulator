@@ -1,8 +1,8 @@
-import { calculateFactionIncome } from '../../utils/mapUtils';
 import { runAITick } from '../../ai/cpuPlayer';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
 import { ProductionQueueItem, FactionId } from '../../types/game';
+import { getBaseProductionTime } from '../../utils/bonusCalculator';
 import { 
   validateDivisions, 
   processMovements, 
@@ -34,7 +34,7 @@ export const createTickActions = (
     const state = get();
     if (!state.isPlaying) return;
 
-    const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, money, aiStates, gameEvents, notifications, armyGroups, productionQueues, relationships, regionCentroids, scheduledEvents } = state;
+    const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, aiStates, gameEvents, notifications, armyGroups, productionQueues, relationships, regionCentroids, scheduledEvents } = state;
     
     // Step 1: Validate divisions (development mode only)
     const { updatedRegions, updatedMovingUnits } = validateDivisions(regions, movingUnits, armyGroups);
@@ -71,12 +71,9 @@ export const createTickActions = (
         expiresAt: new Date(dateTime.getTime() + 6 * 60 * 60 * 1000), // 6 hours
       }));
     
-    // Step 3: Calculate income and advance time
-    const playerFaction = selectedCountry?.id;
-    const playerIncome = playerFaction ? calculateFactionIncome(regionsAfterProduction, playerFaction, updatedMovingUnits) : 0;
+    // Step 3: Advance time
     const newDate = new Date(dateTime);
     newDate.setHours(newDate.getHours() + 1);
-    const newMoney = money + playerIncome;
     
     // Step 3.5: Process scheduled events (historical events that trigger on specific dates)
     const {
@@ -153,9 +150,11 @@ export const createTickActions = (
         if (aiActions.productionRequests.length > 0) {
           // Get or initialize the faction's queue
           const factionQueue = nextProductionQueues[aiState.factionId] || [];
+          const bonuses = state.factionBonuses[aiState.factionId];
+          const productionTimeHours = getBaseProductionTime(bonuses);
           
           aiActions.productionRequests.forEach(req => {
-            const completionTime = new Date(newDate.getTime() + 24 * 60 * 60 * 1000); // 24 hours production
+            const completionTime = new Date(newDate.getTime() + productionTimeHours * 60 * 60 * 1000);
             factionQueue.push({
               id: `prod-ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               divisionName: req.divisionName,
@@ -185,8 +184,6 @@ export const createTickActions = (
     // Update state first so actions have latest data
     set({
       dateTime: newDate,
-      money: newMoney,
-      income: playerIncome,
       movingUnits: nextMovingUnits,
       activeCombats: nextCombats,
       regions: nextRegions,

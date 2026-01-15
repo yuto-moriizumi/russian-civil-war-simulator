@@ -89,8 +89,6 @@ interface SerializedGameState {
   dateTime: string;
   isPlaying: boolean;
   gameSpeed: GameSpeed;
-  money: number;
-  income: number;
   missions: Mission[];
   movingUnits: SerializedMovement[];
   gameEvents: SerializedGameEvent[];

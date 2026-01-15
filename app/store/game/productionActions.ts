@@ -4,9 +4,6 @@ import { getOrdinalSuffix } from '../../utils/eventUtils';
 import { canProduceDivision, getDivisionCapInfo } from '../../utils/divisionCap';
 import { getBaseProductionTime } from '../../utils/bonusCalculator';
 
-const DIVISION_COST = 10; // Cost to produce a division
-const PRODUCTION_TIME_HOURS = 24; // Base production time (can be reduced by bonuses)
-
 export const createProductionActions = (
   set: (fn: (state: GameStore) => Partial<GameStore>) => void,
   get: () => GameStore
@@ -21,13 +18,6 @@ export const createProductionActions = (
     // Check if count is valid
     if (count < 1) {
       console.warn('Invalid count for production');
-      return;
-    }
-
-    // Check if player has enough money for all units
-    const totalCost = DIVISION_COST * count;
-    if (state.money < totalCost) {
-      console.warn(`Not enough money to start production. Need $${totalCost}, have $${state.money}`);
       return;
     }
 
@@ -121,7 +111,6 @@ export const createProductionActions = (
         ...state.productionQueues,
         [state.selectedCountry!.id]: [...(state.productionQueues[state.selectedCountry!.id] || []), ...newProductions],
       },
-      money: state.money - totalCost,
       gameEvents: [
         ...state.gameEvents,
         {
@@ -130,8 +119,8 @@ export const createProductionActions = (
           timestamp: now,
           title: 'Production Started',
           description: count === 1 
-            ? `Started production of ${newProductions[0].divisionName}. Will complete in 24 hours.`
-            : `Started production of ${count} divisions. First will complete in 24 hours.`,
+            ? `Started production of ${newProductions[0].divisionName}. Will complete in ${productionTimeHours} hours.`
+            : `Started production of ${count} divisions. First will complete in ${productionTimeHours} hours.`,
           faction: state.selectedCountry?.id,
         },
       ],
@@ -164,9 +153,6 @@ export const createProductionActions = (
     // Check if we're canceling the first (active) item
     const isFirstItem = playerQueue[0]?.id === productionId;
 
-    // Refund 50% of the cost
-    const refund = Math.floor(DIVISION_COST / 2);
-
     // Filter out the cancelled production
     const filteredQueue = playerQueue.filter(p => p.id !== productionId);
 
@@ -178,7 +164,6 @@ export const createProductionActions = (
         ...state.productionQueues,
         [state.selectedCountry!.id]: filteredQueue,
       },
-      money: state.money + refund,
       gameEvents: [
         ...state.gameEvents,
         {
@@ -186,7 +171,7 @@ export const createProductionActions = (
           type: 'production_started', // Reusing event type
           timestamp: state.dateTime,
           title: 'Production Canceled',
-          description: `Canceled production of ${production.divisionName}. Refunded $${refund}.`,
+          description: `Canceled production of ${production.divisionName}.`,
           faction: state.selectedCountry?.id,
         },
       ],

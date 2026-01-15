@@ -40,7 +40,6 @@ export function checkAndCompleteMissions(
     // Check if all availability conditions are met
     const conditionsMet = areMissionConditionsMet(mission, {
       regions: currentState.regions,
-      money: currentState.money,
       dateTime: currentState.dateTime,
       gameEvents: currentState.gameEvents,
       selectedCountry: currentState.selectedCountry!,

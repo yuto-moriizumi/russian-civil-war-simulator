@@ -18,10 +18,9 @@ export const createUnitActions = (
   get: StoreApi<GameStore>['getState']
 ) => ({
   createInfantry: () => {
-    const { money, selectedCountry, dateTime, gameEvents, regions, selectedGroupId, armyGroups, selectedRegion, factionBonuses } = get();
-    const cost = 10;
+    const { selectedCountry, dateTime, gameEvents, regions, selectedGroupId, armyGroups, selectedRegion, factionBonuses } = get();
     
-    if (money >= cost && selectedCountry) {
+    if (selectedCountry) {
       // Find deployment target
       let deploymentTarget: string | null = null;
       let targetGroupId: string | null = selectedGroupId;
@@ -112,7 +111,7 @@ export const createUnitActions = (
       const newEvent = createGameEvent(
         'unit_deployed',
         `Division Trained and Deployed`,
-        `${divisionName} has been trained for $${cost} and deployed to ${targetRegion.name}. HP: ${newDivision.hp}, Attack: ${newDivision.attack}, Defence: ${newDivision.defence}.`,
+        `${divisionName} has been trained and deployed to ${targetRegion.name}. HP: ${newDivision.hp}, Attack: ${newDivision.attack}, Defence: ${newDivision.defence}.`,
         dateTime,
         selectedCountry.id,
         deploymentTarget
@@ -130,7 +129,6 @@ export const createUnitActions = (
       };
 
       set({
-        money: money - cost,
         regions: newRegions,
         gameEvents: [...gameEvents, newEvent],
         notifications: [...get().notifications, newNotification],
