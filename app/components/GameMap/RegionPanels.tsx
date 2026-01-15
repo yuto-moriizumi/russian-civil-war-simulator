@@ -2,6 +2,7 @@
 
 import { RegionState, Adjacency, FactionId, ActiveCombat } from '../../types/game';
 import { FACTION_COLORS, getAdjacentRegions } from '../../utils/mapUtils';
+import { MAJOR_CITY_CAP_BONUS, DIVISIONS_PER_STATE } from '../../utils/divisionCap';
 
 interface RegionTooltipProps {
   hoveredRegion: string;
@@ -96,7 +97,31 @@ export function RegionInfoPanel({
         <div className="text-stone-400">
           Country: {region.countryIso3}
         </div>
-        <div className="text-stone-400">
+        
+        {/* Division cap contribution */}
+        <div className="rounded bg-stone-800 p-2 mt-2">
+          <div className="text-xs font-semibold text-stone-300 mb-1">Division Cap Contribution:</div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-stone-400">Base:</span>
+              <span className="text-green-400">+{DIVISIONS_PER_STATE}</span>
+            </div>
+            {MAJOR_CITY_CAP_BONUS[selectedRegion] && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-stone-400">Major City Bonus:</span>
+                <span className="text-amber-400 font-semibold">+{MAJOR_CITY_CAP_BONUS[selectedRegion]}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between text-xs border-t border-stone-700 pt-1 font-semibold">
+              <span className="text-stone-300">Total Contribution:</span>
+              <span className={MAJOR_CITY_CAP_BONUS[selectedRegion] ? "text-amber-400" : "text-green-400"}>
+                +{DIVISIONS_PER_STATE + (MAJOR_CITY_CAP_BONUS[selectedRegion] || 0)}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="text-stone-400 mt-2">
           Divisions: {region.divisions.length}
         </div>
         {/* Show division combat stats */}
