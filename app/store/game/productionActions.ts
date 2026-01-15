@@ -1,7 +1,7 @@
 import { GameStore } from './types';
 import { ProductionQueueItem } from '../../types/game';
 import { getOrdinalSuffix } from '../../utils/eventUtils';
-import { canProduceDivision, getDivisionCapInfo } from '../../utils/divisionCap';
+import { getDivisionCapInfo, DIVISION_CAP_PER_UNIT } from '../../utils/divisionCap';
 import { getBaseProductionTime } from '../../utils/bonusCalculator';
 
 export const createProductionActions = (
@@ -27,25 +27,31 @@ export const createProductionActions = (
       return;
     }
 
-    // Check division cap
-    if (!canProduceDivision(
+    // Calculate how many divisions we can actually produce based on cap
+    const capInfo = getDivisionCapInfo(
       state.selectedCountry.id,
       state.regions,
       state.movingUnits,
       state.productionQueues,
       state.factionBonuses[state.selectedCountry.id]
-    )) {
-      const capInfo = getDivisionCapInfo(
-        state.selectedCountry.id,
-        state.regions,
-        state.movingUnits,
-        state.productionQueues,
-        state.factionBonuses[state.selectedCountry.id]
-      );
+    );
+    
+    // Convert available slots to available divisions (each division costs DIVISION_CAP_PER_UNIT slots)
+    const availableDivisions = Math.floor(capInfo.available / DIVISION_CAP_PER_UNIT);
+    
+    // Clamp count to available capacity
+    const actualCount = Math.min(count, availableDivisions);
+    
+    if (actualCount === 0) {
       console.warn(
         `Division cap reached! Current: ${capInfo.current}, In Production: ${capInfo.inProduction}, Cap: ${capInfo.cap} (${capInfo.controlledStates} states × 2)`
       );
       return false;
+    }
+    
+    // Log if we had to reduce the count due to cap
+    if (actualCount < count) {
+      console.log(`Requested ${count} divisions, but only ${actualCount} can be produced due to division cap (${availableDivisions} divisions available)`);
     }
 
     // Find the army group
@@ -90,7 +96,7 @@ export const createProductionActions = (
     const now = state.dateTime;
     const productionTimeHours = getBaseProductionTime(state.factionBonuses[state.selectedCountry.id]);
 
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < actualCount; i++) {
       const divisionNumber = existingDivisions + existingQueueCount + newProductions.length + 1;
       const divisionName = `${divisionNumber}${getOrdinalSuffix(divisionNumber)} Infantry Division`;
       const completionTime = new Date(now.getTime() + productionTimeHours * 60 * 60 * 1000);
@@ -118,9 +124,9 @@ export const createProductionActions = (
           type: 'production_started',
           timestamp: now,
           title: 'Production Started',
-          description: count === 1 
+          description: actualCount === 1 
             ? `Started production of ${newProductions[0].divisionName}. Will complete in ${productionTimeHours} hours.`
-            : `Started production of ${count} divisions. First will complete in ${productionTimeHours} hours.`,
+            : `Started production of ${actualCount} divisions. First will complete in ${productionTimeHours} hours.`,
           faction: state.selectedCountry?.id,
         },
       ],
