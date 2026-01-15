@@ -12,13 +12,10 @@ interface ProductionQueuePanelProps {
   armyGroups: ArmyGroup[];
   playerFaction: FactionId;
   currentDateTime: Date;
-  money: number;
   onAddProduction: (divisionName: string, targetRegionId?: string | null) => void;
   onCancelProduction: (productionId: string) => void;
   viewOnly?: boolean; // Hide the "Add Production" section
 }
-
-const DIVISION_COST = 10;
 
 export default function ProductionQueuePanel({
   isOpen,
@@ -28,7 +25,6 @@ export default function ProductionQueuePanel({
   armyGroups,
   playerFaction,
   currentDateTime,
-  money,
   onAddProduction,
   onCancelProduction,
   viewOnly = false,
@@ -45,11 +41,6 @@ export default function ProductionQueuePanel({
   const handleAddProduction = () => {
     if (!divisionName.trim()) {
       alert('Please enter a division name');
-      return;
-    }
-
-    if (money < DIVISION_COST) {
-      alert(`Not enough money. Need $${DIVISION_COST}, have $${money}`);
       return;
     }
 
@@ -116,13 +107,11 @@ export default function ProductionQueuePanel({
               </div>
               <div className="flex items-center justify-between">
                 <div className="text-sm text-stone-400">
-                  Cost: <span className="font-semibold text-amber-500">${DIVISION_COST}</span>
-                  {' • '}
                   Time: <span className="font-semibold text-stone-300">24h</span>
                 </div>
                 <button
                   onClick={handleAddProduction}
-                  disabled={money < DIVISION_COST || !divisionName.trim()}
+                  disabled={!divisionName.trim()}
                   className="rounded bg-amber-600 px-4 py-2 text-sm font-semibold text-stone-900 transition-colors hover:bg-amber-500 disabled:cursor-not-allowed disabled:bg-stone-600 disabled:text-stone-400"
                 >
                   Start
@@ -235,8 +224,8 @@ export default function ProductionQueuePanel({
         {/* Info */}
         <div className="rounded-lg border border-blue-900/50 bg-blue-950/20 p-3">
           <p className="text-[11px] text-blue-300">
-            <strong>Note:</strong> Each division costs $10 and takes 24 game hours. 
-            Cancel for 50% refund. Completed divisions deploy automatically.
+            <strong>Note:</strong> Each division takes 24 game hours to produce. 
+            Completed divisions deploy automatically to their assigned army group.
           </p>
         </div>
       </div>

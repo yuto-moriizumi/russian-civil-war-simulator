@@ -21,8 +21,6 @@ export const initialGameState: GameState = {
   dateTime: new Date(GAME_START_DATE),
   isPlaying: false,
   gameSpeed: 1,
-  money: 100,
-  income: 0,
   missions: initialMissions,
   movingUnits: [],
   gameEvents: [],

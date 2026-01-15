@@ -1,9 +1,5 @@
 import { AIState, FactionId, RegionState, Region, ActiveCombat, Movement, ArmyGroup, ProductionQueueItem, FactionBonuses } from '../types/game';
-import { calculateFactionIncome } from '../utils/mapUtils';
 import { canProduceDivision, getDivisionCapInfo } from '../utils/divisionCap';
-
-// Cost to create one division
-const DIVISION_COST = 10;
 
 /**
  * Creates initial AI state for a faction
@@ -11,8 +7,6 @@ const DIVISION_COST = 10;
 export function createInitialAIState(factionId: FactionId): AIState {
   return {
     factionId,
-    money: 100,
-    income: 0, // Income is now calculated dynamically based on controlled regions
   };
 }
 
@@ -127,15 +121,8 @@ export function runAITick(
   factionBonuses: FactionBonuses
 ): AIActions {
   const { factionId } = aiState;
-  let { money } = aiState;
   
-  // 1. Calculate income from controlled regions (using region values/weights) minus unit maintenance costs
-  const income = calculateFactionIncome(regions, factionId, movingUnits);
-  
-  // 2. Earn income
-  money += income;
-  
-  // 3. Find or create an army group for the AI
+  // 1. Find or create an army group for the AI
   let aiArmyGroup = armyGroups.find(g => g.owner === factionId);
   let newArmyGroup: ArmyGroup | undefined = undefined;
   
@@ -165,7 +152,7 @@ export function runAITick(
     aiArmyGroup = newArmyGroup;
   }
   
-  // 4. Create production requests
+  // 2. Create production requests
   const productionRequests: AIProductionRequest[] = [];
   const ownedRegions = getOwnedRegions(regions, factionId);
   
@@ -184,26 +171,17 @@ export function runAITick(
       productionRequests: [],
       updatedAIState: {
         factionId,
-        money,
-        income,
       },
       newArmyGroup,
     };
   }
   
-  // AI limit: don't spend ALL money at once if income is low, 
-  // but for now we follow the existing logic of spending what we have.
-  while (money >= DIVISION_COST) {
+  // AI production logic: produce up to 2 divisions per tick if under cap
+  while (divisionsCreated < 2) {
     // Check division cap before producing
     if (!canProduceDivision(factionId, regions, movingUnits, productionQueues, factionBonuses)) {
-      const capInfo = getDivisionCapInfo(factionId, regions, movingUnits, productionQueues, factionBonuses);
-      console.log(
-        `[AI] ${factionId} reached division cap. Current: ${capInfo.current}, In Production: ${capInfo.inProduction}, Cap: ${capInfo.cap}`
-      );
       break;
     }
-    
-    money -= DIVISION_COST;
     
     // Pick target region
     const targetRegion = pickRandomRegion(availableRegions);
@@ -216,9 +194,6 @@ export function runAITick(
     });
     
     divisionsCreated += 1;
-    
-    // Limit AI to starting at most 2 divisions per tick to avoid massive queue build-up
-    if (divisionsCreated >= 2) break;
   }
   
   return {
@@ -226,8 +201,6 @@ export function runAITick(
     productionRequests,
     updatedAIState: {
       factionId,
-      money,
-      income,
     },
     newArmyGroup,
   };

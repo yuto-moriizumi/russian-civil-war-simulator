@@ -89,8 +89,6 @@ function MainScreenView() {
       dateTime={state.dateTime}
       isPlaying={state.isPlaying}
       gameSpeed={state.gameSpeed}
-      money={state.money}
-      income={state.income}
       missions={state.missions}
       movingUnits={state.movingUnits}
       activeCombats={state.activeCombats}
