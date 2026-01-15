@@ -74,6 +74,86 @@
       "iso3": "AZE",
       "name": "Azerbaijan",
       "admLevel": "ADM0"
+    },
+    {
+      "iso3": "DEU",
+      "name": "Germany",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "POL",
+      "name": "Poland",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "AUT",
+      "name": "Austria",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "HUN",
+      "name": "Hungary",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "CZE",
+      "name": "Czechia",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "SVK",
+      "name": "Slovakia",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "ROU",
+      "name": "Romania",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "BGR",
+      "name": "Bulgaria",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "SRB",
+      "name": "Serbia",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "GRC",
+      "name": "Greece",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "ALB",
+      "name": "Albania",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "MNE",
+      "name": "Montenegro",
+      "admLevel": "ADM0"
+    },
+    {
+      "iso3": "BIH",
+      "name": "Bosnia and Herzegovina",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "HRV",
+      "name": "Croatia",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "SVN",
+      "name": "Slovenia",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "MDA",
+      "name": "Moldova",
+      "admLevel": "ADM1"
     }
   ],
   "customAdjacency": {

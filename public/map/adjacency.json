@@ -582,7 +582,10 @@
   "RU-KGD": [
     "LT-KL",
     "LT-MR",
-    "LT-TA"
+    "LT-TA",
+    "PL-PD",
+    "PL-PM",
+    "PL-WN"
   ],
   "RU-ORE": [
     "KZ-AKT",
@@ -614,6 +617,7 @@
   ],
   "UA-07": [
     "BY-BR",
+    "PL-LU",
     "UA-46",
     "UA-56"
   ],
@@ -686,6 +690,8 @@
     "UA-65"
   ],
   "UA-46": [
+    "PL-LU",
+    "PL-PK",
     "UA-07",
     "UA-21",
     "UA-26",
@@ -693,12 +699,21 @@
     "UA-61"
   ],
   "UA-26": [
+    "RO-MM",
+    "RO-SV",
     "UA-21",
     "UA-46",
     "UA-61",
     "UA-77"
   ],
   "UA-21": [
+    "HU-BZ",
+    "HU-SZ",
+    "PL-PK",
+    "RO-MM",
+    "RO-SM",
+    "SK-KI",
+    "SK-PV",
     "UA-26",
     "UA-46",
     "UA-61"
@@ -712,12 +727,30 @@
     "UA-77"
   ],
   "UA-77": [
+    "MD-BR",
+    "MD-ED",
+    "MD-OC",
+    "RO-BT",
+    "RO-MM",
+    "RO-SV",
     "UA-05",
     "UA-26",
     "UA-61",
     "UA-68"
   ],
   "UA-51": [
+    "MD-BS",
+    "MD-CA",
+    "MD-CM",
+    "MD-CS",
+    "MD-DU",
+    "MD-GA",
+    "MD-OR",
+    "MD-SN",
+    "MD-SV",
+    "MD-TA",
+    "RO-GL",
+    "RO-TL",
     "UA-05",
     "UA-35",
     "UA-48",
@@ -736,6 +769,11 @@
     "UA-65"
   ],
   "UA-05": [
+    "MD-DO",
+    "MD-FL",
+    "MD-OC",
+    "MD-SN",
+    "MD-SO",
     "UA-18",
     "UA-32",
     "UA-35",
@@ -816,12 +854,16 @@
     "BY-MI",
     "BY-VI",
     "LT-AL",
-    "LT-VL"
+    "LT-VL",
+    "PL-PD"
   ],
   "BY-BR": [
     "BY-HO",
     "BY-HR",
     "BY-MI",
+    "PL-LU",
+    "PL-MZ",
+    "PL-PD",
     "UA-07",
     "UA-56"
   ],
@@ -1098,6 +1140,8 @@
     "LT-AL",
     "LT-KU",
     "LT-TA",
+    "PL-PD",
+    "PL-WN",
     "RU-KGD"
   ],
   "LT-VL": [
@@ -1128,8 +1172,8 @@
     "BY-HR",
     "LT-KU",
     "LT-MR",
-    "LT-TA",
-    "LT-VL"
+    "LT-VL",
+    "PL-PD"
   ],
   "LT-KL": [
     "LT-TA",
@@ -1151,7 +1195,6 @@
     "LVA"
   ],
   "LT-TA": [
-    "LT-AL",
     "LT-KL",
     "LT-KU",
     "LT-MR",
@@ -1415,5 +1458,2039 @@
     "ARM",
     "GEO",
     "RU-DA"
+  ],
+  "DE-BW": [
+    "AT-8",
+    "DE-BY",
+    "DE-HE",
+    "DE-RP"
+  ],
+  "DE-BY": [
+    "AT-4",
+    "AT-5",
+    "AT-7",
+    "AT-8",
+    "CZ-31",
+    "CZ-32",
+    "CZ-41",
+    "DE-BW",
+    "DE-HE",
+    "DE-SN",
+    "DE-TH"
+  ],
+  "DE-BE": [
+    "DE-BB"
+  ],
+  "DE-BB": [
+    "DE-BE",
+    "DE-MV",
+    "DE-NI",
+    "DE-SN",
+    "DE-ST",
+    "PL-LB",
+    "PL-ZP"
+  ],
+  "DE-HB": [
+    "DE-NI"
+  ],
+  "DE-HH": [
+    "DE-NI",
+    "DE-SH"
+  ],
+  "DE-HE": [
+    "DE-BW",
+    "DE-BY",
+    "DE-NI",
+    "DE-NW",
+    "DE-RP",
+    "DE-TH"
+  ],
+  "DE-MV": [
+    "DE-BB",
+    "DE-NI",
+    "DE-SH",
+    "PL-ZP"
+  ],
+  "DE-NI": [
+    "DE-BB",
+    "DE-HB",
+    "DE-HE",
+    "DE-HH",
+    "DE-MV",
+    "DE-NW",
+    "DE-SH",
+    "DE-ST",
+    "DE-TH"
+  ],
+  "DE-NW": [
+    "DE-HE",
+    "DE-NI",
+    "DE-RP"
+  ],
+  "DE-RP": [
+    "DE-BW",
+    "DE-HE",
+    "DE-NW",
+    "DE-SL"
+  ],
+  "DE-SL": [
+    "DE-RP"
+  ],
+  "DE-SN": [
+    "CZ-41",
+    "CZ-42",
+    "CZ-51",
+    "DE-BB",
+    "DE-BY",
+    "DE-ST",
+    "DE-TH",
+    "PL-DS",
+    "PL-LB"
+  ],
+  "DE-ST": [
+    "DE-BB",
+    "DE-NI",
+    "DE-SN",
+    "DE-TH"
+  ],
+  "DE-SH": [
+    "DE-HH",
+    "DE-MV",
+    "DE-NI"
+  ],
+  "DE-TH": [
+    "DE-BY",
+    "DE-HE",
+    "DE-NI",
+    "DE-SN",
+    "DE-ST"
+  ],
+  "PL-PK": [
+    "PL-LU",
+    "PL-MA",
+    "PL-SK",
+    "SK-PV",
+    "UA-21",
+    "UA-46"
+  ],
+  "PL-PD": [
+    "BY-BR",
+    "BY-HR",
+    "LT-AL",
+    "LT-MR",
+    "PL-LU",
+    "PL-MZ",
+    "PL-SK",
+    "PL-WN",
+    "RU-KGD"
+  ],
+  "PL-LD": [
+    "PL-KP",
+    "PL-MZ",
+    "PL-OP",
+    "PL-SK",
+    "PL-SL",
+    "PL-WN",
+    "PL-WP"
+  ],
+  "PL-DS": [
+    "CZ-51",
+    "CZ-52",
+    "CZ-53",
+    "CZ-71",
+    "DE-SN",
+    "PL-LB",
+    "PL-OP",
+    "PL-WP"
+  ],
+  "PL-OP": [
+    "CZ-71",
+    "CZ-80",
+    "PL-DS",
+    "PL-LB",
+    "PL-LD",
+    "PL-SL",
+    "PL-WP"
+  ],
+  "PL-SK": [
+    "PL-LD",
+    "PL-LU",
+    "PL-MA",
+    "PL-MZ",
+    "PL-PD",
+    "PL-PK",
+    "PL-SL"
+  ],
+  "PL-MZ": [
+    "BY-BR",
+    "PL-KP",
+    "PL-LD",
+    "PL-LU",
+    "PL-MA",
+    "PL-PD",
+    "PL-SK",
+    "PL-WN"
+  ],
+  "PL-WP": [
+    "PL-DS",
+    "PL-KP",
+    "PL-LB",
+    "PL-LD",
+    "PL-OP",
+    "PL-PM",
+    "PL-ZP"
+  ],
+  "PL-MA": [
+    "PL-MZ",
+    "PL-PK",
+    "PL-SK",
+    "PL-SL",
+    "SK-PV",
+    "SK-ZI"
+  ],
+  "PL-LB": [
+    "DE-BB",
+    "DE-SN",
+    "PL-DS",
+    "PL-OP",
+    "PL-WP",
+    "PL-ZP"
+  ],
+  "PL-KP": [
+    "PL-LD",
+    "PL-MZ",
+    "PL-PM",
+    "PL-WN",
+    "PL-WP"
+  ],
+  "PL-PM": [
+    "PL-KP",
+    "PL-WN",
+    "PL-WP",
+    "PL-ZP",
+    "RU-KGD"
+  ],
+  "PL-ZP": [
+    "DE-BB",
+    "DE-MV",
+    "PL-LB",
+    "PL-PM",
+    "PL-WP"
+  ],
+  "PL-LU": [
+    "BY-BR",
+    "PL-MZ",
+    "PL-PD",
+    "PL-PK",
+    "PL-SK",
+    "UA-07",
+    "UA-46"
+  ],
+  "PL-WN": [
+    "LT-MR",
+    "PL-KP",
+    "PL-LD",
+    "PL-MZ",
+    "PL-PD",
+    "PL-PM",
+    "RU-KGD"
+  ],
+  "PL-SL": [
+    "CZ-80",
+    "PL-LD",
+    "PL-MA",
+    "PL-OP",
+    "PL-SK",
+    "SK-ZI"
+  ],
+  "AT-1": [
+    "AT-3",
+    "AT-6",
+    "HU-GS",
+    "HU-VA",
+    "SI03",
+    "SK-BL"
+  ],
+  "AT-2": [
+    "AT-5",
+    "AT-6",
+    "AT-7",
+    "SI03",
+    "SI04"
+  ],
+  "AT-3": [
+    "AT-1",
+    "AT-4",
+    "AT-6",
+    "AT-9",
+    "CZ-31",
+    "CZ-64",
+    "SK-BL",
+    "SK-TA"
+  ],
+  "AT-4": [
+    "AT-3",
+    "AT-5",
+    "AT-6",
+    "CZ-31",
+    "DE-BY"
+  ],
+  "AT-5": [
+    "AT-2",
+    "AT-4",
+    "AT-6",
+    "AT-7",
+    "DE-BY"
+  ],
+  "AT-6": [
+    "AT-1",
+    "AT-2",
+    "AT-3",
+    "AT-4",
+    "AT-5",
+    "AT-7",
+    "SI03"
+  ],
+  "AT-7": [
+    "AT-2",
+    "AT-5",
+    "AT-6",
+    "AT-8",
+    "DE-BY"
+  ],
+  "AT-8": [
+    "AT-7",
+    "DE-BW",
+    "DE-BY"
+  ],
+  "AT-9": [
+    "AT-3"
+  ],
+  "HU-PE": [
+    "HU-BK",
+    "HU-FE",
+    "HU-HE",
+    "HU-JN",
+    "HU-KE",
+    "HU-NO",
+    "SK-BC",
+    "SK-NI"
+  ],
+  "HU-SZ": [
+    "HU-BZ",
+    "HU-HB",
+    "RO-BH",
+    "RO-SM",
+    "SK-KI",
+    "UA-21"
+  ],
+  "HU-HB": [
+    "HU-BE",
+    "HU-BZ",
+    "HU-JN",
+    "HU-SZ",
+    "RO-BH"
+  ],
+  "HU-BZ": [
+    "HU-HB",
+    "HU-HE",
+    "HU-JN",
+    "HU-NO",
+    "HU-SZ",
+    "SK-BC",
+    "SK-KI",
+    "UA-21"
+  ],
+  "HU-NO": [
+    "HU-BZ",
+    "HU-HE",
+    "HU-JN",
+    "HU-PE",
+    "SK-BC",
+    "SK-NI"
+  ],
+  "HU-HE": [
+    "HU-BZ",
+    "HU-JN",
+    "HU-NO",
+    "HU-PE",
+    "SK-BC"
+  ],
+  "HU-BE": [
+    "HU-CS",
+    "HU-HB",
+    "HU-JN",
+    "RO-AR",
+    "RO-BH"
+  ],
+  "HU-CS": [
+    "HU-BE",
+    "HU-BK",
+    "HU-JN",
+    "RO-AR",
+    "RO-TM",
+    "RS-01",
+    "RS-03"
+  ],
+  "HU-JN": [
+    "HU-BE",
+    "HU-BK",
+    "HU-BZ",
+    "HU-CS",
+    "HU-HB",
+    "HU-HE",
+    "HU-NO",
+    "HU-PE"
+  ],
+  "HU-KE": [
+    "HU-BK",
+    "HU-FE",
+    "HU-GS",
+    "HU-PE",
+    "HU-VE",
+    "SK-NI"
+  ],
+  "HU-GS": [
+    "AT-1",
+    "HU-FE",
+    "HU-KE",
+    "HU-VA",
+    "HU-VE",
+    "SK-BL",
+    "SK-NI",
+    "SK-TA"
+  ],
+  "HU-VA": [
+    "AT-1",
+    "HU-GS",
+    "HU-VE",
+    "HU-ZA",
+    "SI03"
+  ],
+  "HU-ZA": [
+    "HR-06",
+    "HR-20",
+    "HU-SO",
+    "HU-VA",
+    "HU-VE",
+    "SI03"
+  ],
+  "HU-VE": [
+    "HU-FE",
+    "HU-GS",
+    "HU-KE",
+    "HU-SO",
+    "HU-VA",
+    "HU-ZA"
+  ],
+  "HU-BA": [
+    "HR-10",
+    "HR-14",
+    "HU-BK",
+    "HU-FE",
+    "HU-SO",
+    "HU-TO",
+    "RS-05"
+  ],
+  "HU-SO": [
+    "HR-06",
+    "HR-10",
+    "HU-BA",
+    "HU-FE",
+    "HU-TO",
+    "HU-VE",
+    "HU-ZA"
+  ],
+  "HU-TO": [
+    "HU-BA",
+    "HU-BK",
+    "HU-FE",
+    "HU-SO"
+  ],
+  "HU-BK": [
+    "HR-14",
+    "HU-BA",
+    "HU-CS",
+    "HU-FE",
+    "HU-JN",
+    "HU-KE",
+    "HU-PE",
+    "HU-TO",
+    "RS-01",
+    "RS-05"
+  ],
+  "HU-FE": [
+    "HU-BA",
+    "HU-BK",
+    "HU-GS",
+    "HU-KE",
+    "HU-PE",
+    "HU-SO",
+    "HU-TO",
+    "HU-VE"
+  ],
+  "CZ-10": [
+    "CZ-20"
+  ],
+  "CZ-20": [
+    "CZ-10",
+    "CZ-31",
+    "CZ-32",
+    "CZ-42",
+    "CZ-51",
+    "CZ-52",
+    "CZ-53",
+    "CZ-63"
+  ],
+  "CZ-31": [
+    "AT-3",
+    "AT-4",
+    "CZ-20",
+    "CZ-32",
+    "CZ-63",
+    "CZ-64",
+    "DE-BY"
+  ],
+  "CZ-32": [
+    "CZ-20",
+    "CZ-31",
+    "CZ-41",
+    "CZ-42",
+    "DE-BY"
+  ],
+  "CZ-41": [
+    "CZ-32",
+    "CZ-42",
+    "DE-BY",
+    "DE-SN"
+  ],
+  "CZ-42": [
+    "CZ-20",
+    "CZ-32",
+    "CZ-41",
+    "CZ-51",
+    "DE-SN"
+  ],
+  "CZ-51": [
+    "CZ-20",
+    "CZ-42",
+    "CZ-52",
+    "DE-SN",
+    "PL-DS"
+  ],
+  "CZ-52": [
+    "CZ-20",
+    "CZ-51",
+    "CZ-53",
+    "PL-DS"
+  ],
+  "CZ-53": [
+    "CZ-20",
+    "CZ-52",
+    "CZ-63",
+    "CZ-64",
+    "CZ-71",
+    "PL-DS"
+  ],
+  "CZ-63": [
+    "CZ-20",
+    "CZ-31",
+    "CZ-53",
+    "CZ-64"
+  ],
+  "CZ-64": [
+    "AT-3",
+    "CZ-31",
+    "CZ-53",
+    "CZ-63",
+    "CZ-71",
+    "CZ-72",
+    "SK-TA",
+    "SK-TC"
+  ],
+  "CZ-71": [
+    "CZ-53",
+    "CZ-64",
+    "CZ-72",
+    "CZ-80",
+    "PL-DS",
+    "PL-OP"
+  ],
+  "CZ-80": [
+    "CZ-71",
+    "CZ-72",
+    "PL-OP",
+    "PL-SL",
+    "SK-ZI"
+  ],
+  "CZ-72": [
+    "CZ-64",
+    "CZ-71",
+    "CZ-80",
+    "SK-TC",
+    "SK-ZI"
+  ],
+  "SK-BL": [
+    "AT-1",
+    "AT-3",
+    "HU-GS",
+    "SK-TA",
+    "SK-ZI"
+  ],
+  "SK-TA": [
+    "AT-3",
+    "CZ-64",
+    "HU-GS",
+    "SK-BL",
+    "SK-NI",
+    "SK-TC"
+  ],
+  "SK-TC": [
+    "CZ-64",
+    "CZ-72",
+    "SK-BC",
+    "SK-NI",
+    "SK-TA",
+    "SK-ZI"
+  ],
+  "SK-NI": [
+    "HU-GS",
+    "HU-KE",
+    "HU-NO",
+    "HU-PE",
+    "SK-BC",
+    "SK-TA",
+    "SK-TC"
+  ],
+  "SK-ZI": [
+    "CZ-72",
+    "CZ-80",
+    "PL-MA",
+    "PL-SL",
+    "SK-BC",
+    "SK-BL",
+    "SK-PV",
+    "SK-TC"
+  ],
+  "SK-BC": [
+    "HU-BZ",
+    "HU-HE",
+    "HU-NO",
+    "HU-PE",
+    "SK-KI",
+    "SK-NI",
+    "SK-PV",
+    "SK-TC",
+    "SK-ZI"
+  ],
+  "SK-PV": [
+    "PL-MA",
+    "PL-PK",
+    "SK-BC",
+    "SK-KI",
+    "SK-ZI",
+    "UA-21"
+  ],
+  "SK-KI": [
+    "HU-BZ",
+    "HU-SZ",
+    "SK-BC",
+    "SK-PV",
+    "UA-21"
+  ],
+  "RO-AB": [
+    "RO-AR",
+    "RO-BH",
+    "RO-CJ",
+    "RO-HD",
+    "RO-MS",
+    "RO-SB",
+    "RO-VL"
+  ],
+  "RO-AR": [
+    "HU-BE",
+    "HU-CS",
+    "RO-AB",
+    "RO-BH",
+    "RO-CJ",
+    "RO-HD",
+    "RO-TM"
+  ],
+  "RO-AG": [
+    "RO-BV",
+    "RO-DB",
+    "RO-HD",
+    "RO-OT",
+    "RO-SB",
+    "RO-TR",
+    "RO-VL"
+  ],
+  "RO-BC": [
+    "RO-CV",
+    "RO-DB",
+    "RO-HR",
+    "RO-NT",
+    "RO-VN",
+    "RO-VS"
+  ],
+  "RO-BH": [
+    "HU-BE",
+    "HU-HB",
+    "HU-SZ",
+    "RO-AB",
+    "RO-AR",
+    "RO-CJ",
+    "RO-SJ",
+    "RO-SM"
+  ],
+  "RO-BN": [
+    "RO-CJ",
+    "RO-MM",
+    "RO-MS",
+    "RO-SV"
+  ],
+  "RO-BT": [
+    "MD-BR",
+    "MD-ED",
+    "MD-FA",
+    "MD-GL",
+    "MD-RI",
+    "RO-IS",
+    "RO-SV",
+    "UA-77"
+  ],
+  "RO-BR": [
+    "RO-BZ",
+    "RO-CT",
+    "RO-GL",
+    "RO-IL",
+    "RO-TL",
+    "RO-VN"
+  ],
+  "RO-BV": [
+    "RO-AG",
+    "RO-BZ",
+    "RO-CV",
+    "RO-DB",
+    "RO-HR",
+    "RO-MS",
+    "RO-PH",
+    "RO-SB"
+  ],
+  "RO-BZ": [
+    "RO-BR",
+    "RO-BV",
+    "RO-CV",
+    "RO-IL",
+    "RO-PH",
+    "RO-VN"
+  ],
+  "RO-CL": [
+    "BG-19",
+    "RO-CT",
+    "RO-GR",
+    "RO-IF",
+    "RO-IL"
+  ],
+  "RO-CS": [
+    "RO-GJ",
+    "RO-HD",
+    "RO-MH",
+    "RO-TM",
+    "RS-04",
+    "RS-11",
+    "RS-14"
+  ],
+  "RO-CJ": [
+    "RO-AB",
+    "RO-AR",
+    "RO-BH",
+    "RO-BN",
+    "RO-HD",
+    "RO-MM",
+    "RO-MS",
+    "RO-SJ"
+  ],
+  "RO-CT": [
+    "BG-08",
+    "BG-19",
+    "RO-BR",
+    "RO-CL",
+    "RO-IL",
+    "RO-TL"
+  ],
+  "RO-CV": [
+    "RO-BC",
+    "RO-BV",
+    "RO-BZ",
+    "RO-HR",
+    "RO-VN"
+  ],
+  "RO-DB": [
+    "RO-AG",
+    "RO-BC",
+    "RO-BV",
+    "RO-GR",
+    "RO-IF",
+    "RO-PH",
+    "RO-TR",
+    "RO-VN"
+  ],
+  "RO-DJ": [
+    "BG-05",
+    "BG-06",
+    "BG-12",
+    "RO-GJ",
+    "RO-MH",
+    "RO-OT",
+    "RO-VL"
+  ],
+  "RO-GL": [
+    "MD-CA",
+    "MD-CT",
+    "RO-BR",
+    "RO-TL",
+    "RO-VN",
+    "RO-VS",
+    "UA-51"
+  ],
+  "RO-GR": [
+    "BG-18",
+    "BG-19",
+    "RO-CL",
+    "RO-DB",
+    "RO-IF",
+    "RO-TR",
+    "RO-VN"
+  ],
+  "RO-GJ": [
+    "RO-CS",
+    "RO-DJ",
+    "RO-HD",
+    "RO-MH",
+    "RO-VL"
+  ],
+  "RO-HR": [
+    "RO-BC",
+    "RO-BV",
+    "RO-CV",
+    "RO-MS",
+    "RO-NT",
+    "RO-SV"
+  ],
+  "RO-HD": [
+    "RO-AB",
+    "RO-AG",
+    "RO-AR",
+    "RO-CJ",
+    "RO-CS",
+    "RO-GJ",
+    "RO-MS",
+    "RO-TM",
+    "RO-VL"
+  ],
+  "RO-IL": [
+    "RO-BR",
+    "RO-BZ",
+    "RO-CL",
+    "RO-CT",
+    "RO-IF",
+    "RO-PH"
+  ],
+  "RO-IS": [
+    "MD-FA",
+    "MD-GL",
+    "MD-HI",
+    "MD-NI",
+    "MD-UN",
+    "RO-BT",
+    "RO-NT",
+    "RO-SV",
+    "RO-VS"
+  ],
+  "RO-IF": [
+    "RO-B",
+    "RO-CL",
+    "RO-DB",
+    "RO-GR",
+    "RO-IL",
+    "RO-PH"
+  ],
+  "RO-MM": [
+    "RO-BN",
+    "RO-CJ",
+    "RO-SJ",
+    "RO-SM",
+    "RO-SV",
+    "UA-21",
+    "UA-26",
+    "UA-77"
+  ],
+  "RO-MH": [
+    "BG-05",
+    "RO-CS",
+    "RO-DJ",
+    "RO-GJ",
+    "RS-11",
+    "RS-14"
+  ],
+  "RO-B": [
+    "RO-IF"
+  ],
+  "RO-MS": [
+    "RO-AB",
+    "RO-BN",
+    "RO-BV",
+    "RO-CJ",
+    "RO-HD",
+    "RO-HR",
+    "RO-SB",
+    "RO-SV"
+  ],
+  "RO-NT": [
+    "RO-BC",
+    "RO-HR",
+    "RO-IS",
+    "RO-SV",
+    "RO-VS"
+  ],
+  "RO-OT": [
+    "BG-06",
+    "BG-15",
+    "RO-AG",
+    "RO-DJ",
+    "RO-TR",
+    "RO-VL"
+  ],
+  "RO-PH": [
+    "RO-BV",
+    "RO-BZ",
+    "RO-DB",
+    "RO-IF",
+    "RO-IL"
+  ],
+  "RO-SJ": [
+    "RO-BH",
+    "RO-CJ",
+    "RO-MM",
+    "RO-SM"
+  ],
+  "RO-SM": [
+    "HU-SZ",
+    "RO-BH",
+    "RO-MM",
+    "RO-SJ",
+    "UA-21"
+  ],
+  "RO-SB": [
+    "RO-AB",
+    "RO-AG",
+    "RO-BV",
+    "RO-MS",
+    "RO-VL"
+  ],
+  "RO-SV": [
+    "RO-BN",
+    "RO-BT",
+    "RO-HR",
+    "RO-IS",
+    "RO-MM",
+    "RO-MS",
+    "RO-NT",
+    "UA-26",
+    "UA-77"
+  ],
+  "RO-TR": [
+    "BG-04",
+    "BG-15",
+    "BG-18",
+    "RO-AG",
+    "RO-DB",
+    "RO-GR",
+    "RO-OT"
+  ],
+  "RO-TM": [
+    "HU-CS",
+    "RO-AR",
+    "RO-CS",
+    "RO-HD",
+    "RS-02",
+    "RS-03",
+    "RS-04"
+  ],
+  "RO-TL": [
+    "MD-CA",
+    "RO-BR",
+    "RO-CT",
+    "RO-GL",
+    "UA-51"
+  ],
+  "RO-VL": [
+    "RO-AB",
+    "RO-AG",
+    "RO-DJ",
+    "RO-GJ",
+    "RO-HD",
+    "RO-OT",
+    "RO-SB"
+  ],
+  "RO-VS": [
+    "MD-CA",
+    "MD-CT",
+    "MD-HI",
+    "MD-LE",
+    "RO-BC",
+    "RO-GL",
+    "RO-IS",
+    "RO-NT",
+    "RO-VN"
+  ],
+  "RO-VN": [
+    "RO-BC",
+    "RO-BR",
+    "RO-BZ",
+    "RO-CV",
+    "RO-DB",
+    "RO-GL",
+    "RO-GR",
+    "RO-VS"
+  ],
+  "BG-01": [
+    "BG-10",
+    "BG-13",
+    "BG-21",
+    "BG-23",
+    "GR-MH"
+  ],
+  "BG-02": [
+    "BG-03",
+    "BG-20",
+    "BG-27",
+    "BG-28"
+  ],
+  "BG-08": [
+    "BG-03",
+    "BG-19",
+    "BG-27",
+    "RO-CT"
+  ],
+  "BG-07": [
+    "BG-04",
+    "BG-11",
+    "BG-16",
+    "BG-24"
+  ],
+  "BG-26": [
+    "BG-09",
+    "BG-16",
+    "BG-24",
+    "BG-28",
+    "GR-MH"
+  ],
+  "BG-09": [
+    "BG-16",
+    "BG-21",
+    "BG-26",
+    "GR-MH"
+  ],
+  "BG-10": [
+    "BG-01",
+    "BG-14",
+    "BG-23",
+    "RS-24"
+  ],
+  "BG-11": [
+    "BG-04",
+    "BG-06",
+    "BG-07",
+    "BG-15",
+    "BG-16",
+    "BG-23",
+    "BG-24"
+  ],
+  "BG-12": [
+    "BG-05",
+    "BG-06",
+    "BG-16",
+    "BG-23",
+    "RO-DJ",
+    "RS-22"
+  ],
+  "BG-13": [
+    "BG-01",
+    "BG-06",
+    "BG-16",
+    "BG-21",
+    "BG-23"
+  ],
+  "BG-14": [
+    "BG-10",
+    "BG-22",
+    "BG-23",
+    "RS-22",
+    "RS-23",
+    "RS-24"
+  ],
+  "BG-15": [
+    "BG-04",
+    "BG-06",
+    "BG-11",
+    "RO-OT",
+    "RO-TR"
+  ],
+  "BG-16": [
+    "BG-07",
+    "BG-09",
+    "BG-11",
+    "BG-12",
+    "BG-13",
+    "BG-21",
+    "BG-23",
+    "BG-24",
+    "BG-26"
+  ],
+  "BG-17": [
+    "BG-18",
+    "BG-19",
+    "BG-25",
+    "BG-27"
+  ],
+  "BG-18": [
+    "BG-04",
+    "BG-17",
+    "BG-19",
+    "BG-25",
+    "RO-GR",
+    "RO-TR"
+  ],
+  "BG-27": [
+    "BG-02",
+    "BG-03",
+    "BG-08",
+    "BG-17",
+    "BG-19",
+    "BG-20",
+    "BG-25"
+  ],
+  "BG-19": [
+    "BG-08",
+    "BG-17",
+    "BG-18",
+    "BG-20",
+    "BG-27",
+    "RO-CL",
+    "RO-CT",
+    "RO-GR"
+  ],
+  "BG-20": [
+    "BG-02",
+    "BG-04",
+    "BG-19",
+    "BG-24",
+    "BG-25",
+    "BG-27",
+    "BG-28"
+  ],
+  "BG-21": [
+    "BG-01",
+    "BG-09",
+    "BG-13",
+    "BG-16",
+    "BG-28",
+    "GR-MH"
+  ],
+  "BG-23": [
+    "BG-01",
+    "BG-06",
+    "BG-10",
+    "BG-11",
+    "BG-12",
+    "BG-13",
+    "BG-14",
+    "BG-16",
+    "BG-22",
+    "RS-22"
+  ],
+  "BG-22": [
+    "BG-14",
+    "BG-23"
+  ],
+  "BG-24": [
+    "BG-04",
+    "BG-07",
+    "BG-11",
+    "BG-16",
+    "BG-20",
+    "BG-26",
+    "BG-28"
+  ],
+  "BG-25": [
+    "BG-04",
+    "BG-17",
+    "BG-18",
+    "BG-20",
+    "BG-27"
+  ],
+  "BG-03": [
+    "BG-02",
+    "BG-04",
+    "BG-08",
+    "BG-27"
+  ],
+  "BG-04": [
+    "BG-03",
+    "BG-07",
+    "BG-11",
+    "BG-15",
+    "BG-18",
+    "BG-20",
+    "BG-24",
+    "BG-25",
+    "RO-TR"
+  ],
+  "BG-05": [
+    "BG-12",
+    "RO-DJ",
+    "RO-MH",
+    "RS-14",
+    "RS-15",
+    "RS-22"
+  ],
+  "BG-06": [
+    "BG-11",
+    "BG-12",
+    "BG-13",
+    "BG-15",
+    "BG-23",
+    "RO-DJ",
+    "RO-OT"
+  ],
+  "BG-28": [
+    "BG-02",
+    "BG-20",
+    "BG-21",
+    "BG-24",
+    "BG-26"
+  ],
+  "RS-07": [
+    "BA-BRC*",
+    "BA-SRP*",
+    "HR-16",
+    "RS-00",
+    "RS-02",
+    "RS-06",
+    "RS-08"
+  ],
+  "RS-04": [
+    "RO-CS",
+    "RO-TM",
+    "RS-00",
+    "RS-02",
+    "RS-06",
+    "RS-10",
+    "RS-11"
+  ],
+  "RS-03": [
+    "HU-CS",
+    "RO-TM",
+    "RS-01",
+    "RS-02",
+    "RS-06"
+  ],
+  "RS-01": [
+    "HU-BK",
+    "HU-CS",
+    "RS-03",
+    "RS-05",
+    "RS-06"
+  ],
+  "RS-02": [
+    "RO-TM",
+    "RS-00",
+    "RS-03",
+    "RS-04",
+    "RS-06",
+    "RS-07"
+  ],
+  "RS-05": [
+    "HR-14",
+    "HU-BA",
+    "HU-BK",
+    "RS-01",
+    "RS-06"
+  ],
+  "RS-06": [
+    "HR-14",
+    "HR-16",
+    "RS-01",
+    "RS-02",
+    "RS-03",
+    "RS-04",
+    "RS-05",
+    "RS-07"
+  ],
+  "RS-00": [
+    "RS-02",
+    "RS-04",
+    "RS-07",
+    "RS-08",
+    "RS-09",
+    "RS-10",
+    "RS-12"
+  ],
+  "RS-14": [
+    "BG-05",
+    "RO-CS",
+    "RO-MH",
+    "RS-10",
+    "RS-11",
+    "RS-13",
+    "RS-15"
+  ],
+  "RS-08": [
+    "BA-SRP*",
+    "RS-00",
+    "RS-07",
+    "RS-09",
+    "RS-13",
+    "RS-16"
+  ],
+  "RS-24": [
+    "BG-10",
+    "BG-14",
+    "RS-23"
+  ],
+  "RS-09": [
+    "RS-00",
+    "RS-08",
+    "RS-12",
+    "RS-16",
+    "RS-17",
+    "RS-23"
+  ],
+  "RS-10": [
+    "RS-00",
+    "RS-04",
+    "RS-11",
+    "RS-12",
+    "RS-13",
+    "RS-14"
+  ],
+  "RS-11": [
+    "RO-CS",
+    "RO-MH",
+    "RS-04",
+    "RS-10",
+    "RS-13",
+    "RS-14"
+  ],
+  "RS-12": [
+    "RS-00",
+    "RS-09",
+    "RS-10",
+    "RS-13",
+    "RS-17",
+    "RS-18"
+  ],
+  "RS-13": [
+    "RS-08",
+    "RS-10",
+    "RS-11",
+    "RS-12",
+    "RS-14",
+    "RS-15",
+    "RS-18",
+    "RS-19",
+    "RS-20"
+  ],
+  "RS-17": [
+    "RS-09",
+    "RS-12",
+    "RS-16",
+    "RS-18"
+  ],
+  "RS-15": [
+    "BG-05",
+    "RS-13",
+    "RS-14",
+    "RS-20",
+    "RS-22"
+  ],
+  "RS-16": [
+    "BA-SRP*",
+    "MNE",
+    "RS-08",
+    "RS-09",
+    "RS-17",
+    "RS-18"
+  ],
+  "RS-18": [
+    "MNE",
+    "RS-12",
+    "RS-13",
+    "RS-16",
+    "RS-17",
+    "RS-19"
+  ],
+  "RS-22": [
+    "BG-05",
+    "BG-12",
+    "BG-14",
+    "BG-23",
+    "RS-15",
+    "RS-19",
+    "RS-20",
+    "RS-23"
+  ],
+  "RS-23": [
+    "BG-14",
+    "RS-09",
+    "RS-20",
+    "RS-21",
+    "RS-22",
+    "RS-24"
+  ],
+  "RS-21": [
+    "RS-19",
+    "RS-20",
+    "RS-23"
+  ],
+  "RS-20": [
+    "RS-13",
+    "RS-15",
+    "RS-19",
+    "RS-21",
+    "RS-22",
+    "RS-23"
+  ],
+  "RS-19": [
+    "RS-13",
+    "RS-18",
+    "RS-20",
+    "RS-21",
+    "RS-22"
+  ],
+  "GR-MA": [
+    "GR-MH"
+  ],
+  "GR-CR": [],
+  "GR-AT": [
+    "GR-PW",
+    "GR-TC"
+  ],
+  "GR-MH": [
+    "BG-01",
+    "BG-09",
+    "BG-21",
+    "BG-26",
+    "GR-EM",
+    "GR-MA",
+    "GR-PW",
+    "GR-TC"
+  ],
+  "GR-EM": [
+    "AL-05",
+    "AL-06",
+    "AL-12",
+    "GR-MH",
+    "GR-PW",
+    "GR-TC"
+  ],
+  "GR-PW": [
+    "AL-12",
+    "GR-AT",
+    "GR-EM",
+    "GR-MH",
+    "GR-TC"
+  ],
+  "GR-AI": [
+    "GR-TC"
+  ],
+  "GR-TC": [
+    "GR-AI",
+    "GR-AT",
+    "GR-EM",
+    "GR-MH",
+    "GR-PW"
+  ],
+  "AL-01": [
+    "AL-03",
+    "AL-04",
+    "AL-05",
+    "AL-06"
+  ],
+  "AL-09": [
+    "AL-02",
+    "AL-03",
+    "AL-06",
+    "AL-07",
+    "AL-08",
+    "AL-11"
+  ],
+  "AL-02": [
+    "AL-08",
+    "AL-09",
+    "AL-11"
+  ],
+  "AL-03": [
+    "AL-01",
+    "AL-04",
+    "AL-06",
+    "AL-09",
+    "AL-11"
+  ],
+  "AL-04": [
+    "AL-01",
+    "AL-03",
+    "AL-05",
+    "AL-11",
+    "AL-12"
+  ],
+  "AL-05": [
+    "AL-01",
+    "AL-04",
+    "AL-06",
+    "AL-12",
+    "GR-EM"
+  ],
+  "AL-06": [
+    "AL-01",
+    "AL-03",
+    "AL-05",
+    "AL-09",
+    "GR-EM"
+  ],
+  "AL-07": [
+    "AL-08",
+    "AL-09",
+    "AL-10",
+    "MNE"
+  ],
+  "AL-08": [
+    "AL-02",
+    "AL-07",
+    "AL-09",
+    "AL-10"
+  ],
+  "AL-10": [
+    "AL-07",
+    "AL-08",
+    "MNE"
+  ],
+  "AL-11": [
+    "AL-02",
+    "AL-03",
+    "AL-04",
+    "AL-09"
+  ],
+  "AL-12": [
+    "AL-04",
+    "AL-05",
+    "GR-EM",
+    "GR-PW"
+  ],
+  "MNE": [
+    "AL-07",
+    "AL-10",
+    "BA-SRP*",
+    "HR-19",
+    "RS-16",
+    "RS-18"
+  ],
+  "BA-BRC*": [
+    "BA-BIH*",
+    "BA-SRP*",
+    "HR-16",
+    "RS-07"
+  ],
+  "BA-SRP*": [
+    "BA-BIH*",
+    "BA-BRC*",
+    "HR-03",
+    "HR-12",
+    "HR-16",
+    "HR-19",
+    "MNE",
+    "RS-07",
+    "RS-08",
+    "RS-16"
+  ],
+  "BA-BIH*": [
+    "BA-BRC*",
+    "BA-SRP*",
+    "HR-03",
+    "HR-04",
+    "HR-09",
+    "HR-12",
+    "HR-13",
+    "HR-15",
+    "HR-16",
+    "HR-17",
+    "HR-19"
+  ],
+  "HR-14": [
+    "HR-10",
+    "HR-11",
+    "HR-12",
+    "HR-16",
+    "HU-BA",
+    "HU-BK",
+    "RS-05",
+    "RS-06"
+  ],
+  "HR-16": [
+    "BA-BIH*",
+    "BA-BRC*",
+    "BA-SRP*",
+    "HR-10",
+    "HR-12",
+    "HR-14",
+    "RS-06",
+    "RS-07"
+  ],
+  "HR-12": [
+    "BA-BIH*",
+    "BA-SRP*",
+    "HR-03",
+    "HR-11",
+    "HR-14",
+    "HR-16"
+  ],
+  "HR-10": [
+    "HR-06",
+    "HR-07",
+    "HR-11",
+    "HR-14",
+    "HR-16",
+    "HU-BA",
+    "HU-SO"
+  ],
+  "HR-11": [
+    "HR-03",
+    "HR-07",
+    "HR-10",
+    "HR-12",
+    "HR-14"
+  ],
+  "HR-03": [
+    "BA-BIH*",
+    "BA-SRP*",
+    "HR-01",
+    "HR-04",
+    "HR-07",
+    "HR-11",
+    "HR-12"
+  ],
+  "HR-07": [
+    "HR-01",
+    "HR-03",
+    "HR-06",
+    "HR-10",
+    "HR-11"
+  ],
+  "HR-20": [
+    "HR-01",
+    "HR-05",
+    "HR-06",
+    "HU-ZA",
+    "SI03"
+  ],
+  "HR-06": [
+    "HR-01",
+    "HR-05",
+    "HR-07",
+    "HR-10",
+    "HR-20",
+    "HU-SO",
+    "HU-ZA"
+  ],
+  "HR-05": [
+    "HR-01",
+    "HR-02",
+    "HR-06",
+    "HR-20",
+    "SI03"
+  ],
+  "HR-02": [
+    "HR-01",
+    "HR-05",
+    "HR-21",
+    "SI03"
+  ],
+  "HR-21": [
+    "HR-01",
+    "HR-02"
+  ],
+  "HR-01": [
+    "HR-02",
+    "HR-03",
+    "HR-04",
+    "HR-05",
+    "HR-06",
+    "HR-07",
+    "HR-20",
+    "HR-21",
+    "SI03"
+  ],
+  "HR-04": [
+    "BA-BIH*",
+    "HR-01",
+    "HR-03",
+    "HR-08",
+    "HR-09",
+    "SI03"
+  ],
+  "HR-18": [
+    "HR-08",
+    "SI03",
+    "SI04"
+  ],
+  "HR-08": [
+    "HR-04",
+    "HR-09",
+    "HR-18",
+    "SI03",
+    "SI04"
+  ],
+  "HR-09": [
+    "BA-BIH*",
+    "HR-04",
+    "HR-08",
+    "HR-13"
+  ],
+  "HR-13": [
+    "BA-BIH*",
+    "HR-09",
+    "HR-15"
+  ],
+  "HR-15": [
+    "BA-BIH*",
+    "HR-13",
+    "HR-17"
+  ],
+  "HR-17": [
+    "BA-BIH*",
+    "HR-15",
+    "HR-19"
+  ],
+  "HR-19": [
+    "BA-BIH*",
+    "BA-SRP*",
+    "HR-17",
+    "MNE"
+  ],
+  "SI03": [
+    "AT-1",
+    "AT-2",
+    "AT-6",
+    "HR-01",
+    "HR-02",
+    "HR-04",
+    "HR-05",
+    "HR-08",
+    "HR-18",
+    "HR-20",
+    "HU-VA",
+    "HU-ZA",
+    "SI04"
+  ],
+  "SI04": [
+    "AT-2",
+    "HR-08",
+    "HR-18",
+    "SI03"
+  ],
+  "MD-CA": [
+    "MD-CT",
+    "MD-GA",
+    "MD-TA",
+    "RO-GL",
+    "RO-TL",
+    "RO-VS",
+    "UA-51"
+  ],
+  "MD-GA": [
+    "MD-BS",
+    "MD-CA",
+    "MD-CM",
+    "MD-CT",
+    "MD-LE",
+    "MD-TA",
+    "UA-51"
+  ],
+  "MD-TA": [
+    "MD-CA",
+    "MD-GA",
+    "UA-51"
+  ],
+  "MD-CT": [
+    "MD-CA",
+    "MD-GA",
+    "MD-LE",
+    "RO-GL",
+    "RO-VS"
+  ],
+  "MD-BS": [
+    "MD-CM",
+    "MD-GA",
+    "UA-51"
+  ],
+  "MD-LE": [
+    "MD-CM",
+    "MD-CT",
+    "MD-GA",
+    "MD-HI",
+    "RO-VS"
+  ],
+  "MD-CM": [
+    "MD-BS",
+    "MD-CS",
+    "MD-GA",
+    "MD-HI",
+    "MD-IA",
+    "MD-LE",
+    "UA-51"
+  ],
+  "MD-SV": [
+    "MD-CS",
+    "MD-HI",
+    "MD-SN",
+    "UA-51"
+  ],
+  "MD-BD": [
+    "MD-AN",
+    "MD-CS",
+    "MD-SN"
+  ],
+  "MD-CS": [
+    "MD-AN",
+    "MD-BD",
+    "MD-CM",
+    "MD-IA",
+    "MD-SN",
+    "MD-SV",
+    "UA-51"
+  ],
+  "MD-HI": [
+    "MD-CM",
+    "MD-IA",
+    "MD-LE",
+    "MD-NI",
+    "MD-ST",
+    "MD-SV",
+    "RO-IS",
+    "RO-VS"
+  ],
+  "MD-IA": [
+    "MD-AN",
+    "MD-CM",
+    "MD-CS",
+    "MD-CU",
+    "MD-HI",
+    "MD-ST"
+  ],
+  "MD-NI": [
+    "MD-CL",
+    "MD-HI",
+    "MD-ST",
+    "MD-UN",
+    "RO-IS"
+  ],
+  "MD-CU": [
+    "MD-AN",
+    "MD-CR",
+    "MD-DU",
+    "MD-IA",
+    "MD-ST"
+  ],
+  "MD-AN": [
+    "MD-BD",
+    "MD-CR",
+    "MD-CS",
+    "MD-CU",
+    "MD-IA",
+    "MD-SN"
+  ],
+  "MD-CR": [
+    "MD-AN",
+    "MD-CU",
+    "MD-DU",
+    "MD-OR",
+    "MD-SN",
+    "MD-ST"
+  ],
+  "MD-ST": [
+    "MD-CL",
+    "MD-CR",
+    "MD-CU",
+    "MD-HI",
+    "MD-IA",
+    "MD-NI",
+    "MD-OR"
+  ],
+  "MD-UN": [
+    "MD-CL",
+    "MD-FA",
+    "MD-NI",
+    "MD-SI",
+    "MD-TE",
+    "RO-IS"
+  ],
+  "MD-DU": [
+    "MD-CR",
+    "MD-CU",
+    "MD-OR",
+    "MD-SN",
+    "UA-51"
+  ],
+  "MD-CL": [
+    "MD-NI",
+    "MD-OR",
+    "MD-ST",
+    "MD-TE",
+    "MD-UN"
+  ],
+  "MD-SN": [
+    "MD-AN",
+    "MD-BD",
+    "MD-CR",
+    "MD-CS",
+    "MD-DU",
+    "MD-FL",
+    "MD-OR",
+    "MD-RE",
+    "MD-SD",
+    "MD-SO",
+    "MD-SV",
+    "UA-05",
+    "UA-51"
+  ],
+  "MD-FA": [
+    "MD-BA",
+    "MD-GL",
+    "MD-OR",
+    "MD-SI",
+    "MD-UN",
+    "RO-BT",
+    "RO-IS"
+  ],
+  "MD-OR": [
+    "MD-CL",
+    "MD-CR",
+    "MD-DU",
+    "MD-FA",
+    "MD-RE",
+    "MD-SN",
+    "MD-ST",
+    "MD-TE",
+    "UA-51"
+  ],
+  "MD-GL": [
+    "MD-BA",
+    "MD-FA",
+    "MD-RI",
+    "MD-TE",
+    "RO-BT",
+    "RO-IS"
+  ],
+  "MD-BA": [
+    "MD-FA",
+    "MD-GL",
+    "MD-RI",
+    "MD-SI"
+  ],
+  "MD-TE": [
+    "MD-CL",
+    "MD-FL",
+    "MD-GL",
+    "MD-OR",
+    "MD-RE",
+    "MD-RI",
+    "MD-SD",
+    "MD-SI",
+    "MD-UN"
+  ],
+  "MD-SI": [
+    "MD-BA",
+    "MD-DR",
+    "MD-FA",
+    "MD-FL",
+    "MD-RI",
+    "MD-TE",
+    "MD-UN"
+  ],
+  "MD-RI": [
+    "MD-BA",
+    "MD-DO",
+    "MD-DR",
+    "MD-ED",
+    "MD-GL",
+    "MD-SI",
+    "MD-TE",
+    "RO-BT"
+  ],
+  "MD-RE": [
+    "MD-OR",
+    "MD-SD",
+    "MD-SN",
+    "MD-TE"
+  ],
+  "MD-SD": [
+    "MD-FL",
+    "MD-RE",
+    "MD-SN",
+    "MD-TE"
+  ],
+  "MD-FL": [
+    "MD-DR",
+    "MD-SD",
+    "MD-SI",
+    "MD-SN",
+    "MD-SO",
+    "MD-TE",
+    "UA-05"
+  ],
+  "MD-DR": [
+    "MD-DO",
+    "MD-FL",
+    "MD-RI",
+    "MD-SI",
+    "MD-SO"
+  ],
+  "MD-ED": [
+    "MD-BR",
+    "MD-DO",
+    "MD-OC",
+    "MD-RI",
+    "RO-BT",
+    "UA-77"
+  ],
+  "MD-BR": [
+    "MD-ED",
+    "MD-OC",
+    "RO-BT",
+    "UA-77"
+  ],
+  "MD-SO": [
+    "MD-DO",
+    "MD-DR",
+    "MD-FL",
+    "MD-SN",
+    "UA-05"
+  ],
+  "MD-DO": [
+    "MD-DR",
+    "MD-ED",
+    "MD-OC",
+    "MD-RI",
+    "MD-SO",
+    "UA-05"
+  ],
+  "MD-OC": [
+    "MD-BR",
+    "MD-DO",
+    "MD-ED",
+    "UA-05",
+    "UA-77"
   ]
 }

@@ -57,6 +57,29 @@ export const regionValues: Record<string, number> = {
   
   // Tajikistan
   'TJ-DU': 2,   // Dushanbe (city) - Capital
+  
+  // Germany
+  'DE-BE': 5,   // Berlin - Capital
+  'DE-NW': 3,   // North Rhine-Westphalia - Industrial heartland
+  'DE-BY': 2,   // Bavaria
+  'DE-BW': 2,   // Baden-Württemberg
+  'DE-SN': 2,   // Saxony
+  
+  // Poland
+  'PL-MZ': 4,   // Warsaw - Capital
+  'PL-SL': 2,   // Silesia - Industrial
+  
+  // Austria-Hungary (successors)
+  'AT-9': 5,    // Vienna - Capital
+  'HU-PE': 4,   // Budapest - Capital
+  'CZ-10': 3,   // Prague - Major city
+  
+  // Balkans
+  'RO-B': 3,    // Bucharest - Capital
+  'BG-22': 3,   // Sofia - Capital
+  'RS-00': 3,   // Belgrade - Capital
+  'GR-AT': 3,   // Athens - Capital
+  
   // All other regions default to value 1
 };
 
@@ -334,4 +357,93 @@ export const initialRegionOwnership: Record<string, FactionId> = {
   'GEO': 'white',    // Georgia (country)
   'ARM': 'white',    // Armenia (country)
   'AZE': 'white',    // Azerbaijan (country)
+
+  // ============================================
+  // GERMANY (Foreign Power)
+  // ============================================
+  'DE-BB': 'foreign', 'DE-BE': 'foreign', 'DE-BW': 'foreign', 'DE-BY': 'foreign',
+  'DE-HB': 'foreign', 'DE-HE': 'foreign', 'DE-HH': 'foreign', 'DE-MV': 'foreign',
+  'DE-NI': 'foreign', 'DE-NW': 'foreign', 'DE-RP': 'foreign', 'DE-SH': 'foreign',
+  'DE-SL': 'foreign', 'DE-SN': 'foreign', 'DE-ST': 'foreign', 'DE-TH': 'foreign',
+
+  // ============================================
+  // POLAND (Occupied by Central Powers)
+  // ============================================
+  'PL-DS': 'foreign', 'PL-KP': 'foreign', 'PL-LB': 'foreign', 'PL-LD': 'foreign',
+  'PL-LU': 'foreign', 'PL-MA': 'foreign', 'PL-MZ': 'foreign', 'PL-OP': 'foreign',
+  'PL-PD': 'foreign', 'PL-PK': 'foreign', 'PL-PM': 'foreign', 'PL-SK': 'foreign',
+  'PL-SL': 'foreign', 'PL-WN': 'foreign', 'PL-WP': 'foreign', 'PL-ZP': 'foreign',
+
+  // ============================================
+  // AUSTRIA-HUNGARY SUCCESSORS (Foreign Power)
+  // ============================================
+  'AT-1': 'foreign', 'AT-2': 'foreign', 'AT-3': 'foreign', 'AT-4': 'foreign',
+  'AT-5': 'foreign', 'AT-6': 'foreign', 'AT-7': 'foreign', 'AT-8': 'foreign', 'AT-9': 'foreign',
+  'HU-BA': 'foreign', 'HU-BE': 'foreign', 'HU-BK': 'foreign', 'HU-BZ': 'foreign',
+  'HU-CS': 'foreign', 'HU-FE': 'foreign', 'HU-GS': 'foreign', 'HU-HB': 'foreign',
+  'HU-HE': 'foreign', 'HU-JN': 'foreign', 'HU-KE': 'foreign', 'HU-NO': 'foreign',
+  'HU-PE': 'foreign', 'HU-SO': 'foreign', 'HU-SZ': 'foreign', 'HU-TO': 'foreign',
+  'HU-VA': 'foreign', 'HU-VE': 'foreign', 'HU-ZA': 'foreign',
+  'CZ-10': 'foreign', 'CZ-20': 'foreign', 'CZ-31': 'foreign', 'CZ-32': 'foreign',
+  'CZ-41': 'foreign', 'CZ-42': 'foreign', 'CZ-51': 'foreign', 'CZ-52': 'foreign',
+  'CZ-53': 'foreign', 'CZ-63': 'foreign', 'CZ-64': 'foreign', 'CZ-71': 'foreign',
+  'CZ-72': 'foreign', 'CZ-80': 'foreign',
+  'SK-BC': 'foreign', 'SK-BL': 'foreign', 'SK-KI': 'foreign', 'SK-NI': 'foreign',
+  'SK-PV': 'foreign', 'SK-TA': 'foreign', 'SK-TC': 'foreign', 'SK-ZI': 'foreign',
+
+  // ============================================
+  // BALKANS (Foreign Powers)
+  // ============================================
+  'RO-AB': 'foreign', 'RO-AG': 'foreign', 'RO-AR': 'foreign', 'RO-B': 'foreign',
+  'RO-BC': 'foreign', 'RO-BH': 'foreign', 'RO-BN': 'foreign', 'RO-BR': 'foreign',
+  'RO-BT': 'foreign', 'RO-BV': 'foreign', 'RO-BZ': 'foreign', 'RO-CJ': 'foreign',
+  'RO-CL': 'foreign', 'RO-CS': 'foreign', 'RO-CT': 'foreign', 'RO-CV': 'foreign',
+  'RO-DB': 'foreign', 'RO-DJ': 'foreign', 'RO-GJ': 'foreign', 'RO-GL': 'foreign',
+  'RO-GR': 'foreign', 'RO-HD': 'foreign', 'RO-HR': 'foreign', 'RO-IF': 'foreign',
+  'RO-IL': 'foreign', 'RO-IS': 'foreign', 'RO-MH': 'foreign', 'RO-MM': 'foreign',
+  'RO-MS': 'foreign', 'RO-NT': 'foreign', 'RO-OT': 'foreign', 'RO-PH': 'foreign',
+  'RO-SB': 'foreign', 'RO-SJ': 'foreign', 'RO-SM': 'foreign', 'RO-SV': 'foreign',
+  'RO-TL': 'foreign', 'RO-TM': 'foreign', 'RO-TR': 'foreign', 'RO-VL': 'foreign',
+  'RO-VN': 'foreign', 'RO-VS': 'foreign',
+  'BG-01': 'foreign', 'BG-02': 'foreign', 'BG-03': 'foreign', 'BG-04': 'foreign',
+  'BG-05': 'foreign', 'BG-06': 'foreign', 'BG-07': 'foreign', 'BG-08': 'foreign',
+  'BG-09': 'foreign', 'BG-10': 'foreign', 'BG-11': 'foreign', 'BG-12': 'foreign',
+  'BG-13': 'foreign', 'BG-14': 'foreign', 'BG-15': 'foreign', 'BG-16': 'foreign',
+  'BG-17': 'foreign', 'BG-18': 'foreign', 'BG-19': 'foreign', 'BG-20': 'foreign',
+  'BG-21': 'foreign', 'BG-22': 'foreign', 'BG-23': 'foreign', 'BG-24': 'foreign',
+  'BG-25': 'foreign', 'BG-26': 'foreign', 'BG-27': 'foreign', 'BG-28': 'foreign',
+  'RS-00': 'foreign', 'RS-01': 'foreign', 'RS-02': 'foreign', 'RS-03': 'foreign',
+  'RS-04': 'foreign', 'RS-05': 'foreign', 'RS-06': 'foreign', 'RS-07': 'foreign',
+  'RS-08': 'foreign', 'RS-09': 'foreign', 'RS-10': 'foreign', 'RS-11': 'foreign',
+  'RS-12': 'foreign', 'RS-13': 'foreign', 'RS-14': 'foreign', 'RS-15': 'foreign',
+  'RS-16': 'foreign', 'RS-17': 'foreign', 'RS-18': 'foreign', 'RS-19': 'foreign',
+  'RS-20': 'foreign', 'RS-21': 'foreign', 'RS-22': 'foreign', 'RS-23': 'foreign',
+  'RS-24': 'foreign',
+  'AL-01': 'foreign', 'AL-02': 'foreign', 'AL-03': 'foreign', 'AL-04': 'foreign',
+  'AL-05': 'foreign', 'AL-06': 'foreign', 'AL-07': 'foreign', 'AL-08': 'foreign',
+  'AL-09': 'foreign', 'AL-10': 'foreign', 'AL-11': 'foreign', 'AL-12': 'foreign',
+  'GR-AI': 'foreign', 'GR-AT': 'foreign', 'GR-CR': 'foreign', 'GR-EM': 'foreign',
+  'GR-MA': 'foreign', 'GR-MH': 'foreign', 'GR-PW': 'foreign', 'GR-TC': 'foreign',
+  'MNE': 'foreign', 'BA-BIH*': 'foreign', 'BA-BRC*': 'foreign', 'BA-SRP*': 'foreign',
+  'HR-01': 'foreign', 'HR-02': 'foreign', 'HR-03': 'foreign', 'HR-04': 'foreign',
+  'HR-05': 'foreign', 'HR-06': 'foreign', 'HR-07': 'foreign', 'HR-08': 'foreign',
+  'HR-09': 'foreign', 'HR-10': 'foreign', 'HR-11': 'foreign', 'HR-12': 'foreign',
+  'HR-13': 'foreign', 'HR-14': 'foreign', 'HR-15': 'foreign', 'HR-16': 'foreign',
+  'HR-17': 'foreign', 'HR-18': 'foreign', 'HR-19': 'foreign', 'HR-20': 'foreign',
+  'HR-21': 'foreign',
+  'SI03': 'foreign', 'SI04': 'foreign',
+
+  // ============================================
+  // MOLDOVA (White/Neutral)
+  // ============================================
+  'MD-AN': 'white', 'MD-BA': 'white', 'MD-BD': 'white', 'MD-BR': 'white',
+  'MD-BS': 'white', 'MD-CA': 'white', 'MD-CL': 'white', 'MD-CM': 'white',
+  'MD-CR': 'white', 'MD-CS': 'white', 'MD-CT': 'white', 'MD-CU': 'white',
+  'MD-DO': 'white', 'MD-DR': 'white', 'MD-DU': 'white', 'MD-ED': 'white',
+  'MD-FA': 'white', 'MD-FL': 'white', 'MD-GA': 'white', 'MD-GL': 'white',
+  'MD-HI': 'white', 'MD-IA': 'white', 'MD-LE': 'white', 'MD-NI': 'white',
+  'MD-OC': 'white', 'MD-OR': 'white', 'MD-RE': 'white', 'MD-RI': 'white',
+  'MD-SD': 'white', 'MD-SI': 'white', 'MD-SN': 'white', 'MD-SO': 'white',
+  'MD-ST': 'white', 'MD-SV': 'white', 'MD-TA': 'white', 'MD-TE': 'white',
+  'MD-UN': 'white',
 };
