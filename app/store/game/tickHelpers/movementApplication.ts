@@ -15,14 +15,17 @@ interface MovementApplicationResult {
   nextCombats: ActiveCombat[];
   nextEvents: GameEvent[];
   nextNotifications: NotificationItem[];
+  interceptedMovementIds: string[];
 }
 
 /**
  * Applies completed movements to regions, handling friendly reinforcements,
- * combat reinforcements, undefended captures, and initiating new combats
+ * combat reinforcements, undefended captures, and initiating new combats.
+ * Also detects meeting engagements where opposing forces are moving into each other's territory.
  */
 export function applyCompletedMovements(
   completedMovements: Movement[],
+  allMovements: Movement[],
   context: MovementApplicationContext,
   currentDate: Date
 ): MovementApplicationResult {
@@ -30,9 +33,13 @@ export function applyCompletedMovements(
   const nextCombats = [...context.combats];
   const nextEvents = [...context.events];
   const nextNotifications = [...context.notifications];
+  const interceptedMovementIds: string[] = [];
 
   completedMovements.forEach(movement => {
-    const { toRegion, divisions, owner } = movement;
+    // Skip if this movement was already intercepted as a counter-movement
+    if (interceptedMovementIds.includes(movement.id)) return;
+
+    const { toRegion, fromRegion, divisions, owner } = movement;
     const to = nextRegions[toRegion];
     if (!to) return;
 
@@ -60,9 +67,6 @@ export function applyCompletedMovements(
       const hasAutonomy = theyGrantUs === 'autonomy' || weDeclared === 'autonomy';
       
       // Determine the effective relationship
-      // Autonomy grants mutual military access
-      // If we declared war, it's war regardless of their stance (unless autonomy prevents it)
-      // If they granted us military access and we didn't declare war, it's military access
       let effectiveRelationship = weDeclared === 'war' ? 'war' : theyGrantUs;
       
       // Override: autonomy grants military access
@@ -72,7 +76,6 @@ export function applyCompletedMovements(
       
       if (effectiveRelationship === 'military_access' || effectiveRelationship === 'autonomy') {
         // Military access - units can move but no occupation or combat
-        // Just add divisions to the region without changing ownership
         nextRegions[toRegion] = {
           ...to,
           divisions: [...to.divisions, ...divisions],
@@ -81,6 +84,22 @@ export function applyCompletedMovements(
         
       } else if (effectiveRelationship === 'war' || effectiveRelationship === 'neutral') {
         // War state or neutral (hostile) - proceed with combat/occupation logic
+
+        // INTERCEPTION LOGIC: Check for counter-movements (Meeting Engagement)
+        // If enemy units are moving FROM our destination TO our origin, they meet at our destination
+        const counterMovement = allMovements.find(m => 
+          m.fromRegion === toRegion && 
+          m.toRegion === fromRegion && 
+          m.owner !== owner &&
+          !interceptedMovementIds.includes(m.id)
+        );
+
+        const interceptingDivisions = counterMovement ? counterMovement.divisions : [];
+        if (counterMovement) {
+          interceptedMovementIds.push(counterMovement.id);
+          console.log(`[MEETING ENGAGEMENT] ${owner} forces intercepted ${counterMovement.owner} forces moving from ${to.name} to origin`);
+        }
+
         // Check for ongoing combat
         const ongoingCombat = nextCombats.find(c => c.regionId === toRegion && !c.isComplete);
         
@@ -90,12 +109,21 @@ export function applyCompletedMovements(
           
           if (owner === ongoingCombat.attackerFaction) {
             // Join the attackers
+            const totalDivisionsToAdd = [...divisions];
             const updatedCombat = {
               ...ongoingCombat,
-              attackerDivisions: [...ongoingCombat.attackerDivisions, ...divisions],
-              initialAttackerHp: ongoingCombat.initialAttackerHp + divisions.reduce((sum, d) => sum + d.hp, 0),
-              initialAttackerCount: ongoingCombat.initialAttackerCount + divisions.length,
+              attackerDivisions: [...ongoingCombat.attackerDivisions, ...totalDivisionsToAdd],
+              initialAttackerHp: ongoingCombat.initialAttackerHp + totalDivisionsToAdd.reduce((sum, d) => sum + d.hp, 0),
+              initialAttackerCount: ongoingCombat.initialAttackerCount + totalDivisionsToAdd.length,
             };
+
+            // If we intercepted a counter-movement, they join the defenders
+            if (counterMovement) {
+              updatedCombat.defenderDivisions = [...updatedCombat.defenderDivisions, ...interceptingDivisions];
+              updatedCombat.initialDefenderHp += interceptingDivisions.reduce((sum, d) => sum + d.hp, 0);
+              updatedCombat.initialDefenderCount += interceptingDivisions.length;
+            }
+
             nextCombats[combatIndex] = updatedCombat;
             
             console.log(`[REINFORCEMENTS] ${divisions.length} ${owner} divisions joined the attackers in combat at ${to.name}`);
@@ -109,15 +137,27 @@ export function applyCompletedMovements(
               toRegion
             );
             nextEvents.push(reinforcementEvent);
-            // Notification removed - event still logged in EventsModal
           } else if (owner === ongoingCombat.defenderFaction) {
             // Join the defenders
+            const totalDivisionsToAdd = [...divisions, ...interceptingDivisions];
             const updatedCombat = {
               ...ongoingCombat,
-              defenderDivisions: [...ongoingCombat.defenderDivisions, ...divisions],
-              initialDefenderHp: ongoingCombat.initialDefenderHp + divisions.reduce((sum, d) => sum + d.hp, 0),
-              initialDefenderCount: ongoingCombat.initialDefenderCount + divisions.length,
+              defenderDivisions: [...ongoingCombat.defenderDivisions, ...totalDivisionsToAdd],
+              initialDefenderHp: ongoingCombat.initialDefenderHp + totalDivisionsToAdd.reduce((sum, d) => sum + d.hp, 0),
+              initialDefenderCount: ongoingCombat.initialDefenderCount + totalDivisionsToAdd.length,
             };
+
+            // If we intercepted a counter-movement, they join the attackers (if they belong to attacker faction)
+            // This case is unlikely given the counter-movement check, but for completeness:
+            if (counterMovement && counterMovement.owner === ongoingCombat.attackerFaction) {
+               // This would be weird, but let's handle it
+               updatedCombat.attackerDivisions = [...updatedCombat.attackerDivisions, ...interceptingDivisions];
+               updatedCombat.initialAttackerHp += interceptingDivisions.reduce((sum, d) => sum + d.hp, 0);
+               updatedCombat.initialAttackerCount += interceptingDivisions.length;
+               // And remove them from the defender add
+               updatedCombat.defenderDivisions = updatedCombat.defenderDivisions.filter(d => !interceptingDivisions.includes(d));
+            }
+
             nextCombats[combatIndex] = updatedCombat;
             
             console.log(`[REINFORCEMENTS] ${divisions.length} ${owner} divisions joined the defenders in combat at ${to.name}`);
@@ -131,13 +171,14 @@ export function applyCompletedMovements(
               toRegion
             );
             nextEvents.push(reinforcementEvent);
-            // Notification removed - event still logged in EventsModal
           }
         } else {
           // No ongoing combat - follow standard combat/occupation logic
-          const defenderDivisions = to.divisions.filter(d => d.owner === to.owner);
-          if (defenderDivisions.length === 0) {
-            // Undefended capture (occupation in war state)
+          const existingDefenderDivisions = to.divisions.filter(d => d.owner === to.owner);
+          const totalDefenderDivisions = [...existingDefenderDivisions, ...interceptingDivisions];
+
+          if (totalDefenderDivisions.length === 0) {
+            // Undefended capture
             nextRegions[toRegion] = {
               ...to,
               owner: owner,
@@ -161,7 +202,7 @@ export function applyCompletedMovements(
               owner,
               to.owner,
               divisions,
-              defenderDivisions,
+              totalDefenderDivisions,
               currentDate
             );
             nextCombats.push(newCombat);
@@ -169,20 +210,19 @@ export function applyCompletedMovements(
             const battleEvent = createGameEvent(
               'combat_victory',
               `Battle for ${to.name} Begins!`,
-              `${owner === 'soviet' ? 'Soviet' : 'White'} forces (${divisions.length} divisions) are attacking ${to.owner === 'soviet' ? 'Soviet' : 'White'} defenders (${defenderDivisions.length} divisions) at ${to.name}.`,
+              `${owner === 'soviet' ? 'Soviet' : 'White'} forces (${divisions.length} divisions) are attacking ${to.owner === 'soviet' ? 'Soviet' : 'White'} defenders (${totalDefenderDivisions.length} divisions) at ${to.name}.`,
               currentDate,
               owner,
               toRegion
             );
             nextEvents.push(battleEvent);
-            // Notification removed - event still logged in EventsModal
           }
         }
       }
     }
   });
 
-  return { nextRegions, nextCombats, nextEvents, nextNotifications };
+  return { nextRegions, nextCombats, nextEvents, nextNotifications, interceptedMovementIds };
 }
 
 /**
