@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Movement, ActiveCombat, GameEvent, ProductionQueueItem } from '../types/game';
+import { Movement, ActiveCombat, GameEvent, ProductionQueueItem, FactionId } from '../types/game';
 
 // Internal imports
 import { GameStore } from './game/types';
@@ -60,7 +60,7 @@ export const useGameStore = create<GameStore>()(
         lastSaveTime: state.lastSaveTime,
         theaters: state.theaters,
         armyGroups: state.armyGroups,
-        productionQueue: state.productionQueue,
+        productionQueues: state.productionQueues,
         relationships: state.relationships, // Persist relationships
         mapMode: state.mapMode, // Persist map mode
       }),
@@ -96,13 +96,18 @@ export const useGameStore = create<GameStore>()(
               timestamp: new Date(e.timestamp),
             }));
           }
-          // Convert dates in productionQueue
-          if (state.productionQueue) {
-            state.productionQueue = state.productionQueue.map((p: ProductionQueueItem) => ({
-              ...p,
-              startTime: new Date(p.startTime),
-              completionTime: new Date(p.completionTime),
-            }));
+          // Convert dates in productionQueues
+          if (state.productionQueues) {
+            const factionIds = Object.keys(state.productionQueues) as FactionId[];
+            for (const factionId of factionIds) {
+              if (state.productionQueues[factionId]) {
+                state.productionQueues[factionId] = state.productionQueues[factionId].map((p: ProductionQueueItem) => ({
+                  ...p,
+                  startTime: new Date(p.startTime),
+                  completionTime: new Date(p.completionTime),
+                }));
+              }
+            }
           }
           
           // ALWAYS reset to title screen on rehydration so save data doesn't skip it

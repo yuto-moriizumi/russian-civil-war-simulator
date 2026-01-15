@@ -152,7 +152,7 @@ export interface GameState {
   activeCombats: ActiveCombat[]; // Ongoing battles
   theaters: Theater[]; // Auto-detected theaters for the player
   armyGroups: ArmyGroup[]; // Player's army groups for bulk movement
-  productionQueue: ProductionQueueItem[]; // Queue of divisions being produced (per faction)
+  productionQueues: Record<FactionId, ProductionQueueItem[]>; // Per-faction production queues
   relationships: Relationship[]; // Diplomatic/military relationships between factions
   mapMode: MapMode; // Current map visualization mode
 }
@@ -251,7 +251,7 @@ export interface GameAPI {
   selectTheater: (theaterId: string) => void;
   // Production queue methods
   addToProductionQueue: (armyGroupId: string) => boolean;
-  getProductionQueue: () => ProductionQueueItem[];
+  getProductionQueue: (factionId?: FactionId) => ProductionQueueItem[];
   cancelProduction: (productionId: string) => boolean;
   // Relationship methods
   getRelationships: () => Relationship[];

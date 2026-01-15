@@ -2,7 +2,7 @@ import { calculateFactionIncome } from '../../utils/mapUtils';
 import { runAITick } from '../../ai/cpuPlayer';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
-import { ProductionQueueItem } from '../../types/game';
+import { ProductionQueueItem, FactionId } from '../../types/game';
 import { 
   validateDivisions, 
   processMovements, 
@@ -33,14 +33,14 @@ export const createTickActions = (
     const state = get();
     if (!state.isPlaying) return;
 
-    const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, money, aiStates, gameEvents, notifications, armyGroups, productionQueue, relationships } = state;
+    const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, money, aiStates, gameEvents, notifications, armyGroups, productionQueues, relationships } = state;
     
     // Step 1: Validate divisions (development mode only)
     const { updatedRegions, updatedMovingUnits } = validateDivisions(regions, movingUnits, armyGroups);
     
     // Step 2: Process production queue
     const { remainingProductions, updatedRegions: regionsAfterProduction, completedProductions } = processProductionQueue(
-      productionQueue,
+      productionQueues,
       dateTime,
       updatedRegions
     );
@@ -112,12 +112,12 @@ export const createTickActions = (
     // Step 8: AI Tick - process AI actions and deployments for all AI factions
     let nextAIStates = aiStates;
     let nextArmyGroups = armyGroups;
-    const nextProductionQueue: ProductionQueueItem[] = [...remainingProductions];
+    const nextProductionQueues: Record<FactionId, ProductionQueueItem[]> = { ...remainingProductions };
 
     if (aiStates.length > 0) {
       // Process each AI faction
       nextAIStates = aiStates.map(aiState => {
-        const aiActions = runAITick(aiState, nextRegions, nextArmyGroups, nextCombats, remainingMovements, nextProductionQueue);
+        const aiActions = runAITick(aiState, nextRegions, nextArmyGroups, nextCombats, remainingMovements, nextProductionQueues[aiState.factionId] || []);
         
         // If AI created a new army group, add it
         if (aiActions.newArmyGroup) {
@@ -126,9 +126,12 @@ export const createTickActions = (
         
         // Handle AI production requests
         if (aiActions.productionRequests.length > 0) {
+          // Get or initialize the faction's queue
+          const factionQueue = nextProductionQueues[aiState.factionId] || [];
+          
           aiActions.productionRequests.forEach(req => {
             const completionTime = new Date(newDate.getTime() + 24 * 60 * 60 * 1000); // 24 hours production
-            nextProductionQueue.push({
+            factionQueue.push({
               id: `prod-ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               divisionName: req.divisionName,
               owner: aiState.factionId,
@@ -138,6 +141,9 @@ export const createTickActions = (
               armyGroupId: req.armyGroupId,
             });
           });
+          
+          // Update the faction's queue
+          nextProductionQueues[aiState.factionId] = factionQueue;
         }
         
         return aiActions.updatedAIState;
@@ -163,7 +169,7 @@ export const createTickActions = (
       notifications: nextNotifications,
       aiStates: nextAIStates, // Updated AI states
       armyGroups: nextArmyGroups,
-      productionQueue: nextProductionQueue, // Update production queue
+      productionQueues: nextProductionQueues, // Update production queues
     });
 
     // Now trigger automatic actions for ALL army groups in advance/defend mode (player + AI)

@@ -11,7 +11,7 @@ interface TheaterPanelProps {
   playerFaction: FactionId;
   selectedGroupId: string | null;
   movingUnits: Movement[];
-  productionQueue: ProductionQueueItem[];
+  productionQueue: Record<FactionId, ProductionQueueItem[]>;
   onCreateGroup: (name: string, regionIds: string[], theaterId: string | null) => void;
   onDeleteGroup: (groupId: string) => void;
   onRenameGroup: (groupId: string, name: string) => void;
@@ -70,7 +70,7 @@ export default function TheaterPanel({
       {/* Group cards by theater if desired, but for now we'll just list them horizontally */}
       {playerGroups.map((group) => {
         const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerFaction, group.id, movingUnits);
-        const queueCount = productionQueue.filter(p => p.armyGroupId === group.id).length;
+        const queueCount = (productionQueue[playerFaction] || []).filter(p => p.armyGroupId === group.id).length;
         const isGroupSelected = selectedGroupId === group.id;
 
         return (
