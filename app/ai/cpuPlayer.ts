@@ -1,5 +1,5 @@
 import { AIState, FactionId, RegionState, Region, ActiveCombat, Movement, ArmyGroup, ProductionQueueItem, FactionBonuses } from '../types/game';
-import { canProduceDivision, getDivisionCapInfo } from '../utils/divisionCap';
+import { canProduceDivision, getCommandPowerInfo } from '../utils/commandPower';
 
 /**
  * Creates initial AI state for a faction
@@ -180,7 +180,7 @@ export function runAITick(
   
   // AI production logic: produce up to 2 divisions per tick if under cap
   while (divisionsCreated < 2) {
-    // Check division cap before producing
+    // Check command power before producing
     if (!canProduceDivision(factionId, regions, movingUnits, productionQueues, factionBonuses)) {
       break;
     }

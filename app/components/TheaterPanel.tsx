@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Theater, ArmyGroup, FactionId, RegionState, Movement, ProductionQueueItem, FactionBonuses } from '../types/game';
 import { getArmyGroupUnitCount } from '../utils/mapUtils';
-import { canProduceDivision } from '../utils/divisionCap';
+import { canProduceDivision } from '../utils/commandPower';
 
 interface TheaterPanelProps {
   theaters: Theater[];

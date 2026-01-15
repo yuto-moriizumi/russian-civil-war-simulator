@@ -1,7 +1,7 @@
 import { GameStore } from './types';
 import { ProductionQueueItem } from '../../types/game';
 import { getOrdinalSuffix } from '../../utils/eventUtils';
-import { getDivisionCapInfo, DIVISION_CAP_PER_UNIT } from '../../utils/divisionCap';
+import { getCommandPowerInfo, COMMAND_POWER_PER_UNIT } from '../../utils/commandPower';
 import { getBaseProductionTime } from '../../utils/bonusCalculator';
 
 export const createProductionActions = (
@@ -28,7 +28,7 @@ export const createProductionActions = (
     }
 
     // Calculate how many divisions we can actually produce based on cap
-    const capInfo = getDivisionCapInfo(
+    const capInfo = getCommandPowerInfo(
       state.selectedCountry.id,
       state.regions,
       state.movingUnits,
@@ -36,22 +36,22 @@ export const createProductionActions = (
       state.factionBonuses[state.selectedCountry.id]
     );
     
-    // Convert available slots to available divisions (each division costs DIVISION_CAP_PER_UNIT slots)
-    const availableDivisions = Math.floor(capInfo.available / DIVISION_CAP_PER_UNIT);
+    // Convert available slots to available divisions (each division costs COMMAND_POWER_PER_UNIT slots)
+    const availableDivisions = Math.floor(capInfo.available / COMMAND_POWER_PER_UNIT);
     
     // Clamp count to available capacity
     const actualCount = Math.min(count, availableDivisions);
     
     if (actualCount === 0) {
       console.warn(
-        `Division cap reached! Current: ${capInfo.current}, In Production: ${capInfo.inProduction}, Cap: ${capInfo.cap} (${capInfo.controlledStates} states × 2)`
+        `Command power reached! Current: ${capInfo.current}, In Production: ${capInfo.inProduction}, Cap: ${capInfo.cap} (${capInfo.controlledStates} states × 2)`
       );
       return false;
     }
     
     // Log if we had to reduce the count due to cap
     if (actualCount < count) {
-      console.log(`Requested ${count} divisions, but only ${actualCount} can be produced due to division cap (${availableDivisions} divisions available)`);
+      console.log(`Requested ${count} divisions, but only ${actualCount} can be produced due to command power (${availableDivisions} divisions available)`);
     }
 
     // Find the army group

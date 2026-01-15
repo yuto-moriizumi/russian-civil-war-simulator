@@ -1,6 +1,6 @@
 import type { RegionState, FactionId, MapMode } from '../../types/game';
 import { FACTION_COLORS } from '../../utils/mapUtils';
-import { DIVISIONS_PER_STATE, MAJOR_CITY_CAP_BONUS } from '../../utils/divisionCap';
+import { DIVISIONS_PER_STATE, MAJOR_CITY_CAP_BONUS } from '../../utils/commandPower';
 
 // Colors for diplomacy map mode
 const DIPLOMACY_COLORS = {
@@ -73,19 +73,19 @@ export function createDiplomacyFillColorExpression(
 }
 
 /**
- * Build color expression for region fill based on division cap (value map mode)
- * Uses a gradient from dark to bright based on the region's division cap contribution
+ * Build color expression for region fill based on command power (value map mode)
+ * Uses a gradient from dark to bright based on the region's command power contribution
  */
 export function createValueFillColorExpression(regions: RegionState) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const expression: any[] = ['match', ['get', 'shapeISO']];
   
-  // Calculate cap contribution for each region (base + major city bonus)
+  // Calculate command power contribution for each region (base + major city bonus)
   const getCapContribution = (regionId: string): number => {
     return DIVISIONS_PER_STATE + (MAJOR_CITY_CAP_BONUS[regionId] ?? 0);
   };
   
-  // Find min and max cap contributions for normalization
+  // Find min and max command power contributions for normalization
   const values = Object.keys(regions).map(regionId => getCapContribution(regionId));
   const minValue = Math.min(...values);
   const maxValue = Math.max(...values);
