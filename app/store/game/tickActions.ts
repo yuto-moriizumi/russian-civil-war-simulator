@@ -193,6 +193,7 @@ export const createTickActions = (
       armyGroups: nextArmyGroups,
       productionQueues: nextProductionQueues, // Update production queues
       scheduledEvents: updatedScheduledEvents, // Update scheduled events
+      relationships: relationshipsAfterEvents, // Save updated relationships from events
     });
 
     // Now trigger automatic actions for ALL army groups in advance/defend mode (player + AI)

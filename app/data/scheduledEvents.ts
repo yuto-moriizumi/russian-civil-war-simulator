@@ -46,6 +46,11 @@ export const scheduledEvents: ScheduledEvent[] = [
         newOwner: 'fswr',
       },
       {
+        type: 'transferRegion',
+        regionId: 'FI-02', // South Karelia (Viipuri)
+        newOwner: 'fswr',
+      },
+      {
         type: 'declareWar',
         fromFaction: 'fswr',
         toFaction: 'finland',
