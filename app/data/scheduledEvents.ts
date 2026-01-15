@@ -16,6 +16,31 @@ export const scheduledEvents: ScheduledEvent[] = [
         newOwner: 'fswr',
       },
       {
+        type: 'transferRegion',
+        regionId: 'FI-19', // Southwest Finland
+        newOwner: 'fswr',
+      },
+      {
+        type: 'transferRegion',
+        regionId: 'FI-17', // Satakunta
+        newOwner: 'fswr',
+      },
+      {
+        type: 'transferRegion',
+        regionId: 'FI-11', // Pirkanmaa
+        newOwner: 'fswr',
+      },
+      {
+        type: 'transferRegion',
+        regionId: 'FI-16', // Päijänne Tavastia
+        newOwner: 'fswr',
+      },
+      {
+        type: 'transferRegion',
+        regionId: 'FI-09', // Kymenlaakso
+        newOwner: 'fswr',
+      },
+      {
         type: 'declareWar',
         fromFaction: 'fswr',
         toFaction: 'finland',
