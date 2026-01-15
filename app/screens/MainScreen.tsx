@@ -40,7 +40,7 @@ interface MainScreenProps {
   mapDataLoaded: boolean;
   gameEvents: GameEvent[];
   notifications: NotificationItem[];
-  productionQueue: ProductionQueueItem[];
+  productionQueue: Record<FactionId, ProductionQueueItem[]>;
   // Theater and Army Groups props
   theaters: Theater[];
   armyGroups: ArmyGroup[];

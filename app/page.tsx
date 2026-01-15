@@ -101,7 +101,7 @@ function MainScreenView() {
       mapDataLoaded={state.mapDataLoaded}
       gameEvents={state.gameEvents}
       notifications={state.notifications}
-      productionQueue={state.productionQueue}
+      productionQueue={state.productionQueues}
       theaters={state.theaters}
       armyGroups={state.armyGroups}
       selectedGroupId={state.selectedGroupId}
