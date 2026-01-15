@@ -1,21 +1,28 @@
 /**
  * Adjacency detection functions for geographic regions
+ * 
+ * Optimized with RBush spatial indexing for O(n log n) performance
  */
 
 import * as turf from '@turf/turf';
 import type { FeatureCollection, Feature, Polygon, MultiPolygon } from 'geojson';
+import type RBush from 'rbush';
 import type { Adjacency } from './types.js';
-import { computeBBox, bboxIntersects } from './geometry-utils.js';
+import { computeBBox } from './geometry-utils.js';
+import { buildSpatialIndex, queryCrossBorder, querySameCountry, queryNearby, type IndexedFeature } from './spatial-index.js';
 
 /**
  * 異なる国の間の隣接関係を検出する（境界データの不整合を補完）
  * 
  * GeoJSONデータソースが異なる国では境界が完全に一致しないため、
  * TopoJSONのarc共有では検出できない。バッファ付きの交差判定で検出する。
+ * 
+ * 最適化: RBush空間インデックスを使用してO(n log n)の性能を実現
  */
 export function detectCrossBorderAdjacency(
   mergedGeoJSON: FeatureCollection,
-  existingAdjacency: Adjacency
+  existingAdjacency: Adjacency,
+  spatialIndex?: RBush<IndexedFeature>
 ): { adjacency: Adjacency; addedCount: number } {
   const adjacency: Adjacency = {};
   
@@ -26,72 +33,83 @@ export function detectCrossBorderAdjacency(
   
   const features = mergedGeoJSON.features;
   let addedCount = 0;
+  let candidatesChecked = 0;
   
-  // 国ごとにフィーチャーをグループ化
-  const featuresByCountry: Map<string, Feature[]> = new Map();
-  for (const feature of features) {
-    const country = feature.properties?.countryIso3 as string;
-    if (!featuresByCountry.has(country)) {
-      featuresByCountry.set(country, []);
-    }
-    featuresByCountry.get(country)!.push(feature);
+  // 1. 空間インデックスを構築（渡されていない場合のみ）
+  if (!spatialIndex) {
+    console.log(`  Building spatial index for ${features.length} features...`);
+    spatialIndex = buildSpatialIndex(features);
   }
   
-  const countries = Array.from(featuresByCountry.keys());
-  console.log(`  Checking cross-border adjacency between ${countries.length} countries...`);
+  // 2. バッファ付きジオメトリを遅延キャッシュ（必要なときのみ計算）
+  const bufferCache = new Map<string, Feature>();
+  const getBuffered = (regionId: string, feature: Feature): Feature | null => {
+    if (bufferCache.has(regionId)) {
+      return bufferCache.get(regionId)!;
+    }
+    
+    try {
+      const geom = feature.geometry as Polygon | MultiPolygon;
+      const buffered = turf.buffer(turf.feature(geom), 2, { units: 'kilometers' });
+      if (buffered) {
+        bufferCache.set(regionId, buffered);
+        return buffered;
+      }
+    } catch {
+      // ジオメトリエラーは無視
+    }
+    return null;
+  };
   
-  // 異なる国のペアのみをチェック
-  for (let c1 = 0; c1 < countries.length; c1++) {
-    for (let c2 = c1 + 1; c2 < countries.length; c2++) {
-      const country1 = countries[c1];
-      const country2 = countries[c2];
-      const features1 = featuresByCountry.get(country1)!;
-      const features2 = featuresByCountry.get(country2)!;
+  console.log(`  Checking cross-border adjacency with spatial queries...`);
+  
+  // 3. 各フィーチャーに対して、異なる国の近隣候補のみをクエリ
+  for (const feature of features) {
+    const idA = feature.properties?.regionId as string;
+    const countryA = feature.properties?.countryIso3 as string;
+    
+    if (!idA || !countryA) continue;
+    
+    const bboxA = computeBBox(feature);
+    
+    // 空間インデックスから異なる国の候補のみを取得（マージン0.5度 ≈ 55km）
+    const candidates = queryCrossBorder(spatialIndex, bboxA, countryA, 0.5);
+    
+    for (const candidate of candidates) {
+      const idB = candidate.regionId;
       
-      for (const featureA of features1) {
-        for (const featureB of features2) {
-          const idA = featureA.properties?.regionId as string;
-          const idB = featureB.properties?.regionId as string;
+      // 既に隣接している場合はスキップ
+      if (adjacency[idA]?.includes(idB)) continue;
+      
+      candidatesChecked++;
+      
+      // 遅延バッファリング：必要なときのみバッファを計算
+      const bufferedA = getBuffered(idA, feature);
+      const bufferedB = getBuffered(idB, candidate.feature);
+      
+      if (!bufferedA || !bufferedB) continue;
+      
+      try {
+        if (turf.booleanIntersects(bufferedA, bufferedB)) {
+          // 隣接を追加
+          if (!adjacency[idA]) adjacency[idA] = [];
+          if (!adjacency[idB]) adjacency[idB] = [];
           
-          if (!idA || !idB) continue;
-          
-          // 既に隣接している場合はスキップ
-          if (adjacency[idA]?.includes(idB)) continue;
-          
-          // バウンディングボックスの交差チェック（マージン付き）
-          const bboxA = computeBBox(featureA);
-          const bboxB = computeBBox(featureB);
-          if (!bboxIntersects(bboxA, bboxB, 0.5)) continue;
-          
-          // バッファ付きで交差判定（約2km）
-          try {
-            const geomA = featureA.geometry as Polygon | MultiPolygon;
-            const geomB = featureB.geometry as Polygon | MultiPolygon;
-            
-            // 小さいバッファでポリゴンを拡張して交差判定
-            const bufferedA = turf.buffer(turf.feature(geomA), 2, { units: 'kilometers' });
-            const bufferedB = turf.buffer(turf.feature(geomB), 2, { units: 'kilometers' });
-            
-            if (bufferedA && bufferedB && turf.booleanIntersects(bufferedA, bufferedB)) {
-              // 隣接を追加
-              if (!adjacency[idA]) adjacency[idA] = [];
-              if (!adjacency[idB]) adjacency[idB] = [];
-              
-              if (!adjacency[idA].includes(idB)) {
-                adjacency[idA].push(idB);
-              }
-              if (!adjacency[idB].includes(idA)) {
-                adjacency[idB].push(idA);
-              }
-              addedCount++;
-            }
-          } catch {
-            // ジオメトリエラーは無視
+          if (!adjacency[idA].includes(idB)) {
+            adjacency[idA].push(idB);
           }
+          if (!adjacency[idB].includes(idA)) {
+            adjacency[idB].push(idA);
+          }
+          addedCount++;
         }
+      } catch {
+        // ジオメトリエラーは無視
       }
     }
   }
+  
+  console.log(`  Checked ${candidatesChecked} candidate pairs (spatial index optimization)`);
   
   // ソート
   for (const regionId of Object.keys(adjacency)) {
@@ -106,10 +124,13 @@ export function detectCrossBorderAdjacency(
  * 
  * 一部のリージョンはarc共有が正しく機能しないため、
  * 直接交差判定で隣接関係を検出する。
+ * 
+ * 最適化: RBush空間インデックスを使用してO(n log n)の性能を実現
  */
 export function detectSameCountryAdjacency(
   mergedGeoJSON: FeatureCollection,
-  existingAdjacency: Adjacency
+  existingAdjacency: Adjacency,
+  spatialIndex?: RBush<IndexedFeature>
 ): { adjacency: Adjacency; addedCount: number } {
   const adjacency: Adjacency = {};
   
@@ -119,78 +140,61 @@ export function detectSameCountryAdjacency(
   }
   
   let addedCount = 0;
-  let checkedPairs = 0;
+  let candidatesChecked = 0;
   
-  // 国ごとにフィーチャーをグループ化
-  const featuresByCountry: Map<string, Feature[]> = new Map();
-  for (const feature of mergedGeoJSON.features) {
-    const country = feature.properties?.countryIso3 as string;
-    if (!featuresByCountry.has(country)) {
-      featuresByCountry.set(country, []);
-    }
-    featuresByCountry.get(country)!.push(feature);
+  // 空間インデックスを構築（渡されていない場合のみ）
+  if (!spatialIndex) {
+    console.log(`  Building spatial index for same-country checks...`);
+    spatialIndex = buildSpatialIndex(mergedGeoJSON.features);
   }
   
-  // バウンディングボックスを事前計算
-  const bboxCache: Map<string, [number, number, number, number]> = new Map();
+  // 各フィーチャーに対して、同じ国の近隣候補のみをクエリ
   for (const feature of mergedGeoJSON.features) {
-    const regionId = feature.properties?.regionId as string;
-    if (regionId) {
-      bboxCache.set(regionId, computeBBox(feature));
-    }
-  }
-  
-  // 各国内でペアをチェック
-  for (const [, features] of featuresByCountry) {
-    // 2つ以上のリージョンがある国のみ
-    if (features.length < 2) continue;
+    const idA = feature.properties?.regionId as string;
+    const countryA = feature.properties?.countryIso3 as string;
     
-    for (let i = 0; i < features.length; i++) {
-      const featureA = features[i];
-      const idA = featureA.properties?.regionId as string;
-      if (!idA) continue;
+    if (!idA || !countryA) continue;
+    
+    const bboxA = computeBBox(feature);
+    
+    // 同じ国の候補のみを取得（マージンなし、厳密なbbox交差）
+    const candidates = querySameCountry(spatialIndex, bboxA, countryA, 0);
+    
+    for (const candidate of candidates) {
+      const idB = candidate.regionId;
       
-      for (let j = i + 1; j < features.length; j++) {
-        const featureB = features[j];
-        const idB = featureB.properties?.regionId as string;
-        if (!idB) continue;
+      // 自分自身はスキップ
+      if (idA === idB) continue;
+      
+      // 既に隣接している場合はスキップ
+      if (adjacency[idA]?.includes(idB)) continue;
+      
+      candidatesChecked++;
+      
+      // 直接交差判定
+      try {
+        const geomA = feature.geometry as Polygon | MultiPolygon;
+        const geomB = candidate.feature.geometry as Polygon | MultiPolygon;
         
-        // 既に隣接している場合はスキップ
-        if (adjacency[idA]?.includes(idB)) continue;
-        
-        // バウンディングボックスの交差チェック（厳密、マージンなし）
-        const bboxA = bboxCache.get(idA)!;
-        const bboxB = bboxCache.get(idB)!;
-        if (!bboxIntersects(bboxA, bboxB, 0)) continue;
-        
-        checkedPairs++;
-        
-        // 直接交差判定
-        try {
-          const geomA = featureA.geometry as Polygon | MultiPolygon;
-          const geomB = featureB.geometry as Polygon | MultiPolygon;
+        if (turf.booleanIntersects(turf.feature(geomA), turf.feature(geomB))) {
+          if (!adjacency[idA]) adjacency[idA] = [];
+          if (!adjacency[idB]) adjacency[idB] = [];
           
-          // 直接交差をチェック
-          if (turf.booleanIntersects(turf.feature(geomA), turf.feature(geomB))) {
-            if (!adjacency[idA]) adjacency[idA] = [];
-            if (!adjacency[idB]) adjacency[idB] = [];
-            
-            if (!adjacency[idA].includes(idB)) {
-              adjacency[idA].push(idB);
-            }
-            if (!adjacency[idB].includes(idA)) {
-              adjacency[idB].push(idA);
-            }
-            addedCount++;
+          if (!adjacency[idA].includes(idB)) {
+            adjacency[idA].push(idB);
           }
-        } catch {
-          // ジオメトリエラーは無視
+          if (!adjacency[idB].includes(idA)) {
+            adjacency[idB].push(idA);
+          }
+          addedCount++;
         }
+      } catch {
+        // ジオメトリエラーは無視
       }
     }
   }
   
-  console.log(`  Checked ${checkedPairs} same-country pairs`);
+  console.log(`  Checked ${candidatesChecked} same-country candidate pairs (spatial index optimization)`);
   
   // ソート
   for (const regionId of Object.keys(adjacency)) {
@@ -204,10 +208,13 @@ export function detectSameCountryAdjacency(
  * 孤立したリージョン（隣接が0のリージョン）の隣接関係を検出する
  * 
  * 飛び地や首都（例：BY-HM ミンスク市）など、内包されているリージョンを検出する
+ * 
+ * 最適化: RBush空間インデックスを使用してO(n log n)の性能を実現
  */
 export function detectIsolatedRegionAdjacency(
   mergedGeoJSON: FeatureCollection,
-  existingAdjacency: Adjacency
+  existingAdjacency: Adjacency,
+  spatialIndex?: RBush<IndexedFeature>
 ): { adjacency: Adjacency; addedCount: number } {
   const adjacency: Adjacency = {};
   
@@ -233,29 +240,28 @@ export function detectIsolatedRegionAdjacency(
   
   console.log(`  Found ${isolatedRegions.length} isolated regions, checking containment...`);
   
+  // 空間インデックスを構築（渡されていない場合のみ）
+  if (!spatialIndex) {
+    spatialIndex = buildSpatialIndex(mergedGeoJSON.features);
+  }
+  
   // 各孤立リージョンについて、包含している/隣接しているリージョンを探す
   for (const isolatedFeature of isolatedRegions) {
     const isolatedId = isolatedFeature.properties?.regionId as string;
     const isolatedCountry = isolatedFeature.properties?.countryIso3 as string;
     const isolatedBbox = computeBBox(isolatedFeature);
     
-    // 同じ国の他のリージョンをチェック
-    for (const candidateFeature of mergedGeoJSON.features) {
-      const candidateId = candidateFeature.properties?.regionId as string;
-      const candidateCountry = candidateFeature.properties?.countryIso3 as string;
+    // 同じ国の候補を空間クエリで取得（マージン0.1度）
+    const candidates = querySameCountry(spatialIndex, isolatedBbox, isolatedCountry, 0.1);
+    
+    for (const candidate of candidates) {
+      const candidateId = candidate.regionId;
       
-      if (!candidateId || candidateId === isolatedId) continue;
-      
-      // 同じ国を優先（飛び地は通常同じ国内）
-      if (candidateCountry !== isolatedCountry) continue;
-      
-      // バウンディングボックスチェック
-      const candidateBbox = computeBBox(candidateFeature);
-      if (!bboxIntersects(isolatedBbox, candidateBbox, 0.1)) continue;
+      if (candidateId === isolatedId) continue;
       
       try {
         const isolatedGeom = isolatedFeature.geometry as Polygon | MultiPolygon;
-        const candidateGeom = candidateFeature.geometry as Polygon | MultiPolygon;
+        const candidateGeom = candidate.feature.geometry as Polygon | MultiPolygon;
         
         // 包含または交差をチェック
         const isolatedCentroid = turf.centroid(turf.feature(isolatedGeom));
