@@ -22,6 +22,7 @@ import {
   detectIsolatedRegionAdjacency,
   applyCustomAdjacency 
 } from './lib/adjacency-detector.js';
+import { buildSpatialIndex } from './lib/spatial-index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -69,11 +70,16 @@ async function main() {
   console.log(`  Regions: ${Object.keys(arcAdjacency).length}`);
   console.log(`  Adjacent pairs (arc-sharing): ${arcPairs}\n`);
   
+  // Build spatial index once for all detection functions
+  console.log('Building spatial index for optimized adjacency detection...');
+  const spatialIndex = buildSpatialIndex(mergedGeoJSON.features);
+  console.log(`  Indexed ${mergedGeoJSON.features.length} features\n`);
+  
   // Step 3b: 異なる国間の隣接関係を補完
   console.log('Step 3b: Detecting cross-border adjacency...');
   
   const { adjacency: crossBorderAdjacency, addedCount: crossBorderAdded } = 
-    detectCrossBorderAdjacency(mergedGeoJSON, arcAdjacency);
+    detectCrossBorderAdjacency(mergedGeoJSON, arcAdjacency, spatialIndex);
   
   console.log(`  Added cross-border pairs: ${crossBorderAdded}\n`);
   
@@ -81,7 +87,7 @@ async function main() {
   console.log('Step 3c: Detecting same-country adjacency (missed by arc-sharing)...');
   
   const { adjacency: sameCountryAdjacency, addedCount: sameCountryAdded } = 
-    detectSameCountryAdjacency(mergedGeoJSON, crossBorderAdjacency);
+    detectSameCountryAdjacency(mergedGeoJSON, crossBorderAdjacency, spatialIndex);
   
   console.log(`  Added same-country pairs: ${sameCountryAdded}\n`);
   
@@ -89,7 +95,7 @@ async function main() {
   console.log('Step 3d: Detecting isolated region adjacency...');
   
   const { adjacency: finalAdjacency, addedCount: isolatedAdded } = 
-    detectIsolatedRegionAdjacency(mergedGeoJSON, sameCountryAdjacency);
+    detectIsolatedRegionAdjacency(mergedGeoJSON, sameCountryAdjacency, spatialIndex);
   
   console.log(`  Added isolated region connections: ${isolatedAdded}`);
   
