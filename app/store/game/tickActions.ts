@@ -97,9 +97,10 @@ export const createTickActions = (
 
     // Step 6: Apply completed movements to regions
     let nextRegions: typeof regionsAfterEvents;
-    const { nextCombats, nextEvents, nextNotifications } = (() => {
+    const { nextCombats, nextEvents, nextNotifications, interceptedMovementIds } = (() => {
       const result = applyCompletedMovements(
         completedMovements,
+        updatedMovingUnits,
         {
           regions: regionsAfterEvents,
           combats: updatedCombats,
@@ -116,8 +117,8 @@ export const createTickActions = (
     // Step 6: Apply finished combats to regions
     nextRegions = applyFinishedCombats(finishedCombats, nextRegions);
 
-    // Step 6b: Add retreat movements to the moving units list
-    const nextMovingUnits = [...remainingMovements, ...retreatMovements];
+    // Step 6b: Add retreat movements to the moving units list, filtering out intercepted ones
+    const nextMovingUnits = [...remainingMovements, ...retreatMovements].filter(m => !interceptedMovementIds.includes(m.id));
 
     // Step 7: Regenerate HP for all stationary divisions
     nextRegions = regenerateDivisionHP(nextRegions);

@@ -193,3 +193,54 @@ Add to `package.json`:
 - [RBush GitHub](https://github.com/mourner/rbush) - High-performance R-tree spatial index
 - [Turf.js Performance Issues](https://github.com/Turfjs/turf/issues?q=performance) - Common patterns
 - [pointsWithinPolygon optimization](https://github.com/Turfjs/turf/issues/2350) - Similar approach
+
+# Implementation Plan: Army Swapping Prevention (Commitment Phase)
+
+## Problem
+When two opposing divisions move towards each other's regions simultaneously, they "swap" positions because by the time they arrive, the destination is empty (the enemy has already left). This prevents combat and feels unrealistic.
+
+## Solution: Commitment Phase
+Implement a system where movements completing at the same time or into regions where counter-movements are occurring result in a "meeting engagement" (combat) at the destination.
+
+## Proposed Changes
+
+### 1. Update Movement Application Logic
+**File**: \`app/store/game/tickHelpers/movementApplication.ts\`
+
+- Modify \`applyCompletedMovements\` to detect "meeting engagements".
+- A meeting engagement occurs if:
+    - Forces arrive at a region where enemy forces are currently moving *out* of that region towards the origin (counter-movement).
+    - Opposing forces arrive at the same region simultaneously from different origins.
+
+### 2. Handle Counter-Movements
+When a movement completes:
+1. Check if the destination region currently has a pending movement *out* of it towards the source region.
+2. If yes, intercept the "leaving" units and force a combat at the destination.
+3. If no, proceed with standard capture/reinforcement logic.
+
+### 3. Combat Initiation
+- Use \`createActiveCombat\` to initiate battle with combined forces.
+- Ensure all involved movements are removed from the \`movingUnits\` list.
+
+## Implementation Steps
+
+1.  **Refactor \`applyCompletedMovements\`**:
+    - Pass the full \`movingUnits\` list (including non-completed ones) to the function to check for counter-movements.
+2.  **Add detection logic**:
+    \`\`\`typescript
+    const counterMovement = allMovements.find(m => 
+      m.fromRegion === toRegion && 
+      m.toRegion === fromRegion && 
+      m.owner !== owner
+    );
+    \`\`\`
+3.  **Resolve Combat**:
+    - If counter-movement found, combine its divisions with any current defenders.
+    - Initiate combat.
+    - Remove both the completed movement and the intercepted counter-movement from the game state.
+
+## Verification
+- [x] Test direct swap (A->B, B->A).
+- [x] Test simultaneous arrival at same destination.
+- [x] Verify combat starts at the destination region.
+- [x] Ensure no "undefended capture" happens when forces cross paths.
