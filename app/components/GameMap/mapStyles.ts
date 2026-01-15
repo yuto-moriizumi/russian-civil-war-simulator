@@ -1,5 +1,6 @@
 import type { RegionState, FactionId, MapMode } from '../../types/game';
 import { FACTION_COLORS } from '../../utils/mapUtils';
+import { DIVISIONS_PER_STATE, MAJOR_CITY_CAP_BONUS } from '../../utils/commandPower';
 
 // Colors for diplomacy map mode
 const DIPLOMACY_COLORS = {
@@ -73,14 +74,19 @@ export function createDiplomacyFillColorExpression(
 
 /**
  * Build color expression for region fill based on command power (value map mode)
- * Uses a gradient from dark to bright based on the region's value (command power)
+ * Uses a gradient from dark to bright based on the region's command power contribution
  */
 export function createValueFillColorExpression(regions: RegionState) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const expression: any[] = ['match', ['get', 'shapeISO']];
   
-  // Find min and max values for normalization
-  const values = Object.values(regions).map(r => r.value);
+  // Calculate command power contribution for each region (base + major city bonus)
+  const getCapContribution = (regionId: string): number => {
+    return DIVISIONS_PER_STATE + (MAJOR_CITY_CAP_BONUS[regionId] ?? 0);
+  };
+  
+  // Find min and max command power contributions for normalization
+  const values = Object.keys(regions).map(regionId => getCapContribution(regionId));
   const minValue = Math.min(...values);
   const maxValue = Math.max(...values);
   const range = maxValue - minValue;
@@ -126,8 +132,9 @@ export function createValueFillColorExpression(regions: RegionState) {
     }
   };
   
-  for (const [id, region] of Object.entries(regions)) {
-    const normalized = range > 0 ? (region.value - minValue) / range : 0.5;
+  for (const id of Object.keys(regions)) {
+    const capContribution = getCapContribution(id);
+    const normalized = range > 0 ? (capContribution - minValue) / range : 0.5;
     const color = interpolateColor(normalized);
     expression.push(id, color);
   }
