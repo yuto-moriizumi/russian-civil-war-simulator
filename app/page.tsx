@@ -102,6 +102,7 @@ function MainScreenView() {
       gameEvents={state.gameEvents}
       notifications={state.notifications}
       productionQueue={state.productionQueues}
+      factionBonuses={state.factionBonuses}
       theaters={state.theaters}
       armyGroups={state.armyGroups}
       selectedGroupId={state.selectedGroupId}

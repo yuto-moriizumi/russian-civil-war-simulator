@@ -15,9 +15,10 @@ import {
   Relationship,
   MapMode,
 } from '../types/game';
+import { getInitialFactionBonuses } from './bonusCalculator';
 
 const STORAGE_KEY = 'rcw-save';
-const SAVE_VERSION = 5; // Bumped version for per-faction production queues
+const SAVE_VERSION = 6; // Bumped version for factionBonuses
 
 // Serialized types (Date objects converted to ISO strings)
 interface SerializedMovement {
@@ -100,6 +101,7 @@ interface SerializedGameState {
   productionQueue?: SerializedProductionQueueItem[]; // Legacy format for backward compatibility
   relationships: Relationship[];
   mapMode: MapMode;
+  factionBonuses?: GameState['factionBonuses']; // Optional for backward compatibility
 }
 
 interface SaveData {
@@ -240,6 +242,15 @@ function deserializeGameState(data: SerializedGameState): GameState {
     relationships: data.relationships || [], // Default to empty array if not present
     mapMode: data.mapMode || 'country', // Default to country map mode
     regionCentroids: {}, // Will be re-loaded from map data
+    factionBonuses: data.factionBonuses || {
+      soviet: getInitialFactionBonuses(),
+      white: getInitialFactionBonuses(),
+      finland: getInitialFactionBonuses(),
+      ukraine: getInitialFactionBonuses(),
+      don: getInitialFactionBonuses(),
+      neutral: getInitialFactionBonuses(),
+      foreign: getInitialFactionBonuses(),
+    },
   };
 }
 

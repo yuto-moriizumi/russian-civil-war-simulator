@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Theater, ArmyGroup, RegionState, FactionId, Movement, ProductionQueueItem } from '../types/game';
-import { getArmyGroupUnitCount } from '../utils/pathfinding';
+import { Theater, ArmyGroup, FactionId, RegionState, Movement, ProductionQueueItem, FactionBonuses } from '../types/game';
+import { getArmyGroupUnitCount } from '../utils/mapUtils';
 import { canProduceDivision } from '../utils/divisionCap';
 
 interface TheaterPanelProps {
@@ -13,6 +13,7 @@ interface TheaterPanelProps {
   selectedGroupId: string | null;
   movingUnits: Movement[];
   productionQueue: Record<FactionId, ProductionQueueItem[]>;
+  factionBonuses: FactionBonuses;
   onCreateGroup: (name: string, regionIds: string[], theaterId: string | null) => void;
   onDeleteGroup: (groupId: string) => void;
   onRenameGroup: (groupId: string, name: string) => void;
@@ -30,6 +31,7 @@ export default function TheaterPanel({
   selectedGroupId,
   movingUnits,
   productionQueue,
+  factionBonuses,
   onCreateGroup,
   onDeleteGroup,
   onRenameGroup,
@@ -73,7 +75,7 @@ export default function TheaterPanel({
         const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerFaction, group.id, movingUnits);
         const queueCount = (productionQueue[playerFaction] || []).filter(p => p.armyGroupId === group.id).length;
         const isGroupSelected = selectedGroupId === group.id;
-        const canProduce = canProduceDivision(playerFaction, regions, movingUnits, productionQueue);
+        const canProduce = canProduceDivision(playerFaction, regions, movingUnits, productionQueue, factionBonuses);
 
         return (
           <div

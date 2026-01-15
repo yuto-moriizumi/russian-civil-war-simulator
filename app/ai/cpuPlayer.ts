@@ -1,4 +1,4 @@
-import { AIState, FactionId, RegionState, Region, ActiveCombat, Movement, ArmyGroup, ProductionQueueItem } from '../types/game';
+import { AIState, FactionId, RegionState, Region, ActiveCombat, Movement, ArmyGroup, ProductionQueueItem, FactionBonuses } from '../types/game';
 import { calculateFactionIncome } from '../utils/mapUtils';
 import { canProduceDivision, getDivisionCapInfo } from '../utils/divisionCap';
 
@@ -114,6 +114,7 @@ export interface AIActions {
  * - Adds divisions to the production queue if it has enough money
  * 
  * @param armyGroups - All army groups in the game
+ * @param factionBonuses - Faction bonuses from completed missions
  */
 export function runAITick(
   aiState: AIState,
@@ -122,7 +123,8 @@ export function runAITick(
   activeCombats: ActiveCombat[] = [],
   movingUnits: Movement[] = [],
   productionQueue: ProductionQueueItem[] = [],
-  productionQueues: Record<FactionId, ProductionQueueItem[]> = {} as Record<FactionId, ProductionQueueItem[]>
+  productionQueues: Record<FactionId, ProductionQueueItem[]> = {} as Record<FactionId, ProductionQueueItem[]>,
+  factionBonuses: FactionBonuses
 ): AIActions {
   const { factionId } = aiState;
   let { money } = aiState;
@@ -193,8 +195,8 @@ export function runAITick(
   // but for now we follow the existing logic of spending what we have.
   while (money >= DIVISION_COST) {
     // Check division cap before producing
-    if (!canProduceDivision(factionId, regions, movingUnits, productionQueues)) {
-      const capInfo = getDivisionCapInfo(factionId, regions, movingUnits, productionQueues);
+    if (!canProduceDivision(factionId, regions, movingUnits, productionQueues, factionBonuses)) {
+      const capInfo = getDivisionCapInfo(factionId, regions, movingUnits, productionQueues, factionBonuses);
       console.log(
         `[AI] ${factionId} reached division cap. Current: ${capInfo.current}, In Production: ${capInfo.inProduction}, Cap: ${capInfo.cap}`
       );
