@@ -14,7 +14,7 @@ export const DIVISION_CAP_PER_UNIT = 2;
 /**
  * Base division cap provided to all factions
  */
-export const BASE_DIVISION_CAP = 4;
+export const BASE_DIVISION_CAP = 2;
 
 /**
  * Cap bonuses for major cities
