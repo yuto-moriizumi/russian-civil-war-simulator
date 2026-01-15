@@ -14,6 +14,7 @@ import {
   Theater,
   Relationship,
   MapMode,
+  ScheduledEvent,
 } from '../types/game';
 import { getInitialFactionBonuses } from './bonusCalculator';
 
@@ -101,6 +102,7 @@ interface SerializedGameState {
   productionQueue?: SerializedProductionQueueItem[]; // Legacy format for backward compatibility
   relationships: Relationship[];
   mapMode: MapMode;
+  scheduledEvents: ScheduledEvent[];
   factionBonuses?: GameState['factionBonuses']; // Optional for backward compatibility
 }
 
@@ -242,6 +244,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
     relationships: data.relationships || [], // Default to empty array if not present
     mapMode: data.mapMode || 'country', // Default to country map mode
     regionCentroids: {}, // Will be re-loaded from map data
+    scheduledEvents: data.scheduledEvents || [], // Default to empty array if not present
     factionBonuses: data.factionBonuses || {
       soviet: getInitialFactionBonuses(),
       white: getInitialFactionBonuses(),

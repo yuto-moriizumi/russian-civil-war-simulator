@@ -12,7 +12,8 @@ import {
   regenerateDivisionHP, 
   syncArmyGroupTerritories, 
   checkAndCompleteMissions,
-  processProductionQueue
+  processProductionQueue,
+  processScheduledEvents
 } from './tickHelpers';
 
 /**
@@ -33,7 +34,7 @@ export const createTickActions = (
     const state = get();
     if (!state.isPlaying) return;
 
-    const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, money, aiStates, gameEvents, notifications, armyGroups, productionQueues, relationships, regionCentroids } = state;
+    const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, money, aiStates, gameEvents, notifications, armyGroups, productionQueues, relationships, regionCentroids, scheduledEvents } = state;
     
     // Step 1: Validate divisions (development mode only)
     const { updatedRegions, updatedMovingUnits } = validateDivisions(regions, movingUnits, armyGroups);
@@ -77,23 +78,37 @@ export const createTickActions = (
     newDate.setHours(newDate.getHours() + 1);
     const newMoney = money + playerIncome;
     
+    // Step 3.5: Process scheduled events (historical events that trigger on specific dates)
+    const {
+      updatedScheduledEvents,
+      updatedRegions: regionsAfterEvents,
+      updatedRelationships: relationshipsAfterEvents,
+      newEvents: scheduledEventEvents,
+      newNotifications: scheduledEventNotifications
+    } = processScheduledEvents(
+      scheduledEvents,
+      newDate,
+      regionsAfterProduction,
+      relationships
+    );
+    
     // Step 4: Process unit movements
     const { remainingMovements, completedMovements } = processMovements(updatedMovingUnits, newDate);
 
     // Step 5: Process active combats
-    const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements } = processCombats(activeCombats, newDate, regionsAfterProduction, adjacency, regionCentroids);
+    const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements } = processCombats(activeCombats, newDate, regionsAfterEvents, adjacency, regionCentroids);
 
     // Step 6: Apply completed movements to regions
-    let nextRegions: typeof regionsAfterProduction;
+    let nextRegions: typeof regionsAfterEvents;
     const { nextCombats, nextEvents, nextNotifications } = (() => {
       const result = applyCompletedMovements(
         completedMovements,
         {
-          regions: regionsAfterProduction,
+          regions: regionsAfterEvents,
           combats: updatedCombats,
-          events: [...gameEvents, ...newCombatEvents, ...productionEvents],
-          notifications: [...notifications, ...newCombatNotifications, ...productionNotifications],
-          relationships,
+          events: [...gameEvents, ...newCombatEvents, ...productionEvents, ...scheduledEventEvents],
+          notifications: [...notifications, ...newCombatNotifications, ...productionNotifications, ...scheduledEventNotifications],
+          relationships: relationshipsAfterEvents,
         },
         newDate
       );
@@ -180,6 +195,7 @@ export const createTickActions = (
       aiStates: nextAIStates, // Updated AI states
       armyGroups: nextArmyGroups,
       productionQueues: nextProductionQueues, // Update production queues
+      scheduledEvents: updatedScheduledEvents, // Update scheduled events
     });
 
     // Now trigger automatic actions for ALL army groups in advance/defend mode (player + AI)
