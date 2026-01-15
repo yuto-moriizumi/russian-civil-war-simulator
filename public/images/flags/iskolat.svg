@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600">
+  <!-- Iskolat Soviet Republic Flag: Dark red with hammer and sickle -->
+  
+  <!-- Dark red background -->
+  <rect width="900" height="600" fill="#8B0000"/>
+  
+  <!-- Hammer and sickle symbol in gold -->
+  <g transform="translate(450, 300)">
+    <!-- Simple hammer and sickle representation -->
+    <circle cx="0" cy="0" r="80" fill="none" stroke="#FFD700" stroke-width="8"/>
+    <text x="-30" y="20" font-family="serif" font-size="60" font-weight="bold" fill="#FFD700">☭</text>
+  </g>
+</svg>

@@ -322,8 +322,8 @@ export const initialRegionOwnership: Record<string, FactionId> = {
   // ============================================
   // TAJIKISTAN (White-controlled)
   // ============================================
-  'TJ-DU': 'white',   // Dushanbe (city)
-  'TJ-GB': 'white',   // Gorno-Badakhshan
+  'TJ-DU': 'iskolat',   // Dushanbe (city) - Iskolat Soviet Republic capital
+  'TJ-GB': 'iskolat',   // Gorno-Badakhshan - Iskolat Soviet Republic
   'TJ-KT': 'white',   // Khatlon Region
   'TJ-RA': 'white',   // Districts of Republican Subordination
   'TJ-SU': 'white',   // Sughd Region

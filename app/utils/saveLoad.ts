@@ -183,6 +183,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       ukraine: [],
       don: [],
       fswr: [],
+      iskolat: [],
       neutral: [],
       foreign: [],
     };
@@ -213,6 +214,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       ukraine: [],
       don: [],
       fswr: [],
+      iskolat: [],
       neutral: [],
       foreign: [],
     };
@@ -252,6 +254,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       ukraine: getInitialFactionBonuses(),
       don: getInitialFactionBonuses(),
       fswr: getInitialFactionBonuses(),
+      iskolat: getInitialFactionBonuses(),
       neutral: getInitialFactionBonuses(),
       foreign: getInitialFactionBonuses(),
     },

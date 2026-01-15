@@ -298,6 +298,7 @@ function getEnemyBasedName(enemyFaction: FactionId, index: number): string {
     ukraine: 'Ukrainian',
     don: 'Don',
     fswr: 'Red Guard',
+    iskolat: 'Iskolat',
     neutral: 'Independent',
     foreign: 'Foreign',
   };
