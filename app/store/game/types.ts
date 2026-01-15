@@ -59,7 +59,7 @@ export interface GameStore extends GameState {
   openMissions: () => void;
   
   // Production Queue Actions
-  addToProductionQueue: (armyGroupId: string) => void;
+  addToProductionQueue: (armyGroupId: string, count?: number) => void;
   cancelProduction: (productionId: string) => void;
   
   // Theater Actions
@@ -75,7 +75,7 @@ export interface GameStore extends GameState {
   advanceArmyGroup: (groupId: string) => void;
   defendArmyGroup: (groupId: string) => void;
   setArmyGroupMode: (groupId: string, mode: ArmyGroupMode) => void;
-  deployToArmyGroup: (groupId: string) => void;
+  deployToArmyGroup: (groupId: string, count?: number) => void;
   
   // Relationship Actions
   setRelationship: (fromFaction: FactionId, toFaction: FactionId, type: RelationshipType) => void;

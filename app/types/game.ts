@@ -152,7 +152,7 @@ export interface GameState {
   activeCombats: ActiveCombat[]; // Ongoing battles
   theaters: Theater[]; // Auto-detected theaters for the player
   armyGroups: ArmyGroup[]; // Player's army groups for bulk movement
-  productionQueue: ProductionQueueItem[]; // Queue of divisions being produced (per faction)
+  productionQueues: Record<FactionId, ProductionQueueItem[]>; // Per-faction production queues
   relationships: Relationship[]; // Diplomatic/military relationships between factions
   mapMode: MapMode; // Current map visualization mode
   regionCentroids: Record<string, [number, number]>; // Region centroids for distance calculations [longitude, latitude]
@@ -245,14 +245,14 @@ export interface GameAPI {
   advanceArmyGroup: (groupId: string) => void;
   defendArmyGroup: (groupId: string) => void;
   setArmyGroupMode: (groupId: string, mode: ArmyGroupMode) => void;
-  deployToArmyGroup: (groupId: string) => void;
+  deployToArmyGroup: (groupId: string, count?: number) => void;
   deleteArmyGroup: (groupId: string) => void;
   // Theater methods
   getTheaters: () => Theater[];
   selectTheater: (theaterId: string) => void;
   // Production queue methods
-  addToProductionQueue: (armyGroupId: string) => boolean;
-  getProductionQueue: () => ProductionQueueItem[];
+  addToProductionQueue: (armyGroupId: string, count?: number) => boolean;
+  getProductionQueue: (factionId?: FactionId) => ProductionQueueItem[];
   cancelProduction: (productionId: string) => boolean;
   // Relationship methods
   getRelationships: () => Relationship[];

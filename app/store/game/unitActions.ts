@@ -213,8 +213,8 @@ export const createUnitActions = (
     });
   },
 
-  deployToArmyGroup: (groupId: string) => {
+  deployToArmyGroup: (groupId: string, count?: number) => {
     // Call the production queue action instead of instant deployment
-    get().addToProductionQueue(groupId);
+    get().addToProductionQueue(groupId, count);
   },
 });

@@ -67,7 +67,7 @@ export const createBasicActions = (
   
   selectCountry: (country: Country) => {
     // Determine which factions become AI-controlled (all non-player factions)
-    const allFactions: FactionId[] = ['soviet', 'white', 'finland'];
+    const allFactions: FactionId[] = ['soviet', 'white', 'finland', 'ukraine'];
     const aiFactions = allFactions.filter(faction => faction !== country.id);
     
     const factionMissions = initialMissions.filter(m => m.faction === country.id);

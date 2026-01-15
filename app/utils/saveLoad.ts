@@ -8,6 +8,7 @@ import {
   Mission,
   FactionId,
   GameEventType,
+  ProductionQueueItem,
   Division,
   ArmyGroup,
   Theater,
@@ -16,7 +17,7 @@ import {
 } from '../types/game';
 
 const STORAGE_KEY = 'rcw-save';
-const SAVE_VERSION = 4; // Bumped version for army group assignment (divisions now require armyGroupId)
+const SAVE_VERSION = 5; // Bumped version for per-faction production queues
 
 // Serialized types (Date objects converted to ISO strings)
 interface SerializedMovement {
@@ -95,7 +96,8 @@ interface SerializedGameState {
   activeCombats: SerializedActiveCombat[];
   armyGroups: ArmyGroup[];
   theaters: Theater[];
-  productionQueue: SerializedProductionQueueItem[];
+  productionQueues: Record<FactionId, SerializedProductionQueueItem[]>;
+  productionQueue?: SerializedProductionQueueItem[]; // Legacy format for backward compatibility
   relationships: Relationship[];
   mapMode: MapMode;
 }
@@ -110,6 +112,18 @@ interface SaveData {
 
 // Serialize GameState (convert Date objects to ISO strings)
 function serializeGameState(state: GameState): SerializedGameState {
+  // Convert per-faction queues to serialized format
+  const serializedQueues: Record<FactionId, SerializedProductionQueueItem[]> = {} as Record<FactionId, SerializedProductionQueueItem[]>;
+  const factionIds = Object.keys(state.productionQueues) as FactionId[];
+  
+  for (const factionId of factionIds) {
+    serializedQueues[factionId] = (state.productionQueues[factionId] || []).map((p) => ({
+      ...p,
+      startTime: p.startTime.toISOString(),
+      completionTime: p.completionTime.toISOString(),
+    }));
+  }
+  
   return {
     ...state,
     dateTime: state.dateTime.toISOString(),
@@ -132,16 +146,72 @@ function serializeGameState(state: GameState): SerializedGameState {
       startTime: c.startTime.toISOString(),
       lastRoundTime: c.lastRoundTime.toISOString(),
     })),
-    productionQueue: state.productionQueue.map((p) => ({
-      ...p,
-      startTime: p.startTime.toISOString(),
-      completionTime: p.completionTime.toISOString(),
-    })),
+    productionQueues: serializedQueues,
   };
 }
 
 // Deserialize GameState (convert ISO strings back to Date objects)
 function deserializeGameState(data: SerializedGameState): GameState {
+  // Handle backward compatibility: convert old productionQueue to new productionQueues format
+  let productionQueues: Record<FactionId, ProductionQueueItem[]>;
+  
+  if (data.productionQueues) {
+    // New format: per-faction queues
+    productionQueues = {} as Record<FactionId, ProductionQueueItem[]>;
+    const factionIds = Object.keys(data.productionQueues) as FactionId[];
+    
+    for (const factionId of factionIds) {
+      productionQueues[factionId] = (data.productionQueues[factionId] || []).map((p) => ({
+        id: p.id,
+        divisionName: p.divisionName,
+        owner: p.owner,
+        startTime: new Date(p.startTime),
+        completionTime: new Date(p.completionTime),
+        targetRegionId: p.targetRegionId,
+        armyGroupId: p.armyGroupId,
+      }));
+    }
+  } else if (data.productionQueue) {
+    // Legacy format: migrate from single queue to per-faction queues
+    console.log('Migrating legacy production queue format to per-faction queues');
+    productionQueues = {
+      soviet: [],
+      white: [],
+      finland: [],
+      ukraine: [],
+      neutral: [],
+      foreign: [],
+    };
+    
+    // Sort legacy queue items into faction-specific queues
+    for (const item of data.productionQueue) {
+      const deserialized = {
+        id: item.id,
+        divisionName: item.divisionName,
+        owner: item.owner,
+        startTime: new Date(item.startTime),
+        completionTime: new Date(item.completionTime),
+        targetRegionId: item.targetRegionId,
+        armyGroupId: item.armyGroupId,
+      };
+      
+      if (!productionQueues[item.owner]) {
+        productionQueues[item.owner] = [];
+      }
+      productionQueues[item.owner].push(deserialized);
+    }
+  } else {
+    // No production queue data, initialize empty
+    productionQueues = {
+      soviet: [],
+      white: [],
+      finland: [],
+      ukraine: [],
+      neutral: [],
+      foreign: [],
+    };
+  }
+  
   return {
     ...data,
     dateTime: new Date(data.dateTime),
@@ -164,15 +234,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       startTime: new Date(c.startTime),
       lastRoundTime: new Date(c.lastRoundTime),
     })),
-    productionQueue: (data.productionQueue || []).map((p) => ({
-      id: p.id,
-      divisionName: p.divisionName,
-      owner: p.owner,
-      startTime: new Date(p.startTime),
-      completionTime: new Date(p.completionTime),
-      targetRegionId: p.targetRegionId,
-      armyGroupId: p.armyGroupId,
-    })),
+    productionQueues,
     relationships: data.relationships || [], // Default to empty array if not present
     mapMode: data.mapMode || 'country', // Default to country map mode
     regionCentroids: {}, // Will be re-loaded from map data
@@ -216,12 +278,13 @@ export function loadGame(): {
     // Version check (for future migrations)
     if (data.version !== SAVE_VERSION) {
       console.warn(`Save version mismatch: expected ${SAVE_VERSION}, got ${data.version}`);
-      // Old saves are incompatible with new system
+      // Version 4 saves (with single production queue) can be migrated to version 5
       if (data.version < 4) {
         console.warn('Old save format detected (pre-army-group-assignment), clearing incompatible save');
         deleteSaveGame();
         return null;
       }
+      // Version 4 to 5 migration is handled in deserializeGameState
     }
 
     // Validate required fields

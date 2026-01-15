@@ -28,7 +28,14 @@ export const initialGameState: GameState = {
   activeCombats: [],
   theaters: [],
   armyGroups: [],
-  productionQueue: [],
+  productionQueues: {
+    soviet: [],
+    white: [],
+    finland: [],
+    ukraine: [],
+    neutral: [],
+    foreign: [],
+  },
   relationships: [
     { fromFaction: 'white', toFaction: 'ukraine', type: 'autonomy' }
   ], // Initially no relationships (all neutral)

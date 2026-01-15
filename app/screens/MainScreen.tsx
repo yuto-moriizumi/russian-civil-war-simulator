@@ -12,6 +12,7 @@ import MissionPanel from '../components/MissionPanel';
 import ProductionQueuePanel from '../components/ProductionQueuePanel';
 import CountrySidebar from '../components/CountrySidebar';
 import { countFactionUnits } from '../utils/mapUtils';
+import { getDivisionCapInfo } from '../utils/divisionCap';
 
 // Dynamic import for GameMap to avoid SSR issues with MapLibre
 const GameMap = dynamic(() => import('../components/GameMap'), {
@@ -40,7 +41,7 @@ interface MainScreenProps {
   mapDataLoaded: boolean;
   gameEvents: GameEvent[];
   notifications: NotificationItem[];
-  productionQueue: ProductionQueueItem[];
+  productionQueue: Record<FactionId, ProductionQueueItem[]>;
   // Theater and Army Groups props
   theaters: Theater[];
   armyGroups: ArmyGroup[];
@@ -80,7 +81,7 @@ interface MainScreenProps {
   onRenameArmyGroup: (groupId: string, name: string) => void;
   onSelectArmyGroup: (groupId: string | null) => void;
   onSetArmyGroupMode: (groupId: string, mode: 'none' | 'advance' | 'defend') => void;
-  onDeployToArmyGroup: (groupId: string) => void;
+  onDeployToArmyGroup: (groupId: string, count?: number) => void;
   onAssignTheater: (groupId: string, theaterId: string | null) => void;
   onCountrySelect: (factionId: FactionId | null) => void;
   onSidebarOpen: (isOpen: boolean) => void;
@@ -186,6 +187,14 @@ export default function MainScreen({
   const maintenanceCost = unitCount; // $1 per unit per hour
   const grossIncome = income + maintenanceCost; // Calculate gross income before maintenance
 
+  // Calculate division cap info
+  const divisionCapInfo = getDivisionCapInfo(
+    country.id,
+    regions,
+    movingUnits,
+    productionQueue
+  );
+
   const selectedCombat = selectedCombatId 
     ? activeCombats.find(c => c.id === selectedCombatId) 
     : null;
@@ -267,6 +276,9 @@ export default function MainScreen({
         showSavedIndicator={showSavedIndicator}
         productionQueue={productionQueue}
         mapMode={mapMode}
+        divisionCap={divisionCapInfo.cap}
+        controlledStates={divisionCapInfo.controlledStates}
+        inProduction={divisionCapInfo.inProduction}
         onTogglePlay={onTogglePlay}
         onChangeSpeed={onChangeSpeed}
         onSaveGame={onSaveGame}

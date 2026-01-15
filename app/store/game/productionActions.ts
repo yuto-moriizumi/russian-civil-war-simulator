@@ -1,6 +1,7 @@
 import { GameStore } from './types';
 import { ProductionQueueItem } from '../../types/game';
 import { getOrdinalSuffix } from '../../utils/eventUtils';
+import { canProduceDivision, getDivisionCapInfo } from '../../utils/divisionCap';
 
 const DIVISION_COST = 10; // Cost to produce a division
 const PRODUCTION_TIME_HOURS = 24; // 24 game hours to produce a division
@@ -13,12 +14,19 @@ export const createProductionActions = (
     set(() => ({ isProductionModalOpen: isOpen }));
   },
 
-  addToProductionQueue: (armyGroupId: string) => {
+  addToProductionQueue: (armyGroupId: string, count: number = 1) => {
     const state = get();
     
-    // Check if player has enough money
-    if (state.money < DIVISION_COST) {
-      console.warn('Not enough money to start production');
+    // Check if count is valid
+    if (count < 1) {
+      console.warn('Invalid count for production');
+      return;
+    }
+
+    // Check if player has enough money for all units
+    const totalCost = DIVISION_COST * count;
+    if (state.money < totalCost) {
+      console.warn(`Not enough money to start production. Need $${totalCost}, have $${state.money}`);
       return;
     }
 
@@ -28,19 +36,31 @@ export const createProductionActions = (
       return;
     }
 
+    // Check division cap
+    if (!canProduceDivision(
+      state.selectedCountry.id,
+      state.regions,
+      state.movingUnits,
+      state.productionQueues
+    )) {
+      const capInfo = getDivisionCapInfo(
+        state.selectedCountry.id,
+        state.regions,
+        state.movingUnits,
+        state.productionQueues
+      );
+      console.warn(
+        `Division cap reached! Current: ${capInfo.current}, In Production: ${capInfo.inProduction}, Cap: ${capInfo.cap} (${capInfo.controlledStates} states × 2)`
+      );
+      return false;
+    }
+
     // Find the army group
     const armyGroup = state.armyGroups.find(g => g.id === armyGroupId);
     if (!armyGroup || armyGroup.owner !== state.selectedCountry.id) {
       console.warn('Invalid army group or not owned by player');
       return;
     }
-
-    // Count existing divisions to generate unique name
-    const existingDivisions = Object.values(state.regions).reduce((acc, region) => 
-      acc + region.divisions.filter(d => d.owner === state.selectedCountry!.id).length, 0
-    );
-    const divisionNumber = existingDivisions + state.productionQueue.filter(p => p.owner === state.selectedCountry!.id).length + 1;
-    const divisionName = `${divisionNumber}${getOrdinalSuffix(divisionNumber)} Infantry Division`;
 
     // Find a valid region in the army group to deploy to
     const validRegions = armyGroup.regionIds.filter(id => {
@@ -65,22 +85,39 @@ export const createProductionActions = (
       return;
     }
 
-    const now = state.dateTime;
-    const completionTime = new Date(now.getTime() + PRODUCTION_TIME_HOURS * 60 * 60 * 1000);
+    // Count existing divisions to generate unique names
+    const existingDivisions = Object.values(state.regions).reduce((acc, region) => 
+      acc + region.divisions.filter(d => d.owner === state.selectedCountry!.id).length, 0
+    );
+    const playerQueue = state.productionQueues[state.selectedCountry.id] || [];
+    const existingQueueCount = playerQueue.length;
 
-    const newProduction: ProductionQueueItem = {
-      id: `prod-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      divisionName,
-      owner: state.selectedCountry.id,
-      startTime: now,
-      completionTime,
-      targetRegionId,
-      armyGroupId,
-    };
+    // Create multiple production items
+    const newProductions: ProductionQueueItem[] = [];
+    const now = state.dateTime;
+
+    for (let i = 0; i < count; i++) {
+      const divisionNumber = existingDivisions + existingQueueCount + newProductions.length + 1;
+      const divisionName = `${divisionNumber}${getOrdinalSuffix(divisionNumber)} Infantry Division`;
+      const completionTime = new Date(now.getTime() + PRODUCTION_TIME_HOURS * 60 * 60 * 1000);
+
+      newProductions.push({
+        id: `prod-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        divisionName,
+        owner: state.selectedCountry.id,
+        startTime: now,
+        completionTime,
+        targetRegionId,
+        armyGroupId,
+      });
+    }
 
     set((state) => ({
-      productionQueue: [...state.productionQueue, newProduction],
-      money: state.money - DIVISION_COST,
+      productionQueues: {
+        ...state.productionQueues,
+        [state.selectedCountry!.id]: [...(state.productionQueues[state.selectedCountry!.id] || []), ...newProductions],
+      },
+      money: state.money - totalCost,
       gameEvents: [
         ...state.gameEvents,
         {
@@ -88,7 +125,9 @@ export const createProductionActions = (
           type: 'production_started',
           timestamp: now,
           title: 'Production Started',
-          description: `Started production of ${divisionName}. Will complete in 24 hours.`,
+          description: count === 1 
+            ? `Started production of ${newProductions[0].divisionName}. Will complete in 24 hours.`
+            : `Started production of ${count} divisions. First will complete in 24 hours.`,
           faction: state.selectedCountry?.id,
         },
       ],
@@ -97,7 +136,15 @@ export const createProductionActions = (
 
   cancelProduction: (productionId: string) => {
     const state = get();
-    const production = state.productionQueue.find(p => p.id === productionId);
+    
+    // Get player's faction queue
+    if (!state.selectedCountry) {
+      console.warn('No country selected');
+      return;
+    }
+    
+    const playerQueue = state.productionQueues[state.selectedCountry.id] || [];
+    const production = playerQueue.find(p => p.id === productionId);
     
     if (!production) {
       console.warn('Production item not found');
@@ -105,41 +152,28 @@ export const createProductionActions = (
     }
 
     // Only allow canceling own productions
-    if (production.owner !== state.selectedCountry?.id) {
+    if (production.owner !== state.selectedCountry.id) {
       console.warn('Cannot cancel production of another faction');
       return;
     }
 
     // Check if we're canceling the first (active) item
-    const isFirstItem = state.productionQueue[0]?.id === productionId;
+    const isFirstItem = playerQueue[0]?.id === productionId;
 
     // Refund 50% of the cost
     const refund = Math.floor(DIVISION_COST / 2);
 
     // Filter out the cancelled production
-    const filteredQueue = state.productionQueue.filter(p => p.id !== productionId);
+    const filteredQueue = playerQueue.filter(p => p.id !== productionId);
 
-    // If we cancelled the first item and there are more items, reset the timing of the new first item
-    let updatedQueue = filteredQueue;
-    if (isFirstItem && filteredQueue.length > 0) {
-      const now = state.dateTime;
-      const newCompletionTime = new Date(now.getTime() + PRODUCTION_TIME_HOURS * 60 * 60 * 1000);
-      
-      updatedQueue = filteredQueue.map((item, index) => {
-        if (index === 0) {
-          // Reset timing for the new first item
-          return {
-            ...item,
-            startTime: now,
-            completionTime: newCompletionTime,
-          };
-        }
-        return item;
-      });
-    }
-
+    // If we cancelled the first item, the next item automatically starts
+    // No need to reset timing since each item already has its own 24-hour timer
+    
     set((state) => ({
-      productionQueue: updatedQueue,
+      productionQueues: {
+        ...state.productionQueues,
+        [state.selectedCountry!.id]: filteredQueue,
+      },
       money: state.money + refund,
       gameEvents: [
         ...state.gameEvents,
