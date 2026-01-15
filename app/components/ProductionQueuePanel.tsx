@@ -7,7 +7,7 @@ import SidebarPanel from './SidebarPanel';
 interface ProductionQueuePanelProps {
   isOpen: boolean;
   onClose: () => void;
-  productionQueue: ProductionQueueItem[];
+  productionQueue: Record<FactionId, ProductionQueueItem[]>;
   regions: RegionState;
   armyGroups: ArmyGroup[];
   playerFaction: FactionId;
@@ -37,7 +37,7 @@ export default function ProductionQueuePanel({
   const [selectedRegion, setSelectedRegion] = useState<string>('');
 
   // Filter queue to show only player's productions
-  const playerProductions = productionQueue.filter(p => p.owner === playerFaction);
+  const playerProductions = productionQueue[playerFaction] || [];
 
   // Get player-owned regions for deployment
   const ownedRegions = Object.values(regions).filter(r => r.owner === playerFaction);

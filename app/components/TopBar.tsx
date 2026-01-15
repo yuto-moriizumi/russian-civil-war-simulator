@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import { Country, GameSpeed, GameEvent, ProductionQueueItem, MapMode } from '../types/game';
+import { Country, GameSpeed, GameEvent, ProductionQueueItem, MapMode, FactionId } from '../types/game';
 import SpeedControl from './SpeedControl';
 import TreasuryButton from './TreasuryButton';
 
@@ -17,7 +17,7 @@ interface TopBarProps {
   unitCount: number;
   gameEvents: GameEvent[];
   showSavedIndicator: boolean;
-  productionQueue: ProductionQueueItem[];
+  productionQueue: Record<FactionId, ProductionQueueItem[]>;
   mapMode: MapMode;
   onTogglePlay: () => void;
   onChangeSpeed: (speed: GameSpeed) => void;
@@ -64,7 +64,7 @@ export default function TopBar({
   };
 
   // Count active productions for the player
-  const activeProductions = productionQueue.filter(p => p.owner === country.id).length;
+  const activeProductions = (productionQueue[country.id] || []).length;
 
   return (
     <div className="relative z-10 flex items-center justify-between border-b border-stone-700 bg-stone-900/90 px-4 py-3">
