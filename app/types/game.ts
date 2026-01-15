@@ -44,7 +44,7 @@ export interface RegionState {
   [regionId: string]: Region;
 }
 
-export type GameSpeed = 1 | 2 | 8 | 32 | 128;
+export type GameSpeed = 1 | 2 | 8 | 32 | 1000;
 
 // Mission availability conditions - all conditions in the array must be met (AND)
 export type MissionCondition =

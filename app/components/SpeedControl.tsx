@@ -33,7 +33,7 @@ export default function SpeedControl({
 
       {/* Speed Buttons */}
       <div className="flex gap-1">
-        {([1, 2, 8, 32, 128] as GameSpeed[]).map((speed) => (
+        {([1, 2, 8, 32, 1000] as GameSpeed[]).map((speed) => (
           <button
             key={speed}
             onClick={() => onChangeSpeed(speed)}
@@ -43,7 +43,7 @@ export default function SpeedControl({
                 : 'bg-stone-700 text-stone-400 hover:bg-stone-600'
             }`}
           >
-            {speed}x
+            {speed === 1000 ? '∞' : `${speed}x`}
           </button>
         ))}
       </div>
