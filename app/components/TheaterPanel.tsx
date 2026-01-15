@@ -17,7 +17,7 @@ interface TheaterPanelProps {
   onRenameGroup: (groupId: string, name: string) => void;
   onSelectGroup: (groupId: string | null) => void;
   onSetGroupMode: (groupId: string, mode: 'none' | 'advance' | 'defend') => void;
-  onDeployToGroup: (groupId: string) => void;
+  onDeployToGroup: (groupId: string, count?: number) => void;
   onAssignTheater: (groupId: string, theaterId: string | null) => void;
 }
 
@@ -196,16 +196,39 @@ export default function TheaterPanel({
               </div>
             </div>
 
-            {/* Deploy button at bottom */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDeployToGroup(group.id);
-              }}
-              className="w-full bg-blue-700 py-2 text-[10px] font-black text-white hover:bg-blue-600 transition-colors shrink-0"
-            >
-              DEPLOY
-            </button>
+            {/* Deploy buttons at bottom - split into +1, +5, +10 */}
+            <div className="flex divide-x divide-blue-900 shrink-0">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeployToGroup(group.id, 1);
+                }}
+                className="flex-1 bg-blue-700 py-2 text-[10px] font-black text-white hover:bg-blue-600 transition-colors"
+                title="Deploy 1 division"
+              >
+                +1
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeployToGroup(group.id, 5);
+                }}
+                className="flex-1 bg-blue-700 py-2 text-[10px] font-black text-white hover:bg-blue-600 transition-colors"
+                title="Deploy 5 divisions"
+              >
+                +5
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeployToGroup(group.id, 10);
+                }}
+                className="flex-1 bg-blue-700 py-2 text-[10px] font-black text-white hover:bg-blue-600 transition-colors"
+                title="Deploy 10 divisions"
+              >
+                +10
+              </button>
+            </div>
           </div>
         );
       })}
