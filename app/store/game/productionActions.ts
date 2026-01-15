@@ -172,24 +172,29 @@ export const createProductionActions = (
     const isFirstItem = playerQueue[0]?.id === productionId;
 
     // Filter out the cancelled production
-    let filteredQueue = playerQueue.filter(p => p.id !== productionId);
+    const filteredQueue = playerQueue.filter(p => p.id !== productionId);
 
     // If we cancelled the first item, adjust the new first item's timing to start now
-    if (isFirstItem && filteredQueue.length > 0) {
-      const nextItem = filteredQueue[0];
-      const productionDuration = nextItem.completionTime.getTime() - nextItem.startTime.getTime();
-      
-      filteredQueue[0] = {
-        ...nextItem,
-        startTime: state.dateTime,
-        completionTime: new Date(state.dateTime.getTime() + productionDuration),
-      };
-    }
+    const finalQueue = isFirstItem && filteredQueue.length > 0
+      ? (() => {
+          const nextItem = filteredQueue[0];
+          const productionDuration = nextItem.completionTime.getTime() - nextItem.startTime.getTime();
+          
+          return [
+            {
+              ...nextItem,
+              startTime: state.dateTime,
+              completionTime: new Date(state.dateTime.getTime() + productionDuration),
+            },
+            ...filteredQueue.slice(1)
+          ];
+        })()
+      : filteredQueue;
     
     set((state) => ({
       productionQueues: {
         ...state.productionQueues,
-        [state.selectedCountry!.id]: filteredQueue,
+        [state.selectedCountry!.id]: finalQueue,
       },
       gameEvents: [
         ...state.gameEvents,
