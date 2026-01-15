@@ -72,6 +72,83 @@ export function createDiplomacyFillColorExpression(
 }
 
 /**
+ * Build color expression for region fill based on division cap (value map mode)
+ * Uses a gradient from dark to bright based on the region's value (division cap)
+ */
+export function createValueFillColorExpression(regions: RegionState) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const expression: any[] = ['match', ['get', 'shapeISO']];
+  
+  // Find min and max values for normalization
+  const values = Object.values(regions).map(r => r.value);
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
+  const range = maxValue - minValue;
+  
+  // Define color gradient: dark blue to bright yellow
+  // Low value = dark blue (#1e3a8a)
+  // High value = bright yellow (#fbbf24)
+  const interpolateColor = (normalizedValue: number): string => {
+    // normalizedValue is 0-1, representing position in gradient
+    // Use a multi-stop gradient for better visualization
+    if (normalizedValue <= 0.25) {
+      // Dark blue to medium blue
+      const t = normalizedValue / 0.25;
+      return rgbToHex(
+        Math.round(30 + (59 - 30) * t),    // R: 30 -> 59
+        Math.round(58 + (130 - 58) * t),   // G: 58 -> 130
+        Math.round(138 + (246 - 138) * t)  // B: 138 -> 246
+      );
+    } else if (normalizedValue <= 0.5) {
+      // Medium blue to cyan
+      const t = (normalizedValue - 0.25) / 0.25;
+      return rgbToHex(
+        Math.round(59 + (34 - 59) * t),    // R: 59 -> 34
+        Math.round(130 + (211 - 130) * t), // G: 130 -> 211
+        Math.round(246 + (238 - 246) * t)  // B: 246 -> 238
+      );
+    } else if (normalizedValue <= 0.75) {
+      // Cyan to orange
+      const t = (normalizedValue - 0.5) / 0.25;
+      return rgbToHex(
+        Math.round(34 + (251 - 34) * t),   // R: 34 -> 251
+        Math.round(211 + (146 - 211) * t), // G: 211 -> 146
+        Math.round(238 + (60 - 238) * t)   // B: 238 -> 60
+      );
+    } else {
+      // Orange to bright yellow
+      const t = (normalizedValue - 0.75) / 0.25;
+      return rgbToHex(
+        Math.round(251 + (251 - 251) * t), // R: 251 -> 251
+        Math.round(146 + (191 - 146) * t), // G: 146 -> 191
+        Math.round(60 + (36 - 60) * t)     // B: 60 -> 36
+      );
+    }
+  };
+  
+  for (const [id, region] of Object.entries(regions)) {
+    const normalized = range > 0 ? (region.value - minValue) / range : 0.5;
+    const color = interpolateColor(normalized);
+    expression.push(id, color);
+  }
+  
+  // Default color for unmatched regions
+  expression.push('#808080');
+  
+  return expression;
+}
+
+/**
+ * Helper function to convert RGB to hex color
+ */
+function rgbToHex(r: number, g: number, b: number): string {
+  return '#' + [r, g, b].map(x => {
+    const hex = Math.round(x).toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  }).join('');
+}
+
+/**
  * Build the appropriate fill color expression based on map mode
  */
 export function createMapModeFillColorExpression(
@@ -82,6 +159,10 @@ export function createMapModeFillColorExpression(
 ) {
   if (mapMode === 'diplomacy' && playerFaction) {
     return createDiplomacyFillColorExpression(regions, playerFaction, getRelationship);
+  }
+  
+  if (mapMode === 'value') {
+    return createValueFillColorExpression(regions);
   }
   
   // Default to country map mode

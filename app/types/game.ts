@@ -51,7 +51,6 @@ export type MissionCondition =
   | { type: 'controlRegions'; regionIds: string[] }                // Control all listed regions
   | { type: 'controlRegionCount'; count: number }                  // Control at least N regions
   | { type: 'hasUnits'; count: number }                            // Have at least N divisions
-  | { type: 'hasMoney'; amount: number }                           // Have at least N money
   | { type: 'dateAfter'; date: string }                            // Date is after specified (YYYY-MM-DD)
   | { type: 'combatVictories'; count: number }                     // Win at least N combats
   | { type: 'enemyRegionCount'; faction: FactionId; maxCount: number } // Enemy controls at most N regions
@@ -132,7 +131,7 @@ export interface NotificationItem extends GameEvent {
 }
 
 // Map mode types for different map visualizations
-export type MapMode = 'country' | 'diplomacy';
+export type MapMode = 'country' | 'diplomacy' | 'value';
 
 // Relationship types between countries
 export type RelationshipType = 'neutral' | 'military_access' | 'war' | 'autonomy';
@@ -180,8 +179,6 @@ export interface GameState {
   dateTime: Date;
   isPlaying: boolean;
   gameSpeed: GameSpeed;
-  money: number;
-  income: number;
   missions: Mission[];
   movingUnits: Movement[];
   gameEvents: GameEvent[];
@@ -200,8 +197,6 @@ export interface GameState {
 // AI State for CPU-controlled factions
 export interface AIState {
   factionId: FactionId;
-  money: number;
-  income: number;
 }
 
 // Combat result for battle resolution

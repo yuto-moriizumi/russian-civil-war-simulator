@@ -3,15 +3,12 @@
 
 import { Country, GameSpeed, GameEvent, ProductionQueueItem, MapMode, FactionId } from '../types/game';
 import SpeedControl from './SpeedControl';
-import TreasuryButton from './TreasuryButton';
 
 interface TopBarProps {
   country: Country;
   dateTime: Date;
   isPlaying: boolean;
   gameSpeed: GameSpeed;
-  money: number;
-  income: number;
   grossIncome: number;
   maintenanceCost: number;
   unitCount: number;
@@ -35,8 +32,6 @@ export default function TopBar({
   dateTime,
   isPlaying,
   gameSpeed,
-  money,
-  income,
   grossIncome,
   maintenanceCost,
   unitCount,
@@ -90,18 +85,6 @@ export default function TopBar({
           <h1 className="text-lg font-bold text-white">{country.name}</h1>
           <p className="text-xs text-stone-400">The struggle continues...</p>
         </div>
-
-        {/* Resources */}
-        <TreasuryButton
-          money={money}
-          income={income}
-          grossIncome={grossIncome}
-          maintenanceCost={maintenanceCost}
-          unitCount={unitCount}
-          divisionCap={divisionCap}
-          controlledStates={controlledStates}
-          inProduction={inProduction}
-        />
 
         {/* Division Cap Display */}
         {divisionCap !== undefined && (
@@ -166,6 +149,17 @@ export default function TopBar({
             title="Diplomacy Map - Colors by relationship"
           >
             Diplomacy
+          </button>
+          <button
+            onClick={() => onSetMapMode('value')}
+            className={`px-3 py-1 text-xs transition-colors ${
+              mapMode === 'value'
+                ? 'bg-blue-600 text-white font-semibold'
+                : 'text-stone-300 hover:bg-stone-700'
+            }`}
+            title="Value Map - Colors by division cap"
+          >
+            Value
           </button>
         </div>
       </div>

@@ -16,7 +16,6 @@ export function evaluateMissionCondition(
   condition: MissionCondition,
   state: {
     regions: RegionState;
-    money: number;
     dateTime: Date;
     gameEvents: GameEvent[];
     selectedCountry: Country;
@@ -24,7 +23,7 @@ export function evaluateMissionCondition(
     armyGroups: ArmyGroup[];
   }
 ): boolean {
-  const { regions, money, dateTime, gameEvents, selectedCountry, theaters, armyGroups } = state;
+  const { regions, dateTime, gameEvents, selectedCountry, theaters, armyGroups } = state;
   const playerFaction = selectedCountry.id;
 
   switch (condition.type) {
@@ -55,10 +54,6 @@ export function evaluateMissionCondition(
         return acc;
       }, 0);
       return totalUnits >= condition.count;
-    }
-    
-    case 'hasMoney': {
-      return money >= condition.amount;
     }
     
     case 'dateAfter': {
@@ -114,7 +109,6 @@ export function areMissionConditionsMet(
   mission: Mission,
   state: {
     regions: RegionState;
-    money: number;
     dateTime: Date;
     gameEvents: GameEvent[];
     selectedCountry: Country;

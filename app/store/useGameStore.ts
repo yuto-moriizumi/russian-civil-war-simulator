@@ -50,7 +50,6 @@ export const useGameStore = create<GameStore>()(
         currentScreen: state.currentScreen,
         selectedCountry: state.selectedCountry,
         dateTime: state.dateTime,
-        money: state.money,
         missions: state.missions,
         movingUnits: state.movingUnits,
         gameEvents: state.gameEvents,
