@@ -170,10 +170,13 @@ export const createArmyGroupActions = (
 
   advanceArmyGroup: (groupId: string) => {
     const state = get();
-    const { armyGroups, regions, adjacency, selectedCountry, dateTime, movingUnits, selectedUnitRegion, relationships } = state;
+    const { armyGroups, regions, adjacency, dateTime, movingUnits, selectedUnitRegion, relationships } = state;
     
     const group = armyGroups.find(g => g.id === groupId);
-    if (!group || !selectedCountry) return;
+    if (!group) return;
+    
+    // Use the army group's owner faction instead of selectedCountry to support AI
+    const factionId = group.owner;
 
     const newMovements: Movement[] = [];
     const newRegions = { ...regions };
@@ -184,7 +187,7 @@ export const createArmyGroupActions = (
     // This allows divisions to be moved even after they've been relocated
     const regionsWithGroupDivisions = Object.keys(newRegions).filter(regionId => {
       const region = newRegions[regionId];
-      if (!region || region.owner !== selectedCountry.id) return false;
+      if (!region || region.owner !== factionId) return false;
       return region.divisions.some(d => d.armyGroupId === groupId);
     });
 
@@ -193,21 +196,21 @@ export const createArmyGroupActions = (
       if (!region || region.divisions.length === 0) continue;
 
       // Find the best move toward an enemy
-      const nextStep = findBestMoveTowardEnemy(regionId, newRegions, adjacency, selectedCountry.id);
+      const nextStep = findBestMoveTowardEnemy(regionId, newRegions, adjacency, factionId);
       if (!nextStep) continue;
 
       // Check relationship with target region owner
       const targetRegion = newRegions[nextStep];
-      if (targetRegion && targetRegion.owner !== selectedCountry.id) {
+      if (targetRegion && targetRegion.owner !== factionId) {
         // Check if they grant us access/war
         const theirRelationship = relationships.find(
-          r => r.fromFaction === targetRegion.owner && r.toFaction === selectedCountry.id
+          r => r.fromFaction === targetRegion.owner && r.toFaction === factionId
         );
         const theyGrantUs = theirRelationship ? theirRelationship.type : 'neutral';
         
         // Check if we declared war on them
         const ourRelationship = relationships.find(
-          r => r.fromFaction === selectedCountry.id && r.toFaction === targetRegion.owner
+          r => r.fromFaction === factionId && r.toFaction === targetRegion.owner
         );
         const weDeclared = ourRelationship ? ourRelationship.type : 'neutral';
         
@@ -248,7 +251,7 @@ export const createArmyGroupActions = (
         divisions: divisionsToMove,
         departureTime: new Date(dateTime),
         arrivalTime,
-        owner: selectedCountry.id,
+        owner: factionId,
       };
 
       newMovements.push(newMovement);
@@ -284,10 +287,13 @@ export const createArmyGroupActions = (
 
   defendArmyGroup: (groupId: string) => {
     const state = get();
-    const { armyGroups, regions, adjacency, selectedCountry, dateTime, movingUnits, selectedUnitRegion, theaters, relationships } = state;
+    const { armyGroups, regions, adjacency, dateTime, movingUnits, selectedUnitRegion, theaters, relationships } = state;
     
     const group = armyGroups.find(g => g.id === groupId);
-    if (!group || !selectedCountry) return;
+    if (!group) return;
+    
+    // Use the army group's owner faction instead of selectedCountry to support AI
+    const factionId = group.owner;
 
     const newMovements: Movement[] = [];
     const newRegions = { ...regions };
@@ -300,7 +306,7 @@ export const createArmyGroupActions = (
     // Find border regions in this theater (or all friendly border regions if no theater)
     const allBorderRegions: string[] = [];
     for (const [regionId, region] of Object.entries(newRegions)) {
-      if (!region || region.owner !== selectedCountry.id) continue;
+      if (!region || region.owner !== factionId) continue;
       
       // If there's a theater, only consider regions in that theater
       if (theater && !theater.frontlineRegions.includes(regionId)) continue;
@@ -308,7 +314,7 @@ export const createArmyGroupActions = (
       const neighbors = adjacency[regionId] || [];
       const hasEnemyNeighbor = neighbors.some(neighborId => {
         const neighbor = newRegions[neighborId];
-        return neighbor && neighbor.owner !== selectedCountry.id && neighbor.owner !== 'neutral';
+        return neighbor && neighbor.owner !== factionId && neighbor.owner !== 'neutral';
       });
       
       if (hasEnemyNeighbor) {
@@ -330,7 +336,7 @@ export const createArmyGroupActions = (
     const allGroupDivisions: { regionId: string; divisions: typeof regions[string]['divisions'] }[] = [];
     Object.keys(newRegions).forEach(regionId => {
       const region = newRegions[regionId];
-      if (!region || region.owner !== selectedCountry.id) return;
+      if (!region || region.owner !== factionId) return;
       const divisionsInGroup = region.divisions.filter(d => d.armyGroupId === groupId);
       if (divisionsInGroup.length > 0) {
         allGroupDivisions.push({ regionId, divisions: divisionsInGroup });
@@ -406,16 +412,16 @@ export const createArmyGroupActions = (
             
             // Check relationship with target region owner
             const targetRegion = newRegions[borderRegionId];
-            if (targetRegion && targetRegion.owner !== selectedCountry.id) {
+            if (targetRegion && targetRegion.owner !== factionId) {
               // Check if they grant us access/war
               const theirRelationship = relationships.find(
-                r => r.fromFaction === targetRegion.owner && r.toFaction === selectedCountry.id
+                r => r.fromFaction === targetRegion.owner && r.toFaction === factionId
               );
               const theyGrantUs = theirRelationship ? theirRelationship.type : 'neutral';
               
               // Check if we declared war on them
               const ourRelationship = relationships.find(
-                r => r.fromFaction === selectedCountry.id && r.toFaction === targetRegion.owner
+                r => r.fromFaction === factionId && r.toFaction === targetRegion.owner
               );
               const weDeclared = ourRelationship ? ourRelationship.type : 'neutral';
               
@@ -456,7 +462,7 @@ export const createArmyGroupActions = (
               divisions: divsFromSource,
               departureTime: new Date(dateTime),
               arrivalTime,
-              owner: selectedCountry.id,
+              owner: factionId,
             };
 
             newMovements.push(newMovement);
