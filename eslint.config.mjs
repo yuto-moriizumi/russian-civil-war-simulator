@@ -27,6 +27,8 @@ const eslintConfig = defineConfig([
           skipComments: true,
         },
       ],
+      // Change @typescript-eslint/no-unused-vars to error level
+      "@typescript-eslint/no-unused-vars": "error",
     },
   },
 ]);
