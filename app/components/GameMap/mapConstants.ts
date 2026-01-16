@@ -12,4 +12,5 @@ export const FACTION_FLAGS: Record<CountryId, string> = {
   neutral: '',
   foreign: '',
   germany: '/images/flags/germany.svg',
+  poland: '/images/flags/poland.svg',
 };
