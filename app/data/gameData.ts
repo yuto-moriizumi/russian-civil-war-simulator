@@ -12,30 +12,133 @@ export const countries: Country[] = [
     name: 'Soviet Russia',
     flag: '/images/flags/soviet.svg',
     color: '#CC0000',
+    coreRegions: [
+      // Central Russia - Industrial heartland
+      'RU-MOW', // Moscow (city) - Capital
+      'RU-MOS', // Moscow Oblast
+      'RU-SPE', // Saint Petersburg (city)
+      'RU-LEN', // Leningrad Oblast
+      'RU-TVE', // Tver Oblast
+      'RU-IVA', // Ivanovo Oblast
+      'RU-VLA', // Vladimir Oblast
+      'RU-KOS', // Kostroma Oblast
+      'RU-YAR', // Yaroslavl Oblast
+      'RU-NIZ', // Nizhny Novgorod Oblast
+      'RU-VOR', // Voronezh Oblast
+      'RU-BEL', // Belgorod Oblast
+      // Volga region
+      'RU-SAM', // Samara Oblast
+      'RU-SAR', // Saratov Oblast
+      'RU-ULY', // Ulyanovsk Oblast
+      'RU-TA',  // Tatarstan
+      // Urals - Industrial base
+      'RU-SVE', // Sverdlovsk Oblast
+      'RU-CHE', // Chelyabinsk Oblast
+      'RU-PER', // Perm Krai
+    ],
   },
   {
     id: 'white',
     name: 'White Army',
     flag: '/images/flags/white.svg',
     color: '#0d3b0d',
+    coreRegions: [
+      // Historical White strongholds - Southern Russia, Siberia, North
+      'RU-ROS', // Rostov Oblast - Don region
+      'RU-KDA', // Krasnodar Krai
+      'RU-STA', // Stavropol Krai
+      'RU-VGG', // Volgograd Oblast
+      // Siberia
+      'RU-OMS', // Omsk Oblast - White capital
+      'RU-TYU', // Tyumen Oblast
+      'RU-NVS', // Novosibirsk Oblast
+      'RU-TOM', // Tomsk Oblast
+      'RU-IRK', // Irkutsk Oblast
+      // Northern Russia
+      'RU-ARK', // Arkhangelsk Oblast
+      'RU-VLG', // Vologda Oblast
+      // Far East
+      'RU-PRI', // Primorsky Krai (Vladivostok)
+      'RU-KHA', // Khabarovsk Krai
+    ],
   },
   {
     id: 'finland',
     name: 'Finland',
     flag: '/images/flags/finland.svg',
     color: '#FFFFFF',
+    coreRegions: [
+      // All Finnish regions (ADM-1)
+      'FI-01', // Ahvenanmaa
+      'FI-02', // Etelä-Karjala
+      'FI-03', // Etelä-Pohjanmaa
+      'FI-04', // Etelä-Savo
+      'FI-05', // Kainuu
+      'FI-06', // Kanta-Häme
+      'FI-07', // Keski-Pohjanmaa
+      'FI-08', // Keski-Suomi
+      'FI-09', // Kymenlaakso
+      'FI-10', // Lappi
+      'FI-11', // Pirkanmaa
+      'FI-12', // Pohjanmaa
+      'FI-13', // Pohjois-Karjala
+      'FI-14', // Pohjois-Pohjanmaa
+      'FI-15', // Pohjois-Savo
+      'FI-16', // Päijät-Häme
+      'FI-17', // Satakunta
+      'FI-18', // Uusimaa (Helsinki)
+      'FI-19', // Varsinais-Suomi
+      // Karelia expansion goals
+      'RU-KR',  // Republic of Karelia
+    ],
   },
   {
     id: 'ukraine',
     name: 'Ukraine',
     flag: '/images/flags/ukraine.svg',
     color: '#0057B7',
+    coreRegions: [
+      // Central and Eastern Ukraine
+      'UA-30', // Kyiv (city)
+      'UA-32', // Kyiv Oblast
+      'UA-71', // Cherkasy Oblast
+      'UA-74', // Chernihiv Oblast
+      'UA-77', // Chernivtsi Oblast
+      'UA-12', // Dnipropetrovsk Oblast
+      'UA-14', // Donetsk Oblast
+      'UA-63', // Kharkiv Oblast
+      'UA-65', // Kherson Oblast
+      'UA-18', // Ivano-Frankivsk Oblast
+      'UA-61', // Kirovohrad Oblast
+      'UA-09', // Luhansk Oblast
+      'UA-46', // Lviv Oblast
+      'UA-48', // Mykolaiv Oblast
+      'UA-51', // Odesa Oblast
+      'UA-53', // Poltava Oblast
+      'UA-56', // Rivne Oblast
+      'UA-59', // Sumy Oblast
+      'UA-05', // Vinnytsia Oblast
+      'UA-07', // Volyn Oblast
+      'UA-21', // Zakarpattia Oblast
+      'UA-23', // Zaporizhzhia Oblast
+      'UA-26', // Zhytomyr Oblast
+      // Crimea
+      'UA-43', // Crimea
+    ],
   },
   {
     id: 'don',
     name: 'Don Republic',
     flag: '/images/flags/don.svg',
     color: '#FFD700',
+    coreRegions: [
+      // Don Cossack homeland
+      'RU-ROS', // Rostov Oblast - Capital (Novocherkassk)
+      'RU-VGG', // Volgograd Oblast - Don Cossack lands
+      'RU-KDA', // Krasnodar Krai - Kuban Cossack alliance
+      'RU-STA', // Stavropol Krai
+      'RU-AST', // Astrakhan Oblast
+    ],
   },
   {
     id: 'fswr',
@@ -43,6 +146,14 @@ export const countries: Country[] = [
     flag: '/images/flags/fswr.svg',
     color: '#CC0000',
     selectable: false,
+    coreRegions: [
+      // Red Finland - Southern urban centers
+      'FI-18', // Uusimaa (Helsinki)
+      'FI-09', // Kymenlaakso
+      'FI-11', // Pirkanmaa (Tampere)
+      'FI-06', // Kanta-Häme
+      'FI-16', // Päijät-Häme
+    ],
   },
   {
     id: 'iskolat',
@@ -50,6 +161,10 @@ export const countries: Country[] = [
     flag: '/images/flags/iskolat.svg',
     color: '#8B0000',
     selectable: false,
+    coreRegions: [
+      // Latvia
+      'LVA', // Latvia (ADM0)
+    ],
   },
   {
     id: 'germany',

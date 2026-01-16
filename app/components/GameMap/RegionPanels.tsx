@@ -48,6 +48,7 @@ interface RegionInfoPanelProps {
   playerFaction: FactionId;
   unitsInReserve: number;
   activeCombats: ActiveCombat[];
+  coreRegions?: string[];
   onRegionSelect: (regionId: string | null) => void;
   onUnitSelect: (regionId: string | null) => void;
   onDeployUnit: () => void;
@@ -61,6 +62,7 @@ export function RegionInfoPanel({
   playerFaction,
   unitsInReserve,
   activeCombats,
+  coreRegions,
   onRegionSelect,
   onUnitSelect,
   onDeployUnit,
@@ -112,10 +114,16 @@ export function RegionInfoPanel({
                 <span className="text-amber-400 font-semibold">+{MAJOR_CITY_CAP_BONUS[selectedRegion]}</span>
               </div>
             )}
+            {coreRegions?.includes(selectedRegion) && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-stone-400">Core Region Bonus:</span>
+                <span className="text-purple-400 font-semibold">+1</span>
+              </div>
+            )}
             <div className="flex items-center justify-between text-xs border-t border-stone-700 pt-1 font-semibold">
               <span className="text-stone-300">Total Contribution:</span>
-              <span className={MAJOR_CITY_CAP_BONUS[selectedRegion] ? "text-amber-400" : "text-green-400"}>
-                +{DIVISIONS_PER_STATE + (MAJOR_CITY_CAP_BONUS[selectedRegion] || 0)}
+              <span className={MAJOR_CITY_CAP_BONUS[selectedRegion] || coreRegions?.includes(selectedRegion) ? "text-amber-400" : "text-green-400"}>
+                +{DIVISIONS_PER_STATE + (MAJOR_CITY_CAP_BONUS[selectedRegion] || 0) + (coreRegions?.includes(selectedRegion) ? 1 : 0)}
               </span>
             </div>
           </div>

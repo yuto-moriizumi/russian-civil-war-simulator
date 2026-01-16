@@ -14,6 +14,7 @@ interface TheaterPanelProps {
   movingUnits: Movement[];
   productionQueue: Record<FactionId, ProductionQueueItem[]>;
   factionBonuses: FactionBonuses;
+  coreRegions?: string[];
   onCreateGroup: (name: string, regionIds: string[], theaterId: string | null) => void;
   onDeleteGroup: (groupId: string) => void;
   onRenameGroup: (groupId: string, name: string) => void;
@@ -32,6 +33,7 @@ export default function TheaterPanel({
   movingUnits,
   productionQueue,
   factionBonuses,
+  coreRegions,
   onCreateGroup,
   onDeleteGroup,
   onRenameGroup,
@@ -75,7 +77,7 @@ export default function TheaterPanel({
         const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerFaction, group.id, movingUnits);
         const queueCount = (productionQueue[playerFaction] || []).filter(p => p.armyGroupId === group.id).length;
         const isGroupSelected = selectedGroupId === group.id;
-        const canProduce = canProduceDivision(playerFaction, regions, movingUnits, productionQueue, factionBonuses);
+        const canProduce = canProduceDivision(playerFaction, regions, movingUnits, productionQueue, factionBonuses, coreRegions);
 
         return (
           <div
