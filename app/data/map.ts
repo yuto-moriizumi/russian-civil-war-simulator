@@ -371,12 +371,12 @@ export const initialRegionOwnership: Record<string, CountryId> = {
   'DE-SL': 'germany', 'DE-SN': 'germany', 'DE-ST': 'germany', 'DE-TH': 'germany',
 
   // ============================================
-  // POLAND (Occupied by Central Powers)
+  // POLAND (Kingdom of Poland - German puppet state)
   // ============================================
-  'PL-DS': 'foreign', 'PL-KP': 'foreign', 'PL-LB': 'foreign', 'PL-LD': 'foreign',
-  'PL-LU': 'foreign', 'PL-MA': 'foreign', 'PL-MZ': 'foreign', 'PL-OP': 'foreign',
-  'PL-PD': 'foreign', 'PL-PK': 'foreign', 'PL-PM': 'foreign', 'PL-SK': 'foreign',
-  'PL-SL': 'foreign', 'PL-WN': 'foreign', 'PL-WP': 'foreign', 'PL-ZP': 'foreign',
+  'PL-DS': 'poland', 'PL-KP': 'poland', 'PL-LB': 'poland', 'PL-LD': 'poland',
+  'PL-LU': 'poland', 'PL-MA': 'poland', 'PL-MZ': 'poland', 'PL-OP': 'poland',
+  'PL-PD': 'poland', 'PL-PK': 'poland', 'PL-PM': 'poland', 'PL-SK': 'poland',
+  'PL-SL': 'poland', 'PL-WN': 'poland', 'PL-WP': 'poland', 'PL-ZP': 'poland',
 
   // ============================================
   // AUSTRIA-HUNGARY SUCCESSORS (Foreign Power)
