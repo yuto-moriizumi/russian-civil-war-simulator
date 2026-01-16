@@ -113,6 +113,7 @@ export interface AIActions {
  * 
  * @param armyGroups - All army groups in the game
  * @param factionBonuses - Faction bonuses from completed missions
+ * @param coreRegions - Optional list of core region IDs for this faction
  */
 export function runAITick(
   aiState: AIState,
@@ -122,7 +123,8 @@ export function runAITick(
   movingUnits: Movement[] = [],
   productionQueue: ProductionQueueItem[] = [],
   productionQueues: Record<FactionId, ProductionQueueItem[]> = {} as Record<FactionId, ProductionQueueItem[]>,
-  factionBonuses: FactionBonuses
+  factionBonuses: FactionBonuses,
+  coreRegions?: string[]
 ): AIActions {
   const { factionId } = aiState;
   
@@ -184,7 +186,7 @@ export function runAITick(
   // AI production logic: produce up to 2 divisions per tick if under cap
   while (divisionsCreated < 2) {
     // Check command power before producing
-    if (!canProduceDivision(factionId, regions, movingUnits, productionQueues, factionBonuses)) {
+    if (!canProduceDivision(factionId, regions, movingUnits, productionQueues, factionBonuses, coreRegions)) {
       break;
     }
     
