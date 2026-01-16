@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     
     // Create mapping from shapeID to shapeISO for categorization
     const shapeIdToISO: Record<string, string> = {};
-    geojsonData.features.forEach((feature: any) => {
+    geojsonData.features.forEach((feature: { properties?: { shapeID?: string; shapeISO?: string } }) => {
       const shapeID = feature.properties?.shapeID;
       const shapeISO = feature.properties?.shapeISO;
       if (shapeID && shapeISO) {
