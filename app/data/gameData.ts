@@ -210,6 +210,32 @@ export const countries: Country[] = [
       'BG-28', // Yambol
     ],
   },
+  {
+    id: 'poland',
+    name: 'Kingdom of Poland',
+    flag: '/images/flags/poland.svg',
+    color: '#DC143C',
+    selectable: false,
+    coreRegions: [
+      // Polish voivodeships
+      'PL-DS', // Lower Silesian
+      'PL-KP', // Kuyavian-Pomeranian
+      'PL-LB', // Lubusz
+      'PL-LD', // Łódź
+      'PL-LU', // Lublin
+      'PL-MA', // Lesser Poland (Małopolskie)
+      'PL-MZ', // Masovian (Warsaw) - Capital
+      'PL-OP', // Opole
+      'PL-PD', // Pomeranian
+      'PL-PK', // Podkarpackie
+      'PL-PM', // Pomeranian
+      'PL-SK', // Świętokrzyskie
+      'PL-SL', // Silesian
+      'PL-WN', // Warmian-Masurian
+      'PL-WP', // Greater Poland (Wielkopolskie)
+      'PL-ZP', // West Pomeranian
+    ],
+  },
 ];
 
 /**
@@ -877,5 +903,93 @@ const bulgarianMissions: Mission[] = [
   },
 ];
 
+// Kingdom of Poland Mission Tree (Balanced: Defense > HP > Production)
+const polandMissions: Mission[] = [
+  {
+    id: 'poland_regency',
+    country: 'poland',
+    name: 'Regency Council Authority',
+    description: 'Establish the Regency Council as the governing body of Poland',
+    completed: false,
+    claimed: false,
+    rewards: { defenceBonus: 1, hpBonus: 10 },
+    prerequisites: [],
+    available: [
+      { type: 'hasUnits', count: 3 }, // Build initial Polish forces
+    ],
+  },
+  {
+    id: 'poland_wehrmacht',
+    country: 'poland',
+    name: 'Polnische Wehrmacht',
+    description: 'Establish the Polish Armed Forces under the Regency Kingdom',
+    completed: false,
+    claimed: false,
+    rewards: { attackBonus: 1, commandPowerBonus: 3 },
+    prerequisites: ['poland_regency'],
+    available: [
+      { type: 'hasUnits', count: 8 }, // Build military capacity
+      { type: 'controlRegion', regionId: 'PL-MZ' }, // Control Warsaw
+    ],
+  },
+  {
+    id: 'poland_autonomy',
+    country: 'poland',
+    name: 'Assert Polish Autonomy',
+    description: 'Distance Poland from German control and assert independence',
+    completed: false,
+    claimed: false,
+    rewards: { productionSpeedBonus: 0.15, defenceBonus: 1 },
+    prerequisites: ['poland_regency'],
+    available: [
+      { type: 'controlRegionCount', count: 10 }, // Control most Polish territory
+      { type: 'dateAfter', date: '1918-09-01' }, // After German military collapse begins
+    ],
+  },
+  {
+    id: 'poland_independence',
+    country: 'poland',
+    name: 'Declare Independence',
+    description: 'With the Central Powers defeated, proclaim the independent Polish Republic',
+    completed: false,
+    claimed: false,
+    rewards: { hpBonus: 15, attackBonus: 2 },
+    prerequisites: ['poland_wehrmacht', 'poland_autonomy'],
+    available: [
+      { type: 'dateAfter', date: '1918-11-01' }, // Historical: November 11, 1918
+      { type: 'controlRegion', regionId: 'PL-MZ' }, // Control Warsaw
+      { type: 'hasUnits', count: 12 },
+    ],
+  },
+  {
+    id: 'poland_borders',
+    country: 'poland',
+    name: 'Secure Polish Borders',
+    description: 'Defend the new Polish state from external threats',
+    completed: false,
+    claimed: false,
+    rewards: { defenceBonus: 2, commandPowerBonus: 3 },
+    prerequisites: ['poland_independence'],
+    available: [
+      { type: 'controlRegionCount', count: 14 }, // Control almost all Polish territory
+      { type: 'combatVictories', count: 2 }, // Win defensive battles
+    ],
+  },
+  {
+    id: 'poland_republic',
+    country: 'poland',
+    name: 'Second Polish Republic',
+    description: 'Establish Poland as a free and independent republic after 123 years of partition',
+    completed: false,
+    claimed: false,
+    rewards: { attackBonus: 3, defenceBonus: 3, gameVictory: true },
+    prerequisites: ['poland_borders'],
+    available: [
+      { type: 'allRegionsControlled', countryIso3: 'POL' }, // Control all Polish regions
+      { type: 'hasUnits', count: 18 }, // Strong military
+    ],
+  },
+];
+
 // Combined missions for all countries
-export const initialMissions: Mission[] = [...sovietMissions, ...whiteMissions, ...finnishMissions, ...ukrainianMissions, ...donMissions, ...germanMissions, ...bulgarianMissions];
+export const initialMissions: Mission[] = [...sovietMissions, ...whiteMissions, ...finnishMissions, ...ukrainianMissions, ...donMissions, ...germanMissions, ...bulgarianMissions, ...polandMissions];

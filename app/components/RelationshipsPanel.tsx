@@ -23,6 +23,7 @@ const COUNTRY_NAMES: Record<CountryId, string> = {
   foreign: 'Foreign',
   germany: 'German Empire',
   bulgaria: 'Tsardom of Bulgaria',
+  poland: 'Kingdom of Poland',
 };
 
 const RELATIONSHIP_COLORS: Record<RelationshipType, string> = {
