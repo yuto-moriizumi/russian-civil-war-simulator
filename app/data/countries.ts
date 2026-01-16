@@ -175,6 +175,7 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     adjective: 'Don',
     firstArmyGroupName: 'Don Cossack Host',
     divisionPrefix: 'Don Cossack',
+    selectable: false,
     coreRegions: [
       // Don Cossack homeland
       'RU-ROS', // Rostov Oblast - Capital (Novocherkassk)
@@ -227,6 +228,7 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     adjective: 'Independent',
     firstArmyGroupName: '1st Army',
     divisionPrefix: 'Militia',
+    selectable: false,
   },
   foreign: {
     id: 'foreign',
@@ -237,6 +239,7 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     adjective: 'Foreign',
     firstArmyGroupName: 'Expeditionary Force',
     divisionPrefix: 'Foreign Legion',
+    selectable: false,
   },
   germany: {
     id: 'germany',
@@ -247,6 +250,7 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     adjective: 'German',
     firstArmyGroupName: 'Imperial German Army',
     divisionPrefix: 'German Guard',
+    selectable: false,
   },
   bulgaria: {
     id: 'bulgaria',
