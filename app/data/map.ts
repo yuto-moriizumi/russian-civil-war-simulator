@@ -363,12 +363,12 @@ export const initialRegionOwnership: Record<string, CountryId> = {
   'AZE': 'white',    // Azerbaijan (country)
 
   // ============================================
-  // GERMANY (Foreign Power)
+  // GERMANY (German Empire)
   // ============================================
-  'DE-BB': 'foreign', 'DE-BE': 'foreign', 'DE-BW': 'foreign', 'DE-BY': 'foreign',
-  'DE-HB': 'foreign', 'DE-HE': 'foreign', 'DE-HH': 'foreign', 'DE-MV': 'foreign',
-  'DE-NI': 'foreign', 'DE-NW': 'foreign', 'DE-RP': 'foreign', 'DE-SH': 'foreign',
-  'DE-SL': 'foreign', 'DE-SN': 'foreign', 'DE-ST': 'foreign', 'DE-TH': 'foreign',
+  'DE-BB': 'germany', 'DE-BE': 'germany', 'DE-BW': 'germany', 'DE-BY': 'germany',
+  'DE-HB': 'germany', 'DE-HE': 'germany', 'DE-HH': 'germany', 'DE-MV': 'germany',
+  'DE-NI': 'germany', 'DE-NW': 'germany', 'DE-RP': 'germany', 'DE-SH': 'germany',
+  'DE-SL': 'germany', 'DE-SN': 'germany', 'DE-ST': 'germany', 'DE-TH': 'germany',
 
   // ============================================
   // POLAND (Occupied by Central Powers)

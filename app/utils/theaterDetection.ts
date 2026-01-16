@@ -301,6 +301,7 @@ function getEnemyBasedName(enemyCountry: CountryId, index: number): string {
     iskolat: 'Iskolat',
     neutral: 'Independent',
     foreign: 'Foreign',
+    germany: 'German',
   };
   
   const enemyName = enemyNames[enemyCountry] || 'Unknown';

@@ -21,6 +21,7 @@ const COUNTRY_NAMES: Record<CountryId, string> = {
   iskolat: 'Iskolat (Latvian Soviet Republic)',
   neutral: 'Neutral',
   foreign: 'Foreign',
+  germany: 'German Empire',
 };
 
 const RELATIONSHIP_COLORS: Record<RelationshipType, string> = {

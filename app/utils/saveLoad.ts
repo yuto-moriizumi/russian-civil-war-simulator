@@ -186,6 +186,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       iskolat: [],
       neutral: [],
       foreign: [],
+      germany: [],
     };
     
     // Sort legacy queue items into country-specific queues
@@ -217,6 +218,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       iskolat: [],
       neutral: [],
       foreign: [],
+      germany: [],
     };
   }
   
@@ -257,6 +259,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       iskolat: getInitialCountryBonuses(),
       neutral: getInitialCountryBonuses(),
       foreign: getInitialCountryBonuses(),
+      germany: getInitialCountryBonuses(),
     },
   };
 }

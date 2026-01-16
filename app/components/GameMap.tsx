@@ -41,6 +41,7 @@ interface GameMapProps {
   armyGroups: ArmyGroup[];
   mapMode: MapMode;
   regionCentroids: Record<string, [number, number]>;
+  coreRegions?: string[];
   getRelationship: (fromCountry: CountryId, toCountry: CountryId) => RelationshipType;
   onRegionSelect: (regionId: string | null) => void;
   onUnitSelect: (regionId: string | null) => void;
@@ -68,6 +69,7 @@ export default function GameMap({
   armyGroups,
   mapMode,
   regionCentroids,
+  coreRegions,
   getRelationship,
   onRegionSelect,
   onUnitSelect,
@@ -329,6 +331,7 @@ export default function GameMap({
           playerCountry={playerCountry}
           unitsInReserve={unitsInReserve}
           activeCombats={activeCombats}
+          coreRegions={coreRegions}
           onRegionSelect={onRegionSelect}
           onUnitSelect={onUnitSelect}
           onDeployUnit={onDeployUnit}

@@ -191,7 +191,8 @@ export default function MainScreen({
     regions,
     movingUnits,
     productionQueue,
-    countryBonuses[country.id]
+    countryBonuses[country.id],
+    country.coreRegions
   );
 
   const selectedCombat = selectedCombatId 
@@ -231,6 +232,7 @@ export default function MainScreen({
             armyGroups={armyGroups}
             mapMode={mapMode}
             regionCentroids={regionCentroids}
+            coreRegions={country.coreRegions}
             getRelationship={getRelationship}
             onRegionSelect={onRegionSelect}
             onUnitSelect={onUnitSelect}
@@ -328,6 +330,7 @@ export default function MainScreen({
           movingUnits={movingUnits}
           productionQueue={productionQueue}
           countryBonuses={countryBonuses[country.id]}
+          coreRegions={country.coreRegions}
           onCreateGroup={onCreateArmyGroup}
           onDeleteGroup={onDeleteArmyGroup}
           onRenameGroup={onRenameArmyGroup}

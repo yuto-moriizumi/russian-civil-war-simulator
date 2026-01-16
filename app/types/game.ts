@@ -1,7 +1,7 @@
 export type Screen = 'title' | 'countrySelect' | 'main' | 'mission';
 
 // All countries in the game - some playable, some neutral
-export type CountryId = 'soviet' | 'white' | 'finland' | 'ukraine' | 'don' | 'fswr' | 'iskolat' | 'neutral' | 'foreign';
+export type CountryId = 'soviet' | 'white' | 'finland' | 'ukraine' | 'don' | 'fswr' | 'iskolat' | 'neutral' | 'foreign' | 'germany';
 
 export interface Country {
   id: CountryId;
@@ -9,6 +9,7 @@ export interface Country {
   flag: string;
   color: string;
   selectable?: boolean;
+  coreRegions?: string[]; // List of core region IDs - controlling these gives +1 command power each
 }
 
 // Division represents a military unit with combat stats

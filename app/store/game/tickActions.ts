@@ -3,6 +3,7 @@ import { GameStore } from './types';
 import { StoreApi } from 'zustand';
 import { ProductionQueueItem, CountryId } from '../../types/game';
 import { getBaseProductionTime } from '../../utils/bonusCalculator';
+import { countries } from '../../data/gameData';
 import { 
   validateDivisions, 
   processMovements, 
@@ -131,6 +132,7 @@ export const createTickActions = (
     if (aiStates.length > 0) {
       // Process each AI faction
       nextAIStates = aiStates.map(aiState => {
+        const country = countries.find(c => c.id === aiState.countryId);
         const aiActions = runAITick(
           aiState, 
           nextRegions, 
@@ -139,7 +141,8 @@ export const createTickActions = (
           remainingMovements, 
           nextProductionQueues[aiState.countryId] || [], 
           nextProductionQueues,
-          state.countryBonuses[aiState.countryId]
+          state.countryBonuses[aiState.countryId],
+          country?.coreRegions
         );
         
         // If AI created a new army group, add it

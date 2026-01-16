@@ -112,7 +112,8 @@ export interface AIActions {
  * - Adds divisions to the production queue if it has enough money
  * 
  * @param armyGroups - All army groups in the game
- * @param countryBonuses - Faction bonuses from completed missions
+ * @param countryBonuses - Country bonuses from completed missions
+ * @param coreRegions - Optional list of core region IDs for this country
  */
 export function runAITick(
   aiState: AIState,
@@ -122,7 +123,8 @@ export function runAITick(
   movingUnits: Movement[] = [],
   productionQueue: ProductionQueueItem[] = [],
   productionQueues: Record<CountryId, ProductionQueueItem[]> = {} as Record<CountryId, ProductionQueueItem[]>,
-  countryBonuses: CountryBonuses
+  countryBonuses: CountryBonuses,
+  coreRegions?: string[]
 ): AIActions {
   const { countryId } = aiState;
   
@@ -184,7 +186,7 @@ export function runAITick(
   // AI production logic: produce up to 2 divisions per tick if under cap
   while (divisionsCreated < 2) {
     // Check command power before producing
-    if (!canProduceDivision(countryId, regions, movingUnits, productionQueues, countryBonuses)) {
+    if (!canProduceDivision(countryId, regions, movingUnits, productionQueues, countryBonuses, coreRegions)) {
       break;
     }
     

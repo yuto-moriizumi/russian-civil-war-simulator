@@ -82,6 +82,7 @@ function getFirstGroupName(country: CountryId): string {
     iskolat: 'Red Latvian Riflemen',
     neutral: '1st Army',
     foreign: 'Expeditionary Force',
+    germany: 'Imperial German Army',
   };
   return names[country] || '1st Army';
 }
