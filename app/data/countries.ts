@@ -21,6 +21,10 @@ export interface CountryMetadata {
   firstArmyGroupName: string;
   /** Division name prefix */
   divisionPrefix: string;
+  /** Whether this country can be selected by players (defaults to true) */
+  selectable?: boolean;
+  /** Core regions that belong to this country */
+  coreRegions?: string[];
 }
 
 /**
@@ -36,6 +40,30 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     adjective: 'Soviet',
     firstArmyGroupName: 'Red Army Group',
     divisionPrefix: 'Red Guard',
+    coreRegions: [
+      // Central Russia - Industrial heartland
+      'RU-MOW', // Moscow (city) - Capital
+      'RU-MOS', // Moscow Oblast
+      'RU-SPE', // Saint Petersburg (city)
+      'RU-LEN', // Leningrad Oblast
+      'RU-TVE', // Tver Oblast
+      'RU-IVA', // Ivanovo Oblast
+      'RU-VLA', // Vladimir Oblast
+      'RU-KOS', // Kostroma Oblast
+      'RU-YAR', // Yaroslavl Oblast
+      'RU-NIZ', // Nizhny Novgorod Oblast
+      'RU-VOR', // Voronezh Oblast
+      'RU-BEL', // Belgorod Oblast
+      // Volga region
+      'RU-SAM', // Samara Oblast
+      'RU-SAR', // Saratov Oblast
+      'RU-ULY', // Ulyanovsk Oblast
+      'RU-TA',  // Tatarstan
+      // Urals - Industrial base
+      'RU-SVE', // Sverdlovsk Oblast
+      'RU-CHE', // Chelyabinsk Oblast
+      'RU-PER', // Perm Krai
+    ],
   },
   white: {
     id: 'white',
@@ -46,6 +74,25 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     adjective: 'White',
     firstArmyGroupName: 'Volunteer Army',
     divisionPrefix: 'White Guard',
+    coreRegions: [
+      // Historical White strongholds - Southern Russia, Siberia, North
+      'RU-ROS', // Rostov Oblast - Don region
+      'RU-KDA', // Krasnodar Krai
+      'RU-STA', // Stavropol Krai
+      'RU-VGG', // Volgograd Oblast
+      // Siberia
+      'RU-OMS', // Omsk Oblast - White capital
+      'RU-TYU', // Tyumen Oblast
+      'RU-NVS', // Novosibirsk Oblast
+      'RU-TOM', // Tomsk Oblast
+      'RU-IRK', // Irkutsk Oblast
+      // Northern Russia
+      'RU-ARK', // Arkhangelsk Oblast
+      'RU-VLG', // Vologda Oblast
+      // Far East
+      'RU-PRI', // Primorsky Krai (Vladivostok)
+      'RU-KHA', // Khabarovsk Krai
+    ],
   },
   finland: {
     id: 'finland',
@@ -56,6 +103,30 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     adjective: 'Finnish',
     firstArmyGroupName: 'Finnish Defense Forces',
     divisionPrefix: 'Finnish Guard',
+    coreRegions: [
+      // All Finnish regions (ADM-1)
+      'FI-01', // Ahvenanmaa
+      'FI-02', // Etelä-Karjala
+      'FI-03', // Etelä-Pohjanmaa
+      'FI-04', // Etelä-Savo
+      'FI-05', // Kainuu
+      'FI-06', // Kanta-Häme
+      'FI-07', // Keski-Pohjanmaa
+      'FI-08', // Keski-Suomi
+      'FI-09', // Kymenlaakso
+      'FI-10', // Lappi
+      'FI-11', // Pirkanmaa
+      'FI-12', // Pohjanmaa
+      'FI-13', // Pohjois-Karjala
+      'FI-14', // Pohjois-Pohjanmaa
+      'FI-15', // Pohjois-Savo
+      'FI-16', // Päijät-Häme
+      'FI-17', // Satakunta
+      'FI-18', // Uusimaa (Helsinki)
+      'FI-19', // Varsinais-Suomi
+      // Karelia expansion goals
+      'RU-KR',  // Republic of Karelia
+    ],
   },
   ukraine: {
     id: 'ukraine',
@@ -66,6 +137,34 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     adjective: 'Ukrainian',
     firstArmyGroupName: 'Ukrainian Army',
     divisionPrefix: 'Ukrainian Guard',
+    coreRegions: [
+      // Central and Eastern Ukraine
+      'UA-30', // Kyiv (city)
+      'UA-32', // Kyiv Oblast
+      'UA-71', // Cherkasy Oblast
+      'UA-74', // Chernihiv Oblast
+      'UA-77', // Chernivtsi Oblast
+      'UA-12', // Dnipropetrovsk Oblast
+      'UA-14', // Donetsk Oblast
+      'UA-63', // Kharkiv Oblast
+      'UA-65', // Kherson Oblast
+      'UA-18', // Ivano-Frankivsk Oblast
+      'UA-61', // Kirovohrad Oblast
+      'UA-09', // Luhansk Oblast
+      'UA-46', // Lviv Oblast
+      'UA-48', // Mykolaiv Oblast
+      'UA-51', // Odesa Oblast
+      'UA-53', // Poltava Oblast
+      'UA-56', // Rivne Oblast
+      'UA-59', // Sumy Oblast
+      'UA-05', // Vinnytsia Oblast
+      'UA-07', // Volyn Oblast
+      'UA-21', // Zakarpattia Oblast
+      'UA-23', // Zaporizhzhia Oblast
+      'UA-26', // Zhytomyr Oblast
+      // Crimea
+      'UA-43', // Crimea
+    ],
   },
   don: {
     id: 'don',
@@ -76,6 +175,14 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     adjective: 'Don',
     firstArmyGroupName: 'Don Cossack Host',
     divisionPrefix: 'Don Cossack',
+    coreRegions: [
+      // Don Cossack homeland
+      'RU-ROS', // Rostov Oblast - Capital (Novocherkassk)
+      'RU-VGG', // Volgograd Oblast - Don Cossack lands
+      'RU-KDA', // Krasnodar Krai - Kuban Cossack alliance
+      'RU-STA', // Stavropol Krai
+      'RU-AST', // Astrakhan Oblast
+    ],
   },
   fswr: {
     id: 'fswr',
@@ -86,6 +193,15 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     adjective: 'Red Guard',
     firstArmyGroupName: 'Red Guard Army Group',
     divisionPrefix: 'Red Guard',
+    selectable: false,
+    coreRegions: [
+      // Red Finland - Southern urban centers
+      'FI-18', // Uusimaa (Helsinki)
+      'FI-09', // Kymenlaakso
+      'FI-11', // Pirkanmaa (Tampere)
+      'FI-06', // Kanta-Häme
+      'FI-16', // Päijät-Häme
+    ],
   },
   iskolat: {
     id: 'iskolat',
@@ -96,6 +212,11 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     adjective: 'Iskolat',
     firstArmyGroupName: 'Red Latvian Riflemen',
     divisionPrefix: 'Latvian Guard',
+    selectable: false,
+    coreRegions: [
+      // Latvia
+      'LVA', // Latvia (ADM0)
+    ],
   },
   neutral: {
     id: 'neutral',
@@ -136,6 +257,38 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     adjective: 'Bulgarian',
     firstArmyGroupName: 'Bulgarian Army',
     divisionPrefix: 'Bulgarian Guard',
+    selectable: false,
+    coreRegions: [
+      // All Bulgarian provinces (oblasts) - circa 1917
+      'BG-01', // Blagoevgrad
+      'BG-02', // Burgas
+      'BG-03', // Varna
+      'BG-04', // Veliko Tarnovo
+      'BG-05', // Vidin
+      'BG-06', // Vratsa
+      'BG-07', // Gabrovo
+      'BG-08', // Dobrich
+      'BG-09', // Kardzhali
+      'BG-10', // Kyustendil
+      'BG-11', // Lovech
+      'BG-12', // Montana
+      'BG-13', // Pazardzhik
+      'BG-14', // Pernik
+      'BG-15', // Pleven
+      'BG-16', // Plovdiv
+      'BG-17', // Razgrad
+      'BG-18', // Ruse
+      'BG-19', // Silistra
+      'BG-20', // Sliven
+      'BG-21', // Smolyan
+      'BG-22', // Sofia (city) - Capital
+      'BG-23', // Sofia Province
+      'BG-24', // Stara Zagora
+      'BG-25', // Targovishte
+      'BG-26', // Haskovo
+      'BG-27', // Shumen
+      'BG-28', // Yambol
+    ],
   },
   poland: {
     id: 'poland',
@@ -146,6 +299,26 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     adjective: 'Polish',
     firstArmyGroupName: 'Polnische Wehrmacht',
     divisionPrefix: 'Polish Guard',
+    selectable: false,
+    coreRegions: [
+      // Polish voivodeships
+      'PL-DS', // Lower Silesian
+      'PL-KP', // Kuyavian-Pomeranian
+      'PL-LB', // Lubusz
+      'PL-LD', // Łódź
+      'PL-LU', // Lublin
+      'PL-MA', // Lesser Poland (Małopolskie)
+      'PL-MZ', // Masovian (Warsaw) - Capital
+      'PL-OP', // Opole
+      'PL-PD', // Pomeranian
+      'PL-PK', // Podkarpackie
+      'PL-PM', // Pomeranian
+      'PL-SK', // Świętokrzyskie
+      'PL-SL', // Silesian
+      'PL-WN', // Warmian-Masurian
+      'PL-WP', // Greater Poland (Wielkopolskie)
+      'PL-ZP', // West Pomeranian
+    ],
   },
 };
 
@@ -206,3 +379,16 @@ export const COUNTRY_COLORS: Record<CountryId, string> = Object.fromEntries(
 export const FACTION_FLAGS: Record<CountryId, string> = Object.fromEntries(
   Object.values(COUNTRY_METADATA).map(meta => [meta.id, meta.flag])
 ) as Record<CountryId, string>;
+
+/**
+ * Countries array for backward compatibility
+ * This is derived from COUNTRY_METADATA and maintains compatibility with existing code
+ */
+export const countries = Object.values(COUNTRY_METADATA).map(meta => ({
+  id: meta.id,
+  name: meta.name,
+  flag: meta.flag,
+  color: meta.color,
+  selectable: meta.selectable,
+  coreRegions: meta.coreRegions,
+}));
