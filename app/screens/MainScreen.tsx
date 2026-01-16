@@ -74,7 +74,6 @@ interface MainScreenProps {
   onDismissNotification: (notificationId: string) => void;
   onSetRelationship: (fromCountry: CountryId, toCountry: CountryId, type: RelationshipType) => void;
   // Theater and Army Groups action props
-  onSelectTheater: (theaterId: string | null) => void;
   onCreateArmyGroup: (name: string, regionIds: string[], theaterId?: string | null) => void;
   onDeleteArmyGroup: (groupId: string) => void;
   onRenameArmyGroup: (groupId: string, name: string) => void;
@@ -135,7 +134,6 @@ export default function MainScreen({
   onCancelProduction,
   onDismissNotification,
   onSetRelationship,
-  onSelectTheater,
   onCreateArmyGroup,
   onDeleteArmyGroup,
   onRenameArmyGroup,
@@ -180,10 +178,8 @@ export default function MainScreen({
     }
   }, [lastSaveTime]);
 
-  // Calculate unit count and maintenance costs
+  // Calculate unit count
   const unitCount = countCountryUnits(regions, country.id, movingUnits);
-  const maintenanceCost = unitCount; // $1 per unit per hour
-  const grossIncome = 0; // No longer used
 
   // Calculate command power info
   const commandPowerInfo = getCommandPowerInfo(
@@ -268,15 +264,12 @@ export default function MainScreen({
         dateTime={dateTime}
         isPlaying={isPlaying}
         gameSpeed={gameSpeed}
-        grossIncome={grossIncome}
-        maintenanceCost={maintenanceCost}
         unitCount={unitCount}
         gameEvents={gameEvents}
         showSavedIndicator={showSavedIndicator}
         productionQueue={productionQueue}
         mapMode={mapMode}
         divisionCap={commandPowerInfo.cap}
-        controlledStates={commandPowerInfo.controlledStates}
         inProduction={commandPowerInfo.inProduction}
         onTogglePlay={onTogglePlay}
         onChangeSpeed={onChangeSpeed}

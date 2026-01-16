@@ -9,15 +9,12 @@ interface TopBarProps {
   dateTime: Date;
   isPlaying: boolean;
   gameSpeed: GameSpeed;
-  grossIncome: number;
-  maintenanceCost: number;
   unitCount: number;
   gameEvents: GameEvent[];
   showSavedIndicator: boolean;
   productionQueue: Record<CountryId, ProductionQueueItem[]>;
   mapMode: MapMode;
   divisionCap?: number;
-  controlledStates?: number;
   inProduction?: number;
   onTogglePlay: () => void;
   onChangeSpeed: (speed: GameSpeed) => void;
@@ -32,15 +29,12 @@ export default function TopBar({
   dateTime,
   isPlaying,
   gameSpeed,
-  grossIncome,
-  maintenanceCost,
   unitCount,
   gameEvents,
   showSavedIndicator,
   productionQueue,
   mapMode,
   divisionCap,
-  controlledStates,
   inProduction,
   onTogglePlay,
   onChangeSpeed,

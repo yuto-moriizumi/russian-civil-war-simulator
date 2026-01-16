@@ -9,7 +9,7 @@ import type { FeatureCollection, Feature, Polygon, MultiPolygon } from 'geojson'
 import type RBush from 'rbush';
 import type { Adjacency } from './types.js';
 import { computeBBox } from './geometry-utils.js';
-import { buildSpatialIndex, queryCrossBorder, querySameCountry, queryNearby, type IndexedFeature } from './spatial-index.js';
+import { buildSpatialIndex, queryCrossBorder, querySameCountry, type IndexedFeature } from './spatial-index.js';
 
 /**
  * 異なる国の間の隣接関係を検出する（境界データの不整合を補完）
