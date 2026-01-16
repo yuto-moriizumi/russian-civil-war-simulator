@@ -409,6 +409,19 @@ export function getDivisionPrefix(countryId: CountryId): string {
   return COUNTRY_METADATA[countryId]?.divisionPrefix || 'Division';
 }
 
+/** Get all countries that consider a specific region as a core region */
+export function getCountriesWithCoreRegion(regionId: string): CountryId[] {
+  const countries: CountryId[] = [];
+  
+  for (const [countryId, metadata] of Object.entries(COUNTRY_METADATA)) {
+    if (metadata.coreRegions?.includes(regionId)) {
+      countries.push(countryId as CountryId);
+    }
+  }
+  
+  return countries;
+}
+
 /**
  * Legacy exports for backward compatibility
  */

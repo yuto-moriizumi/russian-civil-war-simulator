@@ -3,6 +3,7 @@
 import { RegionState, Adjacency, CountryId, ActiveCombat } from '../../types/game';
 import { COUNTRY_COLORS, getAdjacentRegions } from '../../utils/mapUtils';
 import { MAJOR_CITY_CAP_BONUS, DIVISIONS_PER_STATE } from '../../utils/commandPower';
+import { getCountriesWithCoreRegion, getCountryName, getCountryColor } from '../../data/countries';
 
 interface RegionTooltipProps {
   hoveredRegion: string;
@@ -99,6 +100,37 @@ export function RegionInfoPanel({
         <div className="text-stone-400">
           Country: {region.countryIso3}
         </div>
+        
+        {/* Show countries that consider this region as core */}
+        {(() => {
+          const coreCountries = getCountriesWithCoreRegion(selectedRegion);
+          if (coreCountries.length > 0) {
+            return (
+              <div className="mt-2 rounded bg-stone-800 p-2">
+                <div className="text-xs font-semibold text-stone-300 mb-1">
+                  Core Region For:
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {coreCountries.map((countryId) => (
+                    <div
+                      key={countryId}
+                      className="flex items-center gap-1 rounded bg-stone-700 px-2 py-1"
+                    >
+                      <div
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: getCountryColor(countryId) }}
+                      />
+                      <span className="text-xs text-stone-300">
+                        {getCountryName(countryId)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          }
+          return null;
+        })()}
         
         {/* Command power contribution */}
         <div className="rounded bg-stone-800 p-2 mt-2">
