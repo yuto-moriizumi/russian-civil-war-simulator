@@ -1,7 +1,7 @@
 export type Screen = 'title' | 'countrySelect' | 'main' | 'mission';
 
 // All countries in the game - some playable, some neutral
-export type CountryId = 'soviet' | 'white' | 'finland' | 'ukraine' | 'don' | 'fswr' | 'iskolat' | 'neutral' | 'foreign' | 'germany' | 'poland';
+export type CountryId = 'soviet' | 'white' | 'finland' | 'ukraine' | 'don' | 'fswr' | 'iskolat' | 'neutral' | 'foreign' | 'germany' | 'bulgaria' | 'poland';
 
 export interface Country {
   id: CountryId;
@@ -94,7 +94,7 @@ export interface Movement {
 export interface ProductionQueueItem {
   id: string;                       // Unique identifier
   divisionName: string;             // Name of the division being produced
-  owner: CountryId;                 // Which faction is producing this
+  owner: CountryId;                 // Which country is producing this
   startTime: Date;                  // When production started
   completionTime: Date;             // When production will complete (24 game hours)
   targetRegionId: string | null;    // Where the division will deploy (null = reserves)
@@ -185,8 +185,8 @@ export interface GameState {
   activeCombats: ActiveCombat[]; // Ongoing battles
   theaters: Theater[]; // Auto-detected theaters for the player
   armyGroups: ArmyGroup[]; // Player's army groups for bulk movement
-  productionQueues: Record<CountryId, ProductionQueueItem[]>; // Per-faction production queues
-  relationships: Relationship[]; // Diplomatic/military relationships between factions
+  productionQueues: Record<CountryId, ProductionQueueItem[]>; // Per-country production queues
+  relationships: Relationship[]; // Diplomatic/military relationships between countries
   mapMode: MapMode; // Current map visualization mode
   regionCentroids: Record<string, [number, number]>; // Region centroids for distance calculations [longitude, latitude]
   scheduledEvents: ScheduledEvent[]; // Scheduled historical events

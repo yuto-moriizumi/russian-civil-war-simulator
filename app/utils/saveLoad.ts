@@ -187,6 +187,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       neutral: [],
       foreign: [],
       germany: [],
+      bulgaria: [],
       poland: [],
     };
     
@@ -220,6 +221,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       neutral: [],
       foreign: [],
       germany: [],
+      bulgaria: [],
       poland: [],
     };
   }
@@ -262,6 +264,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       neutral: getInitialCountryBonuses(),
       foreign: getInitialCountryBonuses(),
       germany: getInitialCountryBonuses(),
+      bulgaria: getInitialCountryBonuses(),
       poland: getInitialCountryBonuses(),
     },
   };

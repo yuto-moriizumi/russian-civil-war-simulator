@@ -173,6 +173,44 @@ export const countries: Country[] = [
     color: '#1a1a1a',
   },
   {
+    id: 'bulgaria',
+    name: 'Tsardom of Bulgaria',
+    flag: '/images/flags/bulgaria.svg',
+    color: '#D62612',  // Bulgarian red from the flag
+    selectable: false,  // NPC country - not selectable by players
+    coreRegions: [
+      // All Bulgarian provinces (oblasts) - circa 1917
+      'BG-01', // Blagoevgrad
+      'BG-02', // Burgas
+      'BG-03', // Varna
+      'BG-04', // Veliko Tarnovo
+      'BG-05', // Vidin
+      'BG-06', // Vratsa
+      'BG-07', // Gabrovo
+      'BG-08', // Dobrich
+      'BG-09', // Kardzhali
+      'BG-10', // Kyustendil
+      'BG-11', // Lovech
+      'BG-12', // Montana
+      'BG-13', // Pazardzhik
+      'BG-14', // Pernik
+      'BG-15', // Pleven
+      'BG-16', // Plovdiv
+      'BG-17', // Razgrad
+      'BG-18', // Ruse
+      'BG-19', // Silistra
+      'BG-20', // Sliven
+      'BG-21', // Smolyan
+      'BG-22', // Sofia (city) - Capital
+      'BG-23', // Sofia Province
+      'BG-24', // Stara Zagora
+      'BG-25', // Targovishte
+      'BG-26', // Haskovo
+      'BG-27', // Shumen
+      'BG-28', // Yambol
+    ],
+  },
+  {
     id: 'poland',
     name: 'Kingdom of Poland',
     flag: '/images/flags/poland.svg',
@@ -199,6 +237,43 @@ export const countries: Country[] = [
     ],
   },
 ];
+
+/**
+ * BULGARIA - Initial Setup Documentation
+ * 
+ * Historical Context (November 1917):
+ * - Bulgaria entered WWI in October 1915 on the side of the Central Powers
+ * - By November 1917, Bulgaria controlled its pre-war territories and parts of occupied Macedonia/Serbia
+ * - Tsar Ferdinand I ruled Bulgaria (abdicated October 1918, succeeded by Boris III)
+ * - Bulgaria was fighting on the Macedonian Front against Allied forces (France, Britain, Serbia, Greece)
+ * - The country faced severe economic hardship, food shortages, and growing war weariness
+ * 
+ * Recommended Initial Setup:
+ * 
+ * 1. INITIAL REGIONS (app/data/map.ts):
+ *    - All Bulgarian regions (BG-01 through BG-28) should be owned by 'bulgaria'
+ *    - Historical note: Bulgaria also occupied parts of Macedonia and Serbia, but for game balance
+ *      it's recommended to start with just Bulgarian core territories
+ * 
+ * 2. STARTING MILITARY (app/store/game/initialState.ts):
+ *    - Recommended: 12-15 divisions total
+ *    - Deploy primarily in: BG-22 (Sofia - capital), BG-16 (Plovdiv), BG-03 (Varna)
+ *    - Historical strength: Bulgaria mobilized over 1 million men, but by 1917 was exhausted
+ *    - Army Groups: Consider 1-2 army groups (Macedonian Front, Home Defense)
+ * 
+ * 3. DIPLOMATIC RELATIONSHIPS (app/store/game/initialState.ts):
+ *    - At WAR with: Serbia (if included), Greece (if included)
+ *    - MILITARY_ACCESS with: Germany, Ottoman Empire (if included)
+ *    - NEUTRAL towards: Soviet Russia, White Army (not involved in Russian Civil War)
+ * 
+ * 4. AI BEHAVIOR:
+ *    - Bulgaria is an NPC (selectable: false) and will be controlled by default CPU AI
+ *    - Recommended behavior: Defensive, focused on holding territories
+ *    - Historical outcome: Bulgaria signed armistice in September 1918, first Central Power to exit WWI
+ * 
+ * Note: Bulgaria's inclusion represents the broader Eastern European/Balkan context of the period.
+ * While not directly involved in the Russian Civil War, it existed as a major power in the region.
+ */
 
 // Soviet Mission Tree (Offense-focused: Attack > HP > Defence)
 const sovietMissions: Mission[] = [
@@ -740,6 +815,94 @@ const germanMissions: Mission[] = [
   },
 ];
 
+// Bulgarian Mission Tree (Defense & Survival: Defence > HP > Attack)
+const bulgarianMissions: Mission[] = [
+  {
+    id: 'bulgaria_mobilize',
+    country: 'bulgaria',
+    name: 'Maintain the Army',
+    description: 'Keep Bulgarian forces mobilized on the Macedonian Front',
+    completed: false,
+    claimed: false,
+    rewards: { defenceBonus: 2, hpBonus: 5 },
+    prerequisites: [],
+    available: [
+      { type: 'hasUnits', count: 5 }, // Maintain standing army
+    ],
+  },
+  {
+    id: 'bulgaria_macedonian_front',
+    country: 'bulgaria',
+    name: 'Hold the Macedonian Front',
+    description: 'Defend Bulgaria\'s positions against Allied forces in Macedonia',
+    completed: false,
+    claimed: false,
+    rewards: { defenceBonus: 3, commandPowerBonus: 2 },
+    prerequisites: ['bulgaria_mobilize'],
+    available: [
+      { type: 'controlRegionCount', count: 25 }, // Hold Bulgarian territories
+      { type: 'combatVictories', count: 1 }, // Win defensive battle
+    ],
+  },
+  {
+    id: 'bulgaria_war_weariness',
+    country: 'bulgaria',
+    name: 'Manage War Weariness',
+    description: 'Address growing unrest and food shortages among the population',
+    completed: false,
+    claimed: false,
+    rewards: { productionSpeedBonus: 0.10, hpBonus: 10 },
+    prerequisites: ['bulgaria_mobilize'],
+    available: [
+      { type: 'hasUnits', count: 8 }, // Maintain military
+      { type: 'dateAfter', date: '1918-01-01' }, // Winter 1918 hardships
+    ],
+  },
+  {
+    id: 'bulgaria_alliance',
+    country: 'bulgaria',
+    name: 'Central Powers Alliance',
+    description: 'Coordinate with Germany and Austria-Hungary on the Balkan front',
+    completed: false,
+    claimed: false,
+    rewards: { attackBonus: 2, commandPowerBonus: 2 },
+    prerequisites: ['bulgaria_macedonian_front', 'bulgaria_war_weariness'],
+    available: [
+      { type: 'combatVictories', count: 3 }, // Prove military value
+      { type: 'hasUnits', count: 12 }, // Strong military
+    ],
+  },
+  {
+    id: 'bulgaria_survival',
+    country: 'bulgaria',
+    name: 'National Survival',
+    description: 'Navigate the collapsing Central Powers and seek an honorable peace',
+    completed: false,
+    claimed: false,
+    rewards: { defenceBonus: 4, hpBonus: 20 },
+    prerequisites: ['bulgaria_alliance'],
+    available: [
+      { type: 'dateAfter', date: '1918-09-01' }, // September 1918 - historical context
+      { type: 'controlRegionCount', count: 28 }, // Hold all Bulgarian territories
+      { type: 'hasUnits', count: 15 }, // Strong defense
+    ],
+  },
+  {
+    id: 'bulgaria_victory',
+    country: 'bulgaria',
+    name: 'Survive the Great War',
+    description: 'Preserve Bulgarian independence and sovereignty through the crisis',
+    completed: false,
+    claimed: false,
+    rewards: { defenceBonus: 5, attackBonus: 2, gameVictory: true },
+    prerequisites: ['bulgaria_survival'],
+    available: [
+      { type: 'controlRegionCount', count: 28 }, // Hold all territories
+      { type: 'hasUnits', count: 20 }, // Strong military presence
+    ],
+  },
+];
+
 // Kingdom of Poland Mission Tree (Balanced: Defense > HP > Production)
 const polandMissions: Mission[] = [
   {
@@ -829,4 +992,4 @@ const polandMissions: Mission[] = [
 ];
 
 // Combined missions for all countries
-export const initialMissions: Mission[] = [...sovietMissions, ...whiteMissions, ...finnishMissions, ...ukrainianMissions, ...donMissions, ...germanMissions, ...polandMissions];
+export const initialMissions: Mission[] = [...sovietMissions, ...whiteMissions, ...finnishMissions, ...ukrainianMissions, ...donMissions, ...germanMissions, ...bulgarianMissions, ...polandMissions];

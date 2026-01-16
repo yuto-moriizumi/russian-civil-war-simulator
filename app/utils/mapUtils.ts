@@ -1,6 +1,6 @@
 import { Adjacency, CountryId, RegionState, Movement } from '../types/game';
 import { initialRegionOwnership, regionValues } from '../data/map';
-import { COUNTRY_COLORS } from '../config/countries';
+import { COUNTRY_COLORS } from '../data/countries';
 
 // Re-export for backward compatibility
 export { COUNTRY_COLORS };

@@ -3,7 +3,7 @@
 import { CountryId, Relationship, RelationshipType } from '../types/game';
 import SidebarPanel from './SidebarPanel';
 import { countries } from '../data/gameData';
-import { COUNTRY_NAMES } from '../config/countries';
+import { COUNTRY_NAMES } from '../data/countries';
 import Image from 'next/image';
 
 interface CountrySidebarProps {

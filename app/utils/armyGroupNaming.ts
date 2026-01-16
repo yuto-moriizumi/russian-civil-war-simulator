@@ -1,5 +1,5 @@
 import { ArmyGroup, CountryId } from '../types/game';
-import { getFirstArmyGroupName } from '../config/countries';
+import { getFirstArmyGroupName } from '../data/countries';
 
 /**
  * Army group naming hierarchy following historical conventions:

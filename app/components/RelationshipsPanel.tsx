@@ -2,7 +2,7 @@
 
 import { CountryId, Relationship, RelationshipType} from '../types/game';
 import SidebarPanel from './SidebarPanel';
-import { COUNTRY_NAMES } from '../config/countries';
+import { COUNTRY_NAMES } from '../data/countries';
 
 interface RelationshipsPanelProps {
   isOpen: boolean;

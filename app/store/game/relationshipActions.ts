@@ -5,7 +5,7 @@ import { createGameEvent, createNotification } from '../../utils/eventUtils';
 import { countries } from '../../data/gameData';
 
 /**
- * Defines actions related to managing relationships between factions:
+ * Defines actions related to managing relationships between countries:
  * - Setting military access
  * - Declaring war
  * - Getting relationship status
@@ -15,7 +15,7 @@ export const createRelationshipActions = (
   get: StoreApi<GameStore>['getState']
 ) => ({
   /**
-   * Set or update relationship between two factions
+   * Set or update relationship between two countries
    */
   setRelationship: (fromCountry: CountryId, toCountry: CountryId, type: RelationshipType) => {
     const { relationships: startRelationships, dateTime, gameEvents, notifications } = get();
@@ -26,7 +26,7 @@ export const createRelationshipActions = (
       return;
     }
 
-    const getFactionName = (id: CountryId) => countries.find(c => c.id === id)?.name || id;
+    const getCountryName = (id: CountryId) => countries.find(c => c.id === id)?.name || id;
     const newEvents: GameEvent[] = [];
     const newNotifications: NotificationItem[] = [];
 
@@ -78,7 +78,7 @@ export const createRelationshipActions = (
       );
       
       if (hasAutonomy) {
-        console.warn('Cannot declare war on a faction with autonomy relationship');
+        console.warn('Cannot declare war on a country with autonomy relationship');
         return;
       }
     }
@@ -99,8 +99,8 @@ export const createRelationshipActions = (
 
     // Check if this is a new war declaration
     if (type === 'war' && getCurrentStatus(fromCountry, toCountry) !== 'war') {
-      const fromName = getFactionName(fromCountry);
-      const toName = getFactionName(toCountry);
+      const fromName = getCountryName(fromCountry);
+      const toName = getCountryName(toCountry);
       const event = createGameEvent(
         'war_declared',
         `${fromName} declares war against ${toName}`,
@@ -128,9 +128,9 @@ export const createRelationshipActions = (
       servantsOfAggressor.forEach(s => {
         // Servant declares war on the same target if not already at war
         if (getCurrentStatus(s.toCountry, toCountry) !== 'war') {
-          const servantName = getFactionName(s.toCountry);
-          const masterName = getFactionName(fromCountry);
-          const targetName = getFactionName(toCountry);
+          const servantName = getCountryName(s.toCountry);
+          const masterName = getCountryName(fromCountry);
+          const targetName = getCountryName(toCountry);
           const event = createGameEvent(
             'war_declared',
             `${servantName} joins war against ${targetName}`,
@@ -154,9 +154,9 @@ export const createRelationshipActions = (
       servantsOfDefender.forEach(s => {
         // Servant declares war on the aggressor to defend Master if not already at war
         if (getCurrentStatus(s.toCountry, fromCountry) !== 'war') {
-          const servantName = getFactionName(s.toCountry);
-          const masterName = getFactionName(toCountry);
-          const aggressorName = getFactionName(fromCountry);
+          const servantName = getCountryName(s.toCountry);
+          const masterName = getCountryName(toCountry);
+          const aggressorName = getCountryName(fromCountry);
           const event = createGameEvent(
             'war_declared',
             `${servantName} joins defense against ${aggressorName}`,
@@ -182,7 +182,7 @@ export const createRelationshipActions = (
   },
   
   /**
-   * Get relationship status between two factions
+   * Get relationship status between two countries
    * Returns 'neutral' if no explicit relationship exists
    */
   getRelationship: (fromCountry: CountryId, toCountry: CountryId): RelationshipType => {

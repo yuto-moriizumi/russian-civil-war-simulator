@@ -127,6 +127,16 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     firstArmyGroupName: 'Imperial German Army',
     divisionPrefix: 'German Guard',
   },
+  bulgaria: {
+    id: 'bulgaria',
+    name: 'Tsardom of Bulgaria',
+    combatName: 'Bulgarian Army',
+    flag: '/images/flags/bulgaria.svg',
+    color: '#D62612',
+    adjective: 'Bulgarian',
+    firstArmyGroupName: 'Bulgarian Army',
+    divisionPrefix: 'Bulgarian Guard',
+  },
   poland: {
     id: 'poland',
     name: 'Kingdom of Poland',

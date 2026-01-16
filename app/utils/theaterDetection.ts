@@ -1,5 +1,5 @@
 import { RegionState, Adjacency, CountryId, Theater, Region } from '../types/game';
-import { getCountryAdjective } from '../config/countries';
+import { getCountryAdjective } from '../data/countries';
 
 /**
  * Detect theaters of operation by finding connected groups of frontline regions.

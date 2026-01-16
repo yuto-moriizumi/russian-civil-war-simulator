@@ -1,7 +1,7 @@
 'use client';
 
 import { ActiveCombat, Division, CountryId } from '../types/game';
-import { getCountryCombatName } from '../config/countries';
+import { getCountryCombatName } from '../data/countries';
 
 interface CombatPopupProps {
   combat: ActiveCombat;

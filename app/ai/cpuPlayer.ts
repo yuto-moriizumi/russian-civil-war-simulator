@@ -1,6 +1,6 @@
 import { AIState, CountryId, RegionState, Region, ActiveCombat, Movement, ArmyGroup, ProductionQueueItem, CountryBonuses } from '../types/game';
 import { canProduceDivision, getCommandPowerInfo } from '../utils/commandPower';
-import { getFirstArmyGroupName, getDivisionPrefix } from '../config/countries';
+import { getFirstArmyGroupName, getDivisionPrefix } from '../data/countries';
 
 /**
  * Creates initial AI state for a faction

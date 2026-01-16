@@ -37,7 +37,7 @@ export function validateDivisionArmyGroup(
       };
     }
     
-    console.error(`Cannot auto-fix: No army group found for faction ${division.owner}`);
+    console.error(`Cannot auto-fix: No army group found for country ${division.owner}`);
     return { division, isValid: false, wasFixed: false };
   }
   
@@ -50,7 +50,7 @@ export function validateDivisionArmyGroup(
 }
 
 /**
- * Create a new division with default stats (applying faction bonuses)
+ * Create a new division with default stats (applying country bonuses)
  */
 export function createDivision(
   owner: CountryId,

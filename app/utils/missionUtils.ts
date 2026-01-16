@@ -1,5 +1,5 @@
 import { MissionCondition } from '../types/game';
-import { getCountryName } from '../config/countries';
+import { getCountryName } from '../data/countries';
 
 /**
  * Formats a mission condition into a human-readable string.
