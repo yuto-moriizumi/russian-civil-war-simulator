@@ -41,7 +41,7 @@ export default function CountrySidebar({
   const countryName = country?.name || COUNTRY_NAMES[countryId];
 
   // Get relationships from this country to others
-  const otherCountries: CountryId[] = ['soviet', 'white', 'finland', 'ukraine', 'don', 'fswr', 'neutral', 'foreign'].filter(
+  const otherCountries: CountryId[] = ['soviet', 'white', 'finland', 'ukraine', 'don', 'fswr', 'romania', 'neutral', 'foreign'].filter(
     f => f !== countryId
   ) as CountryId[];
 
@@ -67,7 +67,7 @@ export default function CountrySidebar({
 
   const playerToTargetStatus = getRelationshipStatus(playerCountry, countryId);
   const targetToPlayerStatus = getRelationshipStatus(countryId, playerCountry);
-  const isPlayable = countryId === 'soviet' || countryId === 'white' || countryId === 'finland' || countryId === 'ukraine' || countryId === 'don' || countryId === 'fswr';
+  const isPlayable = countryId === 'soviet' || countryId === 'white' || countryId === 'finland' || countryId === 'ukraine' || countryId === 'don' || countryId === 'fswr' || countryId === 'romania';
 
   return (
     <SidebarPanel

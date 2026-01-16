@@ -255,3 +255,61 @@ export const donMissions: Mission[] = [
     ],
   },
 ];
+
+// Romanian Mission Tree
+export const romaniaMissions: Mission[] = [
+  {
+    id: 'romania_mobilization',
+    country: 'romania',
+    name: 'Reorganize the Army',
+    description: 'Rebuild the Romanian Army in Moldavia following the collapse of the Eastern Front',
+    completed: false,
+    claimed: false,
+    rewards: { productionSpeedBonus: 0.15, hpBonus: 10 },
+    prerequisites: [],
+    available: [{ type: 'hasUnits', count: 3 }],
+  },
+  {
+    id: 'romania_bessarabia',
+    country: 'romania',
+    name: 'Secure Bessarabia',
+    description: 'Intervene in Bessarabia to maintain order and protect the region from Bolshevik influence',
+    completed: false,
+    claimed: false,
+    rewards: { attackBonus: 2, commandPowerBonus: 3 },
+    prerequisites: ['romania_mobilization'],
+    available: [
+      { type: 'controlRegion', regionId: 'MD-CU' },
+      { type: 'hasUnits', count: 8 },
+    ],
+  },
+  {
+    id: 'romania_union',
+    country: 'romania',
+    name: 'Union of Bessarabia',
+    description: 'Formally unite Bessarabia with the Kingdom of Romania',
+    completed: false,
+    claimed: false,
+    rewards: { defenceBonus: 2, hpBonus: 10 },
+    prerequisites: ['romania_bessarabia'],
+    available: [
+      { type: 'controlRegions', regionIds: ['MD-CU', 'MD-BA'] },
+      { type: 'combatVictories', count: 2 },
+    ],
+  },
+  {
+    id: 'romania_victory',
+    country: 'romania',
+    name: 'Greater Romania',
+    description: 'Unite all Romanian lands and establish the Kingdom as a dominant regional power',
+    completed: false,
+    claimed: false,
+    rewards: { attackBonus: 3, defenceBonus: 3, gameVictory: true },
+    prerequisites: ['romania_union'],
+    available: [
+      { type: 'controlRegions', regionIds: ['RO-B', 'RO-IS', 'MD-CU'] },
+      { type: 'hasUnits', count: 15 },
+    ],
+  },
+];
+
