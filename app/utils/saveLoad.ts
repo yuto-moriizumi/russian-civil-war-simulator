@@ -186,6 +186,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       iskolat: [],
       neutral: [],
       foreign: [],
+      germany: [],
     };
     
     // Sort legacy queue items into faction-specific queues
@@ -217,6 +218,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       iskolat: [],
       neutral: [],
       foreign: [],
+      germany: [],
     };
   }
   
@@ -257,6 +259,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       iskolat: getInitialFactionBonuses(),
       neutral: getInitialFactionBonuses(),
       foreign: getInitialFactionBonuses(),
+      germany: getInitialFactionBonuses(),
     },
   };
 }

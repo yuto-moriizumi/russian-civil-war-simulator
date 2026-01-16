@@ -51,6 +51,12 @@ export const countries: Country[] = [
     color: '#8B0000',
     selectable: false,
   },
+  {
+    id: 'germany',
+    name: 'German Empire',
+    flag: '/images/flags/germany.svg',
+    color: '#1a1a1a',
+  },
 ];
 
 // Soviet Mission Tree (Offense-focused: Attack > HP > Defence)
@@ -491,5 +497,107 @@ const donMissions: Mission[] = [
   },
 ];
 
+// German Empire Mission Tree (Expansion-focused: Attack > Production > Defence)
+const germanMissions: Mission[] = [
+  {
+    id: 'germany_mobilize',
+    faction: 'germany',
+    name: 'Mobilize the Imperial Army',
+    description: 'Deploy German forces for eastern expansion',
+    completed: false,
+    claimed: false,
+    rewards: { attackBonus: 2, defenceBonus: 1 },
+    prerequisites: [],
+    available: [
+      { type: 'hasUnits', count: 5 }, // Build initial military forces
+    ],
+  },
+  {
+    id: 'germany_ober_ost',
+    faction: 'germany',
+    name: 'Establish Ober Ost',
+    description: 'Create the Supreme Command of All German Forces in the East',
+    completed: false,
+    claimed: false,
+    rewards: { commandPowerBonus: 3, productionSpeedBonus: 0.15 },
+    prerequisites: ['germany_mobilize'],
+    available: [
+      { type: 'hasUnits', count: 8 },
+      { type: 'armyGroupCount', count: 1 }, // Have organized command structure
+    ],
+  },
+  {
+    id: 'germany_brest_litovsk',
+    faction: 'germany',
+    name: 'Treaty of Brest-Litovsk',
+    description: 'Secure German dominance over Eastern territories through treaty with Soviets',
+    completed: false,
+    claimed: false,
+    rewards: { hpBonus: 10, attackBonus: 1 },
+    prerequisites: ['germany_mobilize'],
+    available: [
+      { type: 'dateAfter', date: '1918-03-01' }, // Historical treaty date: March 3, 1918
+      { type: 'controlRegionCount', count: 16 }, // Control German territories
+    ],
+  },
+  {
+    id: 'germany_mitteleuropa',
+    faction: 'germany',
+    name: 'Mitteleuropa Strategy',
+    description: 'Expand German influence into Eastern Europe and the Baltics',
+    completed: false,
+    claimed: false,
+    rewards: { productionSpeedBonus: 0.20, attackBonus: 2 },
+    prerequisites: ['germany_ober_ost', 'germany_brest_litovsk'],
+    available: [
+      { type: 'controlRegionCount', count: 25 }, // Expand beyond Germany
+      { type: 'hasUnits', count: 15 },
+    ],
+  },
+  {
+    id: 'germany_support_whites',
+    faction: 'germany',
+    name: 'Support Anti-Bolshevik Forces',
+    description: 'Aid White Army forces to maintain German strategic interests',
+    completed: false,
+    claimed: false,
+    rewards: { commandPowerBonus: 3, defenceBonus: 2 },
+    prerequisites: ['germany_brest_litovsk'],
+    available: [
+      { type: 'combatVictories', count: 3 }, // Win battles against Soviets
+      { type: 'theaterExists', enemyFaction: 'soviet' }, // Border Soviet territory
+    ],
+  },
+  {
+    id: 'germany_baltic',
+    faction: 'germany',
+    name: 'Baltic Dominance',
+    description: 'Secure German control over the Baltic states',
+    completed: false,
+    claimed: false,
+    rewards: { hpBonus: 20, attackBonus: 3 },
+    prerequisites: ['germany_mitteleuropa', 'germany_support_whites'],
+    available: [
+      { type: 'controlRegions', regionIds: ['LVA', 'EE-37', 'LT-VL'] }, // Control Latvia, Estonia (Tallinn), Lithuania (Vilnius)
+      { type: 'hasUnits', count: 20 },
+    ],
+  },
+  {
+    id: 'germany_victory',
+    faction: 'germany',
+    name: 'German Imperial Hegemony',
+    description: 'Establish the German Empire as the dominant power in Eastern Europe',
+    completed: false,
+    claimed: false,
+    rewards: { attackBonus: 5, defenceBonus: 3, gameVictory: true },
+    prerequisites: ['germany_baltic'],
+    available: [
+      { type: 'controlRegionCount', count: 40 }, // Control significant territory
+      { type: 'hasUnits', count: 30 }, // Strong military presence
+      { type: 'enemyRegionCount', faction: 'soviet', maxCount: 10 }, // Soviets greatly weakened
+    ],
+  },
+];
+
 // Combined missions for both factions
-export const initialMissions: Mission[] = [...sovietMissions, ...whiteMissions, ...finnishMissions, ...ukrainianMissions, ...donMissions];
+export const initialMissions: Mission[] = [...sovietMissions, ...whiteMissions, ...finnishMissions, ...ukrainianMissions, ...donMissions, ...germanMissions];

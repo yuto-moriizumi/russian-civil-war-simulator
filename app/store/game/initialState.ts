@@ -38,6 +38,7 @@ export const initialGameState: GameState = {
     iskolat: [],
     neutral: [],
     foreign: [],
+    germany: [],
   },
   relationships: [
     { fromFaction: 'white', toFaction: 'ukraine', type: 'autonomy' },
@@ -56,5 +57,6 @@ export const initialGameState: GameState = {
     iskolat: getInitialFactionBonuses(),
     neutral: getInitialFactionBonuses(),
     foreign: getInitialFactionBonuses(),
+    germany: getInitialFactionBonuses(),
   },
 };

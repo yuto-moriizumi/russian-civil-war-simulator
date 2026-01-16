@@ -11,4 +11,5 @@ export const FACTION_FLAGS: Record<FactionId, string> = {
   iskolat: '/images/flags/iskolat.svg',
   neutral: '',
   foreign: '',
+  germany: '/images/flags/germany.svg',
 };
