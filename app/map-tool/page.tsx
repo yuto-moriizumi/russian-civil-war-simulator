@@ -19,7 +19,6 @@ export default function MapToolPage() {
   
   // UI state
   const [selectedCountry, setSelectedCountry] = useState<CountryId>('soviet');
-  const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
   const [showAdjacency, setShowAdjacency] = useState(false);
   const [isPaintEnabled, setIsPaintEnabled] = useState(false);
   
@@ -307,7 +306,7 @@ export default function MapToolPage() {
               showAdjacency={showAdjacency}
               isPaintEnabled={isPaintEnabled}
               onRegionPaint={handleRegionPaint}
-              onRegionHover={setHoveredRegion}
+              onRegionHover={() => {}}
               onCountryPick={setSelectedCountry}
             />
           ) : (

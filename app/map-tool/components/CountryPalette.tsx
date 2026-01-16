@@ -48,6 +48,7 @@ export default function CountryPalette({ selectedCountry, onSelectCountry }: Cou
             {/* Flag if available */}
             {country.flag && (
               <div className="h-4 w-6 flex-shrink-0 overflow-hidden rounded border border-gray-600">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={country.flag}
                   alt={country.name}

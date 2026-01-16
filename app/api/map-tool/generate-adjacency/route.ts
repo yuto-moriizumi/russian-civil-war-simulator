@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { FeatureCollection, Feature, Polygon, MultiPolygon } from 'geojson';
+import type { FeatureCollection, Polygon, MultiPolygon } from 'geojson';
 import * as turf from '@turf/turf';
 
 interface GenerateAdjacencyRequest {
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
               adjacency[idB].push(idA);
               bufferConnections++;
             }
-          } catch (error) {
+          } catch {
             // Skip invalid geometries
           }
         }
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
                 console.log(`  Enclave detected: ${regionId} inside ${otherId}`);
                 break;
               }
-            } catch (error) {
+            } catch {
               // Skip
             }
           }
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
 
     // Find isolated regions (still no connections)
     const isolatedRegions = Object.entries(adjacency)
-      .filter(([_, neighbors]) => neighbors.length === 0)
+      .filter(([, neighbors]) => neighbors.length === 0)
       .map(([id]) => id);
 
     const stats = {

@@ -8,7 +8,7 @@ interface GeoJSONLoaderProps {
   isLoading: boolean;
 }
 
-export default function GeoJSONLoader({ onLoad, isLoading }: GeoJSONLoaderProps) {
+export default function GeoJSONLoader({ onLoad }: GeoJSONLoaderProps) {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // Load current project GeoJSON
@@ -28,6 +28,11 @@ export default function GeoJSONLoader({ onLoad, isLoading }: GeoJSONLoaderProps)
   useEffect(() => {
     handleLoadCurrent();
   }, [handleLoadCurrent]);
+
+  // Show error if loading failed
+  if (loadError) {
+    console.error('Failed to load GeoJSON:', loadError);
+  }
 
   return null;
 }
