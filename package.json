@@ -9,7 +9,9 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "map:dl": "tsx scripts/download-geojson.ts",
-    "map:build": "tsx scripts/process-map.ts",
+    "map:build:geojson": "tsx scripts/build-geojson.ts",
+    "map:build:adjacency": "tsx scripts/build-adjacency.ts",
+    "map:build": "npm run map:build:geojson && npm run map:build:adjacency",
     "map:gen": "npm run map:dl && npm run map:build",
     "prepare": "husky"
   },
