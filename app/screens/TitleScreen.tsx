@@ -98,7 +98,7 @@ export default function TitleScreen({
 
         {/* Subtitle */}
         <p className="mt-12 max-w-md text-center text-sm text-stone-500 md:text-base">
-          Lead your faction through the chaos of revolution. 
+          Lead your country through the chaos of revolution. 
           Will you forge a new Soviet state or restore the Republic?
         </p>
       </div>

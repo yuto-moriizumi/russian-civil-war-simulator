@@ -166,7 +166,7 @@ export const createBasicActions = (
           const region = state.regions[regionId];
           const updatedDivisions = region.divisions.map(div => {
             if (div.owner === countryId) {
-              // Apply new stats to this faction's divisions
+              // Apply new stats to this country's divisions
               return {
                 ...div,
                 attack: newDivisionStats.attack,

@@ -147,7 +147,7 @@ export function applyCompletedMovements(
               initialDefenderCount: ongoingCombat.initialDefenderCount + totalDivisionsToAdd.length,
             };
 
-            // If we intercepted a counter-movement, they join the attackers (if they belong to attacker faction)
+            // If we intercepted a counter-movement, they join the attackers (if they belong to attacker country)
             // This case is unlikely given the counter-movement check, but for completeness:
             if (counterMovement && counterMovement.owner === ongoingCombat.attackerCountry) {
                // This would be weird, but let's handle it

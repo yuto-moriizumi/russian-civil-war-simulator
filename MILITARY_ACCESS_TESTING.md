@@ -6,16 +6,16 @@ This document provides guidance on testing the newly implemented military access
 ## Features Implemented
 
 ### 1. Relationship Types
-- **Neutral**: Default state. No troop movement allowed between factions.
-- **Military Access**: Factions can move troops through each other's territory without triggering combat or occupation.
-- **War**: Factions can move troops and engage in combat/occupation.
+- **Neutral**: Default state. No troop movement allowed between countries.
+- **Military Access**: Countries can move troops through each other's territory without triggering combat or occupation.
+- **War**: Countries can move troops and engage in combat/occupation.
 
 ### 2. Game Mechanics
 
 #### Movement Validation
-- Players cannot move units to another faction's territory unless:
-  - That faction has granted them **Military Access**, or
-  - That faction has declared **War** on them
+- Players cannot move units to another country's territory unless:
+  - That country has granted them **Military Access**, or
+  - That country has declared **War** on them
 
 #### Region Occupation
 - **Military Access**: Units can move but region ownership doesn't change
@@ -26,7 +26,7 @@ This document provides guidance on testing the newly implemented military access
 
 #### Relationships Panel
 - Accessible via "Relations" button in the top bar
-- Shows all other factions and their relationship status
+- Shows all other countries and their relationship status
 - Displays:
   - What access they grant you (read-only)
   - What access you grant them (editable dropdown)
@@ -40,12 +40,12 @@ The system exposes the following methods via `window.gameAPI`:
 // Get all relationships
 window.gameAPI.getRelationships()
 
-// Set relationship (you granting access to another faction)
-window.gameAPI.setRelationship(fromFaction, toFaction, type)
+// Set relationship (you granting access to another country)
+window.gameAPI.setRelationship(fromCountry, toCountry, type)
 // Example: window.gameAPI.setRelationship('soviet', 'white', 'war')
 
-// Get relationship status between two factions
-window.gameAPI.getRelationship(fromFaction, toFaction)
+// Get relationship status between two countries
+window.gameAPI.getRelationship(fromCountry, toCountry)
 // Returns: 'neutral' | 'military_access' | 'war'
 ```
 
@@ -65,7 +65,7 @@ window.gameAPI.getRelationship(fromFaction, toFaction)
    - Units move successfully
    - No combat occurs
    - Region remains under White Army control
-   - Units of both factions coexist in the region
+   - Units of both countries coexist in the region
 
 ### Scenario 3: War State
 1. Open the Relations panel
@@ -102,7 +102,7 @@ window.gameAPI.getRelationships()
 
 2. **AI Behavior**: The AI does not yet actively manage relationships. This will need to be implemented in future updates.
 
-3. **Neutral & Foreign Factions**: The system currently focuses on player-controllable factions (soviet, white, finland). Neutral and Foreign factions use existing logic.
+3. **Neutral & Foreign Countries**: The system currently focuses on player-controllable countries (soviet, white, finland). Neutral and Foreign countries use existing logic.
 
 ## Files Modified
 
@@ -137,6 +137,6 @@ window.gameAPI.getRelationships()
 1. **AI Relationship Management**: Implement AI logic for declaring war and granting access
 2. **Diplomatic Events**: Add events for relationship changes (war declarations, peace treaties)
 3. **Conditional Relationships**: Time-based or mission-based relationship requirements
-4. **Alliance System**: Multi-faction alliances with shared military access
+4. **Alliance System**: Multi-country alliances with shared military access
 5. **Peace Treaties**: Ability to end war state and transition back to neutral
 6. **Historical Accuracy**: Pre-configure historical relationships based on the time period

@@ -3,7 +3,7 @@ import { canProduceDivision } from '../utils/commandPower';
 import { getFirstArmyGroupName, getDivisionPrefix } from '../data/countries';
 
 /**
- * Creates initial AI state for a faction
+ * Creates initial AI state for a country
  */
 export function createInitialAIState(countryId: CountryId): AIState {
   return {
@@ -12,7 +12,7 @@ export function createInitialAIState(countryId: CountryId): AIState {
 }
 
 /**
- * Creates initial AI army group for a faction
+ * Creates initial AI army group for a country
  */
 export function createInitialAIArmyGroup(countryId: CountryId, regions: RegionState): ArmyGroup {
   const ownedRegions = getOwnedRegions(regions, countryId);
@@ -32,7 +32,7 @@ export function createInitialAIArmyGroup(countryId: CountryId, regions: RegionSt
 }
 
 /**
- * Get all regions owned by a faction
+ * Get all regions owned by a country
  */
 function getOwnedRegions(regions: RegionState, countryId: CountryId): Region[] {
   return Object.values(regions).filter(region => region.owner === countryId);
@@ -53,12 +53,12 @@ function pickRandomRegion(regionList: Region[]): Region | null {
 function generateAIDivisionName(countryId: CountryId, regions: RegionState, productionQueue: ProductionQueueItem[], offset: number = 0): string {
   const prefix = getDivisionPrefix(countryId);
   
-  // Count existing divisions owned by this faction
+  // Count existing divisions owned by this country
   const existingCount = Object.values(regions).reduce((acc, region) => 
     acc + region.divisions.filter(d => d.owner === countryId).length, 0
   );
   
-  // Count divisions in production for this faction
+  // Count divisions in production for this country
   const productionCount = productionQueue.filter(p => p.owner === countryId).length;
   
   const totalCount = existingCount + productionCount + offset;
