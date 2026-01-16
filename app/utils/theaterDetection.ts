@@ -291,21 +291,9 @@ function getRegionalDescriptor(regionData: Region[]): string | null {
  * Get enemy-based fallback name
  */
 function getEnemyBasedName(enemyCountry: CountryId, index: number): string {
-  const enemyNames: Record<CountryId, string> = {
-    white: 'White',
-    soviet: 'Soviet',
-    finland: 'Finnish',
-    ukraine: 'Ukrainian',
-    don: 'Don',
-    fswr: 'Red Guard',
-    iskolat: 'Iskolat',
-    neutral: 'Independent',
-    foreign: 'Foreign',
-    germany: 'German',
-    poland: 'Polish',
-  };
+  const { getCountryAdjective } = require('../config/countries');
   
-  const enemyName = enemyNames[enemyCountry] || 'Unknown';
+  const enemyName = getCountryAdjective(enemyCountry);
   const ordinals = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
   const ordinal = ordinals[index] || `${index + 1}th`;
   

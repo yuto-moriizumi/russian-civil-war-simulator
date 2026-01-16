@@ -1,4 +1,5 @@
 import { ArmyGroup, CountryId } from '../types/game';
+import { getFirstArmyGroupName } from '../config/countries';
 
 /**
  * Army group naming hierarchy following historical conventions:
@@ -38,7 +39,7 @@ export function generateArmyGroupName(
   
   if (groupCount === 0) {
     // First group - use country-specific name
-    return getFirstGroupName(playerCountry);
+    return getFirstArmyGroupName(playerCountry);
   } else if (groupCount < 5) {
     // Early groups - use ordinal armies
     return `${ORDINAL_NAMES[groupCount]} Army`;
@@ -66,26 +67,6 @@ export function generateArmyGroupName(
       ? `${ORDINAL_NAMES[suffix - 1]} ${ELITE_NAMES[eliteIndex]} Corps`
       : `${ELITE_NAMES[eliteIndex]} Corps`;
   }
-}
-
-/**
- * Get the default name for the first army group based on country
- */
-function getFirstGroupName(country: CountryId): string {
-  const names: Record<CountryId, string> = {
-    white: 'Volunteer Army',
-    soviet: 'Red Army Group',
-    finland: 'Finnish Defense Forces',
-    ukraine: 'Ukrainian Army',
-    don: 'Don Cossack Host',
-    fswr: 'Red Guard Army Group',
-    iskolat: 'Red Latvian Riflemen',
-    neutral: '1st Army',
-    foreign: 'Expeditionary Force',
-    germany: 'Imperial German Army',
-    poland: 'Polnische Wehrmacht',
-  };
-  return names[country] || '1st Army';
 }
 
 /**

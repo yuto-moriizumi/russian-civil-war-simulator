@@ -3,6 +3,7 @@
 import { CountryId, Relationship, RelationshipType } from '../types/game';
 import SidebarPanel from './SidebarPanel';
 import { countries } from '../data/gameData';
+import { COUNTRY_NAMES } from '../config/countries';
 import Image from 'next/image';
 
 interface CountrySidebarProps {
@@ -13,20 +14,6 @@ interface CountrySidebarProps {
   relationships: Relationship[];
   onSetRelationship: (fromCountry: CountryId, toCountry: CountryId, type: RelationshipType) => void;
 }
-
-const COUNTRY_NAMES: Record<CountryId, string> = {
-  soviet: 'Soviet Russia',
-  white: 'White Army',
-  finland: 'Finland',
-  ukraine: 'Ukraine',
-  don: 'Don Republic',
-  fswr: "Finnish Socialist Workers' Republic",
-  iskolat: 'Iskolat (Latvian Soviet Republic)',
-  neutral: 'Neutral',
-  foreign: 'Foreign',
-  germany: 'German Empire',
-  poland: 'Kingdom of Poland',
-};
 
 const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
   neutral: 'Neutral',
