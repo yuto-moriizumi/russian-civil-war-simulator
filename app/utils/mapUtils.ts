@@ -13,6 +13,7 @@ export const COUNTRY_COLORS: Record<CountryId, string> = {
   neutral: '#808080',     // Gray
   foreign: '#4A90D9',     // Blue
   germany: '#1a1a1a',     // Dark Gray/Black (German Empire)
+  bulgaria: '#D62612',    // Bulgarian Red
   poland: '#DC143C',      // Crimson Red (Kingdom of Poland)
 };
 

@@ -83,6 +83,7 @@ function getFirstGroupName(country: CountryId): string {
     neutral: '1st Army',
     foreign: 'Expeditionary Force',
     germany: 'Imperial German Army',
+    bulgaria: 'Bulgarian Army',
     poland: 'Polnische Wehrmacht',
   };
   return names[country] || '1st Army';

@@ -302,6 +302,7 @@ function getEnemyBasedName(enemyCountry: CountryId, index: number): string {
     neutral: 'Independent',
     foreign: 'Foreign',
     germany: 'German',
+    bulgaria: 'Bulgarian',
     poland: 'Polish',
   };
   

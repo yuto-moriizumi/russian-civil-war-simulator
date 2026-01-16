@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200">
+  <!-- Bulgarian flag: horizontal tricolor white-green-red -->
+  <rect width="300" height="200" fill="#FFFFFF"/>
+  <rect y="66.67" width="300" height="66.67" fill="#00966E"/>
+  <rect y="133.33" width="300" height="66.67" fill="#D62612"/>
+</svg>

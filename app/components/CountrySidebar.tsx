@@ -25,6 +25,7 @@ const COUNTRY_NAMES: Record<CountryId, string> = {
   neutral: 'Neutral',
   foreign: 'Foreign',
   germany: 'German Empire',
+  bulgaria: 'Tsardom of Bulgaria',
   poland: 'Kingdom of Poland',
 };
 
