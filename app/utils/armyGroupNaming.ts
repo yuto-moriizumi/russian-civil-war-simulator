@@ -82,6 +82,7 @@ function getFirstGroupName(faction: FactionId): string {
     iskolat: 'Red Latvian Riflemen',
     neutral: '1st Army',
     foreign: 'Expeditionary Force',
+    germany: 'Imperial German Army',
   };
   return names[faction] || '1st Army';
 }
