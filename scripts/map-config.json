@@ -28,7 +28,7 @@
     {
       "iso3": "LVA",
       "name": "Latvia",
-      "admLevel": "ADM0"
+      "admLevel": "ADM1"
     },
     {
       "iso3": "LTU",
@@ -43,7 +43,7 @@
     {
       "iso3": "UZB",
       "name": "Uzbekistan",
-      "admLevel": "ADM0"
+      "admLevel": "ADM1"
     },
     {
       "iso3": "TKM",
@@ -73,7 +73,7 @@
     {
       "iso3": "AZE",
       "name": "Azerbaijan",
-      "admLevel": "ADM0"
+      "admLevel": "ADM1"
     },
     {
       "iso3": "DEU",
@@ -153,7 +153,7 @@
     {
       "iso3": "MDA",
       "name": "Moldova",
-      "admLevel": "ADM1"
+      "admLevel": "ADM0"
     },
     {
       "iso3": "MKD",
@@ -163,6 +163,31 @@
     {
       "iso3": "XKX",
       "name": "Kosovo",
+      "admLevel": "ADM0"
+    },
+    {
+      "iso3": "TUR",
+      "name": "Turkey",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "IRN",
+      "name": "Iran",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "MNG",
+      "name": "Mongolia",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "CHN",
+      "name": "China",
+      "admLevel": "ADM1"
+    },
+    {
+      "iso3": "JPN",
+      "name": "Japan",
       "admLevel": "ADM1"
     }
   ],
