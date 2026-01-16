@@ -23,7 +23,7 @@ export type DamageResult =
 ```typescript
 function findRetreatDestination(
   combatRegionId: string,
-  divisionOwner: FactionId,
+  divisionOwner: CountryId,
   regions: RegionState,
   adjacency: Adjacency
 ): string | null
@@ -61,7 +61,7 @@ function findRetreatDestination(
 
 ### When Division HP Reaches 0:
 1. **Check Adjacent Regions**: System looks for adjacent regions using adjacency data
-2. **Filter Friendly Regions**: Only regions owned by the same faction are considered
+2. **Filter Friendly Regions**: Only regions owned by the same country are considered
 3. **Random Selection**: If friendly neighbors exist, picks one at random
 4. **Create Retreat Movement**:
    - If friendly neighbor exists: Creates a Movement object with 3-hour travel time
@@ -76,7 +76,7 @@ function findRetreatDestination(
 ### Console Logging:
 - `[RETREAT]`: When a division successfully retreats
 - `[DESTROYED]`: When a division is destroyed (no retreat available)
-- Both logs include division name, faction, and region names
+- Both logs include division name, country, and region names
 
 ## Testing Recommendations
 

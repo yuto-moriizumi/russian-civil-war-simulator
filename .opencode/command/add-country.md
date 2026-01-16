@@ -2,7 +2,7 @@
 description: Add a new non-playable country that exists from the beginning of the game
 ---
 
-Add a new non-playable country/faction that exists from the start of the game: $ARGUMENTS
+Add a new non-playable country that exists from the start of the game: $ARGUMENTS
 
 **Important**: This command is for adding countries that exist at game start (November 20, 1917), not for countries that emerge during gameplay. The country will be added to the initial game state with starting territories, units, and diplomatic relationships.
 
@@ -20,7 +20,7 @@ Add a new non-playable country/faction that exists from the start of the game: $
    
    **Automatically determine**:
    - Country ID: Create a short identifier from the country name (lowercase, no spaces, e.g., "Kuban People's Republic" → "kuban", "Alash Autonomy" → "alash")
-   - Country color: Extract a hex color from the historical flag colors found in research, or choose a color that represents the faction (ensure it's distinct from existing countries)
+   - Country color: Extract a hex color from the historical flag colors found in research, or choose a color that represents the country (ensure it's distinct from existing countries)
    
    This research will inform the mission tree, initial territories, and narrative elements.
 
@@ -41,7 +41,7 @@ Add a new non-playable country/faction that exists from the start of the game: $
 
 4. **Update type definitions** (`app/types/game.ts`):
    - Add the new country ID to the `CountryId` type union
-   - Add the new country ID to the `FactionId` type union
+   - Add the new country ID to the `CountryId` type union
 
 5. **Add country definition** to `app/data/gameData.ts`:
    - Add the new country to the `countries` array with the following structure:

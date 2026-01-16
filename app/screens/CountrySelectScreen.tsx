@@ -21,7 +21,7 @@ export default function CountrySelectScreen({ onSelectCountry, onBack }: Country
           <span className="text-xl">&larr;</span>
           <span>Back</span>
         </button>
-        <h1 className="text-2xl font-bold tracking-wider text-stone-200">SELECT YOUR FACTION</h1>
+        <h1 className="text-2xl font-bold tracking-wider text-stone-200">SELECT YOUR COUNTRY</h1>
         <div className="w-20" />
       </div>
 

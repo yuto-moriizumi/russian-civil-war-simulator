@@ -376,7 +376,7 @@ export const COUNTRY_COLORS: Record<CountryId, string> = Object.fromEntries(
 ) as Record<CountryId, string>;
 
 /** Map of country IDs to flag paths */
-export const FACTION_FLAGS: Record<CountryId, string> = Object.fromEntries(
+export const COUNTRY_FLAGS: Record<CountryId, string> = Object.fromEntries(
   Object.values(COUNTRY_METADATA).map(meta => [meta.id, meta.flag])
 ) as Record<CountryId, string>;
 

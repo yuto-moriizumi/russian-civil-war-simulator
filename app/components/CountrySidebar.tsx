@@ -97,7 +97,7 @@ export default function CountrySidebar({
           </div>
           <div>
             <div className="text-xl font-bold text-stone-100">{countryName}</div>
-            <div className="text-sm text-stone-400 capitalize">{countryId} Faction</div>
+            <div className="text-sm text-stone-400 capitalize">{countryId} Country</div>
           </div>
         </div>
 

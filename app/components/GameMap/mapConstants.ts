@@ -1,4 +1,4 @@
-import { FACTION_FLAGS } from '../../data/countries';
+import { COUNTRY_FLAGS } from '../../data/countries';
 
 // Re-export for backward compatibility
-export { FACTION_FLAGS };
+export { COUNTRY_FLAGS, COUNTRY_FLAGS as FACTION_FLAGS };

@@ -4,7 +4,7 @@
 import { Marker } from 'react-map-gl/maplibre';
 import { Region, Movement, ActiveCombat } from '../../types/game';
 import { COUNTRY_COLORS } from '../../utils/mapUtils';
-import { FACTION_FLAGS } from './mapConstants';
+import { COUNTRY_FLAGS } from './mapConstants';
 
 interface UnitMarkerProps {
   regionId: string;
@@ -25,7 +25,7 @@ export function UnitMarker({
   onRegionSelect,
   onUnitSelect,
 }: UnitMarkerProps) {
-  const flagUrl = FACTION_FLAGS[region.owner];
+  const flagUrl = COUNTRY_FLAGS[region.owner];
   
   return (
     <Marker
@@ -97,7 +97,7 @@ export function MovingUnitMarker({
   longitude,
   latitude,
 }: MovingUnitMarkerProps) {
-  const flagUrl = FACTION_FLAGS[movement.owner];
+  const flagUrl = COUNTRY_FLAGS[movement.owner];
   
   return (
     <Marker

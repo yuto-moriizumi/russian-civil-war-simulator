@@ -26,7 +26,7 @@ Created a new utility module with the following functions:
 - `calculateCommandPower()` - Calculates max command power based on controlled states
 - `countCurrentDivisions()` - Counts command power consumed by units in regions and in transit (each unit consumes 2 cap)
 - `countDivisionsInProduction()` - Counts command power consumed by units in production queue (each unit consumes 2 cap)
-- `canProduceDivision()` - Checks if a faction can produce more divisions
+- `canProduceDivision()` - Checks if a country can produce more divisions
 - `getCommandPowerInfo()` - Returns detailed cap information for UI display
 
 ### 2. Production System Updates
@@ -36,7 +36,7 @@ Created a new utility module with the following functions:
 - Shows warning message when cap is reached with detailed info
 
 **AI Production (`app/ai/cpuPlayer.ts`)**
-- Added command power check for AI factions
+- Added command power check for AI countries
 - AI will stop producing when at cap
 - Logs cap info for debugging
 
@@ -95,7 +95,7 @@ Change these values to adjust the cap formula and unit cost.
 
 ## How It Works
 
-1. **Cap Calculation**: The game counts how many regions/states each faction controls and multiplies by DIVISIONS_PER_STATE (1) to get total command power
+1. **Cap Calculation**: The game counts how many regions/states each country controls and multiplies by DIVISIONS_PER_STATE (1) to get total command power
 2. **Unit Cost**: Each unit (division) consumes COMMAND_POWER_PER_UNIT (2) command power slots
 3. **Production Check**: When attempting to produce a division, the game checks if (cap consumed by current units + cap consumed by units in production) < total cap
 4. **UI Feedback**: The treasury tooltip shows the current cap and how many divisions are active/in production
