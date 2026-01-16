@@ -101,12 +101,19 @@ async function main() {
       
       console.log(`  Found ${metadata.admUnitCount} regions`);
       
+      // Save to temp directory with admin level in filename
+      const outputPath = path.join(tempDir, `${country.iso3}_${country.admLevel}.geojson`);
+      
+      // Check if file already exists
+      if (fs.existsSync(outputPath)) {
+        console.log(`  Already exists, skipping: ${outputPath}\n`);
+        continue;
+      }
+      
       // Download simplified GeoJSON (smaller file size)
       const geojsonUrl = metadata.simplifiedGeometryGeoJSON || metadata.gjDownloadURL;
       const geojson = await downloadGeoJSON(geojsonUrl);
       
-      // Save to temp directory
-      const outputPath = path.join(tempDir, `${country.iso3}.geojson`);
       fs.writeFileSync(outputPath, JSON.stringify(geojson, null, 2));
       
       console.log(`  Saved to: ${outputPath}\n`);

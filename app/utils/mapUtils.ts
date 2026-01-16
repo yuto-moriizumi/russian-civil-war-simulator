@@ -98,7 +98,7 @@ export function initializeRegionState(
     const props = feature.properties;
     if (!props) continue;
     
-    const id = props.regionId || props.shapeISO || props.id;
+    const id = props.shapeID;
     if (!id) continue;
     
     state[id] = {
@@ -124,7 +124,7 @@ export function createInitialOwnership(
     const props = feature.properties;
     if (!props) continue;
     
-    const id = props.regionId || props.shapeISO || props.id;
+    const id = props.shapeID;
     if (!id) continue;
     
     const countryIso3 = props.countryIso3 || props.shapeGroup || 'UNK';
@@ -149,7 +149,7 @@ export function createInitialOwnership(
 export function generateOwnershipColorExpression(
   regions: RegionState
 ): ['match', ['get', string], ...Array<string>] {
-  const expression: ['match', ['get', string], ...Array<string>] = ['match', ['get', 'regionId']];
+  const expression: ['match', ['get', string], ...Array<string>] = ['match', ['get', 'shapeID']];
   
   for (const [id, region] of Object.entries(regions)) {
     expression.push(id, COUNTRY_COLORS[region.owner]);

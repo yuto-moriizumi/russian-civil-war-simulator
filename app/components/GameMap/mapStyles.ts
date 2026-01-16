@@ -15,7 +15,7 @@ const DIPLOMACY_COLORS = {
  */
 export function createFillColorExpression(regions: RegionState) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const expression: any[] = ['match', ['get', 'shapeISO']];
+  const expression: any[] = ['match', ['get', 'shapeID']];
   
   for (const [id, region] of Object.entries(regions)) {
     expression.push(id, COUNTRY_COLORS[region.owner]);
@@ -36,7 +36,7 @@ export function createDiplomacyFillColorExpression(
   getRelationship: (from: CountryId, to: CountryId) => string
 ) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const expression: any[] = ['match', ['get', 'shapeISO']];
+  const expression: any[] = ['match', ['get', 'shapeID']];
   
   for (const [id, region] of Object.entries(regions)) {
     const owner = region.owner;
@@ -78,7 +78,7 @@ export function createDiplomacyFillColorExpression(
  */
 export function createValueFillColorExpression(regions: RegionState) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const expression: any[] = ['match', ['get', 'shapeISO']];
+  const expression: any[] = ['match', ['get', 'shapeID']];
   
   // Calculate command power contribution for each region (base + major city bonus)
   const getCapContribution = (regionId: string): number => {

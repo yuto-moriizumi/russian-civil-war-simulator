@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     // Initialize adjacency lists
     for (const feature of features) {
-      const regionId = feature.properties?.regionId || feature.properties?.shapeISO;
+      const regionId = feature.properties?.regionId || feature.properties?.shapeID;
       if (regionId) {
         adjacency[regionId] = [];
       }
@@ -40,12 +40,12 @@ export async function POST(request: NextRequest) {
     // Method 1: Direct intersection check (for adjacent regions)
     for (let i = 0; i < features.length; i++) {
       const featureA = features[i];
-      const idA = featureA.properties?.regionId || featureA.properties?.shapeISO;
+      const idA = featureA.properties?.regionId || featureA.properties?.shapeID;
       if (!idA) continue;
 
       for (let j = i + 1; j < features.length; j++) {
         const featureB = features[j];
-        const idB = featureB.properties?.regionId || featureB.properties?.shapeISO;
+        const idB = featureB.properties?.regionId || featureB.properties?.shapeID;
         if (!idB) continue;
 
         try {
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     let bufferConnections = 0;
     for (let i = 0; i < features.length; i++) {
       const featureA = features[i];
-      const idA = featureA.properties?.regionId || featureA.properties?.shapeISO;
+      const idA = featureA.properties?.regionId || featureA.properties?.shapeID;
       if (!idA) continue;
 
       try {
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
 
         for (let j = i + 1; j < features.length; j++) {
           const featureB = features[j];
-          const idB = featureB.properties?.regionId || featureB.properties?.shapeISO;
+          const idB = featureB.properties?.regionId || featureB.properties?.shapeID;
           if (!idB) continue;
 
           // Skip if already adjacent
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
     let enclaveConnections = 0;
     if (detectIsolated) {
       for (const feature of features) {
-        const regionId = feature.properties?.regionId || feature.properties?.shapeISO;
+        const regionId = feature.properties?.regionId || feature.properties?.shapeID;
         if (!regionId || adjacency[regionId].length > 0) continue;
 
         try {
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
           const centroid = turf.centroid(geometry);
 
           for (const otherFeature of features) {
-            const otherId = otherFeature.properties?.regionId || otherFeature.properties?.shapeISO;
+            const otherId = otherFeature.properties?.regionId || otherFeature.properties?.shapeID;
             if (!otherId || otherId === regionId) continue;
 
             try {

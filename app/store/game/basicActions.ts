@@ -260,7 +260,7 @@ export const createBasicActions = (
       const centroids: Record<string, [number, number]> = {};
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       geojson.features.forEach((feature: any) => {
-        const id = feature.properties.regionId || feature.properties.shapeISO || feature.properties.id;
+        const id = feature.properties.regionId || feature.properties.shapeID || feature.properties.id;
         const centroid = turf.centroid(feature);
         const coords = centroid.geometry.coordinates;
         centroids[id] = [coords[0], coords[1]];

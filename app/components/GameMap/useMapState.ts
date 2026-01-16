@@ -29,8 +29,8 @@ export function useMapState({
   armyGroups,
   onRegionHover,
 }: UseMapStateProps) {
-  const hoveredRegionIdRef = useRef<string | null>(null);
-  const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
+  const hoveredFeatureIdRef = useRef<string | null>(null); // Store shapeID for feature state
+  const [hoveredRegion, setHoveredRegion] = useState<string | null>(null); // Store shapeID for game logic
 
   // Set up native MapLibre hover handlers for better performance
   useEffect(() => {
@@ -39,23 +39,25 @@ export function useMapState({
 
     const onMouseMove = (e: MapMouseEvent & { features?: GeoJSON.Feature[] }) => {
       if (e.features && e.features.length > 0) {
-        const regionId = e.features[0].properties?.regionId || e.features[0].properties?.shapeISO;
-        if (regionId && regionId !== hoveredRegionIdRef.current) {
+        const feature = e.features[0];
+        const shapeId = feature.properties?.shapeID; // Use shapeID for both feature state and game logic
+        
+        if (shapeId && shapeId !== hoveredFeatureIdRef.current) {
           // Clear previous hover
-          if (hoveredRegionIdRef.current) {
+          if (hoveredFeatureIdRef.current) {
             map.setFeatureState(
-              { source: 'regions', id: hoveredRegionIdRef.current },
+              { source: 'regions', id: hoveredFeatureIdRef.current },
               { hover: false }
             );
           }
           // Set new hover
           map.setFeatureState(
-            { source: 'regions', id: regionId },
+            { source: 'regions', id: shapeId },
             { hover: true }
           );
-          hoveredRegionIdRef.current = regionId;
-          setHoveredRegion(regionId);
-          onRegionHover?.(regionId);
+          hoveredFeatureIdRef.current = shapeId;
+          setHoveredRegion(shapeId);
+          onRegionHover?.(shapeId);
         }
       }
       map.getCanvas().style.cursor = 'pointer';
@@ -63,12 +65,12 @@ export function useMapState({
 
     const onMouseLeave = () => {
       map.getCanvas().style.cursor = '';
-      if (hoveredRegionIdRef.current) {
+      if (hoveredFeatureIdRef.current) {
         map.setFeatureState(
-          { source: 'regions', id: hoveredRegionIdRef.current },
+          { source: 'regions', id: hoveredFeatureIdRef.current },
           { hover: false }
         );
-        hoveredRegionIdRef.current = null;
+        hoveredFeatureIdRef.current = null;
         setHoveredRegion(null);
         onRegionHover?.(null);
       }
@@ -104,9 +106,9 @@ export function useMapState({
     if (theaterToHighlight) {
       const theater = theaters.find(t => t.id === theaterToHighlight);
       if (theater) {
-        for (const regionId of theater.frontlineRegions) {
+        for (const shapeId of theater.frontlineRegions) {
           map.setFeatureState(
-            { source: 'regions', id: regionId },
+            { source: 'regions', id: shapeId },
             { theaterFrontline: true }
           );
         }
@@ -142,9 +144,9 @@ export function useMapState({
     }
 
     // Restore hover state if there's a currently hovered region
-    if (hoveredRegionIdRef.current) {
+    if (hoveredFeatureIdRef.current) {
       map.setFeatureState(
-        { source: 'regions', id: hoveredRegionIdRef.current },
+        { source: 'regions', id: hoveredFeatureIdRef.current },
         { hover: true }
       );
     }
@@ -152,6 +154,6 @@ export function useMapState({
 
   return {
     hoveredRegion,
-    hoveredRegionIdRef,
+    hoveredFeatureIdRef,
   };
 }
