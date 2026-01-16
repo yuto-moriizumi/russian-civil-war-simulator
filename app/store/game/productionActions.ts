@@ -140,7 +140,7 @@ export const createProductionActions = (
           description: actualCount === 1 
             ? `Started production of ${newProductions[0].divisionName}. Will complete in ${productionTimeHours} hours.`
             : `Started production of ${actualCount} divisions. First will complete in ${productionTimeHours} hours.`,
-          faction: state.selectedCountry?.id,
+          country: state.selectedCountry?.id,
         },
       ],
     }));
@@ -149,7 +149,7 @@ export const createProductionActions = (
   cancelProduction: (productionId: string) => {
     const state = get();
     
-    // Get player's faction queue
+    // Get player's country queue
     if (!state.selectedCountry) {
       console.warn('No country selected');
       return;
@@ -165,7 +165,7 @@ export const createProductionActions = (
 
     // Only allow canceling own productions
     if (production.owner !== state.selectedCountry.id) {
-      console.warn('Cannot cancel production of another faction');
+      console.warn('Cannot cancel production of another country');
       return;
     }
 
@@ -205,7 +205,7 @@ export const createProductionActions = (
           timestamp: state.dateTime,
           title: 'Production Canceled',
           description: `Canceled production of ${production.divisionName}.`,
-          faction: state.selectedCountry?.id,
+          country: state.selectedCountry?.id,
         },
       ],
     }));

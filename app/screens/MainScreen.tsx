@@ -72,7 +72,7 @@ interface MainScreenProps {
   onCloseProductionQueue: () => void;
   onCancelProduction: (productionId: string) => void;
   onDismissNotification: (notificationId: string) => void;
-  onSetRelationship: (fromFaction: CountryId, toFaction: CountryId, type: RelationshipType) => void;
+  onSetRelationship: (fromCountry: CountryId, toCountry: CountryId, type: RelationshipType) => void;
   // Theater and Army Groups action props
   onSelectTheater: (theaterId: string | null) => void;
   onCreateArmyGroup: (name: string, regionIds: string[], theaterId?: string | null) => void;
@@ -82,7 +82,7 @@ interface MainScreenProps {
   onSetArmyGroupMode: (groupId: string, mode: 'none' | 'advance' | 'defend') => void;
   onDeployToArmyGroup: (groupId: string, count?: number) => void;
   onAssignTheater: (groupId: string, theaterId: string | null) => void;
-  onCountrySelect: (factionId: CountryId | null) => void;
+  onCountrySelect: (countryId: CountryId | null) => void;
   onSidebarOpen: (isOpen: boolean) => void;
   onSetMapMode: (mode: MapMode) => void;
 }
@@ -204,11 +204,11 @@ export default function MainScreen({
     onOpenProductionQueue();
   };
 
-  const handleCountrySelect = (factionId: CountryId | null) => {
-    if (factionId) {
+  const handleCountrySelect = (countryId: CountryId | null) => {
+    if (countryId) {
       onCloseProductionQueue();
     }
-    onCountrySelect(factionId);
+    onCountrySelect(countryId);
   };
 
   return (

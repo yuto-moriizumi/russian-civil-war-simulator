@@ -135,7 +135,7 @@ export default function TopBar({
                 ? 'bg-blue-600 text-white font-semibold'
                 : 'text-stone-300 hover:bg-stone-700'
             }`}
-            title="Country Map - Colors by faction"
+            title="Country Map - Colors by country"
           >
             Country
           </button>

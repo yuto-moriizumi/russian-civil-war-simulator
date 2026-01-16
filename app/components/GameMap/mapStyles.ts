@@ -32,7 +32,7 @@ export function createFillColorExpression(regions: RegionState) {
  */
 export function createDiplomacyFillColorExpression(
   regions: RegionState,
-  playerFaction: CountryId,
+  playerCountry: CountryId,
   getRelationship: (from: CountryId, to: CountryId) => string
 ) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,7 +42,7 @@ export function createDiplomacyFillColorExpression(
     const owner = region.owner;
     let color: string;
     
-    if (owner === playerFaction) {
+    if (owner === playerCountry) {
       // Your country
       color = DIPLOMACY_COLORS.player;
     } else if (owner === 'neutral' || owner === 'foreign') {
@@ -50,8 +50,8 @@ export function createDiplomacyFillColorExpression(
       color = DIPLOMACY_COLORS.neutral;
     } else {
       // Check relationship (check both directions for mutual status like war or hierarchical like autonomy)
-      const relForward = getRelationship(playerFaction, owner);
-      const relBackward = getRelationship(owner, playerFaction);
+      const relForward = getRelationship(playerCountry, owner);
+      const relBackward = getRelationship(owner, playerCountry);
       
       if (relForward === 'autonomy' || relBackward === 'autonomy') {
         color = DIPLOMACY_COLORS.autonomy;
@@ -161,11 +161,11 @@ function rgbToHex(r: number, g: number, b: number): string {
 export function createMapModeFillColorExpression(
   mapMode: MapMode,
   regions: RegionState,
-  playerFaction: CountryId | undefined,
+  playerCountry: CountryId | undefined,
   getRelationship: (from: CountryId, to: CountryId) => string
 ) {
-  if (mapMode === 'diplomacy' && playerFaction) {
-    return createDiplomacyFillColorExpression(regions, playerFaction, getRelationship);
+  if (mapMode === 'diplomacy' && playerCountry) {
+    return createDiplomacyFillColorExpression(regions, playerCountry, getRelationship);
   }
   
   if (mapMode === 'value') {

@@ -12,7 +12,7 @@ export const DIVISIONS_PER_STATE = 1;
 export const COMMAND_POWER_PER_UNIT = 2;
 
 /**
- * Base command power provided to all factions
+ * Base command power provided to all countries
  */
 export const BASE_COMMAND_POWER = 2;
 
@@ -29,7 +29,7 @@ export const MAJOR_CITY_CAP_BONUS: Record<string, number> = {
 };
 
 /**
- * Calculate the maximum divisions a faction can have based on controlled states
+ * Calculate the maximum divisions a country can have based on controlled states
  * @param countryId - The country to calculate command power for
  * @param regions - Current region state
  * @param countryBonuses - Country bonuses from completed missions
@@ -69,7 +69,7 @@ export function calculateCommandPower(
 }
 
 /**
- * Count current divisions for a faction (in regions + in transit)
+ * Count current divisions for a country (in regions + in transit)
  * Each division consumes COMMAND_POWER_PER_UNIT command power slots
  * @param countryId - The country to count for
  * @param regions - Current region state
@@ -99,7 +99,7 @@ export function countCurrentDivisions(
 }
 
 /**
- * Count divisions in production queue for a faction
+ * Count divisions in production queue for a country
  * Each division consumes COMMAND_POWER_PER_UNIT command power slots
  * @param countryId - The country to count for
  * @param productionQueues - Per-country production queues
@@ -115,7 +115,7 @@ export function countDivisionsInProduction(
 }
 
 /**
- * Check if a faction can produce another division
+ * Check if a country can produce another division
  * @param countryId - The country to check
  * @param regions - Current region state
  * @param movements - Current unit movements

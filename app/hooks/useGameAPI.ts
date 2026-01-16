@@ -80,13 +80,13 @@ export function useGameAPI() {
 
       // Relationship API methods
       getRelationships: () => state.relationships,
-      setRelationship: (fromFaction, toFaction, type) => state.setRelationship(fromFaction, toFaction, type),
-      getRelationship: (fromFaction, toFaction) => state.getRelationship(fromFaction, toFaction),
+      setRelationship: (fromCountry, toCountry, type) => state.setRelationship(fromCountry, toCountry, type),
+      getRelationship: (fromCountry, toCountry) => state.getRelationship(fromCountry, toCountry),
       
       // Country sidebar
-      openCountrySidebar: (factionId) => {
-        state.setSelectedCountryId(factionId);
-        state.setIsCountrySidebarOpen(factionId !== null);
+      openCountrySidebar: (countryId) => {
+        state.setSelectedCountryId(countryId);
+        state.setIsCountrySidebarOpen(countryId !== null);
       },
 
       // Map mode

@@ -19,7 +19,7 @@ export interface GameStore extends GameState {
   selectedRegion: string | null;
   selectedUnitRegion: string | null;
   mapDataLoaded: boolean;
-  aiStates: AIState[]; // Multiple AI states for different factions
+  aiStates: AIState[]; // Multiple AI states for different countries
   isEventsModalOpen: boolean;
   selectedCombatId: string | null;
   lastSaveTime: Date | null;
