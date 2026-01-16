@@ -34,6 +34,27 @@ export default function MapToolCanvas({
   const mapRef = useRef<MapRef>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
+  const [hoveredRegionName, setHoveredRegionName] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isPainting, setIsPainting] = useState(false);
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState<{ x: number; y: number } | null>(null);
+
+  // Create a map of regionId to region name for quick lookup
+  const regionNames = useMemo(() => {
+    const names: Record<string, string> = {};
+    geojson.features.forEach((feature) => {
+      const regionId = feature.properties?.regionId || feature.properties?.shapeISO;
+      const name = feature.properties?.shapeName || 
+                   feature.properties?.SHAPENAME || 
+                   feature.properties?.name || 
+                   feature.properties?.NAME;
+      if (regionId && name) {
+        names[regionId] = name;
+      }
+    });
+    return names;
+  }, [geojson]);
 
   // Create fill color expression based on ownership
   const fillColorExpression = useMemo(() => {
@@ -83,6 +104,9 @@ export default function MapToolCanvas({
   // Handle click
   const handleMapClick = useCallback(
     (e: MapLayerMouseEvent) => {
+      // Don't process clicks that were part of a drag
+      if (isDragging) return;
+      
       const features = e.features;
       if (features && features.length > 0) {
         const regionId = features[0].properties?.regionId || features[0].properties?.shapeISO;
@@ -91,13 +115,17 @@ export default function MapToolCanvas({
         }
       }
     },
-    [onRegionPaint, isPaintEnabled]
+    [onRegionPaint, isPaintEnabled, isDragging]
   );
 
   // Handle right-click (eyedropper)
   const handleContextMenu = useCallback(
     (e: MapLayerMouseEvent) => {
       e.preventDefault();
+      
+      // In paint mode, right-click is used for panning, not eyedropper
+      if (isPaintEnabled) return;
+      
       const features = e.features;
       if (features && features.length > 0) {
         const regionId = features[0].properties?.regionId || features[0].properties?.shapeISO;
@@ -106,27 +134,91 @@ export default function MapToolCanvas({
         }
       }
     },
-    [ownership, onCountryPick]
+    [ownership, onCountryPick, isPaintEnabled]
   );
 
   // Handle mouse move
   const handleMouseMove = useCallback(
     (e: MapLayerMouseEvent) => {
+      // Handle panning with right mouse button in paint mode
+      if (isPanning && panStart && mapRef.current) {
+        const dx = e.originalEvent.clientX - panStart.x;
+        const dy = e.originalEvent.clientY - panStart.y;
+        
+        const map = mapRef.current.getMap();
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+        
+        // Calculate movement in map coordinates
+        const scale = 360 / (512 * Math.pow(2, zoom));
+        const newLng = center.lng - dx * scale;
+        const newLat = center.lat + dy * scale * Math.cos(center.lat * Math.PI / 180);
+        
+        map.setCenter([newLng, newLat]);
+        setPanStart({ x: e.originalEvent.clientX, y: e.originalEvent.clientY });
+        return;
+      }
+
       const features = e.features;
       if (features && features.length > 0) {
         const regionId = features[0].properties?.regionId || features[0].properties?.shapeISO;
         
         if (regionId !== hoveredRegion) {
           setHoveredRegion(regionId);
+          setHoveredRegionName(regionNames[regionId] || null);
           onRegionHover(regionId);
+        }
+
+        // Paint while dragging in paint mode
+        if (isPainting && isPaintEnabled && regionId) {
+          onRegionPaint(regionId);
         }
       } else {
         setHoveredRegion(null);
+        setHoveredRegionName(null);
         onRegionHover(null);
       }
     },
-    [hoveredRegion, onRegionHover]
+    [hoveredRegion, onRegionHover, isPainting, isPaintEnabled, onRegionPaint, isPanning, panStart, regionNames]
   );
+
+  // Handle mouse down
+  const handleMouseDown = useCallback(
+    (e: MapLayerMouseEvent) => {
+      if (isPaintEnabled) {
+        if (e.originalEvent.button === 0) {
+          // Left mouse button in paint mode - start painting
+          setIsPainting(true);
+          const features = e.features;
+          if (features && features.length > 0) {
+            const regionId = features[0].properties?.regionId || features[0].properties?.shapeISO;
+            if (regionId) {
+              onRegionPaint(regionId);
+            }
+          }
+        } else if (e.originalEvent.button === 2) {
+          // Right mouse button in paint mode - start panning
+          setIsPanning(true);
+          setPanStart({ x: e.originalEvent.clientX, y: e.originalEvent.clientY });
+        }
+      }
+      setIsDragging(false);
+    },
+    [isPaintEnabled, onRegionPaint]
+  );
+
+  // Handle mouse up
+  const handleMouseUp = useCallback(() => {
+    setIsPainting(false);
+    setIsPanning(false);
+    setPanStart(null);
+  }, []);
+
+  // Handle drag start
+  const handleDragStart = useCallback(() => {
+    setIsDragging(true);
+    setIsPainting(false);
+  }, []);
 
   // Update feature-state for hover and adjacency highlighting
   useEffect(() => {
@@ -201,8 +293,15 @@ export default function MapToolCanvas({
         onClick={handleMapClick}
         onContextMenu={handleContextMenu}
         onMouseMove={handleMouseMove}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onDragStart={handleDragStart}
         onLoad={handleMapLoad}
         cursor={isPaintEnabled ? 'crosshair' : 'pointer'}
+        dragPan={isPaintEnabled ? false : true}
+        dragRotate={false}
+        touchZoomRotate={false}
+        touchPitch={false}
       >
         <Source
           id="regions"
@@ -220,7 +319,10 @@ export default function MapToolCanvas({
       {/* Tooltip */}
       {hoveredRegion && ownership[hoveredRegion] && (
         <div className="pointer-events-none absolute left-4 top-4 rounded border border-gray-600 bg-gray-800/95 px-3 py-2 text-sm shadow-lg">
-          <div className="font-semibold">{hoveredRegion}</div>
+          {hoveredRegionName && (
+            <div className="font-semibold text-white">{hoveredRegionName}</div>
+          )}
+          <div className={hoveredRegionName ? "text-xs text-gray-500" : "font-semibold"}>{hoveredRegion}</div>
           <div className="text-xs text-gray-400">
             Owner: {ownership[hoveredRegion]}
           </div>
@@ -240,7 +342,7 @@ export default function MapToolCanvas({
         />
         <span className="font-semibold">{selectedCountry}</span>
         <span className="text-xs text-gray-400">
-          ({isPaintEnabled ? 'Click to paint' : 'Paint disabled'})
+          ({isPaintEnabled ? 'Left: Paint | Right: Pan' : 'Paint disabled'})
         </span>
       </div>
     </div>
