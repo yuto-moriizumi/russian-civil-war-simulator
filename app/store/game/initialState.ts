@@ -44,8 +44,9 @@ export const initialGameState: GameState = {
   },
   relationships: [
     { fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy' },
-    { fromCountry: 'soviet', toCountry: 'iskolat', type: 'autonomy' }
-  ], // Initially no relationships (all neutral)
+    { fromCountry: 'soviet', toCountry: 'iskolat', type: 'autonomy' },
+    { fromCountry: 'germany', toCountry: 'poland', type: 'autonomy' }
+  ], // Initial relationships (autonomy = puppet state)
   mapMode: 'country', // Default map mode
   regionCentroids: {}, // Will be loaded asynchronously
   scheduledEvents: scheduledEvents, // Historical events
