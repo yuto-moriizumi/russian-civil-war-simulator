@@ -1,21 +1,9 @@
 import { Adjacency, CountryId, RegionState, Movement } from '../types/game';
 import { initialRegionOwnership, regionValues } from '../data/map';
+import { COUNTRY_COLORS } from '../data/countries';
 
-// Country colors for map display
-export const COUNTRY_COLORS: Record<CountryId, string> = {
-  soviet: '#CC0000',      // Red
-  white: '#0d3b0d',       // Very Dark Green (White Army)
-  finland: '#FFFFFF',     // White (Finnish white guard color)
-  ukraine: '#0057B7',     // Blue (Ukrainian national color)
-  don: '#FFD700',         // Gold (Don Republic)
-  fswr: '#CC0000',        // Red (Finnish Socialist Workers' Republic)
-  iskolat: '#8B0000',     // Dark Red (Iskolat Soviet Republic)
-  neutral: '#808080',     // Gray
-  foreign: '#4A90D9',     // Blue
-  germany: '#1a1a1a',     // Dark Gray/Black (German Empire)
-  bulgaria: '#D62612',    // Bulgarian Red
-  poland: '#DC143C',      // Crimson Red (Kingdom of Poland)
-};
+// Re-export for backward compatibility
+export { COUNTRY_COLORS };
 
 // Check if movement between two regions is valid
 export function canMoveTo(adjacency: Adjacency, from: string, to: string): boolean {

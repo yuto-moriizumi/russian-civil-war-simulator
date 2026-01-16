@@ -1,5 +1,6 @@
 import { AIState, CountryId, RegionState, Region, ActiveCombat, Movement, ArmyGroup, ProductionQueueItem, CountryBonuses } from '../types/game';
 import { canProduceDivision, getCommandPowerInfo } from '../utils/commandPower';
+import { getFirstArmyGroupName, getDivisionPrefix } from '../data/countries';
 
 /**
  * Creates initial AI state for a faction
@@ -17,15 +18,7 @@ export function createInitialAIArmyGroup(countryId: CountryId, regions: RegionSt
   const ownedRegions = getOwnedRegions(regions, countryId);
   const ownedRegionIds = ownedRegions.map(r => r.id);
   
-  const nameMap: Record<string, string> = {
-    soviet: 'Soviet Army Group',
-    white: 'White Army Group',
-    finland: 'Finnish Army Group',
-    ukraine: 'Ukrainian Army Group',
-    don: 'Don Cossack Army Group',
-    fswr: 'Red Guard Army Group',
-  };
-  const name = nameMap[countryId] || 'Army Group';
+  const name = getFirstArmyGroupName(countryId);
   
   return {
     id: `ai-army-group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -58,15 +51,7 @@ function pickRandomRegion(regionList: Region[]): Region | null {
  * Generate a unique division name for the AI
  */
 function generateAIDivisionName(countryId: CountryId, regions: RegionState, productionQueue: ProductionQueueItem[], offset: number = 0): string {
-  const prefixMap: Record<string, string> = {
-    soviet: 'Red Guard',
-    white: 'White Guard',
-    finland: 'Finnish Guard',
-    ukraine: 'Ukrainian Guard',
-    don: 'Don Cossack',
-    fswr: 'Red Guard',
-  };
-  const prefix = prefixMap[countryId] || 'Guard';
+  const prefix = getDivisionPrefix(countryId);
   
   // Count existing divisions owned by this faction
   const existingCount = Object.values(regions).reduce((acc, region) => 

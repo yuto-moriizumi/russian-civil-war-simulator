@@ -1,6 +1,7 @@
 'use client';
 
 import { ActiveCombat, Division, CountryId } from '../types/game';
+import { getCountryCombatName } from '../data/countries';
 
 interface CombatPopupProps {
   combat: ActiveCombat;
@@ -22,16 +23,6 @@ export default function CombatPopup({ combat, onClose }: CombatPopupProps) {
   const defenderHpProgress = Math.min(100, combat.initialDefenderHp > 0 
     ? (defenderHp / combat.initialDefenderHp) * 100 
     : 0);
-
-  const getFactionName = (faction: CountryId) => {
-    switch (faction) {
-      case 'soviet': return 'Red Army';
-      case 'white': return 'White Army';
-      case 'neutral': return 'Neutral Forces';
-      case 'foreign': return 'Foreign Forces';
-      default: return faction;
-    }
-  };
 
   const getFactionFlag = (faction: CountryId) => {
     switch (faction) {
@@ -185,7 +176,7 @@ export default function CombatPopup({ combat, onClose }: CombatPopupProps) {
                  combat.victor === combat.defenderCountry ? 'bg-green-900/40 border-green-700 text-green-400' :
                  'bg-stone-800 border-stone-600 text-stone-400'
                }`}>
-                 {combat.victor ? `${getFactionName(combat.victor)} Victory` : 'Stalemate'}
+                  {combat.victor ? `${getCountryCombatName(combat.victor)} Victory` : 'Stalemate'}
                </div>
              )}
           </div>
