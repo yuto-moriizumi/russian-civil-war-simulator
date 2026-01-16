@@ -2,13 +2,13 @@ import { ProductionQueueItem, RegionState, Division, CountryId, CountryBonuses }
 import { getDivisionStats } from '../../../utils/bonusCalculator';
 
 /**
- * Process per-faction production queues and complete the FIRST production from each faction's queue.
- * This allows all factions to produce divisions in parallel.
- * @param productionQueues - Per-faction production queues
+ * Process per-country production queues and complete the FIRST production from each country's queue.
+ * This allows all countries to produce divisions in parallel.
+ * @param productionQueues - Per-country production queues
  * @param currentTime - Current game time
  * @param regions - Current region state
- * @param countryBonuses - Per-faction bonuses from missions
- * @returns Updated per-faction queues, regions, and completed production events
+ * @param countryBonuses - Per-country bonuses from missions
+ * @returns Updated per-country queues, regions, and completed production events
  */
 export function processProductionQueue(
   productionQueues: Record<CountryId, ProductionQueueItem[]>,
@@ -24,18 +24,18 @@ export function processProductionQueue(
   let updatedRegions = { ...regions };
   const remainingQueues: Record<CountryId, ProductionQueueItem[]> = {} as Record<CountryId, ProductionQueueItem[]>;
 
-  // Process each faction's queue independently
-  const factionIds = Object.keys(productionQueues) as CountryId[];
+  // Process each country's queue independently
+  const countryIds = Object.keys(productionQueues) as CountryId[];
   
-  for (const factionId of factionIds) {
-    const factionQueue = productionQueues[factionId] || [];
+  for (const countryId of countryIds) {
+    const countryQueue = productionQueues[countryId] || [];
     
-    // Only process the FIRST item in this faction's queue if it's complete
-    if (factionQueue.length > 0 && currentTime >= factionQueue[0].completionTime) {
-      const production = factionQueue[0];
+    // Only process the FIRST item in this country's queue if it's complete
+    if (countryQueue.length > 0 && currentTime >= countryQueue[0].completionTime) {
+      const production = countryQueue[0];
       completedProductions.push(production);
 
-      // Get division stats with faction bonuses applied
+      // Get division stats with country bonuses applied
       const bonuses = countryBonuses[production.owner];
       const divisionStats = getDivisionStats(production.owner, bonuses);
 
@@ -77,7 +77,7 @@ export function processProductionQueue(
               },
             };
           }
-          // If no owned regions, division is lost (faction was defeated)
+          // If no owned regions, division is lost (country was defeated)
         }
       } else {
         // No target specified, deploy to first owned region
@@ -96,8 +96,8 @@ export function processProductionQueue(
         }
       }
 
-      // Store remaining queue for this faction (without the first completed item)
-      const remainingItems = factionQueue.slice(1);
+      // Store remaining queue for this country (without the first completed item)
+      const remainingItems = countryQueue.slice(1);
       
       // Adjust the start time and completion time of the new first item
       // so it starts from the current time (when the previous item completed)
@@ -113,10 +113,10 @@ export function processProductionQueue(
         };
       }
       
-      remainingQueues[factionId] = remainingItems;
+      remainingQueues[countryId] = remainingItems;
     } else {
-      // No production completed for this faction, keep queue unchanged
-      remainingQueues[factionId] = factionQueue;
+      // No production completed for this country, keep queue unchanged
+      remainingQueues[countryId] = countryQueue;
     }
   }
 

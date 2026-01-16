@@ -67,19 +67,19 @@ export const createBasicActions = (
   navigateToScreen: (screen: Screen) => set({ currentScreen: screen }),
   
   selectCountry: (country: Country) => {
-    // Determine which factions become AI-controlled (all non-player factions)
-    const allFactions: CountryId[] = ['soviet', 'white', 'finland', 'ukraine', 'don', 'fswr'];
-    const aiFactions = allFactions.filter(faction => faction !== country.id);
+    // Determine which countries become AI-controlled (all non-player countries)
+    const allCountries: CountryId[] = ['soviet', 'white', 'finland', 'ukraine', 'don', 'fswr'];
+    const aiCountries = allCountries.filter(countryId => countryId !== country.id);
     
-    const factionMissions = initialMissions.filter(m => m.country === country.id);
+    const countryMissions = initialMissions.filter(m => m.country === country.id);
     const currentRegions = get().regions;
     
-    // Create initial AI states for all AI factions
-    const aiStates = aiFactions.map(faction => createInitialAIState(faction));
+    // Create initial AI states for all AI countries
+    const aiStates = aiCountries.map(countryId => createInitialAIState(countryId));
     
-    // Create initial army groups for all AI factions
-    const aiArmyGroups = aiFactions.map(faction => 
-      createInitialAIArmyGroup(faction, currentRegions)
+    // Create initial army groups for all AI countries
+    const aiArmyGroups = aiCountries.map(countryId => 
+      createInitialAIArmyGroup(countryId, currentRegions)
     );
     
     // Create initial player army group
@@ -91,7 +91,7 @@ export const createBasicActions = (
       ...initialGameState,
       selectedCountry: country,
       currentScreen: 'main',
-      missions: factionMissions,
+      missions: countryMissions,
       aiStates: aiStates, // Multiple AI states
       armyGroups: [playerArmyGroup, ...aiArmyGroups], // Player + all AI army groups
       // Keep the regions and adjacency from map data (these are static)

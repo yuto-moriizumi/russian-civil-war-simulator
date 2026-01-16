@@ -45,7 +45,7 @@ export function processScheduledEvents(
           };
         }
       } else if (action.type === 'declareWar' && action.fromCountry && action.toCountry) {
-        // Declare war between factions
+        // Declare war between countries
         updatedRelationships = applyWarDeclaration(
           updatedRelationships,
           action.fromCountry,
@@ -78,7 +78,7 @@ export function processScheduledEvents(
 }
 
 /**
- * Apply war declaration between two factions
+ * Apply war declaration between two countries
  * Returns updated relationships array
  */
 function applyWarDeclaration(
@@ -88,7 +88,7 @@ function applyWarDeclaration(
 ): Relationship[] {
   let updatedRelationships = [...relationships];
   
-  // Remove any existing relationship between these factions
+  // Remove any existing relationship between these countries
   updatedRelationships = updatedRelationships.filter(
     r => !(
       (r.fromCountry === fromCountry && r.toCountry === toCountry) ||

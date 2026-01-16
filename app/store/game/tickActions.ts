@@ -57,7 +57,7 @@ export const createTickActions = (
         timestamp: dateTime,
         title: 'Production Complete',
         description: `${p.divisionName} has been produced and deployed.`,
-        faction: p.owner,
+        country: p.owner,
       }));
     
     const productionNotifications = completedProductions
@@ -68,7 +68,7 @@ export const createTickActions = (
         timestamp: dateTime,
         title: 'Production Complete',
         description: `${p.divisionName} has been produced and deployed.`,
-        faction: p.owner,
+        country: p.owner,
         expiresAt: new Date(dateTime.getTime() + 6 * 60 * 60 * 1000), // 6 hours
       }));
     
@@ -124,13 +124,13 @@ export const createTickActions = (
     // Step 7: Regenerate HP for all stationary divisions
     nextRegions = regenerateDivisionHP(nextRegions);
 
-    // Step 8: AI Tick - process AI actions and deployments for all AI factions
+    // Step 8: AI Tick - process AI actions and deployments for all AI countries
     let nextAIStates = aiStates;
     let nextArmyGroups = armyGroups;
     const nextProductionQueues: Record<CountryId, ProductionQueueItem[]> = { ...remainingProductions };
 
     if (aiStates.length > 0) {
-      // Process each AI faction
+      // Process each AI country
       nextAIStates = aiStates.map(aiState => {
         const country = countries.find(c => c.id === aiState.countryId);
         const aiActions = runAITick(
@@ -152,14 +152,14 @@ export const createTickActions = (
         
         // Handle AI production requests
         if (aiActions.productionRequests.length > 0) {
-          // Get or initialize the faction's queue
-          const factionQueue = nextProductionQueues[aiState.countryId] || [];
+          // Get or initialize the country's queue
+          const countryQueue = nextProductionQueues[aiState.countryId] || [];
           const bonuses = state.countryBonuses[aiState.countryId];
           const productionTimeHours = getBaseProductionTime(bonuses);
           
           aiActions.productionRequests.forEach(req => {
             const completionTime = new Date(newDate.getTime() + productionTimeHours * 60 * 60 * 1000);
-            factionQueue.push({
+            countryQueue.push({
               id: `prod-ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               divisionName: req.divisionName,
               owner: aiState.countryId,
@@ -170,8 +170,8 @@ export const createTickActions = (
             });
           });
           
-          // Update the faction's queue
-          nextProductionQueues[aiState.countryId] = factionQueue;
+          // Update the country's queue
+          nextProductionQueues[aiState.countryId] = countryQueue;
         }
         
         return aiActions.updatedAIState;

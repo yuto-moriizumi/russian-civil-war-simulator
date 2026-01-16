@@ -176,7 +176,7 @@ export const createArmyGroupActions = (
     const group = armyGroups.find(g => g.id === groupId);
     if (!group) return;
     
-    // Use the army group's owner faction instead of selectedCountry to support AI
+    // Use the army group's owner country instead of selectedCountry to support AI
     const countryId = group.owner;
 
     const newMovements: Movement[] = [];
@@ -298,7 +298,7 @@ export const createArmyGroupActions = (
     const group = armyGroups.find(g => g.id === groupId);
     if (!group) return;
     
-    // Use the army group's owner faction instead of selectedCountry to support AI
+    // Use the army group's owner country instead of selectedCountry to support AI
     const countryId = group.owner;
 
     const newMovements: Movement[] = [];

@@ -152,7 +152,7 @@ export const createUnitActions = (
     // Check relationship with target region owner
     const targetOwner = to.owner;
     if (targetOwner !== selectedCountry.id) {
-      // Moving to another faction's territory
+      // Moving to another country's territory
       // Check if they grant us access/war
       const theirRelationship = relationships.find(
         r => r.fromCountry === targetOwner && r.toCountry === selectedCountry.id
