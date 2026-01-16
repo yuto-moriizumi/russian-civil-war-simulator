@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { ownership, format, filename } = body;
+    const { ownership } = body;
 
     if (!ownership || typeof ownership !== 'object') {
       return NextResponse.json(
@@ -23,86 +23,61 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (format === 'typescript') {
-      // Group regions by country ISO3 code prefix for better organization
-      const regionsByFile: Record<string, Record<string, string>> = {
-        russia: {},
-        easternEurope: {},
-        centralEurope: {},
-        asia: {},
-        middleEast: {},
-        other: {},
-      };
+    // Group regions by country ISO3 code prefix for better organization
+    const regionsByFile: Record<string, Record<string, string>> = {
+      russia: {},
+      easternEurope: {},
+      centralEurope: {},
+      asia: {},
+      middleEast: {},
+      other: {},
+    };
 
-      for (const [regionId, countryId] of Object.entries(ownership)) {
-        if (typeof countryId !== 'string') continue;
-        
-        const prefix = regionId.substring(0, 2);
-        
-        // Categorize by region prefix
-        if (prefix === 'RU') {
-          regionsByFile.russia[regionId] = countryId;
-        } else if (['UA', 'BY', 'MD', 'EE', 'LV', 'LT', 'FI'].includes(prefix)) {
-          regionsByFile.easternEurope[regionId] = countryId;
-        } else if (['PL', 'DE', 'CZ', 'SK', 'HU', 'AT', 'RO', 'BG', 'GR'].includes(prefix)) {
-          regionsByFile.centralEurope[regionId] = countryId;
-        } else if (['KZ', 'UZ', 'TM', 'KG', 'TJ', 'MN', 'CN'].includes(prefix)) {
-          regionsByFile.asia[regionId] = countryId;
-        } else if (['TR', 'IR', 'IQ', 'SY', 'SA', 'AZ', 'AM', 'GE'].includes(prefix)) {
-          regionsByFile.middleEast[regionId] = countryId;
-        } else {
-          regionsByFile.other[regionId] = countryId;
-        }
+    for (const [regionId, countryId] of Object.entries(ownership)) {
+      if (typeof countryId !== 'string') continue;
+      
+      const prefix = regionId.substring(0, 2);
+      
+      // Categorize by region prefix
+      if (prefix === 'RU') {
+        regionsByFile.russia[regionId] = countryId;
+      } else if (['UA', 'BY', 'MD', 'EE', 'LV', 'LT', 'FI'].includes(prefix)) {
+        regionsByFile.easternEurope[regionId] = countryId;
+      } else if (['PL', 'DE', 'CZ', 'SK', 'HU', 'AT', 'RO', 'BG', 'GR'].includes(prefix)) {
+        regionsByFile.centralEurope[regionId] = countryId;
+      } else if (['KZ', 'UZ', 'TM', 'KG', 'TJ', 'MN', 'CN'].includes(prefix)) {
+        regionsByFile.asia[regionId] = countryId;
+      } else if (['TR', 'IR', 'IQ', 'SY', 'SA', 'AZ', 'AM', 'GE'].includes(prefix)) {
+        regionsByFile.middleEast[regionId] = countryId;
+      } else {
+        regionsByFile.other[regionId] = countryId;
       }
-
-      const filesWritten: string[] = [];
-      const ownershipDir = path.join(process.cwd(), 'app', 'data', 'map', 'ownership');
-
-      // Ensure directory exists
-      if (!existsSync(ownershipDir)) {
-        await mkdir(ownershipDir, { recursive: true });
-      }
-
-      // Write each file
-      for (const [fileName, regions] of Object.entries(regionsByFile)) {
-        if (Object.keys(regions).length === 0) continue;
-
-        const filePath = path.join(ownershipDir, `${fileName}.ts`);
-        const content = generateTypeScriptFile(fileName, regions);
-        
-        await writeFile(filePath, content, 'utf-8');
-        filesWritten.push(filePath);
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: `Wrote ${filesWritten.length} TypeScript files`,
-        filesWritten,
-      });
-    } else if (format === 'json') {
-      // Save as JSON file in the ownership directory
-      const ownershipDir = path.join(process.cwd(), 'app', 'data', 'map', 'ownership');
-      const jsonFileName = filename || `ownership-${Date.now()}.json`;
-      const filePath = path.join(ownershipDir, jsonFileName);
-
-      // Ensure directory exists
-      if (!existsSync(ownershipDir)) {
-        await mkdir(ownershipDir, { recursive: true });
-      }
-
-      await writeFile(filePath, JSON.stringify(ownership, null, 2), 'utf-8');
-
-      return NextResponse.json({
-        success: true,
-        message: `Wrote JSON file: ${jsonFileName}`,
-        filesWritten: [filePath],
-      });
-    } else {
-      return NextResponse.json(
-        { error: 'Invalid format. Must be "json" or "typescript"' },
-        { status: 400 }
-      );
     }
+
+    const filesWritten: string[] = [];
+    const ownershipDir = path.join(process.cwd(), 'app', 'data', 'map', 'ownership');
+
+    // Ensure directory exists
+    if (!existsSync(ownershipDir)) {
+      await mkdir(ownershipDir, { recursive: true });
+    }
+
+    // Write each file
+    for (const [fileName, regions] of Object.entries(regionsByFile)) {
+      if (Object.keys(regions).length === 0) continue;
+
+      const filePath = path.join(ownershipDir, `${fileName}.ts`);
+      const content = generateTypeScriptFile(fileName, regions);
+      
+      await writeFile(filePath, content, 'utf-8');
+      filesWritten.push(filePath);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Wrote ${filesWritten.length} TypeScript files`,
+      filesWritten,
+    });
   } catch (error) {
     console.error('Error saving ownership:', error);
     return NextResponse.json(

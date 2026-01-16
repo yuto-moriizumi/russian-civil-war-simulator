@@ -82,13 +82,13 @@ export default function MapToolPage() {
   }, [historyIndex, history]);
 
   // Save handler
-  const handleSave = useCallback(async (format: 'json' | 'typescript') => {
+  const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
       const response = await fetch('/api/map-tool/save-ownership', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ownership, format }),
+        body: JSON.stringify({ ownership, format: 'typescript' }),
       });
       
       const result = await response.json();
@@ -105,18 +105,6 @@ export default function MapToolPage() {
     } finally {
       setIsSaving(false);
     }
-  }, [ownership]);
-
-  // Export JSON to download
-  const handleExportJSON = useCallback(() => {
-    const dataStr = JSON.stringify(ownership, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `ownership-${Date.now()}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
   }, [ownership]);
 
   // Reset to original
@@ -173,19 +161,14 @@ export default function MapToolPage() {
       else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         if (hasChanges) {
-          handleSave('typescript');
+          handleSave();
         }
-      }
-      // Ctrl/Cmd + E: Export JSON
-      else if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
-        e.preventDefault();
-        handleExportJSON();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleUndo, handleRedo, handleSave, handleExportJSON, hasChanges]);
+  }, [handleUndo, handleRedo, handleSave, hasChanges]);
 
   // Warn before leaving with unsaved changes
   useEffect(() => {
@@ -288,7 +271,6 @@ export default function MapToolPage() {
                 hasChanges={hasChanges}
                 isSaving={isSaving}
                 onSave={handleSave}
-                onExportJSON={handleExportJSON}
                 onReset={handleReset}
               />
             </>
