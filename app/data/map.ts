@@ -207,27 +207,27 @@ export const initialRegionOwnership: Record<string, CountryId> = {
   'UA-12': 'ukraine',  // Dnipropetrovsk Oblast
   'UA-14': 'ukraine',  // Donetsk Oblast
   'UA-18': 'ukraine',  // Zhytomyr Oblast
-  'UA-21': 'ukraine',  // Zakarpattia Oblast
+  'UA-21': 'austriahungary',  // Zakarpattia Oblast
   'UA-23': 'ukraine',  // Zaporizhzhia Oblast
-  'UA-26': 'ukraine',  // Ivano-Frankivsk Oblast
+  'UA-26': 'austriahungary',  // Ivano-Frankivsk Oblast
   'UA-30': 'ukraine',  // Kyiv (city)
   'UA-32': 'ukraine',  // Kyiv Oblast
   'UA-35': 'ukraine',  // Kirovohrad Oblast
   'UA-40': 'ukraine',  // Sevastopol (city)
   'UA-43': 'ukraine',  // Crimea
-  'UA-46': 'ukraine',  // Lviv Oblast
+  'UA-46': 'austriahungary',  // Lviv Oblast
   'UA-48': 'ukraine',  // Mykolaiv Oblast
   'UA-51': 'ukraine',  // Odesa Oblast
   'UA-53': 'ukraine',  // Poltava Oblast
   'UA-56': 'ukraine',  // Rivne Oblast
   'UA-59': 'ukraine',  // Sumy Oblast
-  'UA-61': 'ukraine',  // Ternopil Oblast
+  'UA-61': 'austriahungary',  // Ternopil Oblast
   'UA-63': 'ukraine',  // Kharkiv Oblast
   'UA-65': 'ukraine',  // Kherson Oblast
   'UA-68': 'ukraine',  // Khmelnytskyi Oblast
   'UA-71': 'ukraine',  // Cherkasy Oblast
   'UA-74': 'ukraine',  // Chernihiv Oblast
-  'UA-77': 'ukraine',  // Chernivtsi Oblast
+  'UA-77': 'austriahungary',  // Chernivtsi Oblast
 
   // ============================================
   // BELARUS (Soviet/German-controlled)
@@ -379,21 +379,21 @@ export const initialRegionOwnership: Record<string, CountryId> = {
   'PL-SL': 'poland', 'PL-WN': 'poland', 'PL-WP': 'poland', 'PL-ZP': 'poland',
 
   // ============================================
-  // AUSTRIA-HUNGARY SUCCESSORS (Foreign Power)
+  // AUSTRIA-HUNGARY (Empire)
   // ============================================
-  'AT-1': 'foreign', 'AT-2': 'foreign', 'AT-3': 'foreign', 'AT-4': 'foreign',
-  'AT-5': 'foreign', 'AT-6': 'foreign', 'AT-7': 'foreign', 'AT-8': 'foreign', 'AT-9': 'foreign',
-  'HU-BA': 'foreign', 'HU-BE': 'foreign', 'HU-BK': 'foreign', 'HU-BZ': 'foreign',
-  'HU-CS': 'foreign', 'HU-FE': 'foreign', 'HU-GS': 'foreign', 'HU-HB': 'foreign',
-  'HU-HE': 'foreign', 'HU-JN': 'foreign', 'HU-KE': 'foreign', 'HU-NO': 'foreign',
-  'HU-PE': 'foreign', 'HU-SO': 'foreign', 'HU-SZ': 'foreign', 'HU-TO': 'foreign',
-  'HU-VA': 'foreign', 'HU-VE': 'foreign', 'HU-ZA': 'foreign',
-  'CZ-10': 'foreign', 'CZ-20': 'foreign', 'CZ-31': 'foreign', 'CZ-32': 'foreign',
-  'CZ-41': 'foreign', 'CZ-42': 'foreign', 'CZ-51': 'foreign', 'CZ-52': 'foreign',
-  'CZ-53': 'foreign', 'CZ-63': 'foreign', 'CZ-64': 'foreign', 'CZ-71': 'foreign',
-  'CZ-72': 'foreign', 'CZ-80': 'foreign',
-  'SK-BC': 'foreign', 'SK-BL': 'foreign', 'SK-KI': 'foreign', 'SK-NI': 'foreign',
-  'SK-PV': 'foreign', 'SK-TA': 'foreign', 'SK-TC': 'foreign', 'SK-ZI': 'foreign',
+  'AT-1': 'austriahungary', 'AT-2': 'austriahungary', 'AT-3': 'austriahungary', 'AT-4': 'austriahungary',
+  'AT-5': 'austriahungary', 'AT-6': 'austriahungary', 'AT-7': 'austriahungary', 'AT-8': 'austriahungary', 'AT-9': 'austriahungary',
+  'HU-BA': 'austriahungary', 'HU-BE': 'austriahungary', 'HU-BK': 'austriahungary', 'HU-BZ': 'austriahungary',
+  'HU-CS': 'austriahungary', 'HU-FE': 'austriahungary', 'HU-GS': 'austriahungary', 'HU-HB': 'austriahungary',
+  'HU-HE': 'austriahungary', 'HU-JN': 'austriahungary', 'HU-KE': 'austriahungary', 'HU-NO': 'austriahungary',
+  'HU-PE': 'austriahungary', 'HU-SO': 'austriahungary', 'HU-SZ': 'austriahungary', 'HU-TO': 'austriahungary',
+  'HU-VA': 'austriahungary', 'HU-VE': 'austriahungary', 'HU-ZA': 'austriahungary',
+  'CZ-10': 'austriahungary', 'CZ-20': 'austriahungary', 'CZ-31': 'austriahungary', 'CZ-32': 'austriahungary',
+  'CZ-41': 'austriahungary', 'CZ-42': 'austriahungary', 'CZ-51': 'austriahungary', 'CZ-52': 'austriahungary',
+  'CZ-53': 'austriahungary', 'CZ-63': 'austriahungary', 'CZ-64': 'austriahungary', 'CZ-71': 'austriahungary',
+  'CZ-72': 'austriahungary', 'CZ-80': 'austriahungary',
+  'SK-BC': 'austriahungary', 'SK-BL': 'austriahungary', 'SK-KI': 'austriahungary', 'SK-NI': 'austriahungary',
+  'SK-PV': 'austriahungary', 'SK-TA': 'austriahungary', 'SK-TC': 'austriahungary', 'SK-ZI': 'austriahungary',
 
   // ============================================
   // BALKANS (Foreign Powers)
@@ -416,26 +416,26 @@ export const initialRegionOwnership: Record<string, CountryId> = {
   'BG-17': 'foreign', 'BG-18': 'foreign', 'BG-19': 'foreign', 'BG-20': 'foreign',
   'BG-21': 'foreign', 'BG-22': 'foreign', 'BG-23': 'foreign', 'BG-24': 'foreign',
   'BG-25': 'foreign', 'BG-26': 'foreign', 'BG-27': 'foreign', 'BG-28': 'foreign',
-  'RS-00': 'foreign', 'RS-01': 'foreign', 'RS-02': 'foreign', 'RS-03': 'foreign',
-  'RS-04': 'foreign', 'RS-05': 'foreign', 'RS-06': 'foreign', 'RS-07': 'foreign',
-  'RS-08': 'foreign', 'RS-09': 'foreign', 'RS-10': 'foreign', 'RS-11': 'foreign',
-  'RS-12': 'foreign', 'RS-13': 'foreign', 'RS-14': 'foreign', 'RS-15': 'foreign',
-  'RS-16': 'foreign', 'RS-17': 'foreign', 'RS-18': 'foreign', 'RS-19': 'foreign',
-  'RS-20': 'foreign', 'RS-21': 'foreign', 'RS-22': 'foreign', 'RS-23': 'foreign',
-  'RS-24': 'foreign',
+  'RS-00': 'austriahungary', 'RS-01': 'austriahungary', 'RS-02': 'austriahungary', 'RS-03': 'austriahungary',
+  'RS-04': 'austriahungary', 'RS-05': 'austriahungary', 'RS-06': 'austriahungary', 'RS-07': 'austriahungary',
+  'RS-08': 'austriahungary', 'RS-09': 'austriahungary', 'RS-10': 'austriahungary', 'RS-11': 'austriahungary',
+  'RS-12': 'austriahungary', 'RS-13': 'austriahungary', 'RS-14': 'austriahungary', 'RS-15': 'austriahungary',
+  'RS-16': 'austriahungary', 'RS-17': 'austriahungary', 'RS-18': 'austriahungary', 'RS-19': 'austriahungary',
+  'RS-20': 'austriahungary', 'RS-21': 'austriahungary', 'RS-22': 'austriahungary', 'RS-23': 'austriahungary',
+  'RS-24': 'austriahungary',
   'AL-01': 'foreign', 'AL-02': 'foreign', 'AL-03': 'foreign', 'AL-04': 'foreign',
   'AL-05': 'foreign', 'AL-06': 'foreign', 'AL-07': 'foreign', 'AL-08': 'foreign',
   'AL-09': 'foreign', 'AL-10': 'foreign', 'AL-11': 'foreign', 'AL-12': 'foreign',
   'GR-AI': 'foreign', 'GR-AT': 'foreign', 'GR-CR': 'foreign', 'GR-EM': 'foreign',
   'GR-MA': 'foreign', 'GR-MH': 'foreign', 'GR-PW': 'foreign', 'GR-TC': 'foreign',
-  'MNE': 'foreign', 'BA-BIH*': 'foreign', 'BA-BRC*': 'foreign', 'BA-SRP*': 'foreign',
-  'HR-01': 'foreign', 'HR-02': 'foreign', 'HR-03': 'foreign', 'HR-04': 'foreign',
-  'HR-05': 'foreign', 'HR-06': 'foreign', 'HR-07': 'foreign', 'HR-08': 'foreign',
-  'HR-09': 'foreign', 'HR-10': 'foreign', 'HR-11': 'foreign', 'HR-12': 'foreign',
-  'HR-13': 'foreign', 'HR-14': 'foreign', 'HR-15': 'foreign', 'HR-16': 'foreign',
-  'HR-17': 'foreign', 'HR-18': 'foreign', 'HR-19': 'foreign', 'HR-20': 'foreign',
-  'HR-21': 'foreign',
-  'SI03': 'foreign', 'SI04': 'foreign',
+  'MNE': 'austriahungary', 'BA-BIH*': 'austriahungary', 'BA-BRC*': 'austriahungary', 'BA-SRP*': 'austriahungary',
+  'HR-01': 'austriahungary', 'HR-02': 'austriahungary', 'HR-03': 'austriahungary', 'HR-04': 'austriahungary',
+  'HR-05': 'austriahungary', 'HR-06': 'austriahungary', 'HR-07': 'austriahungary', 'HR-08': 'austriahungary',
+  'HR-09': 'austriahungary', 'HR-10': 'austriahungary', 'HR-11': 'austriahungary', 'HR-12': 'austriahungary',
+  'HR-13': 'austriahungary', 'HR-14': 'austriahungary', 'HR-15': 'austriahungary', 'HR-16': 'austriahungary',
+  'HR-17': 'austriahungary', 'HR-18': 'austriahungary', 'HR-19': 'austriahungary', 'HR-20': 'austriahungary',
+  'HR-21': 'austriahungary',
+  'SI03': 'austriahungary', 'SI04': 'austriahungary',
 
   // ============================================
   // NORTH MACEDONIA & KOSOVO (Foreign Power)

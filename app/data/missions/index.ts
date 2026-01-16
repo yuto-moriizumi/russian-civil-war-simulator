@@ -1,7 +1,7 @@
 import { Mission } from '../../types/game';
 import { sovietMissions, whiteMissions } from './russia';
 import { finnishMissions, ukrainianMissions, donMissions } from './eastern-europe';
-import { germanMissions, bulgarianMissions, polandMissions } from './central-powers';
+import { germanMissions, bulgarianMissions, polandMissions, austriaHungaryMissions } from './central-powers';
 
 /**
  * Combined missions for all countries in the game.
@@ -19,4 +19,5 @@ export const initialMissions: Mission[] = [
   ...germanMissions,
   ...bulgarianMissions,
   ...polandMissions,
+  ...austriaHungaryMissions,
 ];
