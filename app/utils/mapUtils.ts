@@ -12,6 +12,7 @@ export const FACTION_COLORS: Record<FactionId, string> = {
   iskolat: '#8B0000',     // Dark Red (Iskolat Soviet Republic)
   neutral: '#808080',     // Gray
   foreign: '#4A90D9',     // Blue
+  germany: '#1a1a1a',     // Dark Gray/Black (German Empire)
 };
 
 // Check if movement between two regions is valid

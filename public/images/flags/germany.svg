@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600">
+  <!-- Historical German Empire Flag (1871-1918): Horizontal tricolor -->
+  
+  <!-- Black stripe (top) -->
+  <rect width="900" height="200" y="0" fill="#000000"/>
+  
+  <!-- White stripe (middle) -->
+  <rect width="900" height="200" y="200" fill="#FFFFFF"/>
+  
+  <!-- Red stripe (bottom) -->
+  <rect width="900" height="200" y="400" fill="#DD0000"/>
+</svg>
