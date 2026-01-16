@@ -131,7 +131,6 @@ function MainScreenView() {
       onCloseProductionQueue={() => state.setIsProductionModalOpen(false)}
       onCancelProduction={state.cancelProduction}
       onDismissNotification={state.dismissNotification}
-      onSelectTheater={state.selectTheater}
       onCreateArmyGroup={state.createArmyGroup}
       onDeleteArmyGroup={state.deleteArmyGroup}
       onRenameArmyGroup={state.renameArmyGroup}
