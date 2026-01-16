@@ -1,4 +1,4 @@
-import { MissionCondition, CountryId } from '../types/game';
+import { MissionCondition } from '../types/game';
 import { getCountryName } from '../config/countries';
 
 /**

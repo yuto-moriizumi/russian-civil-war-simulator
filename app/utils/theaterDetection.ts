@@ -1,4 +1,5 @@
 import { RegionState, Adjacency, CountryId, Theater, Region } from '../types/game';
+import { getCountryAdjective } from '../config/countries';
 
 /**
  * Detect theaters of operation by finding connected groups of frontline regions.
@@ -291,8 +292,6 @@ function getRegionalDescriptor(regionData: Region[]): string | null {
  * Get enemy-based fallback name
  */
 function getEnemyBasedName(enemyCountry: CountryId, index: number): string {
-  const { getCountryAdjective } = require('../config/countries');
-  
   const enemyName = getCountryAdjective(enemyCountry);
   const ordinals = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
   const ordinal = ordinals[index] || `${index + 1}th`;
