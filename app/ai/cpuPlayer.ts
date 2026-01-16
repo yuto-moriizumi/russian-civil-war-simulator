@@ -1,5 +1,5 @@
 import { AIState, CountryId, RegionState, Region, ActiveCombat, Movement, ArmyGroup, ProductionQueueItem, CountryBonuses } from '../types/game';
-import { canProduceDivision, getCommandPowerInfo } from '../utils/commandPower';
+import { canProduceDivision } from '../utils/commandPower';
 import { getFirstArmyGroupName, getDivisionPrefix } from '../data/countries';
 
 /**
