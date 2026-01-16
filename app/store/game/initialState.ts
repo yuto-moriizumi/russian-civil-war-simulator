@@ -39,6 +39,7 @@ export const initialGameState: GameState = {
     neutral: [],
     foreign: [],
     germany: [],
+    bulgaria: [],
   },
   relationships: [
     { fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy' },
@@ -58,5 +59,6 @@ export const initialGameState: GameState = {
     neutral: getInitialCountryBonuses(),
     foreign: getInitialCountryBonuses(),
     germany: getInitialCountryBonuses(),
+    bulgaria: getInitialCountryBonuses(),
   },
 };
