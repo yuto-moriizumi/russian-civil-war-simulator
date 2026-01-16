@@ -22,7 +22,7 @@ const eslintConfig = defineConfig([
       "max-lines": [
         "error",
         {
-          max: 400,
+          max: 350,
           skipBlankLines: true,
           skipComments: true,
         },
