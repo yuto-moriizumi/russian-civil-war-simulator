@@ -368,6 +368,21 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
       'MD-CU', // Chișinău
     ],
   },
+  greece: {
+    id: 'greece',
+    name: 'Kingdom of Greece',
+    combatName: 'Greek Army',
+    flag: '/images/flags/greece.svg',
+    color: '#0D5EAF',
+    adjective: 'Greek',
+    firstArmyGroupName: 'Hellenic Army',
+    divisionPrefix: 'Greek',
+    selectable: false,
+    coreRegions: [
+      // Greece did not control territory in Russia, but participated in Allied intervention
+      // in southern Russia (primarily around Crimea and Black Sea coast)
+    ],
+  },
 };
 
 /**

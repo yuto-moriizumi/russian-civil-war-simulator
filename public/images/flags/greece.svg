@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
+  <!-- Historical Greek flag (1863-1924) - Blue and white with cross canton -->
+  <defs>
+    <clipPath id="canton">
+      <rect x="0" y="0" width="210" height="210"/>
+    </clipPath>
+  </defs>
+  
+  <!-- Blue background -->
+  <rect width="600" height="400" fill="#0D5EAF"/>
+  
+  <!-- White stripes (9 stripes total, alternating) -->
+  <rect x="0" y="44.44" width="600" height="44.44" fill="#FFFFFF"/>
+  <rect x="0" y="133.33" width="600" height="44.44" fill="#FFFFFF"/>
+  <rect x="0" y="222.22" width="600" height="44.44" fill="#FFFFFF"/>
+  <rect x="0" y="311.11" width="600" height="44.44" fill="#FFFFFF"/>
+  
+  <!-- Cross canton -->
+  <g clip-path="url(#canton)">
+    <!-- Blue background for canton -->
+    <rect x="0" y="0" width="210" height="210" fill="#0D5EAF"/>
+    
+    <!-- White cross -->
+    <!-- Vertical bar -->
+    <rect x="73.5" y="0" width="63" height="210" fill="#FFFFFF"/>
+    <!-- Horizontal bar -->
+    <rect x="0" y="73.5" width="210" height="63" fill="#FFFFFF"/>
+  </g>
+</svg>
