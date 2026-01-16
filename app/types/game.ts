@@ -1,10 +1,7 @@
 export type Screen = 'title' | 'countrySelect' | 'main' | 'mission';
 
-// Player-selectable factions (subset of FactionId)
-export type CountryId = 'soviet' | 'white' | 'finland' | 'ukraine' | 'don' | 'fswr' | 'iskolat';
-
-// Faction types for map control
-export type FactionId = 'soviet' | 'white' | 'finland' | 'ukraine' | 'don' | 'fswr' | 'iskolat' | 'neutral' | 'foreign';
+// All countries in the game - some playable, some neutral
+export type CountryId = 'soviet' | 'white' | 'finland' | 'ukraine' | 'don' | 'fswr' | 'iskolat' | 'neutral' | 'foreign';
 
 export interface Country {
   id: CountryId;
@@ -18,7 +15,7 @@ export interface Country {
 export interface Division {
   id: string;           // Unique identifier for this division
   name: string;         // Display name (e.g., "1st Infantry Division")
-  owner: FactionId;     // Which faction owns this division
+  owner: CountryId;     // Which country owns this division
   armyGroupId: string;  // Army group this division belongs to
   hp: number;           // Current hit points (0-100)
   maxHp: number;        // Maximum hit points
@@ -31,7 +28,7 @@ export interface Region {
   id: string;           // "RU-ALT", "UA-74" etc. (ISO format)
   name: string;         // "Altai Krai"
   countryIso3: string;  // "RUS", "UKR"
-  owner: FactionId;     // Which faction controls this region
+  owner: CountryId;     // Which country controls this region
   divisions: Division[]; // Divisions stationed in this region
   value: number;        // Economic value/weight for income (default 1, capitals higher)
 }
@@ -54,9 +51,9 @@ export type MissionCondition =
   | { type: 'hasUnits'; count: number }                            // Have at least N divisions
   | { type: 'dateAfter'; date: string }                            // Date is after specified (YYYY-MM-DD)
   | { type: 'combatVictories'; count: number }                     // Win at least N combats
-  | { type: 'enemyRegionCount'; faction: FactionId; maxCount: number } // Enemy controls at most N regions
+  | { type: 'enemyRegionCount'; country: CountryId; maxCount: number } // Enemy controls at most N regions
   | { type: 'allRegionsControlled'; countryIso3: string }          // Control all regions in a country
-  | { type: 'theaterExists'; enemyFaction: FactionId }             // Have at least one theater facing enemy
+  | { type: 'theaterExists'; enemyCountry: CountryId }             // Have at least one theater facing enemy
   | { type: 'armyGroupCount'; count: number };                     // Have at least N army groups
 
 // Mission rewards interface
@@ -71,7 +68,7 @@ export interface MissionRewards {
 
 export interface Mission {
   id: string;
-  faction: CountryId;
+  country: CountryId;
   name: string;
   description: string;
   completed: boolean;
@@ -89,14 +86,14 @@ export interface Movement {
   divisions: Division[]; // Divisions being moved
   departureTime: Date;
   arrivalTime: Date;
-  owner: FactionId;
+  owner: CountryId;
 }
 
 // Production queue item - represents a division being produced
 export interface ProductionQueueItem {
   id: string;                       // Unique identifier
   divisionName: string;             // Name of the division being produced
-  owner: FactionId;                 // Which faction is producing this
+  owner: CountryId;                 // Which faction is producing this
   startTime: Date;                  // When production started
   completionTime: Date;             // When production will complete (24 game hours)
   targetRegionId: string | null;    // Where the division will deploy (null = reserves)
@@ -123,7 +120,7 @@ export interface GameEvent {
   timestamp: Date;
   title: string;
   description: string;
-  faction?: FactionId;
+  country?: CountryId;
   regionId?: string;
 }
 
@@ -137,10 +134,10 @@ export type MapMode = 'country' | 'diplomacy' | 'value';
 // Relationship types between countries
 export type RelationshipType = 'neutral' | 'military_access' | 'war' | 'autonomy';
 
-// Represents a diplomatic/military relationship between two factions
+// Represents a diplomatic/military relationship between two countries
 export interface Relationship {
-  fromFaction: FactionId;  // The faction granting access/declaring war
-  toFaction: FactionId;    // The faction receiving access/being declared war on
+  fromCountry: CountryId;  // The country granting access/declaring war
+  toCountry: CountryId;    // The country receiving access/being declared war on
   type: RelationshipType;  // Type of relationship
 }
 
@@ -149,10 +146,10 @@ export interface ScheduledEventAction {
   type: 'transferRegion' | 'declareWar';
   // For transferRegion
   regionId?: string;
-  newOwner?: FactionId;
+  newOwner?: CountryId;
   // For declareWar
-  fromFaction?: FactionId;
-  toFaction?: FactionId;
+  fromCountry?: CountryId;
+  toCountry?: CountryId;
 }
 
 export interface ScheduledEvent {
@@ -164,8 +161,8 @@ export interface ScheduledEvent {
   triggered: boolean; // Track if event has already been triggered
 }
 
-// Faction bonuses from completed missions
-export interface FactionBonuses {
+// Country bonuses from completed missions
+export interface CountryBonuses {
   attackBonus: number;               // Total attack bonus from missions
   defenceBonus: number;              // Total defence bonus from missions
   hpBonus: number;                   // Total HP bonus from missions
@@ -187,17 +184,17 @@ export interface GameState {
   activeCombats: ActiveCombat[]; // Ongoing battles
   theaters: Theater[]; // Auto-detected theaters for the player
   armyGroups: ArmyGroup[]; // Player's army groups for bulk movement
-  productionQueues: Record<FactionId, ProductionQueueItem[]>; // Per-faction production queues
+  productionQueues: Record<CountryId, ProductionQueueItem[]>; // Per-faction production queues
   relationships: Relationship[]; // Diplomatic/military relationships between factions
   mapMode: MapMode; // Current map visualization mode
   regionCentroids: Record<string, [number, number]>; // Region centroids for distance calculations [longitude, latitude]
   scheduledEvents: ScheduledEvent[]; // Scheduled historical events
-  factionBonuses: Record<FactionId, FactionBonuses>; // Per-faction bonuses from claimed missions
+  countryBonuses: Record<CountryId, CountryBonuses>; // Per-country bonuses from claimed missions
 }
 
-// AI State for CPU-controlled factions
+// AI State for CPU-controlled countries
 export interface AIState {
-  factionId: FactionId;
+  countryId: CountryId;
 }
 
 // Combat result for battle resolution
@@ -214,8 +211,8 @@ export interface ActiveCombat {
   id: string;                       // Unique combat ID
   regionId: string;                 // Where the combat is taking place
   regionName: string;               // Display name of the region
-  attackerFaction: FactionId;       // Who is attacking
-  defenderFaction: FactionId;       // Who is defending
+  attackerCountry: CountryId;       // Who is attacking
+  defenderCountry: CountryId;       // Who is defending
   attackerDivisions: Division[];    // Current attacker divisions
   defenderDivisions: Division[];    // Current defender divisions
   initialAttackerCount: number;     // Starting attacker division count
@@ -227,7 +224,7 @@ export interface ActiveCombat {
   lastRoundTime: Date;              // When the last round was resolved
   roundIntervalHours: number;       // Hours between rounds
   isComplete: boolean;              // Whether combat has concluded
-  victor: FactionId | null;         // Who won (null if ongoing)
+  victor: CountryId | null;         // Who won (null if ongoing)
 }
 
 // Story/Narrative Event for master data (introduction, victory screens, etc.)
@@ -242,8 +239,8 @@ export interface Theater {
   id: string;                      // Unique identifier
   name: string;                    // Auto-generated name (e.g., "Western Theater", "Finnish Front")
   frontlineRegions: string[];      // Player-owned regions adjacent to enemies
-  enemyFaction: FactionId;         // Primary enemy faction this theater faces
-  owner: FactionId;                // Which faction owns this theater
+  enemyCountry: CountryId;         // Primary enemy country this theater faces
+  owner: CountryId;                // Which country owns this theater
 }
 
 // Army Group operational mode for automatic unit control
@@ -255,7 +252,7 @@ export interface ArmyGroup {
   name: string;                    // Display name (e.g., "Northern Front")
   regionIds: string[];             // Regions assigned to this group
   color: string;                   // Visual identifier (#hex color)
-  owner: FactionId;                // Which faction owns this group
+  owner: CountryId;                // Which country owns this group
   theaterId: string | null;        // Theater this group belongs to (if any)
   mode: ArmyGroupMode;             // Operational mode: none, advance (auto-attack), or defend (auto-defend)
 }
@@ -287,14 +284,14 @@ export interface GameAPI {
   selectTheater: (theaterId: string) => void;
   // Production queue methods
   addToProductionQueue: (armyGroupId: string, count?: number) => boolean;
-  getProductionQueue: (factionId?: FactionId) => ProductionQueueItem[];
+  getProductionQueue: (countryId?: CountryId) => ProductionQueueItem[];
   cancelProduction: (productionId: string) => boolean;
   // Relationship methods
   getRelationships: () => Relationship[];
-  setRelationship: (fromFaction: FactionId, toFaction: FactionId, type: RelationshipType) => void;
-  getRelationship: (fromFaction: FactionId, toFaction: FactionId) => RelationshipType;
+  setRelationship: (fromCountry: CountryId, toCountry: CountryId, type: RelationshipType) => void;
+  getRelationship: (fromCountry: CountryId, toCountry: CountryId) => RelationshipType;
   // Country sidebar
-  openCountrySidebar: (factionId: FactionId | null) => void;
+  openCountrySidebar: (countryId: CountryId | null) => void;
   // Map mode
   setMapMode: (mode: MapMode) => void;
   getMapMode: () => MapMode;

@@ -1,4 +1,4 @@
-import { FactionId } from '../types/game';
+import { CountryId } from '../types/game';
 
 /**
  * Region economic values/weights for income generation.
@@ -93,7 +93,7 @@ export const regionValues: Record<string, number> = {
  * Soviet: Moscow and surrounding core regions (Bolshevik control)
  * White: Peripheral Russian regions, Ukraine, Belarus, Finland, Baltics, Central Asia (anti-Bolshevik forces)
  */
-export const initialRegionOwnership: Record<string, FactionId> = {
+export const initialRegionOwnership: Record<string, CountryId> = {
   // ============================================
   // SOVIET CORE REGIONS (Moscow and surroundings)
   // ============================================

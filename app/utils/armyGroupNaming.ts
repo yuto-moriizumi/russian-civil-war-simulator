@@ -1,4 +1,4 @@
-import { ArmyGroup, FactionId } from '../types/game';
+import { ArmyGroup, CountryId } from '../types/game';
 
 /**
  * Army group naming hierarchy following historical conventions:
@@ -28,17 +28,17 @@ const ELITE_NAMES = [
  */
 export function generateArmyGroupName(
   existingGroups: ArmyGroup[],
-  playerFaction: FactionId
+  playerCountry: CountryId
 ): string {
-  // Filter groups belonging to the same faction
-  const playerGroups = existingGroups.filter(g => g.owner === playerFaction);
+  // Filter groups belonging to the same country
+  const playerGroups = existingGroups.filter(g => g.owner === playerCountry);
   
   // Determine naming style based on number of existing groups
   const groupCount = playerGroups.length;
   
   if (groupCount === 0) {
-    // First group - use faction-specific name
-    return getFirstGroupName(playerFaction);
+    // First group - use country-specific name
+    return getFirstGroupName(playerCountry);
   } else if (groupCount < 5) {
     // Early groups - use ordinal armies
     return `${ORDINAL_NAMES[groupCount]} Army`;
@@ -69,10 +69,10 @@ export function generateArmyGroupName(
 }
 
 /**
- * Get the default name for the first army group based on faction
+ * Get the default name for the first army group based on country
  */
-function getFirstGroupName(faction: FactionId): string {
-  const names: Record<FactionId, string> = {
+function getFirstGroupName(country: CountryId): string {
+  const names: Record<CountryId, string> = {
     white: 'Volunteer Army',
     soviet: 'Red Army Group',
     finland: 'Finnish Defense Forces',
@@ -83,7 +83,7 @@ function getFirstGroupName(faction: FactionId): string {
     neutral: '1st Army',
     foreign: 'Expeditionary Force',
   };
-  return names[faction] || '1st Army';
+  return names[country] || '1st Army';
 }
 
 /**
@@ -92,9 +92,9 @@ function getFirstGroupName(faction: FactionId): string {
 export function generateNumberedName(
   baseName: string,
   existingGroups: ArmyGroup[],
-  playerFaction: FactionId
+  playerCountry: CountryId
 ): string {
-  const playerGroups = existingGroups.filter(g => g.owner === playerFaction);
+  const playerGroups = existingGroups.filter(g => g.owner === playerCountry);
   const existingWithBase = playerGroups.filter(g => g.name.includes(baseName));
   
   if (existingWithBase.length === 0) {

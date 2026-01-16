@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useGameStore } from '../store/useGameStore';
-import { FactionId } from '../types/game';
+import { CountryId } from '../types/game';
 
 export function useGameAPI() {
   const state = useGameStore();
@@ -66,9 +66,9 @@ export function useGameAPI() {
         state.addToProductionQueue(armyGroupId);
         return true;
       },
-      getProductionQueue: (factionId?: FactionId) => {
-        if (factionId) {
-          return state.productionQueues[factionId] || [];
+      getProductionQueue: (countryId?: CountryId) => {
+        if (countryId) {
+          return state.productionQueues[countryId] || [];
         }
         // Return all queues flattened for backward compatibility
         return Object.values(state.productionQueues).flat();

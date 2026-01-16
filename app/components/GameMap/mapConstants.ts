@@ -1,7 +1,7 @@
-import { FactionId } from '../../types/game';
+import { CountryId } from '../../types/game';
 
 // Map faction to flag image URL
-export const FACTION_FLAGS: Record<FactionId, string> = {
+export const FACTION_FLAGS: Record<CountryId, string> = {
   soviet: '/images/flags/soviet.svg',
   white: '/images/flags/white.svg',
   finland: '/images/flags/finland.svg',

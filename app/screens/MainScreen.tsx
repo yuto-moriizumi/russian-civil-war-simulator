@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, NotificationItem, ActiveCombat, ArmyGroup, Theater, ProductionQueueItem, Relationship, RelationshipType, FactionId, MapMode, FactionBonuses } from '../types/game';
+import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, NotificationItem, ActiveCombat, ArmyGroup, Theater, ProductionQueueItem, Relationship, RelationshipType, CountryId, MapMode, CountryBonuses } from '../types/game';
 import CombatPopup from '../components/CombatPopup';
 import EventsModal from '../components/EventsModal';
 import TheaterPanel from '../components/TheaterPanel';
@@ -11,7 +11,7 @@ import TopBar from '../components/TopBar';
 import MissionPanel from '../components/MissionPanel';
 import ProductionQueuePanel from '../components/ProductionQueuePanel';
 import CountrySidebar from '../components/CountrySidebar';
-import { countFactionUnits } from '../utils/mapUtils';
+import { countCountryUnits } from '../utils/mapUtils';
 import { getCommandPowerInfo } from '../utils/commandPower';
 
 // Dynamic import for GameMap to avoid SSR issues with MapLibre
@@ -39,19 +39,19 @@ interface MainScreenProps {
   mapDataLoaded: boolean;
   gameEvents: GameEvent[];
   notifications: NotificationItem[];
-  productionQueue: Record<FactionId, ProductionQueueItem[]>;
-  factionBonuses: Record<FactionId, FactionBonuses>;
+  productionQueue: Record<CountryId, ProductionQueueItem[]>;
+  countryBonuses: Record<CountryId, CountryBonuses>;
   // Theater and Army Groups props
   theaters: Theater[];
   armyGroups: ArmyGroup[];
   selectedGroupId: string | null;
   selectedTheaterId: string | null;
   relationships: Relationship[];
-  selectedCountryId: FactionId | null;
+  selectedCountryId: CountryId | null;
   isCountrySidebarOpen: boolean;
   mapMode: MapMode;
   regionCentroids: Record<string, [number, number]>;
-  getRelationship: (fromFaction: FactionId, toFaction: FactionId) => RelationshipType;
+  getRelationship: (fromCountry: CountryId, toCountry: CountryId) => RelationshipType;
   onTogglePlay: () => void;
   onChangeSpeed: (speed: GameSpeed) => void;
   onOpenMissions: () => void;
@@ -72,7 +72,7 @@ interface MainScreenProps {
   onCloseProductionQueue: () => void;
   onCancelProduction: (productionId: string) => void;
   onDismissNotification: (notificationId: string) => void;
-  onSetRelationship: (fromFaction: FactionId, toFaction: FactionId, type: RelationshipType) => void;
+  onSetRelationship: (fromFaction: CountryId, toFaction: CountryId, type: RelationshipType) => void;
   // Theater and Army Groups action props
   onSelectTheater: (theaterId: string | null) => void;
   onCreateArmyGroup: (name: string, regionIds: string[], theaterId?: string | null) => void;
@@ -82,7 +82,7 @@ interface MainScreenProps {
   onSetArmyGroupMode: (groupId: string, mode: 'none' | 'advance' | 'defend') => void;
   onDeployToArmyGroup: (groupId: string, count?: number) => void;
   onAssignTheater: (groupId: string, theaterId: string | null) => void;
-  onCountrySelect: (factionId: FactionId | null) => void;
+  onCountrySelect: (factionId: CountryId | null) => void;
   onSidebarOpen: (isOpen: boolean) => void;
   onSetMapMode: (mode: MapMode) => void;
 }
@@ -103,7 +103,7 @@ export default function MainScreen({
   gameEvents,
   notifications,
   productionQueue,
-  factionBonuses,
+  countryBonuses,
   theaters,
   armyGroups,
   selectedGroupId,
@@ -181,7 +181,7 @@ export default function MainScreen({
   }, [lastSaveTime]);
 
   // Calculate unit count and maintenance costs
-  const unitCount = countFactionUnits(regions, country.id, movingUnits);
+  const unitCount = countCountryUnits(regions, country.id, movingUnits);
   const maintenanceCost = unitCount; // $1 per unit per hour
   const grossIncome = 0; // No longer used
 
@@ -191,7 +191,7 @@ export default function MainScreen({
     regions,
     movingUnits,
     productionQueue,
-    factionBonuses[country.id]
+    countryBonuses[country.id]
   );
 
   const selectedCombat = selectedCombatId 
@@ -203,7 +203,7 @@ export default function MainScreen({
     onOpenProductionQueue();
   };
 
-  const handleCountrySelect = (factionId: FactionId | null) => {
+  const handleCountrySelect = (factionId: CountryId | null) => {
     if (factionId) {
       onCloseProductionQueue();
     }
@@ -223,7 +223,7 @@ export default function MainScreen({
             movingUnits={movingUnits}
             activeCombats={activeCombats}
             currentDateTime={dateTime}
-            playerFaction={country.id}
+            playerCountry={country.id}
             unitsInReserve={0}
             theaters={theaters}
             selectedTheaterId={selectedTheaterId}
@@ -290,7 +290,7 @@ export default function MainScreen({
           isOpen={isCountrySidebarOpen}
           onClose={() => onSidebarOpen(false)}
           countryId={selectedCountryId}
-          playerFaction={country.id}
+          playerCountry={country.id}
           relationships={relationships}
           onSetRelationship={onSetRelationship}
         />
@@ -303,7 +303,7 @@ export default function MainScreen({
         productionQueue={productionQueue}
         regions={regions}
         armyGroups={armyGroups}
-        playerFaction={country.id}
+        playerCountry={country.id}
         currentDateTime={dateTime}
         onAddProduction={() => {}} // Disabled - use Deploy button instead
         onCancelProduction={onCancelProduction}
@@ -323,11 +323,11 @@ export default function MainScreen({
           theaters={theaters}
           armyGroups={armyGroups}
           regions={regions}
-          playerFaction={country.id}
+          playerCountry={country.id}
           selectedGroupId={selectedGroupId}
           movingUnits={movingUnits}
           productionQueue={productionQueue}
-          factionBonuses={factionBonuses[country.id]}
+          countryBonuses={countryBonuses[country.id]}
           onCreateGroup={onCreateArmyGroup}
           onDeleteGroup={onDeleteArmyGroup}
           onRenameGroup={onRenameArmyGroup}

@@ -1,4 +1,4 @@
-import type { RegionState, Movement, ActiveCombat, FactionId, Region } from '../../types/game';
+import type { RegionState, Movement, ActiveCombat, CountryId, Region } from '../../types/game';
 
 export interface UnitMarkerData {
   regionId: string;
@@ -27,7 +27,7 @@ export function calculateUnitMarkers(
   regions: RegionState,
   regionCentroids: Record<string, [number, number]>,
   selectedUnitRegion: string | null,
-  playerFaction: FactionId
+  playerCountry: CountryId
 ): (UnitMarkerData | null)[] {
   // Early return if centroids haven't loaded yet
   if (Object.keys(regionCentroids).length === 0) {
@@ -45,7 +45,7 @@ export function calculateUnitMarkers(
       }
       
       const isSelected = selectedUnitRegion === regionId;
-      const isPlayerUnit = region.owner === playerFaction;
+      const isPlayerUnit = region.owner === playerCountry;
       
       return {
         regionId,

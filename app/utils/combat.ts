@@ -1,4 +1,4 @@
-import { Division, CombatResult, FactionId, ActiveCombat, ArmyGroup, RegionState, Adjacency, FactionBonuses } from '../types/game';
+import { Division, CombatResult, CountryId, ActiveCombat, ArmyGroup, RegionState, Adjacency, CountryBonuses } from '../types/game';
 import { getDivisionStats } from './bonusCalculator';
 
 /**
@@ -53,10 +53,10 @@ export function validateDivisionArmyGroup(
  * Create a new division with default stats (applying faction bonuses)
  */
 export function createDivision(
-  owner: FactionId,
+  owner: CountryId,
   name: string,
   armyGroupId: string,
-  factionBonuses: FactionBonuses,
+  countryBonuses: CountryBonuses,
   options?: {
     hp?: number;
     maxHp?: number;
@@ -65,7 +65,7 @@ export function createDivision(
   }
 ): Division {
   // Get base stats with bonuses applied
-  const stats = getDivisionStats(owner, factionBonuses);
+  const stats = getDivisionStats(owner, countryBonuses);
   
   // Allow options to override the bonused stats if needed
   const maxHp = options?.maxHp ?? stats.maxHp;
@@ -233,8 +233,8 @@ export function generateCombatId(): string {
 export function createActiveCombat(
   regionId: string,
   regionName: string,
-  attackerFaction: FactionId,
-  defenderFaction: FactionId,
+  attackerCountry: CountryId,
+  defenderCountry: CountryId,
   attackerDivisions: Division[],
   defenderDivisions: Division[],
   currentTime: Date
@@ -250,8 +250,8 @@ export function createActiveCombat(
     combatId,
     regionId,
     regionName,
-    attackerFaction,
-    defenderFaction,
+    attackerCountry,
+    defenderCountry,
     attackerDivisions: attackerDivisionsCopy.length,
     defenderDivisions: defenderDivisionsCopy.length,
     attackerTotalHp: getTotalHp(attackerDivisionsCopy),
@@ -263,8 +263,8 @@ export function createActiveCombat(
     id: combatId,
     regionId,
     regionName,
-    attackerFaction,
-    defenderFaction,
+    attackerCountry,
+    defenderCountry,
     attackerDivisions: attackerDivisionsCopy,
     defenderDivisions: defenderDivisionsCopy,
     initialAttackerCount: attackerDivisions.length,
@@ -305,8 +305,8 @@ export function processCombatRound(
       combat: {
         ...combat,
         isComplete: true,
-        victor: attackerDivisions.length > 0 ? combat.attackerFaction : 
-                defenderDivisions.length > 0 ? combat.defenderFaction : null,
+        victor: attackerDivisions.length > 0 ? combat.attackerCountry : 
+                defenderDivisions.length > 0 ? combat.defenderCountry : null,
       },
       retreatingDivisions: []
     };
@@ -392,12 +392,12 @@ export function processCombatRound(
     attackerDivisions.length === 0 || 
     defenderDivisions.length === 0;
   
-  let victor: FactionId | null = null;
+  let victor: CountryId | null = null;
   if (combatEnded) {
     if (defenderDivisions.length === 0 && attackerDivisions.length > 0) {
-      victor = combat.attackerFaction;
+      victor = combat.attackerCountry;
     } else if (attackerDivisions.length === 0 && defenderDivisions.length > 0) {
-      victor = combat.defenderFaction;
+      victor = combat.defenderCountry;
     }
   }
   
@@ -406,8 +406,8 @@ export function processCombatRound(
     combatId: combat.id,
     regionName: combat.regionName,
     round: newRound,
-    attackerFaction: combat.attackerFaction,
-    defenderFaction: combat.defenderFaction,
+    attackerCountry: combat.attackerCountry,
+    defenderCountry: combat.defenderCountry,
     attackerDivisionsRemaining: attackerDivisions.length,
     defenderDivisionsRemaining: defenderDivisions.length,
     attackerHp: getTotalHp(attackerDivisions),
@@ -449,7 +449,7 @@ export function processCombatRound(
  */
 function findRetreatDestination(
   combatRegionId: string,
-  divisionOwner: FactionId,
+  divisionOwner: CountryId,
   regions: RegionState,
   adjacency: Adjacency
 ): string | null {

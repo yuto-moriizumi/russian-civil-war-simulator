@@ -1,7 +1,7 @@
 'use client';
 
-import { RegionState, Adjacency, FactionId, ActiveCombat } from '../../types/game';
-import { FACTION_COLORS, getAdjacentRegions } from '../../utils/mapUtils';
+import { RegionState, Adjacency, CountryId, ActiveCombat } from '../../types/game';
+import { COUNTRY_COLORS, getAdjacentRegions } from '../../utils/mapUtils';
 import { MAJOR_CITY_CAP_BONUS, DIVISIONS_PER_STATE } from '../../utils/commandPower';
 
 interface RegionTooltipProps {
@@ -24,7 +24,7 @@ export function RegionTooltip({ hoveredRegion, regions }: RegionTooltipProps) {
       <div className="mt-1 flex items-center gap-2">
         <div
           className="h-3 w-3 rounded-full"
-          style={{ backgroundColor: FACTION_COLORS[region.owner] }}
+          style={{ backgroundColor: COUNTRY_COLORS[region.owner] }}
         />
         <span className="text-xs capitalize text-stone-300">
           {region.owner}
@@ -45,7 +45,7 @@ interface RegionInfoPanelProps {
   selectedUnitRegion: string | null;
   regions: RegionState;
   adjacency: Adjacency;
-  playerFaction: FactionId;
+  playerCountry: CountryId;
   unitsInReserve: number;
   activeCombats: ActiveCombat[];
   onRegionSelect: (regionId: string | null) => void;
@@ -58,7 +58,7 @@ export function RegionInfoPanel({
   selectedUnitRegion,
   regions,
   adjacency,
-  playerFaction,
+  playerCountry,
   unitsInReserve,
   activeCombats,
   onRegionSelect,
@@ -88,7 +88,7 @@ export function RegionInfoPanel({
           <span className="text-stone-400">Control:</span>
           <div
             className="h-3 w-3 rounded-full"
-            style={{ backgroundColor: FACTION_COLORS[region.owner] }}
+            style={{ backgroundColor: COUNTRY_COLORS[region.owner] }}
           />
           <span className="capitalize text-white">
             {region.owner}
@@ -156,7 +156,7 @@ export function RegionInfoPanel({
       </div>
       
       {/* Actions for player-owned regions */}
-      {region.owner === playerFaction && (
+      {region.owner === playerCountry && (
         <div className="mt-3 space-y-2 border-t border-stone-700 pt-3">
           {/* Deploy unit button */}
           {unitsInReserve > 0 && (() => {
@@ -207,21 +207,21 @@ export function RegionInfoPanel({
       )}
 
       {/* Show adjacent regions when unit is selected */}
-      {selectedUnitRegion === selectedRegion && region.owner === playerFaction && (
+      {selectedUnitRegion === selectedRegion && region.owner === playerCountry && (
         <div className="mt-3 space-y-1 border-t border-stone-700 pt-3">
           <p className="text-xs text-stone-400 mb-2">Adjacent regions (right-click to move):</p>
           <div className="max-h-32 overflow-y-auto space-y-1">
             {getAdjacentRegions(adjacency, selectedRegion).map((adjId) => {
               const adjRegion = regions[adjId];
               if (!adjRegion) return null;
-              const isEnemy = adjRegion.owner !== playerFaction && adjRegion.owner !== 'neutral';
+              const isEnemy = adjRegion.owner !== playerCountry && adjRegion.owner !== 'neutral';
               return (
                 <div
                   key={adjId}
                   className={`w-full rounded px-2 py-1 text-left text-xs ${
                     isEnemy 
                       ? 'bg-red-900/50 text-red-200' 
-                      : adjRegion.owner === playerFaction
+                      : adjRegion.owner === playerCountry
                       ? 'bg-green-900/50 text-green-200'
                       : 'bg-stone-700 text-stone-200'
                   }`}
@@ -231,7 +231,7 @@ export function RegionInfoPanel({
                     <span className="flex items-center gap-1">
                       <span
                         className="h-2 w-2 rounded-full"
-                        style={{ backgroundColor: FACTION_COLORS[adjRegion.owner] }}
+                        style={{ backgroundColor: COUNTRY_COLORS[adjRegion.owner] }}
                       />
                       {adjRegion.divisions.length > 0 && <span>({adjRegion.divisions.length})</span>}
                     </span>

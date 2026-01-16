@@ -1,4 +1,4 @@
-import { FactionId, RegionState, ProductionQueueItem, Movement, FactionBonuses } from '../types/game';
+import { CountryId, RegionState, ProductionQueueItem, Movement, CountryBonuses } from '../types/game';
 
 /**
  * Base divisions per state (configurable)
@@ -30,21 +30,21 @@ export const MAJOR_CITY_CAP_BONUS: Record<string, number> = {
 
 /**
  * Calculate the maximum divisions a faction can have based on controlled states
- * @param factionId - The faction to calculate command power for
+ * @param countryId - The country to calculate command power for
  * @param regions - Current region state
- * @param factionBonuses - Faction bonuses from completed missions
+ * @param countryBonuses - Country bonuses from completed missions
  * @returns Maximum command power allowed
  */
 export function calculateCommandPower(
-  factionId: FactionId,
+  countryId: CountryId,
   regions: RegionState,
-  factionBonuses: FactionBonuses
+  countryBonuses: CountryBonuses
 ): number {
   let totalCap = BASE_COMMAND_POWER;
 
   // Iterate through all controlled regions
   Object.entries(regions).forEach(([regionId, region]) => {
-    if (region.owner === factionId) {
+    if (region.owner === countryId) {
       // Base cap for controlling any state
       totalCap += DIVISIONS_PER_STATE;
       
@@ -56,7 +56,7 @@ export function calculateCommandPower(
   });
 
   // Add bonus from completed missions
-  totalCap += factionBonuses.commandPowerBonus;
+  totalCap += countryBonuses.commandPowerBonus;
 
   return totalCap;
 }
@@ -64,24 +64,24 @@ export function calculateCommandPower(
 /**
  * Count current divisions for a faction (in regions + in transit)
  * Each division consumes COMMAND_POWER_PER_UNIT command power slots
- * @param factionId - The faction to count for
+ * @param countryId - The country to count for
  * @param regions - Current region state
  * @param movements - Current unit movements
  * @returns Total command power consumed by current divisions
  */
 export function countCurrentDivisions(
-  factionId: FactionId,
+  countryId: CountryId,
   regions: RegionState,
   movements: Movement[]
 ): number {
   // Count divisions in regions
   const divisionsInRegions = Object.values(regions).reduce((count, region) => {
-    return count + region.divisions.filter(d => d.owner === factionId).length;
+    return count + region.divisions.filter(d => d.owner === countryId).length;
   }, 0);
 
   // Count divisions in transit
   const divisionsInTransit = movements.reduce((count, movement) => {
-    if (movement.owner === factionId) {
+    if (movement.owner === countryId) {
       return count + movement.divisions.length;
     }
     return count;
@@ -94,38 +94,38 @@ export function countCurrentDivisions(
 /**
  * Count divisions in production queue for a faction
  * Each division consumes COMMAND_POWER_PER_UNIT command power slots
- * @param factionId - The faction to count for
- * @param productionQueues - Per-faction production queues
+ * @param countryId - The country to count for
+ * @param productionQueues - Per-country production queues
  * @returns Command power consumed by divisions being produced
  */
 export function countDivisionsInProduction(
-  factionId: FactionId,
-  productionQueues: Record<FactionId, ProductionQueueItem[]>
+  countryId: CountryId,
+  productionQueues: Record<CountryId, ProductionQueueItem[]>
 ): number {
-  const queue = productionQueues[factionId] || [];
+  const queue = productionQueues[countryId] || [];
   // Each division in production consumes COMMAND_POWER_PER_UNIT command power slots
   return queue.length * COMMAND_POWER_PER_UNIT;
 }
 
 /**
  * Check if a faction can produce another division
- * @param factionId - The faction to check
+ * @param countryId - The country to check
  * @param regions - Current region state
  * @param movements - Current unit movements
- * @param productionQueues - Per-faction production queues
- * @param factionBonuses - Faction bonuses from completed missions
- * @returns True if the faction can produce more divisions
+ * @param productionQueues - Per-country production queues
+ * @param countryBonuses - Country bonuses from completed missions
+ * @returns True if the country can produce more divisions
  */
 export function canProduceDivision(
-  factionId: FactionId,
+  countryId: CountryId,
   regions: RegionState,
   movements: Movement[],
-  productionQueues: Record<FactionId, ProductionQueueItem[]>,
-  factionBonuses: FactionBonuses
+  productionQueues: Record<CountryId, ProductionQueueItem[]>,
+  countryBonuses: CountryBonuses
 ): boolean {
-  const cap = calculateCommandPower(factionId, regions, factionBonuses);
-  const current = countCurrentDivisions(factionId, regions, movements);
-  const inProduction = countDivisionsInProduction(factionId, productionQueues);
+  const cap = calculateCommandPower(countryId, regions, countryBonuses);
+  const current = countCurrentDivisions(countryId, regions, movements);
+  const inProduction = countDivisionsInProduction(countryId, productionQueues);
   
   // Can produce if: (current + inProduction) < cap
   return (current + inProduction) < cap;
@@ -133,19 +133,19 @@ export function canProduceDivision(
 
 /**
  * Get command power info for display
- * @param factionId - The faction to get info for
+ * @param countryId - The country to get info for
  * @param regions - Current region state
  * @param movements - Current unit movements
- * @param productionQueues - Per-faction production queues
- * @param factionBonuses - Faction bonuses from completed missions
+ * @param productionQueues - Per-country production queues
+ * @param countryBonuses - Country bonuses from completed missions
  * @returns Object with cap, current, inProduction, and available counts
  */
 export function getCommandPowerInfo(
-  factionId: FactionId,
+  countryId: CountryId,
   regions: RegionState,
   movements: Movement[],
-  productionQueues: Record<FactionId, ProductionQueueItem[]>,
-  factionBonuses: FactionBonuses
+  productionQueues: Record<CountryId, ProductionQueueItem[]>,
+  countryBonuses: CountryBonuses
 ): {
   cap: number;
   current: number;
@@ -154,14 +154,14 @@ export function getCommandPowerInfo(
   available: number;
   controlledStates: number;
 } {
-  const cap = calculateCommandPower(factionId, regions, factionBonuses);
-  const current = countCurrentDivisions(factionId, regions, movements);
-  const inProduction = countDivisionsInProduction(factionId, productionQueues);
+  const cap = calculateCommandPower(countryId, regions, countryBonuses);
+  const current = countCurrentDivisions(countryId, regions, movements);
+  const inProduction = countDivisionsInProduction(countryId, productionQueues);
   const total = current + inProduction;
   const available = Math.max(0, cap - total);
   
   const controlledStates = Object.values(regions).filter(
-    region => region.owner === factionId
+    region => region.owner === countryId
   ).length;
 
   return {

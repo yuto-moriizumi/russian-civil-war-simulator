@@ -1,4 +1,4 @@
-import { RegionState, Adjacency, FactionId, Theater, Region } from '../types/game';
+import { RegionState, Adjacency, CountryId, Theater, Region } from '../types/game';
 
 /**
  * Detect theaters of operation by finding connected groups of frontline regions.
@@ -9,21 +9,21 @@ import { RegionState, Adjacency, FactionId, Theater, Region } from '../types/gam
 export function detectTheaters(
   regions: RegionState,
   adjacency: Adjacency,
-  playerFaction: FactionId,
+  playerCountry: CountryId,
   existingTheaters: Theater[] = []
 ): Theater[] {
   // Step 1: Find all frontline regions (player regions adjacent to enemies)
-  const frontlineRegions = new Map<string, Set<FactionId>>(); // regionId -> enemy factions it faces
+  const frontlineRegions = new Map<string, Set<CountryId>>(); // regionId -> enemy countries it faces
   
   Object.entries(regions).forEach(([regionId, region]) => {
-    if (region.owner !== playerFaction) return;
+    if (region.owner !== playerCountry) return;
     
-    const adjacentEnemies = new Set<FactionId>();
+    const adjacentEnemies = new Set<CountryId>();
     const neighbors = adjacency[regionId] || [];
     
     neighbors.forEach(neighborId => {
       const neighbor = regions[neighborId];
-      if (neighbor && neighbor.owner !== playerFaction && neighbor.owner !== 'neutral') {
+      if (neighbor && neighbor.owner !== playerCountry && neighbor.owner !== 'neutral') {
         adjacentEnemies.add(neighbor.owner);
       }
     });
@@ -39,14 +39,14 @@ export function detectTheaters(
   
   // Step 2: Group frontline regions into connected components (theaters)
   const visited = new Set<string>();
-  const theaterGroups: Array<{ regions: string[]; enemies: Set<FactionId> }> = [];
+  const theaterGroups: Array<{ regions: string[]; enemies: Set<CountryId> }> = [];
   
   frontlineRegions.forEach((_, startRegionId) => {
     if (visited.has(startRegionId)) return;
     
     // BFS to find all connected frontline regions
     const theaterRegions: string[] = [];
-    const theaterEnemies = new Set<FactionId>();
+    const theaterEnemies = new Set<CountryId>();
     const queue = [startRegionId];
     visited.add(startRegionId);
     
@@ -86,15 +86,15 @@ export function detectTheaters(
       const intersection = group.regions.filter(r => existingSet.has(r)).length;
       const union = new Set([...existingTheater.frontlineRegions, ...group.regions]).size;
       const overlap = intersection / union;
-      return overlap > 0.8 && existingTheater.enemyFaction === primaryEnemy;
+      return overlap > 0.8 && existingTheater.enemyCountry === primaryEnemy;
     });
     
     return {
       id: matchingTheater?.id || `theater-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
       name,
       frontlineRegions: group.regions,
-      enemyFaction: primaryEnemy,
-      owner: playerFaction,
+      enemyCountry: primaryEnemy,
+      owner: playerCountry,
     };
   });
 }
@@ -106,7 +106,7 @@ export function detectTheaters(
 function generateTheaterName(
   regionIds: string[],
   regions: RegionState,
-  enemyFaction: FactionId,
+  enemyCountry: CountryId,
   index: number
 ): string {
   if (regionIds.length === 0) return `Theater ${index + 1}`;
@@ -136,7 +136,7 @@ function generateTheaterName(
   if (regionalName) return regionalName;
   
   // Fallback: Enemy-based naming with ordinal
-  return getEnemyBasedName(enemyFaction, index);
+  return getEnemyBasedName(enemyCountry, index);
 }
 
 /**
@@ -290,8 +290,8 @@ function getRegionalDescriptor(regionData: Region[]): string | null {
 /**
  * Get enemy-based fallback name
  */
-function getEnemyBasedName(enemyFaction: FactionId, index: number): string {
-  const enemyNames: Record<FactionId, string> = {
+function getEnemyBasedName(enemyCountry: CountryId, index: number): string {
+  const enemyNames: Record<CountryId, string> = {
     white: 'White',
     soviet: 'Soviet',
     finland: 'Finnish',
@@ -303,7 +303,7 @@ function getEnemyBasedName(enemyFaction: FactionId, index: number): string {
     foreign: 'Foreign',
   };
   
-  const enemyName = enemyNames[enemyFaction] || 'Unknown';
+  const enemyName = enemyNames[enemyCountry] || 'Unknown';
   const ordinals = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
   const ordinal = ordinals[index] || `${index + 1}th`;
   

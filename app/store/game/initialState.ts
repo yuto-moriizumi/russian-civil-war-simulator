@@ -1,7 +1,7 @@
 import { GameState } from '../../types/game';
 import { initialMissions, GAME_START_DATE } from '../../data/gameData';
 import { scheduledEvents } from '../../data/scheduledEvents';
-import { getInitialFactionBonuses } from '../../utils/bonusCalculator';
+import { getInitialCountryBonuses } from '../../utils/bonusCalculator';
 
 // Predefined colors for army groups
 export const ARMY_GROUP_COLORS = [
@@ -40,21 +40,21 @@ export const initialGameState: GameState = {
     foreign: [],
   },
   relationships: [
-    { fromFaction: 'white', toFaction: 'ukraine', type: 'autonomy' },
-    { fromFaction: 'soviet', toFaction: 'iskolat', type: 'autonomy' }
+    { fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy' },
+    { fromCountry: 'soviet', toCountry: 'iskolat', type: 'autonomy' }
   ], // Initially no relationships (all neutral)
   mapMode: 'country', // Default map mode
   regionCentroids: {}, // Will be loaded asynchronously
   scheduledEvents: scheduledEvents, // Historical events
-  factionBonuses: {
-    soviet: getInitialFactionBonuses(),
-    white: getInitialFactionBonuses(),
-    finland: getInitialFactionBonuses(),
-    ukraine: getInitialFactionBonuses(),
-    don: getInitialFactionBonuses(),
-    fswr: getInitialFactionBonuses(),
-    iskolat: getInitialFactionBonuses(),
-    neutral: getInitialFactionBonuses(),
-    foreign: getInitialFactionBonuses(),
+  countryBonuses: {
+    soviet: getInitialCountryBonuses(),
+    white: getInitialCountryBonuses(),
+    finland: getInitialCountryBonuses(),
+    ukraine: getInitialCountryBonuses(),
+    don: getInitialCountryBonuses(),
+    fswr: getInitialCountryBonuses(),
+    iskolat: getInitialCountryBonuses(),
+    neutral: getInitialCountryBonuses(),
+    foreign: getInitialCountryBonuses(),
   },
 };

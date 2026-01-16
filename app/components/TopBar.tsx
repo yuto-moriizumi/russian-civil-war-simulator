@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import { Country, GameSpeed, GameEvent, ProductionQueueItem, MapMode, FactionId } from '../types/game';
+import { Country, GameSpeed, GameEvent, ProductionQueueItem, MapMode, CountryId } from '../types/game';
 import SpeedControl from './SpeedControl';
 
 interface TopBarProps {
@@ -14,7 +14,7 @@ interface TopBarProps {
   unitCount: number;
   gameEvents: GameEvent[];
   showSavedIndicator: boolean;
-  productionQueue: Record<FactionId, ProductionQueueItem[]>;
+  productionQueue: Record<CountryId, ProductionQueueItem[]>;
   mapMode: MapMode;
   divisionCap?: number;
   controlledStates?: number;

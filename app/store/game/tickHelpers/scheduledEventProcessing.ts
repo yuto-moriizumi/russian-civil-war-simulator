@@ -1,4 +1,4 @@
-import { Region, GameEvent, NotificationItem, FactionId, Relationship, ScheduledEvent, ScheduledEventAction } from '../../../types/game';
+import { Region, GameEvent, NotificationItem, CountryId, Relationship, ScheduledEvent, ScheduledEventAction } from '../../../types/game';
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 
 /**
@@ -44,12 +44,12 @@ export function processScheduledEvents(
             divisions: [],
           };
         }
-      } else if (action.type === 'declareWar' && action.fromFaction && action.toFaction) {
+      } else if (action.type === 'declareWar' && action.fromCountry && action.toCountry) {
         // Declare war between factions
         updatedRelationships = applyWarDeclaration(
           updatedRelationships,
-          action.fromFaction,
-          action.toFaction
+          action.fromCountry,
+          action.toCountry
         );
       }
     });
@@ -83,29 +83,29 @@ export function processScheduledEvents(
  */
 function applyWarDeclaration(
   relationships: Relationship[],
-  fromFaction: FactionId,
-  toFaction: FactionId
+  fromCountry: CountryId,
+  toCountry: CountryId
 ): Relationship[] {
   let updatedRelationships = [...relationships];
   
   // Remove any existing relationship between these factions
   updatedRelationships = updatedRelationships.filter(
     r => !(
-      (r.fromFaction === fromFaction && r.toFaction === toFaction) ||
-      (r.fromFaction === toFaction && r.toFaction === fromFaction)
+      (r.fromCountry === fromCountry && r.toCountry === toCountry) ||
+      (r.fromCountry === toCountry && r.toCountry === fromCountry)
     )
   );
   
   // Add mutual war relationships
   updatedRelationships.push({
-    fromFaction,
-    toFaction,
+    fromCountry,
+    toCountry,
     type: 'war',
   });
   
   updatedRelationships.push({
-    fromFaction: toFaction,
-    toFaction: fromFaction,
+    fromCountry: toCountry,
+    toCountry: fromCountry,
     type: 'war',
   });
   

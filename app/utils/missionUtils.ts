@@ -1,4 +1,4 @@
-import { MissionCondition, FactionId } from '../types/game';
+import { MissionCondition, CountryId } from '../types/game';
 
 /**
  * Formats a mission condition into a human-readable string.
@@ -16,11 +16,11 @@ export function formatCondition(condition: MissionCondition): string {
     case 'combatVictories':
       return `Win at least ${condition.count} combats`;
     case 'enemyRegionCount':
-      return `${formatFactionName(condition.faction)} controls at most ${condition.maxCount} regions`;
+      return `${formatCountryName(condition.country)} controls at most ${condition.maxCount} regions`;
     case 'allRegionsControlled':
       return `Control all regions in ${condition.countryIso3}`;
     case 'theaterExists':
-      return `Have at least one theater facing ${formatFactionName(condition.enemyFaction)}`;
+      return `Have at least one theater facing ${formatCountryName(condition.enemyCountry)}`;
     case 'armyGroupCount':
       return `Have at least ${condition.count} army groups`;
     case 'controlRegion':
@@ -31,10 +31,10 @@ export function formatCondition(condition: MissionCondition): string {
 }
 
 /**
- * Formats a faction ID into a human-readable name.
+ * Formats a country ID into a human-readable name.
  */
-function formatFactionName(factionId: FactionId): string {
-  switch (factionId) {
+function formatCountryName(countryId: CountryId): string {
+  switch (countryId) {
     case 'soviet':
       return 'Soviet Russia';
     case 'white':
@@ -44,6 +44,6 @@ function formatFactionName(factionId: FactionId): string {
     case 'foreign':
       return 'Foreign Intervention';
     default:
-      return factionId;
+      return countryId;
   }
 }

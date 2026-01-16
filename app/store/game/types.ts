@@ -7,7 +7,7 @@ import {
   Country, 
   GameSpeed,
   ArmyGroupMode,
-  FactionId,
+  CountryId,
   RelationshipType,
   MapMode
 } from '../../types/game';
@@ -26,7 +26,7 @@ export interface GameStore extends GameState {
   selectedGroupId: string | null; // Currently selected army group
   selectedTheaterId: string | null; // Currently selected theater
   isProductionModalOpen: boolean; // Production queue modal state
-  selectedCountryId: FactionId | null; // Country for the country sidebar
+  selectedCountryId: CountryId | null; // Country for the country sidebar
   isCountrySidebarOpen: boolean; // Country sidebar state
 
   // Actions
@@ -38,7 +38,7 @@ export interface GameStore extends GameState {
   setIsEventsModalOpen: (isOpen: boolean) => void;
   setSelectedCombatId: (combatId: string | null) => void;
   setIsProductionModalOpen: (isOpen: boolean) => void;
-  setSelectedCountryId: (countryId: FactionId | null) => void;
+  setSelectedCountryId: (countryId: CountryId | null) => void;
   setIsCountrySidebarOpen: (isOpen: boolean) => void;
   
   // Notification Actions
@@ -78,8 +78,8 @@ export interface GameStore extends GameState {
   deployToArmyGroup: (groupId: string, count?: number) => void;
   
   // Relationship Actions
-  setRelationship: (fromFaction: FactionId, toFaction: FactionId, type: RelationshipType) => void;
-  getRelationship: (fromFaction: FactionId, toFaction: FactionId) => RelationshipType;
+  setRelationship: (fromCountry: CountryId, toCountry: CountryId, type: RelationshipType) => void;
+  getRelationship: (fromCountry: CountryId, toCountry: CountryId) => RelationshipType;
   
   // Map Mode Actions
   setMapMode: (mode: MapMode) => void;

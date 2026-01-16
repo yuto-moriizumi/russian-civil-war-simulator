@@ -18,7 +18,7 @@ export const createUnitActions = (
   get: StoreApi<GameStore>['getState']
 ) => ({
   createInfantry: () => {
-    const { selectedCountry, dateTime, gameEvents, regions, selectedGroupId, armyGroups, selectedRegion, factionBonuses } = get();
+    const { selectedCountry, dateTime, gameEvents, regions, selectedGroupId, armyGroups, selectedRegion, countryBonuses } = get();
     
     if (selectedCountry) {
       // Find deployment target
@@ -104,7 +104,7 @@ export const createUnitActions = (
         selectedCountry.id, 
         divisionName, 
         targetGroupId,
-        factionBonuses[selectedCountry.id]
+        countryBonuses[selectedCountry.id]
       );
       
       const targetRegion = regions[deploymentTarget];
@@ -155,13 +155,13 @@ export const createUnitActions = (
       // Moving to another faction's territory
       // Check if they grant us access/war
       const theirRelationship = relationships.find(
-        r => r.fromFaction === targetOwner && r.toFaction === selectedCountry.id
+        r => r.fromCountry === targetOwner && r.toCountry === selectedCountry.id
       );
       const theyGrantUs = theirRelationship ? theirRelationship.type : 'neutral';
       
       // Check if we declared war on them
       const ourRelationship = relationships.find(
-        r => r.fromFaction === selectedCountry.id && r.toFaction === targetOwner
+        r => r.fromCountry === selectedCountry.id && r.toCountry === targetOwner
       );
       const weDeclared = ourRelationship ? ourRelationship.type : 'neutral';
       

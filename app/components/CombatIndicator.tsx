@@ -1,7 +1,7 @@
 'use client';
 
 import { ActiveCombat } from '../types/game';
-import { FACTION_COLORS } from '../utils/mapUtils';
+import { COUNTRY_COLORS } from '../utils/mapUtils';
 
 interface CombatIndicatorProps {
   combat: ActiveCombat;
@@ -25,8 +25,8 @@ export default function CombatIndicator({ combat, onClick, isSelected }: CombatI
     ? (defenderHp / combat.initialDefenderHp) * 100 
     : 0);
 
-  const attackerColor = FACTION_COLORS[combat.attackerFaction];
-  const defenderColor = FACTION_COLORS[combat.defenderFaction];
+  const attackerColor = COUNTRY_COLORS[combat.attackerCountry];
+  const defenderColor = COUNTRY_COLORS[combat.defenderCountry];
 
   return (
     <div 
@@ -50,7 +50,7 @@ export default function CombatIndicator({ combat, onClick, isSelected }: CombatI
             }}
           >
             <span className={`text-[10px] font-bold ${
-              combat.attackerFaction === 'white' ? 'text-black' : 'text-white'
+              combat.attackerCountry === 'white' ? 'text-black' : 'text-white'
             }`}>
               {combat.attackerDivisions.length}
             </span>
@@ -93,7 +93,7 @@ export default function CombatIndicator({ combat, onClick, isSelected }: CombatI
             }}
           >
             <span className={`text-[10px] font-bold ${
-              combat.defenderFaction === 'white' ? 'text-black' : 'text-white'
+              combat.defenderCountry === 'white' ? 'text-black' : 'text-white'
             }`}>
               {combat.defenderDivisions.length}
             </span>

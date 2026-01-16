@@ -1,17 +1,17 @@
 'use client';
 
-import { FactionId, Relationship, RelationshipType } from '../types/game';
+import { CountryId, Relationship, RelationshipType} from '../types/game';
 import SidebarPanel from './SidebarPanel';
 
 interface RelationshipsPanelProps {
   isOpen: boolean;
   onClose: () => void;
-  playerFaction: FactionId;
+  playerCountry: CountryId;
   relationships: Relationship[];
-  onSetRelationship: (fromFaction: FactionId, toFaction: FactionId, type: RelationshipType) => void;
+  onSetRelationship: (fromCountry: CountryId, toCountry: CountryId, type: RelationshipType) => void;
 }
 
-const FACTION_NAMES: Record<FactionId, string> = {
+const COUNTRY_NAMES: Record<CountryId, string> = {
   soviet: 'Soviet Russia',
   white: 'White Army',
   finland: 'Finland',
@@ -40,45 +40,45 @@ const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
 export default function RelationshipsPanel({
   isOpen,
   onClose,
-  playerFaction,
+  playerCountry,
   relationships,
   onSetRelationship,
 }: RelationshipsPanelProps) {
-  // Get all factions except player, neutral, and foreign
-  const otherFactions: FactionId[] = ['soviet', 'white', 'finland', 'ukraine', 'don', 'fswr'].filter(
-    f => f !== playerFaction
-  ) as FactionId[];
+  // Get all countries except player, neutral, and foreign
+  const otherCountries: CountryId[] = ['soviet', 'white', 'finland', 'ukraine', 'don', 'fswr'].filter(
+    f => f !== playerCountry
+  ) as CountryId[];
 
-  const getRelationshipStatus = (targetFaction: FactionId): RelationshipType => {
+  const getRelationshipStatus = (targetCountry: CountryId): RelationshipType => {
     // Check if target grants us access/war
     const theirRelation = relationships.find(
-      r => r.fromFaction === targetFaction && r.toFaction === playerFaction
+      r => r.fromCountry === targetCountry && r.toCountry === playerCountry
     );
     return theirRelation ? theirRelation.type : 'neutral';
   };
 
-  const getOurRelationshipStatus = (targetFaction: FactionId): RelationshipType => {
+  const getOurRelationshipStatus = (targetCountry: CountryId): RelationshipType => {
     // Check if we grant them access/war
     const ourRelation = relationships.find(
-      r => r.fromFaction === playerFaction && r.toFaction === targetFaction
+      r => r.fromCountry === playerCountry && r.toCountry === targetCountry
     );
     return ourRelation ? ourRelation.type : 'neutral';
   };
 
-  const handleMilitaryAccessToggle = (targetFaction: FactionId, isChecked: boolean) => {
-    const currentStatus = getOurRelationshipStatus(targetFaction);
+  const handleMilitaryAccessToggle = (targetCountry: CountryId, isChecked: boolean) => {
+    const currentStatus = getOurRelationshipStatus(targetCountry);
     // If checking military access and currently at war, keep war
     // If checking military access and currently neutral, set to military access
     // If unchecking military access, set to neutral
     if (isChecked && currentStatus !== 'war') {
-      onSetRelationship(playerFaction, targetFaction, 'military_access');
+      onSetRelationship(playerCountry, targetCountry, 'military_access');
     } else if (!isChecked && currentStatus === 'military_access') {
-      onSetRelationship(playerFaction, targetFaction, 'neutral');
+      onSetRelationship(playerCountry, targetCountry, 'neutral');
     }
   };
 
-  const handleDeclareWar = (targetFaction: FactionId) => {
-    onSetRelationship(playerFaction, targetFaction, 'war');
+  const handleDeclareWar = (targetCountry: CountryId) => {
+    onSetRelationship(playerCountry, targetCountry, 'war');
   };
 
   return (
@@ -86,18 +86,18 @@ export default function RelationshipsPanel({
       isOpen={isOpen}
       onClose={onClose}
       title="Diplomatic Relations"
-      subtitle="Manage your relationships with other factions"
+      subtitle="Manage your relationships with other countries"
       side="left"
     >
       <div className="space-y-3">
-        {otherFactions.map(faction => {
-          const theirStatus = getRelationshipStatus(faction);
-          const ourStatus = getOurRelationshipStatus(faction);
+        {otherCountries.map((country: CountryId) => {
+          const theirStatus = getRelationshipStatus(country);
+          const ourStatus = getOurRelationshipStatus(country);
 
           return (
-            <div key={faction} className="bg-stone-900 rounded p-3 border border-stone-700">
+            <div key={country} className="bg-stone-900 rounded p-3 border border-stone-700">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold text-stone-100">{FACTION_NAMES[faction]}</h3>
+                <h3 className="font-semibold text-stone-100">{COUNTRY_NAMES[country]}</h3>
                 <span
                   className={`px-2 py-1 rounded text-xs font-bold text-white ${RELATIONSHIP_COLORS[ourStatus === 'neutral' && theirStatus === 'war' ? 'war' : ourStatus]}`}
                 >
@@ -117,19 +117,19 @@ export default function RelationshipsPanel({
                   <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
-                      id={`military-access-${faction}`}
+                      id={`military-access-${country}`}
                       checked={ourStatus === 'military_access' || ourStatus === 'war'}
                       disabled={ourStatus === 'war' || ourStatus === 'autonomy'}
-                      onChange={(e) => handleMilitaryAccessToggle(faction, e.target.checked)}
+                      onChange={(e) => handleMilitaryAccessToggle(country, e.target.checked)}
                       className="w-4 h-4 text-blue-600 bg-stone-700 border-stone-600 rounded focus:ring-blue-500"
                     />
-                    <label htmlFor={`military-access-${faction}`} className="text-stone-300 font-semibold">
+                    <label htmlFor={`military-access-${country}`} className="text-stone-300 font-semibold">
                       Grant Military Access
                     </label>
                   </div>
 
                   <button
-                    onClick={() => handleDeclareWar(faction)}
+                    onClick={() => handleDeclareWar(country)}
                     disabled={ourStatus === 'war' || theirStatus === 'war' || ourStatus === 'autonomy' || theirStatus === 'autonomy'}
                     className={`w-full font-bold py-2 px-3 rounded transition-colors ${
                       ourStatus === 'war' || theirStatus === 'war'

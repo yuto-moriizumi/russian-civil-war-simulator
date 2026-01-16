@@ -73,16 +73,16 @@ export function processCombats(
       if (updatedCombat.isComplete) {
         finishedCombats.push(updatedCombat);
         
-        const attackerWon = updatedCombat.victor === updatedCombat.attackerFaction;
+        const attackerWon = updatedCombat.victor === updatedCombat.attackerCountry;
         const attackerLosses = updatedCombat.initialAttackerCount - updatedCombat.attackerDivisions.length;
         const defenderLosses = updatedCombat.initialDefenderCount - updatedCombat.defenderDivisions.length;
         
         const combatEvent = createGameEvent(
           attackerWon ? 'region_captured' : 'combat_defeat',
           attackerWon ? `${updatedCombat.regionName} Captured!` : `Battle for ${updatedCombat.regionName} Lost`,
-          `${updatedCombat.attackerFaction === 'soviet' ? 'Soviet' : 'White'} forces ${attackerWon ? 'captured' : 'failed to capture'} ${updatedCombat.regionName}. Attackers lost ${attackerLosses} divisions. Defenders lost ${defenderLosses} divisions.`,
+          `${updatedCombat.attackerCountry === 'soviet' ? 'Soviet' : 'White'} forces ${attackerWon ? 'captured' : 'failed to capture'} ${updatedCombat.regionName}. Attackers lost ${attackerLosses} divisions. Defenders lost ${defenderLosses} divisions.`,
           currentDate,
-          updatedCombat.attackerFaction,
+          updatedCombat.attackerCountry,
           updatedCombat.regionId
         );
         

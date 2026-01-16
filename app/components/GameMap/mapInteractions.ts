@@ -1,11 +1,11 @@
 import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
-import type { RegionState, Adjacency, FactionId } from '../../types/game';
+import type { RegionState, Adjacency, CountryId } from '../../types/game';
 import { getAdjacentRegions } from '../../utils/mapUtils';
 
 interface MapClickHandlerProps {
   selectedRegion: string | null;
   regions: RegionState;
-  playerFaction: FactionId;
+  playerCountry: CountryId;
   onRegionSelect: (regionId: string | null) => void;
   onUnitSelect: (regionId: string | null) => void;
 }
@@ -13,7 +13,7 @@ interface MapClickHandlerProps {
 export function createMapClickHandler({
   selectedRegion,
   regions,
-  playerFaction,
+  playerCountry,
   onRegionSelect,
   onUnitSelect,
 }: MapClickHandlerProps) {
@@ -30,7 +30,7 @@ export function createMapClickHandler({
           onRegionSelect(regionId);
           // If this region has units owned by player, also select as unit
           const region = regions[regionId];
-          if (region && region.owner === playerFaction && region.divisions.length > 0) {
+          if (region && region.owner === playerCountry && region.divisions.length > 0) {
             onUnitSelect(regionId);
           } else {
             onUnitSelect(null);
@@ -47,7 +47,7 @@ interface MapContextMenuHandlerRefs {
   adjacencyRef: React.MutableRefObject<Adjacency>;
   onMoveUnitsRef: React.MutableRefObject<(fromRegion: string, toRegion: string, count: number) => void>;
   onUnitSelectRef: React.MutableRefObject<(regionId: string | null) => void>;
-  onCountrySelectRef: React.MutableRefObject<(factionId: FactionId | null) => void>;
+  onCountrySelectRef: React.MutableRefObject<(countryId: CountryId | null) => void>;
   onSidebarOpenRef: React.MutableRefObject<(isOpen: boolean) => void>;
 }
 

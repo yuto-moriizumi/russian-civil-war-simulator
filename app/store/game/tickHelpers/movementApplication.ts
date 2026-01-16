@@ -53,13 +53,13 @@ export function applyCompletedMovements(
       // Enemy region - check relationship type
       // Check if they grant us access/war
       const theirRelationship = context.relationships.find(
-        r => r.fromFaction === to.owner && r.toFaction === owner
+        r => r.fromCountry === to.owner && r.toCountry === owner
       );
       const theyGrantUs = theirRelationship ? theirRelationship.type : 'neutral';
       
       // Check if we declared war on them
       const ourRelationship = context.relationships.find(
-        r => r.fromFaction === owner && r.toFaction === to.owner
+        r => r.fromCountry === owner && r.toCountry === to.owner
       );
       const weDeclared = ourRelationship ? ourRelationship.type : 'neutral';
       
@@ -107,7 +107,7 @@ export function applyCompletedMovements(
           // There's an ongoing combat - add reinforcements to the appropriate side
           const combatIndex = nextCombats.findIndex(c => c.id === ongoingCombat.id);
           
-          if (owner === ongoingCombat.attackerFaction) {
+          if (owner === ongoingCombat.attackerCountry) {
             // Join the attackers
             const totalDivisionsToAdd = [...divisions];
             const updatedCombat = {
@@ -137,7 +137,7 @@ export function applyCompletedMovements(
               toRegion
             );
             nextEvents.push(reinforcementEvent);
-          } else if (owner === ongoingCombat.defenderFaction) {
+          } else if (owner === ongoingCombat.defenderCountry) {
             // Join the defenders
             const totalDivisionsToAdd = [...divisions, ...interceptingDivisions];
             const updatedCombat = {
@@ -149,7 +149,7 @@ export function applyCompletedMovements(
 
             // If we intercepted a counter-movement, they join the attackers (if they belong to attacker faction)
             // This case is unlikely given the counter-movement check, but for completeness:
-            if (counterMovement && counterMovement.owner === ongoingCombat.attackerFaction) {
+            if (counterMovement && counterMovement.owner === ongoingCombat.attackerCountry) {
                // This would be weird, but let's handle it
                updatedCombat.attackerDivisions = [...updatedCombat.attackerDivisions, ...interceptingDivisions];
                updatedCombat.initialAttackerHp += interceptingDivisions.reduce((sum, d) => sum + d.hp, 0);
@@ -238,10 +238,10 @@ export function applyFinishedCombats(
     const region = nextRegions[combat.regionId];
     if (!region) return;
 
-    if (combat.victor === combat.attackerFaction) {
+    if (combat.victor === combat.attackerCountry) {
       nextRegions[combat.regionId] = {
         ...region,
-        owner: combat.attackerFaction,
+        owner: combat.attackerCountry,
         divisions: combat.attackerDivisions,
       };
     } else {

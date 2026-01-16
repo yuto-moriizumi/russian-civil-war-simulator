@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Theater, ArmyGroup, FactionId, RegionState, Movement, ProductionQueueItem, FactionBonuses } from '../types/game';
+import { Theater, ArmyGroup, CountryId, RegionState, Movement, ProductionQueueItem, CountryBonuses } from '../types/game';
 import { getArmyGroupUnitCount } from '../utils/mapUtils';
 import { canProduceDivision } from '../utils/commandPower';
 
@@ -9,11 +9,11 @@ interface TheaterPanelProps {
   theaters: Theater[];
   armyGroups: ArmyGroup[];
   regions: RegionState;
-  playerFaction: FactionId;
+  playerCountry: CountryId;
   selectedGroupId: string | null;
   movingUnits: Movement[];
-  productionQueue: Record<FactionId, ProductionQueueItem[]>;
-  factionBonuses: FactionBonuses;
+  productionQueue: Record<CountryId, ProductionQueueItem[]>;
+  countryBonuses: CountryBonuses;
   onCreateGroup: (name: string, regionIds: string[], theaterId: string | null) => void;
   onDeleteGroup: (groupId: string) => void;
   onRenameGroup: (groupId: string, name: string) => void;
@@ -27,11 +27,11 @@ export default function TheaterPanel({
   theaters,
   armyGroups,
   regions,
-  playerFaction,
+  playerCountry,
   selectedGroupId,
   movingUnits,
   productionQueue,
-  factionBonuses,
+  countryBonuses,
   onCreateGroup,
   onDeleteGroup,
   onRenameGroup,
@@ -44,7 +44,7 @@ export default function TheaterPanel({
   const [editingName, setEditingName] = useState('');
 
   // Get all player's army groups
-  const playerGroups = armyGroups.filter(g => g.owner === playerFaction);
+  const playerGroups = armyGroups.filter(g => g.owner === playerCountry);
 
   const handleStartRename = (group: ArmyGroup) => {
     setEditingGroupId(group.id);
@@ -72,10 +72,10 @@ export default function TheaterPanel({
     <div className="flex items-end gap-1 overflow-x-auto pb-4 px-4 scrollbar-hide select-none">
       {/* Group cards by theater if desired, but for now we'll just list them horizontally */}
       {playerGroups.map((group) => {
-        const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerFaction, group.id, movingUnits);
-        const queueCount = (productionQueue[playerFaction] || []).filter(p => p.armyGroupId === group.id).length;
+        const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerCountry, group.id, movingUnits);
+        const queueCount = (productionQueue[playerCountry] || []).filter(p => p.armyGroupId === group.id).length;
         const isGroupSelected = selectedGroupId === group.id;
-        const canProduce = canProduceDivision(playerFaction, regions, movingUnits, productionQueue, factionBonuses);
+        const canProduce = canProduceDivision(playerCountry, regions, movingUnits, productionQueue, countryBonuses);
 
         return (
           <div

@@ -1,7 +1,7 @@
 import { runAITick } from '../../ai/cpuPlayer';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
-import { ProductionQueueItem, FactionId } from '../../types/game';
+import { ProductionQueueItem, CountryId } from '../../types/game';
 import { getBaseProductionTime } from '../../utils/bonusCalculator';
 import { 
   validateDivisions, 
@@ -44,7 +44,7 @@ export const createTickActions = (
       productionQueues,
       dateTime,
       updatedRegions,
-      state.factionBonuses
+      state.countryBonuses
     );
     
     // Create events for completed productions
@@ -126,7 +126,7 @@ export const createTickActions = (
     // Step 8: AI Tick - process AI actions and deployments for all AI factions
     let nextAIStates = aiStates;
     let nextArmyGroups = armyGroups;
-    const nextProductionQueues: Record<FactionId, ProductionQueueItem[]> = { ...remainingProductions };
+    const nextProductionQueues: Record<CountryId, ProductionQueueItem[]> = { ...remainingProductions };
 
     if (aiStates.length > 0) {
       // Process each AI faction
@@ -137,9 +137,9 @@ export const createTickActions = (
           nextArmyGroups, 
           nextCombats, 
           remainingMovements, 
-          nextProductionQueues[aiState.factionId] || [], 
+          nextProductionQueues[aiState.countryId] || [], 
           nextProductionQueues,
-          state.factionBonuses[aiState.factionId]
+          state.countryBonuses[aiState.countryId]
         );
         
         // If AI created a new army group, add it
@@ -150,8 +150,8 @@ export const createTickActions = (
         // Handle AI production requests
         if (aiActions.productionRequests.length > 0) {
           // Get or initialize the faction's queue
-          const factionQueue = nextProductionQueues[aiState.factionId] || [];
-          const bonuses = state.factionBonuses[aiState.factionId];
+          const factionQueue = nextProductionQueues[aiState.countryId] || [];
+          const bonuses = state.countryBonuses[aiState.countryId];
           const productionTimeHours = getBaseProductionTime(bonuses);
           
           aiActions.productionRequests.forEach(req => {
@@ -159,7 +159,7 @@ export const createTickActions = (
             factionQueue.push({
               id: `prod-ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               divisionName: req.divisionName,
-              owner: aiState.factionId,
+              owner: aiState.countryId,
               startTime: newDate,
               completionTime,
               targetRegionId: req.targetRegionId,
@@ -168,7 +168,7 @@ export const createTickActions = (
           });
           
           // Update the faction's queue
-          nextProductionQueues[aiState.factionId] = factionQueue;
+          nextProductionQueues[aiState.countryId] = factionQueue;
         }
         
         return aiActions.updatedAIState;

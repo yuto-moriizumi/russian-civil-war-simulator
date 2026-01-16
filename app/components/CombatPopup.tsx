@@ -1,6 +1,6 @@
 'use client';
 
-import { ActiveCombat, Division, FactionId } from '../types/game';
+import { ActiveCombat, Division, CountryId } from '../types/game';
 
 interface CombatPopupProps {
   combat: ActiveCombat;
@@ -23,7 +23,7 @@ export default function CombatPopup({ combat, onClose }: CombatPopupProps) {
     ? (defenderHp / combat.initialDefenderHp) * 100 
     : 0);
 
-  const getFactionName = (faction: FactionId) => {
+  const getFactionName = (faction: CountryId) => {
     switch (faction) {
       case 'soviet': return 'Red Army';
       case 'white': return 'White Army';
@@ -33,7 +33,7 @@ export default function CombatPopup({ combat, onClose }: CombatPopupProps) {
     }
   };
 
-  const getFactionFlag = (faction: FactionId) => {
+  const getFactionFlag = (faction: CountryId) => {
     switch (faction) {
       case 'soviet': return '☭';
       case 'white': return '🦅';
@@ -93,7 +93,7 @@ export default function CombatPopup({ combat, onClose }: CombatPopupProps) {
             {/* Attacker Info */}
             <div className="flex items-center gap-4">
                <div className="w-16 h-10 border border-stone-600 bg-stone-800 flex items-center justify-center text-2xl shadow-md">
-                 {getFactionFlag(combat.attackerFaction)}
+                 {getFactionFlag(combat.attackerCountry)}
                </div>
                <div className="text-right">
                  <div className="text-xl font-bold text-white">{attackerHp.toLocaleString()}</div>
@@ -143,7 +143,7 @@ export default function CombatPopup({ combat, onClose }: CombatPopupProps) {
                  </div>
                </div>
                <div className="w-16 h-10 border border-stone-600 bg-stone-800 flex items-center justify-center text-2xl shadow-md">
-                 {getFactionFlag(combat.defenderFaction)}
+                 {getFactionFlag(combat.defenderCountry)}
                </div>
             </div>
           </div>
@@ -157,7 +157,7 @@ export default function CombatPopup({ combat, onClose }: CombatPopupProps) {
               </div>
               <div className="max-h-32 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
                 {combat.attackerDivisions.map(div => (
-                  <DivisionRow key={div.id} division={div} faction={combat.attackerFaction} />
+                  <DivisionRow key={div.id} division={div} faction={combat.attackerCountry} />
                 ))}
               </div>
             </div>
@@ -169,7 +169,7 @@ export default function CombatPopup({ combat, onClose }: CombatPopupProps) {
               </div>
               <div className="max-h-32 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
                 {combat.defenderDivisions.map(div => (
-                  <DivisionRow key={div.id} division={div} faction={combat.defenderFaction} />
+                  <DivisionRow key={div.id} division={div} faction={combat.defenderCountry} />
                 ))}
               </div>
             </div>
@@ -181,8 +181,8 @@ export default function CombatPopup({ combat, onClose }: CombatPopupProps) {
               </div>
              {combat.isComplete && (
                <div className={`px-4 py-1 rounded border font-bold uppercase tracking-widest animate-pulse ${
-                 combat.victor === combat.attackerFaction ? 'bg-red-900/40 border-red-700 text-red-400' :
-                 combat.victor === combat.defenderFaction ? 'bg-green-900/40 border-green-700 text-green-400' :
+                 combat.victor === combat.attackerCountry ? 'bg-red-900/40 border-red-700 text-red-400' :
+                 combat.victor === combat.defenderCountry ? 'bg-green-900/40 border-green-700 text-green-400' :
                  'bg-stone-800 border-stone-600 text-stone-400'
                }`}>
                  {combat.victor ? `${getFactionName(combat.victor)} Victory` : 'Stalemate'}
@@ -222,7 +222,7 @@ export default function CombatPopup({ combat, onClose }: CombatPopupProps) {
 }
 
 // Helper component for division rows
-function DivisionRow({ division }: { division: Division; faction: FactionId }) {
+function DivisionRow({ division }: { division: Division; faction: CountryId }) {
   const hpPercent = (division.hp / division.maxHp) * 100;
   const hpColor = hpPercent > 50 ? 'bg-green-500' : hpPercent > 25 ? 'bg-yellow-500' : 'bg-red-500';
   
