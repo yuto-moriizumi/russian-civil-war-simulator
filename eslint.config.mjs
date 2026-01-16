@@ -20,7 +20,7 @@ const eslintConfig = defineConfig([
     files: ["**/*.ts", "**/*.tsx"],
     rules: {
       "max-lines": [
-        "warn", // Use "warn" for gradual adoption
+        "error",
         {
           max: 400,
           skipBlankLines: true,
