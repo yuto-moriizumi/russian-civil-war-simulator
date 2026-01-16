@@ -48,7 +48,8 @@ export const initialGameState: GameState = {
     { fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy' },
     { fromCountry: 'soviet', toCountry: 'iskolat', type: 'autonomy' },
     { fromCountry: 'germany', toCountry: 'poland', type: 'autonomy' },
-    { fromCountry: 'germany', toCountry: 'romania', type: 'war' }
+    { fromCountry: 'germany', toCountry: 'romania', type: 'war' },
+    { fromCountry: 'germany', toCountry: 'bulgaria', type: 'military_access' }
   ], // Initial relationships (autonomy = puppet state)
   mapMode: 'country', // Default map mode
   regionCentroids: {}, // Will be loaded asynchronously

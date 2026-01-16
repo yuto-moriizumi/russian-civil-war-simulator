@@ -125,11 +125,12 @@ export function runAITick(
     const nameMap: Record<string, string> = {
       soviet: 'Soviet Army Group',
       white: 'White Army Group',
-    finland: 'Finnish Army Group',
-    ukraine: 'Ukrainian Army Group',
-    fswr: 'Red Guard Army Group',
-    romania: 'Romanian Army Group',
-  };
+      finland: 'Finnish Army Group',
+      ukraine: 'Ukrainian Army Group',
+      fswr: 'Red Guard Army Group',
+      romania: 'Romanian Army Group',
+      bulgaria: 'Bulgarian Army Group',
+    };
     const name = nameMap[countryId] || 'Army Group';
     
     newArmyGroup = {
