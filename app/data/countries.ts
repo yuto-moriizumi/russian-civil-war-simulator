@@ -257,7 +257,7 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     name: 'Tsardom of Bulgaria',
     combatName: 'Bulgarian Army',
     flag: '/images/flags/bulgaria.svg',
-    color: '#D62612',
+    color: '#00966E',
     adjective: 'Bulgarian',
     firstArmyGroupName: 'Bulgarian Army',
     divisionPrefix: 'Bulgarian Guard',
@@ -345,6 +345,27 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
       'AT-9', // Vienna
       'HU-PE', // Budapest
       'CZ-10', // Prague
+    ],
+  },
+  romania: {
+    id: 'romania',
+    name: 'Kingdom of Romania',
+    combatName: 'Romanian Army',
+    flag: '/images/flags/romania.svg',
+    color: '#003399',
+    adjective: 'Romanian',
+    firstArmyGroupName: '1st Romanian Army',
+    divisionPrefix: 'Romanian',
+    selectable: false,
+    coreRegions: [
+      // Historical regions of Romania and Bessarabia
+      'RO-B',  // Bucharest - Capital
+      'RO-IS', // Iași - Wartime capital
+      'RO-CT', // Constanța
+      'RO-CJ', // Cluj
+      'RO-TM', // Timișoara
+      'MD-BA', // Bălți
+      'MD-CU', // Chișinău
     ],
   },
 };

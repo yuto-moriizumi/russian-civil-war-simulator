@@ -128,6 +128,7 @@ export function runAITick(
     finland: 'Finnish Army Group',
     ukraine: 'Ukrainian Army Group',
     fswr: 'Red Guard Army Group',
+    romania: 'Romanian Army Group',
   };
     const name = nameMap[countryId] || 'Army Group';
     
