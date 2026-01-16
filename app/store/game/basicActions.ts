@@ -68,8 +68,12 @@ export const createBasicActions = (
   
   selectCountry: (country: Country) => {
     // Determine which countries become AI-controlled (all non-player countries)
-    const allCountries: CountryId[] = ['soviet', 'white', 'finland', 'ukraine', 'don', 'fswr', 'romania'];
+    const allCountries: CountryId[] = [
+      'soviet', 'white', 'finland', 'ukraine', 'don', 'fswr', 
+      'iskolat', 'germany', 'bulgaria', 'poland', 'austriahungary', 'romania'
+    ];
     const aiCountries = allCountries.filter(countryId => countryId !== country.id);
+
     
     const countryMissions = initialMissions.filter(m => m.country === country.id);
     const currentRegions = get().regions;

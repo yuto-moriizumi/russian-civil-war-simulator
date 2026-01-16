@@ -189,9 +189,10 @@ function deserializeGameState(data: SerializedGameState): GameState {
       germany: [],
       bulgaria: [],
       poland: [],
+      austriahungary: [],
       romania: [],
     };
-    
+
     // Sort legacy queue items into country-specific queues
     for (const item of data.productionQueue) {
       const deserialized = {
@@ -224,6 +225,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       germany: [],
       bulgaria: [],
       poland: [],
+      austriahungary: [],
       romania: [],
     };
   }
@@ -268,6 +270,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       germany: getInitialCountryBonuses(),
       bulgaria: getInitialCountryBonuses(),
       poland: getInitialCountryBonuses(),
+      austriahungary: getInitialCountryBonuses(),
       romania: getInitialCountryBonuses(),
     },
   };

@@ -324,6 +324,29 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
       'PL-ZP', // West Pomeranian
     ],
   },
+  austriahungary: {
+    id: 'austriahungary',
+    name: 'Austria-Hungary',
+    combatName: 'Austro-Hungarian Army',
+    flag: '/images/flags/austriahungary.svg',
+    color: '#B8860B',
+    adjective: 'Austro-Hungarian',
+    firstArmyGroupName: 'k.u.k. Armee',
+    divisionPrefix: 'Imperial Division',
+    selectable: false,
+    coreRegions: [
+      // Galicia, Bukovina and Transcarpathia
+      'UA-46', // Lviv
+      'UA-61', // Ternopil
+      'UA-26', // Ivano-Frankivsk
+      'UA-77', // Chernivtsi
+      'UA-21', // Zakarpattia
+      // Central territories
+      'AT-9', // Vienna
+      'HU-PE', // Budapest
+      'CZ-10', // Prague
+    ],
+  },
   romania: {
     id: 'romania',
     name: 'Kingdom of Romania',

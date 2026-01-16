@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600">
+  <!-- Austrian half -->
+  <rect width="450" height="200" fill="#EF3340"/>
+  <rect y="200" width="450" height="200" fill="#FFFFFF"/>
+  <rect y="400" width="450" height="200" fill="#EF3340"/>
+  <!-- Hungarian half -->
+  <rect x="450" width="450" height="200" fill="#EF3340"/>
+  <rect x="450" y="200" width="450" height="200" fill="#FFFFFF"/>
+  <rect x="450" y="400" width="450" height="200" fill="#436F4D"/>
+</svg>

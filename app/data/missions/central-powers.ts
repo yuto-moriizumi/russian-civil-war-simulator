@@ -271,3 +271,61 @@ export const polandMissions: Mission[] = [
     ],
   },
 ];
+
+// Austria-Hungary Mission Tree (Stability & Preservation: Defence > HP > Attack)
+export const austriaHungaryMissions: Mission[] = [
+  {
+    id: 'austriahungary_mobilize',
+    country: 'austriahungary',
+    name: 'Imperial Mobilization',
+    description: 'Mobilize the k.u.k. Armee to defend the dual monarchy.',
+    completed: false,
+    claimed: false,
+    rewards: { defenceBonus: 2, hpBonus: 10 },
+    prerequisites: [],
+    available: [{ type: 'hasUnits', count: 10 }],
+  },
+  {
+    id: 'austriahungary_bread_peace',
+    country: 'austriahungary',
+    name: 'Bread Peace',
+    description: 'Secure food supplies from Ukraine to address domestic shortages.',
+    completed: false,
+    claimed: false,
+    rewards: { productionSpeedBonus: 0.15, commandPowerBonus: 2 },
+    prerequisites: ['austriahungary_mobilize'],
+    available: [
+      { type: 'controlRegion', regionId: 'UA-46' }, // Lviv/Lemberg
+      { type: 'dateAfter', date: '1918-02-09' }, // Treaty of Brest-Litovsk with Ukraine
+    ],
+  },
+  {
+    id: 'austriahungary_faustschlag',
+    country: 'austriahungary',
+    name: 'Operation Faustschlag',
+    description: 'Advance into Russian territory to force a final settlement.',
+    completed: false,
+    claimed: false,
+    rewards: { attackBonus: 2, commandPowerBonus: 3 },
+    prerequisites: ['austriahungary_bread_peace'],
+    available: [
+      { type: 'controlRegionCount', count: 20 },
+      { type: 'combatVictories', count: 3 },
+    ],
+  },
+  {
+    id: 'austriahungary_preserve_empire',
+    country: 'austriahungary',
+    name: 'Preserve the Dual Monarchy',
+    description: 'Prevent the internal collapse and maintain the integrity of the Habsburg lands.',
+    completed: false,
+    claimed: false,
+    rewards: { defenceBonus: 5, hpBonus: 20, gameVictory: true },
+    prerequisites: ['austriahungary_faustschlag'],
+    available: [
+      { type: 'controlRegionCount', count: 30 },
+      { type: 'hasUnits', count: 25 },
+      { type: 'dateAfter', date: '1918-11-11' }, // Survived past the end of the war
+    ],
+  },
+];

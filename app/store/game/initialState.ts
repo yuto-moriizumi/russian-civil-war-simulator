@@ -41,6 +41,7 @@ export const initialGameState: GameState = {
     germany: [],
     bulgaria: [],
     poland: [],
+    austriahungary: [],
     romania: [],
   },
   relationships: [
@@ -65,6 +66,7 @@ export const initialGameState: GameState = {
     germany: getInitialCountryBonuses(),
     bulgaria: getInitialCountryBonuses(),
     poland: getInitialCountryBonuses(),
+    austriahungary: getInitialCountryBonuses(),
     romania: getInitialCountryBonuses(),
   },
 };
