@@ -230,6 +230,7 @@ function getCountryTheaterName(regionData: Region[]): string | null {
       'LTU': 'Baltic Theater',
       'FIN': 'Finnish Theater',
       'POL': 'Polish Theater',
+      'ROU': 'Romanian Theater',
     };
     
     if (countryNames[country]) {

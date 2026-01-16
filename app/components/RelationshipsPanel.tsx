@@ -34,7 +34,7 @@ export default function RelationshipsPanel({
   onSetRelationship,
 }: RelationshipsPanelProps) {
   // Get all countries except player, neutral, and foreign
-  const otherCountries: CountryId[] = ['soviet', 'white', 'finland', 'ukraine', 'don', 'fswr'].filter(
+  const otherCountries: CountryId[] = ['soviet', 'white', 'finland', 'ukraine', 'don', 'fswr', 'romania'].filter(
     f => f !== playerCountry
   ) as CountryId[];
 
