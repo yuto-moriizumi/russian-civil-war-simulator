@@ -6,7 +6,7 @@ import {
   Country,
   GameSpeed,
   Mission,
-  FactionId,
+  CountryId,
   GameEventType,
   ProductionQueueItem,
   Division,
@@ -16,10 +16,10 @@ import {
   MapMode,
   ScheduledEvent,
 } from '../types/game';
-import { getInitialFactionBonuses } from './bonusCalculator';
+import { getInitialCountryBonuses } from './bonusCalculator';
 
 const STORAGE_KEY = 'rcw-save';
-const SAVE_VERSION = 6; // Bumped version for factionBonuses
+const SAVE_VERSION = 6; // Bumped version for countryBonuses
 
 // Serialized types (Date objects converted to ISO strings)
 interface SerializedMovement {
@@ -29,7 +29,7 @@ interface SerializedMovement {
   divisions: Division[];
   departureTime: string;
   arrivalTime: string;
-  owner: FactionId;
+  owner: CountryId;
 }
 
 interface SerializedGameEvent {
@@ -38,7 +38,7 @@ interface SerializedGameEvent {
   timestamp: string;
   title: string;
   description: string;
-  faction?: FactionId;
+  country?: CountryId;
   regionId?: string;
 }
 
@@ -48,7 +48,7 @@ interface SerializedNotificationItem {
   timestamp: string;
   title: string;
   description: string;
-  faction?: FactionId;
+  country?: CountryId;
   regionId?: string;
   expiresAt: string;
 }
@@ -57,8 +57,8 @@ interface SerializedActiveCombat {
   id: string;
   regionId: string;
   regionName: string;
-  attackerFaction: FactionId;
-  defenderFaction: FactionId;
+  attackerCountry: CountryId;
+  defenderCountry: CountryId;
   attackerDivisions: Division[];
   defenderDivisions: Division[];
   initialAttackerCount: number;
@@ -70,13 +70,13 @@ interface SerializedActiveCombat {
   lastRoundTime: string;
   roundIntervalHours: number;
   isComplete: boolean;
-  victor: FactionId | null;
+  victor: CountryId | null;
 }
 
 interface SerializedProductionQueueItem {
   id: string;
   divisionName: string;
-  owner: FactionId;
+  owner: CountryId;
   startTime: string;
   completionTime: string;
   targetRegionId: string | null;
@@ -96,12 +96,12 @@ interface SerializedGameState {
   activeCombats: SerializedActiveCombat[];
   armyGroups: ArmyGroup[];
   theaters: Theater[];
-  productionQueues: Record<FactionId, SerializedProductionQueueItem[]>;
+  productionQueues: Record<CountryId, SerializedProductionQueueItem[]>;
   productionQueue?: SerializedProductionQueueItem[]; // Legacy format for backward compatibility
   relationships: Relationship[];
   mapMode: MapMode;
   scheduledEvents: ScheduledEvent[];
-  factionBonuses?: GameState['factionBonuses']; // Optional for backward compatibility
+  countryBonuses?: GameState['countryBonuses']; // Optional for backward compatibility
 }
 
 interface SaveData {
@@ -114,12 +114,12 @@ interface SaveData {
 
 // Serialize GameState (convert Date objects to ISO strings)
 function serializeGameState(state: GameState): SerializedGameState {
-  // Convert per-faction queues to serialized format
-  const serializedQueues: Record<FactionId, SerializedProductionQueueItem[]> = {} as Record<FactionId, SerializedProductionQueueItem[]>;
-  const factionIds = Object.keys(state.productionQueues) as FactionId[];
+  // Convert per-country queues to serialized format
+  const serializedQueues: Record<CountryId, SerializedProductionQueueItem[]> = {} as Record<CountryId, SerializedProductionQueueItem[]>;
+  const countryIds = Object.keys(state.productionQueues) as CountryId[];
   
-  for (const factionId of factionIds) {
-    serializedQueues[factionId] = (state.productionQueues[factionId] || []).map((p) => ({
+  for (const countryId of countryIds) {
+    serializedQueues[countryId] = (state.productionQueues[countryId] || []).map((p) => ({
       ...p,
       startTime: p.startTime.toISOString(),
       completionTime: p.completionTime.toISOString(),
@@ -155,15 +155,15 @@ function serializeGameState(state: GameState): SerializedGameState {
 // Deserialize GameState (convert ISO strings back to Date objects)
 function deserializeGameState(data: SerializedGameState): GameState {
   // Handle backward compatibility: convert old productionQueue to new productionQueues format
-  let productionQueues: Record<FactionId, ProductionQueueItem[]>;
+  let productionQueues: Record<CountryId, ProductionQueueItem[]>;
   
   if (data.productionQueues) {
-    // New format: per-faction queues
-    productionQueues = {} as Record<FactionId, ProductionQueueItem[]>;
-    const factionIds = Object.keys(data.productionQueues) as FactionId[];
+    // New format: per-country queues
+    productionQueues = {} as Record<CountryId, ProductionQueueItem[]>;
+    const countryIds = Object.keys(data.productionQueues) as CountryId[];
     
-    for (const factionId of factionIds) {
-      productionQueues[factionId] = (data.productionQueues[factionId] || []).map((p) => ({
+    for (const countryId of countryIds) {
+      productionQueues[countryId] = (data.productionQueues[countryId] || []).map((p) => ({
         id: p.id,
         divisionName: p.divisionName,
         owner: p.owner,
@@ -174,8 +174,8 @@ function deserializeGameState(data: SerializedGameState): GameState {
       }));
     }
   } else if (data.productionQueue) {
-    // Legacy format: migrate from single queue to per-faction queues
-    console.log('Migrating legacy production queue format to per-faction queues');
+    // Legacy format: migrate from single queue to per-country queues
+    console.log('Migrating legacy production queue format to per-country queues');
     productionQueues = {
       soviet: [],
       white: [],
@@ -189,7 +189,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       germany: [],
     };
     
-    // Sort legacy queue items into faction-specific queues
+    // Sort legacy queue items into country-specific queues
     for (const item of data.productionQueue) {
       const deserialized = {
         id: item.id,
@@ -249,17 +249,17 @@ function deserializeGameState(data: SerializedGameState): GameState {
     mapMode: data.mapMode || 'country', // Default to country map mode
     regionCentroids: {}, // Will be re-loaded from map data
     scheduledEvents: data.scheduledEvents || [], // Default to empty array if not present
-    factionBonuses: data.factionBonuses || {
-      soviet: getInitialFactionBonuses(),
-      white: getInitialFactionBonuses(),
-      finland: getInitialFactionBonuses(),
-      ukraine: getInitialFactionBonuses(),
-      don: getInitialFactionBonuses(),
-      fswr: getInitialFactionBonuses(),
-      iskolat: getInitialFactionBonuses(),
-      neutral: getInitialFactionBonuses(),
-      foreign: getInitialFactionBonuses(),
-      germany: getInitialFactionBonuses(),
+    countryBonuses: data.countryBonuses || {
+      soviet: getInitialCountryBonuses(),
+      white: getInitialCountryBonuses(),
+      finland: getInitialCountryBonuses(),
+      ukraine: getInitialCountryBonuses(),
+      don: getInitialCountryBonuses(),
+      fswr: getInitialCountryBonuses(),
+      iskolat: getInitialCountryBonuses(),
+      neutral: getInitialCountryBonuses(),
+      foreign: getInitialCountryBonuses(),
+      germany: getInitialCountryBonuses(),
     },
   };
 }

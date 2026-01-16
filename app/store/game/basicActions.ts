@@ -1,8 +1,8 @@
-import { FactionId, Screen, Region, Adjacency, Country, GameSpeed, GameState, RegionState, AIState, MapMode, Division } from '../../types/game';
+import { CountryId, Screen, Region, Adjacency, Country, GameSpeed, GameState, RegionState, AIState, MapMode, Division } from '../../types/game';
 import { initialMissions } from '../../data/gameData';
 import { createInitialAIState, createInitialAIArmyGroup } from '../../ai/cpuPlayer';
 import { createGameEvent, createNotification } from '../../utils/eventUtils';
-import { calculateFactionBonuses, getDivisionStats } from '../../utils/bonusCalculator';
+import { calculateCountryBonuses, getDivisionStats } from '../../utils/bonusCalculator';
 import { initialGameState } from './initialState';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
@@ -53,7 +53,7 @@ export const createBasicActions = (
   
   setIsProductionModalOpen: (isOpen: boolean) => set({ isProductionModalOpen: isOpen }),
 
-  setSelectedCountryId: (countryId: FactionId | null) => set({ selectedCountryId: countryId }),
+  setSelectedCountryId: (countryId: CountryId | null) => set({ selectedCountryId: countryId }),
 
   setIsCountrySidebarOpen: (isOpen: boolean) => set({ isCountrySidebarOpen: isOpen }),
 
@@ -68,10 +68,10 @@ export const createBasicActions = (
   
   selectCountry: (country: Country) => {
     // Determine which factions become AI-controlled (all non-player factions)
-    const allFactions: FactionId[] = ['soviet', 'white', 'finland', 'ukraine', 'don', 'fswr'];
+    const allFactions: CountryId[] = ['soviet', 'white', 'finland', 'ukraine', 'don', 'fswr'];
     const aiFactions = allFactions.filter(faction => faction !== country.id);
     
-    const factionMissions = initialMissions.filter(m => m.faction === country.id);
+    const factionMissions = initialMissions.filter(m => m.country === country.id);
     const currentRegions = get().regions;
     
     // Create initial AI states for all AI factions
@@ -113,7 +113,7 @@ export const createBasicActions = (
     set((state: GameStore) => {
       const mission = state.missions.find(m => m.id === missionId);
       if (mission && mission.completed && !mission.claimed && state.selectedCountry) {
-        const factionId = state.selectedCountry.id;
+        const countryId = state.selectedCountry.id;
         const events = [...state.gameEvents];
         const notifs = [...state.notifications];
         
@@ -134,7 +134,7 @@ export const createBasicActions = (
           `Mission Completed: ${mission.name}`,
           `Mission "${mission.name}" completed! Bonuses gained: ${rewardDescription}.`,
           state.dateTime,
-          factionId
+          countryId
         );
         events.push(claimEvent);
         notifs.push(createNotification(claimEvent, state.dateTime));
@@ -145,7 +145,7 @@ export const createBasicActions = (
             'Victory!',
             `${state.selectedCountry.name} has achieved total victory in the Russian Civil War!`,
             state.dateTime,
-            factionId
+            countryId
           );
           events.push(victoryEvent);
           notifs.push(createNotification(victoryEvent, state.dateTime));
@@ -156,16 +156,16 @@ export const createBasicActions = (
           m.id === missionId ? { ...m, claimed: true } : m
         );
         
-        // Recalculate faction bonuses
-        const newFactionBonuses = calculateFactionBonuses(updatedMissions, factionId);
-        const newDivisionStats = getDivisionStats(factionId, newFactionBonuses);
+        // Recalculate country bonuses
+        const newCountryBonuses = calculateCountryBonuses(updatedMissions, countryId);
+        const newDivisionStats = getDivisionStats(countryId, newCountryBonuses);
         
         // Apply bonuses retroactively to ALL existing divisions
         const updatedRegions: RegionState = {};
         Object.keys(state.regions).forEach(regionId => {
           const region = state.regions[regionId];
           const updatedDivisions = region.divisions.map(div => {
-            if (div.owner === factionId) {
+            if (div.owner === countryId) {
               // Apply new stats to this faction's divisions
               return {
                 ...div,
@@ -187,7 +187,7 @@ export const createBasicActions = (
         
         // Also apply bonuses to divisions in transit
         const updatedMovingUnits = state.movingUnits.map(movement => {
-          if (movement.owner === factionId) {
+          if (movement.owner === countryId) {
             const updatedDivisions = movement.divisions.map(div => ({
               ...div,
               attack: newDivisionStats.attack,
@@ -203,14 +203,14 @@ export const createBasicActions = (
           return movement;
         });
         
-        console.log(`[MISSION CLAIMED] ${mission.name} - Applied bonuses to ${factionId} divisions`);
-        console.log(`[BONUSES] Attack: +${newFactionBonuses.attackBonus}, Defence: +${newFactionBonuses.defenceBonus}, HP: +${newFactionBonuses.hpBonus}, Command Power: +${newFactionBonuses.commandPowerBonus}, Prod Speed: ${newFactionBonuses.productionSpeedMultiplier.toFixed(2)}x`);
+        console.log(`[MISSION CLAIMED] ${mission.name} - Applied bonuses to ${countryId} divisions`);
+        console.log(`[BONUSES] Attack: +${newCountryBonuses.attackBonus}, Defence: +${newCountryBonuses.defenceBonus}, HP: +${newCountryBonuses.hpBonus}, Command Power: +${newCountryBonuses.commandPowerBonus}, Prod Speed: ${newCountryBonuses.productionSpeedMultiplier.toFixed(2)}x`);
         
         return {
           missions: updatedMissions,
-          factionBonuses: {
-            ...state.factionBonuses,
-            [factionId]: newFactionBonuses,
+          countryBonuses: {
+            ...state.countryBonuses,
+            [countryId]: newCountryBonuses,
           },
           regions: updatedRegions,
           movingUnits: updatedMovingUnits,

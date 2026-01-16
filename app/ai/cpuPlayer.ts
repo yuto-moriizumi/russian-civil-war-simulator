@@ -1,20 +1,20 @@
-import { AIState, FactionId, RegionState, Region, ActiveCombat, Movement, ArmyGroup, ProductionQueueItem, FactionBonuses } from '../types/game';
+import { AIState, CountryId, RegionState, Region, ActiveCombat, Movement, ArmyGroup, ProductionQueueItem, CountryBonuses } from '../types/game';
 import { canProduceDivision, getCommandPowerInfo } from '../utils/commandPower';
 
 /**
  * Creates initial AI state for a faction
  */
-export function createInitialAIState(factionId: FactionId): AIState {
+export function createInitialAIState(countryId: CountryId): AIState {
   return {
-    factionId,
+    countryId,
   };
 }
 
 /**
  * Creates initial AI army group for a faction
  */
-export function createInitialAIArmyGroup(factionId: FactionId, regions: RegionState): ArmyGroup {
-  const ownedRegions = getOwnedRegions(regions, factionId);
+export function createInitialAIArmyGroup(countryId: CountryId, regions: RegionState): ArmyGroup {
+  const ownedRegions = getOwnedRegions(regions, countryId);
   const ownedRegionIds = ownedRegions.map(r => r.id);
   
   const nameMap: Record<string, string> = {
@@ -25,14 +25,14 @@ export function createInitialAIArmyGroup(factionId: FactionId, regions: RegionSt
     don: 'Don Cossack Army Group',
     fswr: 'Red Guard Army Group',
   };
-  const name = nameMap[factionId] || 'Army Group';
+  const name = nameMap[countryId] || 'Army Group';
   
   return {
     id: `ai-army-group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     name,
     regionIds: ownedRegionIds,
     color: '#6B7280',
-    owner: factionId,
+    owner: countryId,
     theaterId: null,
     mode: 'advance', // AI automatically advances toward enemies
   };
@@ -41,8 +41,8 @@ export function createInitialAIArmyGroup(factionId: FactionId, regions: RegionSt
 /**
  * Get all regions owned by a faction
  */
-function getOwnedRegions(regions: RegionState, factionId: FactionId): Region[] {
-  return Object.values(regions).filter(region => region.owner === factionId);
+function getOwnedRegions(regions: RegionState, countryId: CountryId): Region[] {
+  return Object.values(regions).filter(region => region.owner === countryId);
 }
 
 /**
@@ -57,7 +57,7 @@ function pickRandomRegion(regionList: Region[]): Region | null {
 /**
  * Generate a unique division name for the AI
  */
-function generateAIDivisionName(factionId: FactionId, regions: RegionState, productionQueue: ProductionQueueItem[], offset: number = 0): string {
+function generateAIDivisionName(countryId: CountryId, regions: RegionState, productionQueue: ProductionQueueItem[], offset: number = 0): string {
   const prefixMap: Record<string, string> = {
     soviet: 'Red Guard',
     white: 'White Guard',
@@ -66,15 +66,15 @@ function generateAIDivisionName(factionId: FactionId, regions: RegionState, prod
     don: 'Don Cossack',
     fswr: 'Red Guard',
   };
-  const prefix = prefixMap[factionId] || 'Guard';
+  const prefix = prefixMap[countryId] || 'Guard';
   
   // Count existing divisions owned by this faction
   const existingCount = Object.values(regions).reduce((acc, region) => 
-    acc + region.divisions.filter(d => d.owner === factionId).length, 0
+    acc + region.divisions.filter(d => d.owner === countryId).length, 0
   );
   
   // Count divisions in production for this faction
-  const productionCount = productionQueue.filter(p => p.owner === factionId).length;
+  const productionCount = productionQueue.filter(p => p.owner === countryId).length;
   
   const totalCount = existingCount + productionCount + offset;
   
@@ -112,8 +112,8 @@ export interface AIActions {
  * - Adds divisions to the production queue if it has enough money
  * 
  * @param armyGroups - All army groups in the game
- * @param factionBonuses - Faction bonuses from completed missions
- * @param coreRegions - Optional list of core region IDs for this faction
+ * @param countryBonuses - Country bonuses from completed missions
+ * @param coreRegions - Optional list of core region IDs for this country
  */
 export function runAITick(
   aiState: AIState,
@@ -122,19 +122,19 @@ export function runAITick(
   activeCombats: ActiveCombat[] = [],
   movingUnits: Movement[] = [],
   productionQueue: ProductionQueueItem[] = [],
-  productionQueues: Record<FactionId, ProductionQueueItem[]> = {} as Record<FactionId, ProductionQueueItem[]>,
-  factionBonuses: FactionBonuses,
+  productionQueues: Record<CountryId, ProductionQueueItem[]> = {} as Record<CountryId, ProductionQueueItem[]>,
+  countryBonuses: CountryBonuses,
   coreRegions?: string[]
 ): AIActions {
-  const { factionId } = aiState;
+  const { countryId } = aiState;
   
   // 1. Find or create an army group for the AI
-  let aiArmyGroup = armyGroups.find(g => g.owner === factionId);
+  let aiArmyGroup = armyGroups.find(g => g.owner === countryId);
   let newArmyGroup: ArmyGroup | undefined = undefined;
   
   if (!aiArmyGroup) {
     // Create a default AI army group
-    const ownedRegions = getOwnedRegions(regions, factionId);
+    const ownedRegions = getOwnedRegions(regions, countryId);
     const ownedRegionIds = ownedRegions.map(r => r.id);
     
     const nameMap: Record<string, string> = {
@@ -144,14 +144,14 @@ export function runAITick(
     ukraine: 'Ukrainian Army Group',
     fswr: 'Red Guard Army Group',
   };
-    const name = nameMap[factionId] || 'Army Group';
+    const name = nameMap[countryId] || 'Army Group';
     
     newArmyGroup = {
       id: `ai-army-group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       name,
       regionIds: ownedRegionIds,
       color: '#6B7280',
-      owner: factionId,
+      owner: countryId,
       theaterId: null,
       mode: 'advance', // AI automatically advances toward enemies
     };
@@ -161,7 +161,7 @@ export function runAITick(
   
   // 2. Create production requests
   const productionRequests: AIProductionRequest[] = [];
-  const ownedRegions = getOwnedRegions(regions, factionId);
+  const ownedRegions = getOwnedRegions(regions, countryId);
   
   // Filter out regions with active combat
   const regionsWithActiveCombat = new Set(
@@ -177,7 +177,7 @@ export function runAITick(
       divisionsCreated: 0,
       productionRequests: [],
       updatedAIState: {
-        factionId,
+        countryId,
       },
       newArmyGroup,
     };
@@ -186,7 +186,7 @@ export function runAITick(
   // AI production logic: produce up to 2 divisions per tick if under cap
   while (divisionsCreated < 2) {
     // Check command power before producing
-    if (!canProduceDivision(factionId, regions, movingUnits, productionQueues, factionBonuses, coreRegions)) {
+    if (!canProduceDivision(countryId, regions, movingUnits, productionQueues, countryBonuses, coreRegions)) {
       break;
     }
     
@@ -195,7 +195,7 @@ export function runAITick(
     if (!targetRegion) break;
     
     productionRequests.push({
-      divisionName: generateAIDivisionName(factionId, regions, productionQueue, divisionsCreated),
+      divisionName: generateAIDivisionName(countryId, regions, productionQueue, divisionsCreated),
       targetRegionId: targetRegion.id,
       armyGroupId: aiArmyGroup.id,
     });
@@ -207,7 +207,7 @@ export function runAITick(
     divisionsCreated,
     productionRequests,
     updatedAIState: {
-      factionId,
+      countryId,
     },
     newArmyGroup,
   };

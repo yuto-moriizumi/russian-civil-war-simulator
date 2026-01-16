@@ -52,13 +52,13 @@ export const scheduledEvents: ScheduledEvent[] = [
       },
       {
         type: 'declareWar',
-        fromFaction: 'fswr',
-        toFaction: 'finland',
+        fromCountry: 'fswr',
+        toCountry: 'finland',
       },
       {
         type: 'declareWar',
-        fromFaction: 'soviet',
-        toFaction: 'finland',
+        fromCountry: 'soviet',
+        toCountry: 'finland',
       },
     ],
     triggered: false,

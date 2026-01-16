@@ -3,7 +3,7 @@
 
 import { Marker } from 'react-map-gl/maplibre';
 import { Region, Movement, ActiveCombat } from '../../types/game';
-import { FACTION_COLORS } from '../../utils/mapUtils';
+import { COUNTRY_COLORS } from '../../utils/mapUtils';
 import { FACTION_FLAGS } from './mapConstants';
 
 interface UnitMarkerProps {
@@ -43,7 +43,7 @@ export function UnitMarker({
       <div
         className="unit-marker"
         style={{
-          backgroundColor: FACTION_COLORS[region.owner],
+          backgroundColor: COUNTRY_COLORS[region.owner],
           border: isSelected ? '2px solid #22d3ee' : '1px solid rgba(0,0,0,0.5)',
           borderRadius: '4px',
           padding: '2px 6px',
@@ -109,7 +109,7 @@ export function MovingUnitMarker({
       <div
         className="moving-unit-marker"
         style={{
-          backgroundColor: FACTION_COLORS[movement.owner],
+          backgroundColor: COUNTRY_COLORS[movement.owner],
           border: '1px dashed #22d3ee',
           borderRadius: '50%',
           padding: '4px 8px',
@@ -168,10 +168,10 @@ export function CombatMarker({
     ? (defenderHp / combat.initialDefenderHp) * 100 
     : 0);
 
-  const attackerColor = FACTION_COLORS[combat.attackerFaction];
-  const defenderColor = FACTION_COLORS[combat.defenderFaction];
-  const attackerTextColor = combat.attackerFaction === 'white' ? '#000' : '#fff';
-  const defenderTextColor = combat.defenderFaction === 'white' ? '#000' : '#fff';
+  const attackerColor = COUNTRY_COLORS[combat.attackerCountry];
+  const defenderColor = COUNTRY_COLORS[combat.defenderCountry];
+  const attackerTextColor = combat.attackerCountry === 'white' ? '#000' : '#fff';
+  const defenderTextColor = combat.defenderCountry === 'white' ? '#000' : '#fff';
 
   return (
     <Marker

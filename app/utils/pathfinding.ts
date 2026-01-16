@@ -1,4 +1,4 @@
-import { RegionState, Adjacency, FactionId, Movement } from '../types/game';
+import { RegionState, Adjacency, CountryId, Movement } from '../types/game';
 
 /**
  * Find the nearest enemy-controlled region from a starting region using BFS.
@@ -8,7 +8,7 @@ export function findNearestEnemyRegion(
   startRegionId: string,
   regions: RegionState,
   adjacency: Adjacency,
-  playerFaction: FactionId
+  playerCountry: CountryId
 ): string | null {
   const visited = new Set<string>();
   const queue: string[] = [startRegionId];
@@ -26,7 +26,7 @@ export function findNearestEnemyRegion(
       if (!neighbor) continue;
 
       // Check if this is an enemy region
-      if (neighbor.owner !== playerFaction && neighbor.owner !== 'neutral') {
+      if (neighbor.owner !== playerCountry && neighbor.owner !== 'neutral') {
         return neighborId;
       }
 
@@ -98,10 +98,10 @@ export function findBestMoveTowardEnemy(
   regionId: string,
   regions: RegionState,
   adjacency: Adjacency,
-  playerFaction: FactionId
+  playerCountry: CountryId
 ): string | null {
   // First find the nearest enemy
-  const nearestEnemy = findNearestEnemyRegion(regionId, regions, adjacency, playerFaction);
+  const nearestEnemy = findNearestEnemyRegion(regionId, regions, adjacency, playerCountry);
   if (!nearestEnemy) return null;
 
   // Then find the next step toward that enemy
@@ -115,17 +115,17 @@ export function findBestMoveTowardEnemy(
 export function findFriendlyBorderRegions(
   regions: RegionState,
   adjacency: Adjacency,
-  playerFaction: FactionId
+  playerCountry: CountryId
 ): string[] {
   const borderRegions: string[] = [];
 
   for (const [regionId, region] of Object.entries(regions)) {
-    if (!region || region.owner !== playerFaction) continue;
+    if (!region || region.owner !== playerCountry) continue;
 
     const neighbors = adjacency[regionId] || [];
     const hasEnemyNeighbor = neighbors.some(neighborId => {
       const neighbor = regions[neighborId];
-      return neighbor && neighbor.owner !== playerFaction && neighbor.owner !== 'neutral';
+      return neighbor && neighbor.owner !== playerCountry && neighbor.owner !== 'neutral';
     });
 
     if (hasEnemyNeighbor) {
@@ -147,23 +147,23 @@ export function findBestDefensiveMove(
   regionId: string,
   regions: RegionState,
   adjacency: Adjacency,
-  playerFaction: FactionId
+  playerCountry: CountryId
 ): string | null {
   const currentRegion = regions[regionId];
-  if (!currentRegion || currentRegion.owner !== playerFaction) return null;
+  if (!currentRegion || currentRegion.owner !== playerCountry) return null;
 
   // Check if already at a border region (adjacent to enemy)
   const neighbors = adjacency[regionId] || [];
   const hasEnemyNeighbor = neighbors.some(neighborId => {
     const neighbor = regions[neighborId];
-    return neighbor && neighbor.owner !== playerFaction && neighbor.owner !== 'neutral';
+    return neighbor && neighbor.owner !== playerCountry && neighbor.owner !== 'neutral';
   });
 
   // If at a border, stay put to defend
   if (hasEnemyNeighbor) return null;
 
   // Find all friendly border regions
-  const borderRegions = findFriendlyBorderRegions(regions, adjacency, playerFaction);
+  const borderRegions = findFriendlyBorderRegions(regions, adjacency, playerCountry);
   if (borderRegions.length === 0) return null;
 
   // Find the nearest border region using BFS
@@ -181,7 +181,7 @@ export function findBestDefensiveMove(
 
       const neighbor = regions[neighborId];
       // Only move through friendly territory
-      if (!neighbor || neighbor.owner !== playerFaction) continue;
+      if (!neighbor || neighbor.owner !== playerCountry) continue;
 
       const nextFirstStep = firstStep || neighborId;
 
@@ -204,7 +204,7 @@ export function findBestDefensiveMove(
 export function getArmyGroupUnitCount(
   regionIds: string[],
   regions: RegionState,
-  playerFaction: FactionId,
+  playerCountry: CountryId,
   armyGroupId?: string,
   movingUnits?: Movement[]
 ): number {
@@ -212,7 +212,7 @@ export function getArmyGroupUnitCount(
   if (armyGroupId) {
     // Count divisions in regions
     let total = Object.values(regions).reduce((sum, region) => {
-      if (!region || region.owner !== playerFaction) return sum;
+      if (!region || region.owner !== playerCountry) return sum;
       const matchingDivisions = region.divisions.filter(d => d.armyGroupId === armyGroupId);
       return sum + matchingDivisions.length;
     }, 0);
@@ -220,7 +220,7 @@ export function getArmyGroupUnitCount(
     // Count divisions in transit
     if (movingUnits) {
       const inTransit = movingUnits.reduce((sum, movement) => {
-        if (movement.owner !== playerFaction) return sum;
+        if (movement.owner !== playerCountry) return sum;
         const matchingDivisions = movement.divisions.filter(d => d.armyGroupId === armyGroupId);
         return sum + matchingDivisions.length;
       }, 0);
@@ -233,7 +233,7 @@ export function getArmyGroupUnitCount(
   // Legacy behavior: count all divisions in the specified regions
   return regionIds.reduce((total, regionId) => {
     const region = regions[regionId];
-    if (!region || region.owner !== playerFaction) return total;
+    if (!region || region.owner !== playerCountry) return total;
     return total + region.divisions.length;
   }, 0);
 }

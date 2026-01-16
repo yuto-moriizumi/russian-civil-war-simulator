@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Movement, ActiveCombat, GameEvent, ProductionQueueItem, FactionId } from '../types/game';
+import { Movement, ActiveCombat, GameEvent, ProductionQueueItem, CountryId } from '../types/game';
 
 // Internal imports
 import { GameStore } from './game/types';
@@ -97,10 +97,10 @@ export const useGameStore = create<GameStore>()(
           }
           // Convert dates in productionQueues
           if (state.productionQueues) {
-            const factionIds = Object.keys(state.productionQueues) as FactionId[];
-            for (const factionId of factionIds) {
-              if (state.productionQueues[factionId]) {
-                state.productionQueues[factionId] = state.productionQueues[factionId].map((p: ProductionQueueItem) => ({
+            const countryIds = Object.keys(state.productionQueues) as CountryId[];
+            for (const countryId of countryIds) {
+              if (state.productionQueues[countryId]) {
+                state.productionQueues[countryId] = state.productionQueues[countryId].map((p: ProductionQueueItem) => ({
                   ...p,
                   startTime: new Date(p.startTime),
                   completionTime: new Date(p.completionTime),

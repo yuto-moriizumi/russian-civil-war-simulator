@@ -1,5 +1,5 @@
-import type { RegionState, FactionId, MapMode } from '../../types/game';
-import { FACTION_COLORS } from '../../utils/mapUtils';
+import type { RegionState, CountryId, MapMode } from '../../types/game';
+import { COUNTRY_COLORS } from '../../utils/mapUtils';
 import { DIVISIONS_PER_STATE, MAJOR_CITY_CAP_BONUS } from '../../utils/commandPower';
 
 // Colors for diplomacy map mode
@@ -18,11 +18,11 @@ export function createFillColorExpression(regions: RegionState) {
   const expression: any[] = ['match', ['get', 'shapeISO']];
   
   for (const [id, region] of Object.entries(regions)) {
-    expression.push(id, FACTION_COLORS[region.owner]);
+    expression.push(id, COUNTRY_COLORS[region.owner]);
   }
   
   // Default color for unmatched regions
-  expression.push(FACTION_COLORS.neutral);
+  expression.push(COUNTRY_COLORS.neutral);
   
   return expression;
 }
@@ -32,8 +32,8 @@ export function createFillColorExpression(regions: RegionState) {
  */
 export function createDiplomacyFillColorExpression(
   regions: RegionState,
-  playerFaction: FactionId,
-  getRelationship: (from: FactionId, to: FactionId) => string
+  playerFaction: CountryId,
+  getRelationship: (from: CountryId, to: CountryId) => string
 ) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const expression: any[] = ['match', ['get', 'shapeISO']];
@@ -161,8 +161,8 @@ function rgbToHex(r: number, g: number, b: number): string {
 export function createMapModeFillColorExpression(
   mapMode: MapMode,
   regions: RegionState,
-  playerFaction: FactionId | undefined,
-  getRelationship: (from: FactionId, to: FactionId) => string
+  playerFaction: CountryId | undefined,
+  getRelationship: (from: CountryId, to: CountryId) => string
 ) {
   if (mapMode === 'diplomacy' && playerFaction) {
     return createDiplomacyFillColorExpression(regions, playerFaction, getRelationship);

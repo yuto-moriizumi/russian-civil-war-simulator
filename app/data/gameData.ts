@@ -178,7 +178,7 @@ export const countries: Country[] = [
 const sovietMissions: Mission[] = [
   {
     id: 'soviet_mobilize',
-    faction: 'soviet',
+    country: 'soviet',
     name: 'Workers Unite!',
     description: 'Recruit your first Red Army units to begin the revolution',
     completed: false,
@@ -191,7 +191,7 @@ const sovietMissions: Mission[] = [
   },
   {
     id: 'soviet_terror',
-    faction: 'soviet',
+    country: 'soviet',
     name: 'Red Terror',
     description: 'Establish revolutionary tribunals to secure Bolshevik control',
     completed: false,
@@ -205,7 +205,7 @@ const sovietMissions: Mission[] = [
   },
   {
     id: 'soviet_economy',
-    faction: 'soviet',
+    country: 'soviet',
     name: 'War Communism',
     description: 'Nationalize industry and requisition grain for the war effort',
     completed: false,
@@ -219,7 +219,7 @@ const sovietMissions: Mission[] = [
   },
   {
     id: 'soviet_crush',
-    faction: 'soviet',
+    country: 'soviet',
     name: 'Crush the Counter-Revolution',
     description: 'Defeat White Army forces in multiple engagements',
     completed: false,
@@ -229,12 +229,12 @@ const sovietMissions: Mission[] = [
     available: [
       { type: 'combatVictories', count: 5 }, // Win at least 5 battles
       { type: 'controlRegionCount', count: 20 }, // Control at least 20 regions
-      { type: 'theaterExists', enemyFaction: 'white' }, // Have active theater against Whites
+      { type: 'theaterExists', enemyCountry: 'white' }, // Have active theater against Whites
     ],
   },
   {
     id: 'soviet_march',
-    faction: 'soviet',
+    country: 'soviet',
     name: 'March to Victory',
     description: 'Push the offensive and liberate key territories',
     completed: false,
@@ -244,12 +244,12 @@ const sovietMissions: Mission[] = [
     available: [
       { type: 'controlRegionCount', count: 35 }, // Control at least 35 regions
       { type: 'hasUnits', count: 20 }, // Have at least 20 divisions
-      { type: 'enemyRegionCount', faction: 'white', maxCount: 15 }, // Whites control at most 15 regions
+      { type: 'enemyRegionCount', country: 'white', maxCount: 15 }, // Whites control at most 15 regions
     ],
   },
   {
     id: 'soviet_victory',
-    faction: 'soviet',
+    country: 'soviet',
     name: 'Total Victory',
     description: 'Eliminate all White Army resistance and secure Soviet power',
     completed: false,
@@ -257,7 +257,7 @@ const sovietMissions: Mission[] = [
     rewards: { attackBonus: 5, defenceBonus: 3, gameVictory: true },
     prerequisites: ['soviet_march'],
     available: [
-      { type: 'enemyRegionCount', faction: 'white', maxCount: 0 }, // Whites control no regions
+      { type: 'enemyRegionCount', country: 'white', maxCount: 0 }, // Whites control no regions
     ],
   },
 ];
@@ -266,7 +266,7 @@ const sovietMissions: Mission[] = [
 const whiteMissions: Mission[] = [
   {
     id: 'white_rally',
-    faction: 'white',
+    country: 'white',
     name: 'Rally the Faithful',
     description: 'Gather loyal officers and volunteers to the cause',
     completed: false,
@@ -279,7 +279,7 @@ const whiteMissions: Mission[] = [
   },
   {
     id: 'white_foreign',
-    faction: 'white',
+    country: 'white',
     name: 'Secure Foreign Support',
     description: 'Establish supply lines with Allied nations',
     completed: false,
@@ -293,7 +293,7 @@ const whiteMissions: Mission[] = [
   },
   {
     id: 'white_order',
-    faction: 'white',
+    country: 'white',
     name: 'Restore Order',
     description: 'Re-establish lawful authority in liberated regions',
     completed: false,
@@ -307,7 +307,7 @@ const whiteMissions: Mission[] = [
   },
   {
     id: 'white_break',
-    faction: 'white',
+    country: 'white',
     name: 'Break the Red Army',
     description: 'Achieve decisive victories against Bolshevik forces',
     completed: false,
@@ -317,12 +317,12 @@ const whiteMissions: Mission[] = [
     available: [
       { type: 'combatVictories', count: 6 }, // Win at least 6 battles
       { type: 'controlRegionCount', count: 20 }, // Control at least 20 regions
-      { type: 'theaterExists', enemyFaction: 'soviet' }, // Have active theater against Soviets
+      { type: 'theaterExists', enemyCountry: 'soviet' }, // Have active theater against Soviets
     ],
   },
   {
     id: 'white_petrograd',
-    faction: 'white',
+    country: 'white',
     name: 'Advance on Petrograd',
     description: 'Launch the final offensive toward the revolutionary capital',
     completed: false,
@@ -332,12 +332,12 @@ const whiteMissions: Mission[] = [
     available: [
       { type: 'controlRegion', regionId: 'RU-LEN' }, // Control Leningrad Oblast (near Petrograd)
       { type: 'hasUnits', count: 25 }, // Have at least 25 divisions
-      { type: 'enemyRegionCount', faction: 'soviet', maxCount: 15 }, // Soviets control at most 15 regions
+      { type: 'enemyRegionCount', country: 'soviet', maxCount: 15 }, // Soviets control at most 15 regions
     ],
   },
   {
     id: 'white_victory',
-    faction: 'white',
+    country: 'white',
     name: 'Total Victory',
     description: 'Eliminate Bolshevik resistance and restore Russia',
     completed: false,
@@ -345,7 +345,7 @@ const whiteMissions: Mission[] = [
     rewards: { attackBonus: 3, defenceBonus: 5, gameVictory: true },
     prerequisites: ['white_petrograd'],
     available: [
-      { type: 'enemyRegionCount', faction: 'soviet', maxCount: 0 }, // Soviets control no regions
+      { type: 'enemyRegionCount', country: 'soviet', maxCount: 0 }, // Soviets control no regions
     ],
   },
 ];
@@ -354,7 +354,7 @@ const whiteMissions: Mission[] = [
 const finnishMissions: Mission[] = [
   {
     id: 'finland_independence',
-    faction: 'finland',
+    country: 'finland',
     name: 'Declare Independence',
     description: 'Secure Finnish independence from Russian control',
     completed: false,
@@ -367,7 +367,7 @@ const finnishMissions: Mission[] = [
   },
   {
     id: 'finland_civil_war',
-    faction: 'finland',
+    country: 'finland',
     name: 'Finnish Civil War',
     description: 'Defeat the Red Guards and secure the White victory',
     completed: false,
@@ -381,7 +381,7 @@ const finnishMissions: Mission[] = [
   },
   {
     id: 'finland_german_aid',
-    faction: 'finland',
+    country: 'finland',
     name: 'German Intervention',
     description: 'Secure German military support to end the civil war',
     completed: false,
@@ -395,7 +395,7 @@ const finnishMissions: Mission[] = [
   },
   {
     id: 'finland_karelian',
-    faction: 'finland',
+    country: 'finland',
     name: 'East Karelian Uprising',
     description: 'Support the East Karelian uprising against Soviet rule',
     completed: false,
@@ -405,12 +405,12 @@ const finnishMissions: Mission[] = [
     available: [
       { type: 'hasUnits', count: 10 }, // Have sufficient forces
       { type: 'controlRegion', regionId: 'FI-13' }, // Control North Karelia
-      { type: 'theaterExists', enemyFaction: 'soviet' }, // Border Soviet territory
+      { type: 'theaterExists', enemyCountry: 'soviet' }, // Border Soviet territory
     ],
   },
   {
     id: 'finland_greater',
-    faction: 'finland',
+    country: 'finland',
     name: 'Greater Finland',
     description: 'Expand Finnish borders to include Karelia and Kola Peninsula',
     completed: false,
@@ -424,7 +424,7 @@ const finnishMissions: Mission[] = [
   },
   {
     id: 'finland_victory',
-    faction: 'finland',
+    country: 'finland',
     name: 'Secure the North',
     description: 'Establish Finland as the dominant power in Northern Europe',
     completed: false,
@@ -442,7 +442,7 @@ const finnishMissions: Mission[] = [
 const ukrainianMissions: Mission[] = [
   {
     id: 'ukraine_independence',
-    faction: 'ukraine',
+    country: 'ukraine',
     name: 'Ukrainian People\'s Republic',
     description: 'Establish the Ukrainian People\'s Republic and secure independence',
     completed: false,
@@ -455,7 +455,7 @@ const ukrainianMissions: Mission[] = [
   },
   {
     id: 'ukraine_consolidate',
-    faction: 'ukraine',
+    country: 'ukraine',
     name: 'Consolidate Control',
     description: 'Secure control over Ukrainian territories and establish government authority',
     completed: false,
@@ -469,7 +469,7 @@ const ukrainianMissions: Mission[] = [
   },
   {
     id: 'ukraine_rada',
-    faction: 'ukraine',
+    country: 'ukraine',
     name: 'Strengthen the Rada',
     description: 'Build up the Central Rada\'s authority and military capacity',
     completed: false,
@@ -483,7 +483,7 @@ const ukrainianMissions: Mission[] = [
   },
   {
     id: 'ukraine_resist',
-    faction: 'ukraine',
+    country: 'ukraine',
     name: 'Resist Foreign Invasion',
     description: 'Defend Ukrainian independence against Bolshevik and White forces',
     completed: false,
@@ -497,7 +497,7 @@ const ukrainianMissions: Mission[] = [
   },
   {
     id: 'ukraine_donbas',
-    faction: 'ukraine',
+    country: 'ukraine',
     name: 'Secure the Donbas',
     description: 'Control the industrial heartland of the Donbas region',
     completed: false,
@@ -511,7 +511,7 @@ const ukrainianMissions: Mission[] = [
   },
   {
     id: 'ukraine_victory',
-    faction: 'ukraine',
+    country: 'ukraine',
     name: 'Independent and Free',
     description: 'Secure full Ukrainian independence and control all Ukrainian territories',
     completed: false,
@@ -529,7 +529,7 @@ const ukrainianMissions: Mission[] = [
 const donMissions: Mission[] = [
   {
     id: 'don_independence',
-    faction: 'don',
+    country: 'don',
     name: 'Don Cossack Independence',
     description: 'Establish the independent Don Cossack Republic',
     completed: false,
@@ -542,7 +542,7 @@ const donMissions: Mission[] = [
   },
   {
     id: 'don_consolidate',
-    faction: 'don',
+    country: 'don',
     name: 'Unite the Don',
     description: 'Consolidate control over Don Cossack territories',
     completed: false,
@@ -556,7 +556,7 @@ const donMissions: Mission[] = [
   },
   {
     id: 'don_ataman',
-    faction: 'don',
+    country: 'don',
     name: 'Ataman\'s Authority',
     description: 'Strengthen the Ataman\'s military and political control',
     completed: false,
@@ -570,7 +570,7 @@ const donMissions: Mission[] = [
   },
   {
     id: 'don_expansion',
-    faction: 'don',
+    country: 'don',
     name: 'Expand Don Territory',
     description: 'Secure neighboring territories to protect the Don homeland',
     completed: false,
@@ -584,7 +584,7 @@ const donMissions: Mission[] = [
   },
   {
     id: 'don_kuban',
-    faction: 'don',
+    country: 'don',
     name: 'Alliance with Kuban',
     description: 'Forge alliance with neighboring Kuban Cossacks',
     completed: false,
@@ -598,7 +598,7 @@ const donMissions: Mission[] = [
   },
   {
     id: 'don_victory',
-    faction: 'don',
+    country: 'don',
     name: 'Don Cossack Supremacy',
     description: 'Establish the Don Republic as a major power in the South',
     completed: false,
@@ -616,7 +616,7 @@ const donMissions: Mission[] = [
 const germanMissions: Mission[] = [
   {
     id: 'germany_mobilize',
-    faction: 'germany',
+    country: 'germany',
     name: 'Mobilize the Imperial Army',
     description: 'Deploy German forces for eastern expansion',
     completed: false,
@@ -629,7 +629,7 @@ const germanMissions: Mission[] = [
   },
   {
     id: 'germany_ober_ost',
-    faction: 'germany',
+    country: 'germany',
     name: 'Establish Ober Ost',
     description: 'Create the Supreme Command of All German Forces in the East',
     completed: false,
@@ -643,7 +643,7 @@ const germanMissions: Mission[] = [
   },
   {
     id: 'germany_brest_litovsk',
-    faction: 'germany',
+    country: 'germany',
     name: 'Treaty of Brest-Litovsk',
     description: 'Secure German dominance over Eastern territories through treaty with Soviets',
     completed: false,
@@ -657,7 +657,7 @@ const germanMissions: Mission[] = [
   },
   {
     id: 'germany_mitteleuropa',
-    faction: 'germany',
+    country: 'germany',
     name: 'Mitteleuropa Strategy',
     description: 'Expand German influence into Eastern Europe and the Baltics',
     completed: false,
@@ -671,7 +671,7 @@ const germanMissions: Mission[] = [
   },
   {
     id: 'germany_support_whites',
-    faction: 'germany',
+    country: 'germany',
     name: 'Support Anti-Bolshevik Forces',
     description: 'Aid White Army forces to maintain German strategic interests',
     completed: false,
@@ -680,12 +680,12 @@ const germanMissions: Mission[] = [
     prerequisites: ['germany_brest_litovsk'],
     available: [
       { type: 'combatVictories', count: 3 }, // Win battles against Soviets
-      { type: 'theaterExists', enemyFaction: 'soviet' }, // Border Soviet territory
+      { type: 'theaterExists', enemyCountry: 'soviet' }, // Border Soviet territory
     ],
   },
   {
     id: 'germany_baltic',
-    faction: 'germany',
+    country: 'germany',
     name: 'Baltic Dominance',
     description: 'Secure German control over the Baltic states',
     completed: false,
@@ -699,7 +699,7 @@ const germanMissions: Mission[] = [
   },
   {
     id: 'germany_victory',
-    faction: 'germany',
+    country: 'germany',
     name: 'German Imperial Hegemony',
     description: 'Establish the German Empire as the dominant power in Eastern Europe',
     completed: false,
@@ -709,10 +709,10 @@ const germanMissions: Mission[] = [
     available: [
       { type: 'controlRegionCount', count: 40 }, // Control significant territory
       { type: 'hasUnits', count: 30 }, // Strong military presence
-      { type: 'enemyRegionCount', faction: 'soviet', maxCount: 10 }, // Soviets greatly weakened
+      { type: 'enemyRegionCount', country: 'soviet', maxCount: 10 }, // Soviets greatly weakened
     ],
   },
 ];
 
-// Combined missions for both factions
+// Combined missions for all countries
 export const initialMissions: Mission[] = [...sovietMissions, ...whiteMissions, ...finnishMissions, ...ukrainianMissions, ...donMissions, ...germanMissions];

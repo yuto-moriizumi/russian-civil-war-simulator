@@ -1,4 +1,4 @@
-import { FactionId, Relationship, RelationshipType, GameEvent, NotificationItem } from '../../types/game';
+import { CountryId, Relationship, RelationshipType, GameEvent, NotificationItem } from '../../types/game';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
 import { createGameEvent, createNotification } from '../../utils/eventUtils';
@@ -17,36 +17,36 @@ export const createRelationshipActions = (
   /**
    * Set or update relationship between two factions
    */
-  setRelationship: (fromFaction: FactionId, toFaction: FactionId, type: RelationshipType) => {
+  setRelationship: (fromCountry: CountryId, toCountry: CountryId, type: RelationshipType) => {
     const { relationships: startRelationships, dateTime, gameEvents, notifications } = get();
     
     // Don't allow setting relationship with self
-    if (fromFaction === toFaction) {
+    if (fromCountry === toCountry) {
       console.warn('Cannot set relationship with self');
       return;
     }
 
-    const getFactionName = (id: FactionId) => countries.find(c => c.id === id)?.name || id;
+    const getFactionName = (id: CountryId) => countries.find(c => c.id === id)?.name || id;
     const newEvents: GameEvent[] = [];
     const newNotifications: NotificationItem[] = [];
 
     // Helper to get current status from startRelationships
-    const getCurrentStatus = (from: FactionId, to: FactionId): RelationshipType => {
-      const rel = startRelationships.find(r => r.fromFaction === from && r.toFaction === to);
+    const getCurrentStatus = (from: CountryId, to: CountryId): RelationshipType => {
+      const rel = startRelationships.find(r => r.fromCountry === from && r.toCountry === to);
       return rel ? rel.type : 'neutral';
     };
     
     // Helper to apply a single relationship change to a list
     const applyRelationshipChange = (
       rels: Relationship[], 
-      from: FactionId, 
-      to: FactionId, 
+      from: CountryId, 
+      to: CountryId, 
       newType: RelationshipType
     ): Relationship[] => {
       if (from === to) return rels;
 
       const existingIndex = rels.findIndex(
-        r => r.fromFaction === from && r.toFaction === to
+        r => r.fromCountry === from && r.toCountry === to
       );
       
       if (newType === 'neutral') {
@@ -58,7 +58,7 @@ export const createRelationshipActions = (
         }
         return rels;
       } else {
-        const newRel: Relationship = { fromFaction: from, toFaction: to, type: newType };
+        const newRel: Relationship = { fromCountry: from, toCountry: to, type: newType };
         if (existingIndex !== -1) {
           const updated = [...rels];
           updated[existingIndex] = newRel;
@@ -72,8 +72,8 @@ export const createRelationshipActions = (
     // Check for autonomy relationships - cannot declare war on each other
     if (type === 'war') {
       const hasAutonomy = startRelationships.some(
-        r => ((r.fromFaction === fromFaction && r.toFaction === toFaction) ||
-              (r.fromFaction === toFaction && r.toFaction === fromFaction)) &&
+        r => ((r.fromCountry === fromCountry && r.toCountry === toCountry) ||
+              (r.fromCountry === toCountry && r.toCountry === fromCountry)) &&
              r.type === 'autonomy'
       );
       
@@ -86,8 +86,8 @@ export const createRelationshipActions = (
     // Check if trying to set autonomy when at war
     if (type === 'autonomy') {
       const atWar = startRelationships.some(
-        r => ((r.fromFaction === fromFaction && r.toFaction === toFaction) ||
-              (r.fromFaction === toFaction && r.toFaction === fromFaction)) &&
+        r => ((r.fromCountry === fromCountry && r.toCountry === toCountry) ||
+              (r.fromCountry === toCountry && r.toCountry === fromCountry)) &&
              r.type === 'war'
       );
       
@@ -98,78 +98,78 @@ export const createRelationshipActions = (
     }
 
     // Check if this is a new war declaration
-    if (type === 'war' && getCurrentStatus(fromFaction, toFaction) !== 'war') {
-      const fromName = getFactionName(fromFaction);
-      const toName = getFactionName(toFaction);
+    if (type === 'war' && getCurrentStatus(fromCountry, toCountry) !== 'war') {
+      const fromName = getFactionName(fromCountry);
+      const toName = getFactionName(toCountry);
       const event = createGameEvent(
         'war_declared',
         `${fromName} declares war against ${toName}`,
         `${fromName} has declared war on ${toName}!`,
         dateTime,
-        fromFaction
+        fromCountry
       );
       newEvents.push(event);
       newNotifications.push(createNotification(event, dateTime));
     }
     
-    let nextRelationships = applyRelationshipChange(startRelationships, fromFaction, toFaction, type);
+    let nextRelationships = applyRelationshipChange(startRelationships, fromCountry, toCountry, type);
 
     // War is mutual
     if (type === 'war') {
-      nextRelationships = applyRelationshipChange(nextRelationships, toFaction, fromFaction, 'war');
+      nextRelationships = applyRelationshipChange(nextRelationships, toCountry, fromCountry, 'war');
     }
 
     // Cascading war declarations for autonomy
     if (type === 'war') {
       // 1. If Master declares war, Servant also declares war on the target
       const servantsOfAggressor = startRelationships.filter(
-        r => r.fromFaction === fromFaction && r.type === 'autonomy'
+        r => r.fromCountry === fromCountry && r.type === 'autonomy'
       );
       servantsOfAggressor.forEach(s => {
         // Servant declares war on the same target if not already at war
-        if (getCurrentStatus(s.toFaction, toFaction) !== 'war') {
-          const servantName = getFactionName(s.toFaction);
-          const masterName = getFactionName(fromFaction);
-          const targetName = getFactionName(toFaction);
+        if (getCurrentStatus(s.toCountry, toCountry) !== 'war') {
+          const servantName = getFactionName(s.toCountry);
+          const masterName = getFactionName(fromCountry);
+          const targetName = getFactionName(toCountry);
           const event = createGameEvent(
             'war_declared',
             `${servantName} joins war against ${targetName}`,
             `${servantName} joins their Master (${masterName}) in war against ${targetName}!`,
             dateTime,
-            s.toFaction
+            s.toCountry
           );
           newEvents.push(event);
           newNotifications.push(createNotification(event, dateTime));
           
           // Make it mutual between Servant and Target
-          nextRelationships = applyRelationshipChange(nextRelationships, s.toFaction, toFaction, 'war');
-          nextRelationships = applyRelationshipChange(nextRelationships, toFaction, s.toFaction, 'war');
+          nextRelationships = applyRelationshipChange(nextRelationships, s.toCountry, toCountry, 'war');
+          nextRelationships = applyRelationshipChange(nextRelationships, toCountry, s.toCountry, 'war');
         }
       });
 
       // 2. If Master is declared war upon, Servant declares war on the aggressor
       const servantsOfDefender = startRelationships.filter(
-        r => r.fromFaction === toFaction && r.type === 'autonomy'
+        r => r.fromCountry === toCountry && r.type === 'autonomy'
       );
       servantsOfDefender.forEach(s => {
         // Servant declares war on the aggressor to defend Master if not already at war
-        if (getCurrentStatus(s.toFaction, fromFaction) !== 'war') {
-          const servantName = getFactionName(s.toFaction);
-          const masterName = getFactionName(toFaction);
-          const aggressorName = getFactionName(fromFaction);
+        if (getCurrentStatus(s.toCountry, fromCountry) !== 'war') {
+          const servantName = getFactionName(s.toCountry);
+          const masterName = getFactionName(toCountry);
+          const aggressorName = getFactionName(fromCountry);
           const event = createGameEvent(
             'war_declared',
             `${servantName} joins defense against ${aggressorName}`,
             `${servantName} joins their Master (${masterName}) to defend against ${aggressorName}!`,
             dateTime,
-            s.toFaction
+            s.toCountry
           );
           newEvents.push(event);
           newNotifications.push(createNotification(event, dateTime));
           
           // Make it mutual between Servant and Aggressor
-          nextRelationships = applyRelationshipChange(nextRelationships, s.toFaction, fromFaction, 'war');
-          nextRelationships = applyRelationshipChange(nextRelationships, fromFaction, s.toFaction, 'war');
+          nextRelationships = applyRelationshipChange(nextRelationships, s.toCountry, fromCountry, 'war');
+          nextRelationships = applyRelationshipChange(nextRelationships, fromCountry, s.toCountry, 'war');
         }
       });
     }
@@ -185,14 +185,14 @@ export const createRelationshipActions = (
    * Get relationship status between two factions
    * Returns 'neutral' if no explicit relationship exists
    */
-  getRelationship: (fromFaction: FactionId, toFaction: FactionId): RelationshipType => {
-    if (fromFaction === toFaction) {
+  getRelationship: (fromCountry: CountryId, toCountry: CountryId): RelationshipType => {
+    if (fromCountry === toCountry) {
       return 'neutral'; // Can't have relationship with self
     }
     
     const { relationships } = get();
     const relationship = relationships.find(
-      r => r.fromFaction === fromFaction && r.toFaction === toFaction
+      r => r.fromCountry === fromCountry && r.toCountry === toCountry
     );
     
     return relationship ? relationship.type : 'neutral';

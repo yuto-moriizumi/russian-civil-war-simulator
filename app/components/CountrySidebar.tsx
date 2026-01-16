@@ -1,6 +1,6 @@
 'use client';
 
-import { FactionId, Relationship, RelationshipType } from '../types/game';
+import { CountryId, Relationship, RelationshipType } from '../types/game';
 import SidebarPanel from './SidebarPanel';
 import { countries } from '../data/gameData';
 import Image from 'next/image';
@@ -8,13 +8,13 @@ import Image from 'next/image';
 interface CountrySidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  countryId: FactionId;
-  playerFaction: FactionId;
+  countryId: CountryId;
+  playerCountry: CountryId;
   relationships: Relationship[];
-  onSetRelationship: (fromFaction: FactionId, toFaction: FactionId, type: RelationshipType) => void;
+  onSetRelationship: (fromCountry: CountryId, toCountry: CountryId, type: RelationshipType) => void;
 }
 
-const FACTION_NAMES: Record<FactionId, string> = {
+const COUNTRY_NAMES: Record<CountryId, string> = {
   soviet: 'Soviet Russia',
   white: 'White Army',
   finland: 'Finland',
@@ -45,40 +45,40 @@ export default function CountrySidebar({
   isOpen,
   onClose,
   countryId,
-  playerFaction,
+  playerCountry,
   relationships,
   onSetRelationship,
 }: CountrySidebarProps) {
   const country = countries.find(c => c.id === countryId);
-  const countryName = country?.name || FACTION_NAMES[countryId];
+  const countryName = country?.name || COUNTRY_NAMES[countryId];
 
   // Get relationships from this country to others
-  const otherFactions: FactionId[] = ['soviet', 'white', 'finland', 'ukraine', 'don', 'fswr', 'neutral', 'foreign'].filter(
+  const otherCountries: CountryId[] = ['soviet', 'white', 'finland', 'ukraine', 'don', 'fswr', 'neutral', 'foreign'].filter(
     f => f !== countryId
-  ) as FactionId[];
+  ) as CountryId[];
 
-  const getRelationshipStatus = (from: FactionId, to: FactionId): RelationshipType => {
+  const getRelationshipStatus = (from: CountryId, to: CountryId): RelationshipType => {
     const relation = relationships.find(
-      r => r.fromFaction === from && r.toFaction === to
+      r => r.fromCountry === from && r.toCountry === to
     );
     return relation ? relation.type : 'neutral';
   };
 
   const handleMilitaryAccessToggle = (isChecked: boolean) => {
-    const currentStatus = getRelationshipStatus(playerFaction, countryId);
+    const currentStatus = getRelationshipStatus(playerCountry, countryId);
     if (isChecked && currentStatus !== 'war') {
-      onSetRelationship(playerFaction, countryId, 'military_access');
+      onSetRelationship(playerCountry, countryId, 'military_access');
     } else if (!isChecked && currentStatus === 'military_access') {
-      onSetRelationship(playerFaction, countryId, 'neutral');
+      onSetRelationship(playerCountry, countryId, 'neutral');
     }
   };
 
   const handleDeclareWar = () => {
-    onSetRelationship(playerFaction, countryId, 'war');
+    onSetRelationship(playerCountry, countryId, 'war');
   };
 
-  const playerToTargetStatus = getRelationshipStatus(playerFaction, countryId);
-  const targetToPlayerStatus = getRelationshipStatus(countryId, playerFaction);
+  const playerToTargetStatus = getRelationshipStatus(playerCountry, countryId);
+  const targetToPlayerStatus = getRelationshipStatus(countryId, playerCountry);
   const isPlayable = countryId === 'soviet' || countryId === 'white' || countryId === 'finland' || countryId === 'ukraine' || countryId === 'don' || countryId === 'fswr';
 
   return (
@@ -113,8 +113,8 @@ export default function CountrySidebar({
           </div>
         </div>
 
-        {/* Diplomacy Section for non-player playable factions */}
-        {countryId !== playerFaction && isPlayable && (
+        {/* Diplomacy Section for non-player playable countries */}
+        {countryId !== playerCountry && isPlayable && (
           <div className="space-y-3">
             <h3 className="text-sm font-bold uppercase tracking-wider text-stone-500 px-1">
               Diplomacy
@@ -193,7 +193,7 @@ export default function CountrySidebar({
           </h3>
           
           <div className="bg-stone-900 rounded-lg border border-stone-700 divide-y divide-stone-800">
-            {otherFactions.map(otherId => {
+            {otherCountries.map((otherId: CountryId) => {
               if (otherId === 'neutral' || otherId === 'foreign') return null;
               
               const outwardRelation = getRelationshipStatus(countryId, otherId);
@@ -203,7 +203,7 @@ export default function CountrySidebar({
                 <div key={otherId} className="p-3">
                   <div className="flex justify-between items-center mb-1">
                     <span className="font-semibold text-stone-200">
-                      {FACTION_NAMES[otherId]}
+                      {COUNTRY_NAMES[otherId]}
                     </span>
                   </div>
                   <div className="flex flex-col text-xs space-y-1">

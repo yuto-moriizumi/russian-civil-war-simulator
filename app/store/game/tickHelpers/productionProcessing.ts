@@ -1,4 +1,4 @@
-import { ProductionQueueItem, RegionState, Division, FactionId, FactionBonuses } from '../../../types/game';
+import { ProductionQueueItem, RegionState, Division, CountryId, CountryBonuses } from '../../../types/game';
 import { getDivisionStats } from '../../../utils/bonusCalculator';
 
 /**
@@ -7,25 +7,25 @@ import { getDivisionStats } from '../../../utils/bonusCalculator';
  * @param productionQueues - Per-faction production queues
  * @param currentTime - Current game time
  * @param regions - Current region state
- * @param factionBonuses - Per-faction bonuses from missions
+ * @param countryBonuses - Per-faction bonuses from missions
  * @returns Updated per-faction queues, regions, and completed production events
  */
 export function processProductionQueue(
-  productionQueues: Record<FactionId, ProductionQueueItem[]>,
+  productionQueues: Record<CountryId, ProductionQueueItem[]>,
   currentTime: Date,
   regions: RegionState,
-  factionBonuses: Record<FactionId, FactionBonuses>
+  countryBonuses: Record<CountryId, CountryBonuses>
 ): {
-  remainingProductions: Record<FactionId, ProductionQueueItem[]>;
+  remainingProductions: Record<CountryId, ProductionQueueItem[]>;
   updatedRegions: RegionState;
   completedProductions: ProductionQueueItem[];
 } {
   const completedProductions: ProductionQueueItem[] = [];
   let updatedRegions = { ...regions };
-  const remainingQueues: Record<FactionId, ProductionQueueItem[]> = {} as Record<FactionId, ProductionQueueItem[]>;
+  const remainingQueues: Record<CountryId, ProductionQueueItem[]> = {} as Record<CountryId, ProductionQueueItem[]>;
 
   // Process each faction's queue independently
-  const factionIds = Object.keys(productionQueues) as FactionId[];
+  const factionIds = Object.keys(productionQueues) as CountryId[];
   
   for (const factionId of factionIds) {
     const factionQueue = productionQueues[factionId] || [];
@@ -36,7 +36,7 @@ export function processProductionQueue(
       completedProductions.push(production);
 
       // Get division stats with faction bonuses applied
-      const bonuses = factionBonuses[production.owner];
+      const bonuses = countryBonuses[production.owner];
       const divisionStats = getDivisionStats(production.owner, bonuses);
 
       // Create the division with bonuses

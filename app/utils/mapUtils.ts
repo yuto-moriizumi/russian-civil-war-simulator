@@ -1,8 +1,8 @@
-import { Adjacency, FactionId, RegionState, Movement } from '../types/game';
+import { Adjacency, CountryId, RegionState, Movement } from '../types/game';
 import { initialRegionOwnership, regionValues } from '../data/map';
 
-// Faction colors for map display
-export const FACTION_COLORS: Record<FactionId, string> = {
+// Country colors for map display
+export const COUNTRY_COLORS: Record<CountryId, string> = {
   soviet: '#CC0000',      // Red
   white: '#0d3b0d',       // Very Dark Green (White Army)
   finland: '#FFFFFF',     // White (Finnish white guard color)
@@ -25,23 +25,23 @@ export function getAdjacentRegions(adjacency: Adjacency, regionId: string): stri
   return adjacency[regionId] ?? [];
 }
 
-// Get regions controlled by a specific faction
-export function getRegionsByFaction(regions: RegionState, faction: FactionId): string[] {
+// Get regions controlled by a specific country
+export function getRegionsByCountry(regions: RegionState, country: CountryId): string[] {
   return Object.entries(regions)
-    .filter(([, region]) => region.owner === faction)
+    .filter(([, region]) => region.owner === country)
     .map(([id]) => id);
 }
 
-// Count total units owned by a faction (in regions and in transit)
-export function countFactionUnits(regions: RegionState, faction: FactionId, movingUnits: Movement[] = []): number {
+// Count total units owned by a country (in regions and in transit)
+export function countCountryUnits(regions: RegionState, country: CountryId, movingUnits: Movement[] = []): number {
   // Count units in regions
   const unitsInRegions = Object.values(regions)
-    .filter(region => region.owner === faction)
+    .filter(region => region.owner === country)
     .reduce((total, region) => total + region.divisions.length, 0);
   
   // Count units in transit
   const unitsInTransit = movingUnits
-    .filter(movement => movement.owner === faction)
+    .filter(movement => movement.owner === country)
     .reduce((total, movement) => total + movement.divisions.length, 0);
   
   return unitsInRegions + unitsInTransit;
@@ -51,7 +51,7 @@ export function countFactionUnits(regions: RegionState, faction: FactionId, movi
  * Count units in a specific army group across regions and in transit
  * @param regionIds - Region IDs that belong to the army group
  * @param regions - Current region state
- * @param faction - Faction that owns the army group
+ * @param country - Country that owns the army group
  * @param armyGroupId - ID of the army group
  * @param movingUnits - Units currently in transit
  * @returns Total unit count for the army group
@@ -59,14 +59,14 @@ export function countFactionUnits(regions: RegionState, faction: FactionId, movi
 export function getArmyGroupUnitCount(
   regionIds: string[],
   regions: RegionState,
-  faction: FactionId,
+  country: CountryId,
   armyGroupId: string,
   movingUnits: Movement[] = []
 ): number {
   // Count divisions in regions that belong to this army group
   const unitsInRegions = regionIds.reduce((count, regionId) => {
     const region = regions[regionId];
-    if (!region || region.owner !== faction) return count;
+    if (!region || region.owner !== country) return count;
     
     // Count divisions that belong to this army group
     const groupDivisions = region.divisions.filter(d => d.armyGroupId === armyGroupId).length;
@@ -75,7 +75,7 @@ export function getArmyGroupUnitCount(
   
   // Count divisions in transit that belong to this army group
   const unitsInTransit = movingUnits
-    .filter(m => m.owner === faction)
+    .filter(m => m.owner === country)
     .reduce((count, movement) => {
       const groupDivisions = movement.divisions.filter(d => d.armyGroupId === armyGroupId).length;
       return count + groupDivisions;
@@ -84,14 +84,14 @@ export function getArmyGroupUnitCount(
   return unitsInRegions + unitsInTransit;
 }
 
-// Calculate total income from regions controlled by a faction (using region values/weights)
+// Calculate total income from regions controlled by a country (using region values/weights)
 // minus unit maintenance costs ($1 per unit per hour)
-export function calculateFactionIncome(regions: RegionState, faction: FactionId, movingUnits: Movement[] = []): number {
+export function calculateCountryIncome(regions: RegionState, country: CountryId, movingUnits: Movement[] = []): number {
   const grossIncome = Object.values(regions)
-    .filter(region => region.owner === faction)
+    .filter(region => region.owner === country)
     .reduce((total, region) => total + region.value, 0);
   
-  const unitCount = countFactionUnits(regions, faction, movingUnits);
+  const unitCount = countCountryUnits(regions, country, movingUnits);
   const maintenanceCost = unitCount; // $1 per unit per hour
   
   return grossIncome - maintenanceCost;
@@ -100,7 +100,7 @@ export function calculateFactionIncome(regions: RegionState, faction: FactionId,
 // Initialize region state from GeoJSON features
 export function initializeRegionState(
   features: GeoJSON.Feature[],
-  defaultOwner: FactionId = 'neutral'
+  defaultOwner: CountryId = 'neutral'
 ): RegionState {
   const state: RegionState = {};
   
@@ -162,11 +162,11 @@ export function generateOwnershipColorExpression(
   const expression: ['match', ['get', string], ...Array<string>] = ['match', ['get', 'regionId']];
   
   for (const [id, region] of Object.entries(regions)) {
-    expression.push(id, FACTION_COLORS[region.owner]);
+    expression.push(id, COUNTRY_COLORS[region.owner]);
   }
   
   // Default color for unmatched regions
-  expression.push(FACTION_COLORS.neutral);
+  expression.push(COUNTRY_COLORS.neutral);
   
   return expression;
 }

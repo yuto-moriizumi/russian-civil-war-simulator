@@ -1,16 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { ProductionQueueItem, RegionState, FactionId, ArmyGroup } from '../types/game';
+import { ProductionQueueItem, RegionState, CountryId, ArmyGroup } from '../types/game';
 import SidebarPanel from './SidebarPanel';
 
 interface ProductionQueuePanelProps {
   isOpen: boolean;
   onClose: () => void;
-  productionQueue: Record<FactionId, ProductionQueueItem[]>;
+  productionQueue: Record<CountryId, ProductionQueueItem[]>;
   regions: RegionState;
   armyGroups: ArmyGroup[];
-  playerFaction: FactionId;
+  playerCountry: CountryId;
   currentDateTime: Date;
   onAddProduction: (divisionName: string, targetRegionId?: string | null) => void;
   onCancelProduction: (productionId: string) => void;
@@ -23,7 +23,7 @@ export default function ProductionQueuePanel({
   productionQueue,
   regions,
   armyGroups,
-  playerFaction,
+  playerCountry,
   currentDateTime,
   onAddProduction,
   onCancelProduction,
@@ -33,10 +33,10 @@ export default function ProductionQueuePanel({
   const [selectedRegion, setSelectedRegion] = useState<string>('');
 
   // Filter queue to show only player's productions
-  const playerProductions = productionQueue[playerFaction] || [];
+  const playerProductions = productionQueue[playerCountry] || [];
 
   // Get player-owned regions for deployment
-  const ownedRegions = Object.values(regions).filter(r => r.owner === playerFaction);
+  const ownedRegions = Object.values(regions).filter(r => r.owner === playerCountry);
 
   const handleAddProduction = () => {
     if (!divisionName.trim()) {

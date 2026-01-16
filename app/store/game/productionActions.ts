@@ -33,7 +33,7 @@ export const createProductionActions = (
       state.regions,
       state.movingUnits,
       state.productionQueues,
-      state.factionBonuses[state.selectedCountry.id],
+      state.countryBonuses[state.selectedCountry.id],
       state.selectedCountry.coreRegions
     );
     
@@ -95,7 +95,7 @@ export const createProductionActions = (
     // Create multiple production items
     const newProductions: ProductionQueueItem[] = [];
     const now = state.dateTime;
-    const productionTimeHours = getBaseProductionTime(state.factionBonuses[state.selectedCountry.id]);
+    const productionTimeHours = getBaseProductionTime(state.countryBonuses[state.selectedCountry.id]);
 
     // Calculate the start time for the first new production
     // If queue is empty, start immediately. Otherwise, start after the last item completes.

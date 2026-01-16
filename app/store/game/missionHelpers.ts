@@ -24,32 +24,32 @@ export function evaluateMissionCondition(
   }
 ): boolean {
   const { regions, dateTime, gameEvents, selectedCountry, theaters, armyGroups } = state;
-  const playerFaction = selectedCountry.id;
+  const playerCountry = selectedCountry.id;
 
   switch (condition.type) {
     case 'controlRegion': {
       const region = regions[condition.regionId];
-      return region?.owner === playerFaction;
+      return region?.owner === playerCountry;
     }
     
     case 'controlRegions': {
       return condition.regionIds.every(regionId => {
         const region = regions[regionId];
-        return region?.owner === playerFaction;
+        return region?.owner === playerCountry;
       });
     }
     
     case 'controlRegionCount': {
       const controlledCount = Object.values(regions).filter(
-        region => region.owner === playerFaction
+        region => region.owner === playerCountry
       ).length;
       return controlledCount >= condition.count;
     }
     
     case 'hasUnits': {
       const totalUnits = Object.values(regions).reduce((acc, region) => {
-        if (region.owner === playerFaction) {
-          return acc + region.divisions.filter(d => d.owner === playerFaction).length;
+        if (region.owner === playerCountry) {
+          return acc + region.divisions.filter(d => d.owner === playerCountry).length;
         }
         return acc;
       }, 0);
@@ -63,14 +63,14 @@ export function evaluateMissionCondition(
     
     case 'combatVictories': {
       const victories = gameEvents.filter(
-        event => event.type === 'combat_victory' && event.faction === playerFaction
+        event => event.type === 'combat_victory' && event.country === playerCountry
       ).length;
       return victories >= condition.count;
     }
     
     case 'enemyRegionCount': {
       const enemyCount = Object.values(regions).filter(
-        region => region.owner === condition.faction
+        region => region.owner === condition.country
       ).length;
       return enemyCount <= condition.maxCount;
     }
@@ -80,18 +80,18 @@ export function evaluateMissionCondition(
         region => region.countryIso3 === condition.countryIso3
       );
       return countryRegions.length > 0 && countryRegions.every(
-        region => region.owner === playerFaction
+        region => region.owner === playerCountry
       );
     }
     
     case 'theaterExists': {
       return theaters.some(
-        theater => theater.owner === playerFaction && theater.enemyFaction === condition.enemyFaction
+        theater => theater.owner === playerCountry && theater.enemyCountry === condition.enemyCountry
       );
     }
     
     case 'armyGroupCount': {
-      const playerArmyGroups = armyGroups.filter(g => g.owner === playerFaction);
+      const playerArmyGroups = armyGroups.filter(g => g.owner === playerCountry);
       return playerArmyGroups.length >= condition.count;
     }
     

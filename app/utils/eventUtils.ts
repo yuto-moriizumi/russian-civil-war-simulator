@@ -1,4 +1,4 @@
-import { FactionId, GameEvent, GameEventType, NotificationItem } from '../types/game';
+import { CountryId, GameEvent, GameEventType, NotificationItem } from '../types/game';
 
 // Helper function to create game events
 export function createGameEvent(
@@ -6,7 +6,7 @@ export function createGameEvent(
   title: string,
   description: string,
   timestamp: Date,
-  faction?: FactionId,
+  country?: CountryId,
   regionId?: string
 ): GameEvent {
   return {
@@ -15,7 +15,7 @@ export function createGameEvent(
     title,
     description,
     timestamp: new Date(timestamp),
-    faction,
+    country,
     regionId,
   };
 }

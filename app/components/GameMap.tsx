@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import Map, { MapRef, Source, Layer, NavigationControl } from 'react-map-gl/maplibre';
 import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { RegionState, Adjacency, FactionId, Movement, ActiveCombat, Theater, ArmyGroup, MapMode, RelationshipType } from '../types/game';
+import { RegionState, Adjacency, CountryId, Movement, ActiveCombat, Theater, ArmyGroup, MapMode, RelationshipType } from '../types/game';
 import { getAdjacentRegions } from '../utils/mapUtils';
 
 import { UnitMarker, MovingUnitMarker, CombatMarker } from './GameMap/MapMarkers';
@@ -33,7 +33,7 @@ interface GameMapProps {
   movingUnits: Movement[];
   activeCombats: ActiveCombat[];
   currentDateTime: Date;
-  playerFaction: FactionId;
+  playerCountry: CountryId;
   unitsInReserve: number;
   theaters: Theater[];
   selectedTheaterId: string | null;
@@ -42,14 +42,14 @@ interface GameMapProps {
   mapMode: MapMode;
   regionCentroids: Record<string, [number, number]>;
   coreRegions?: string[];
-  getRelationship: (fromFaction: FactionId, toFaction: FactionId) => RelationshipType;
+  getRelationship: (fromCountry: CountryId, toCountry: CountryId) => RelationshipType;
   onRegionSelect: (regionId: string | null) => void;
   onUnitSelect: (regionId: string | null) => void;
   onRegionHover?: (regionId: string | null) => void;
   onDeployUnit: () => void;
   onMoveUnits: (fromRegion: string, toRegion: string, count: number) => void;
   onSelectCombat: (combatId: string | null) => void;
-  onCountrySelect: (factionId: FactionId | null) => void;
+  onCountrySelect: (countryId: CountryId | null) => void;
   onSidebarOpen: (isOpen: boolean) => void;
 }
 
@@ -61,7 +61,7 @@ export default function GameMap({
   movingUnits,
   activeCombats,
   currentDateTime,
-  playerFaction,
+  playerCountry,
   unitsInReserve,
   theaters,
   selectedTheaterId,
@@ -138,8 +138,8 @@ export default function GameMap({
 
   // Map style expressions
   const fillColorExpression = useMemo(() => 
-    createMapModeFillColorExpression(mapMode, regions, playerFaction, getRelationship), 
-    [mapMode, regions, playerFaction, getRelationship]
+    createMapModeFillColorExpression(mapMode, regions, playerCountry, getRelationship), 
+    [mapMode, regions, playerCountry, getRelationship]
   );
   const lineColorExpression = useMemo(() => createLineColorExpression(), []);
   const lineWidthExpression = useMemo(() => createLineWidthExpression(), []);
@@ -160,7 +160,7 @@ export default function GameMap({
             onRegionSelect(regionId);
             // If this region has units owned by player, also select as unit
             const region = regions[regionId];
-            if (region && region.owner === playerFaction && region.divisions.length > 0) {
+            if (region && region.owner === playerCountry && region.divisions.length > 0) {
               onUnitSelect(regionId);
             } else {
               onUnitSelect(null);
@@ -169,7 +169,7 @@ export default function GameMap({
         }
       }
     },
-    [selectedRegion, regions, playerFaction, onRegionSelect, onUnitSelect]
+    [selectedRegion, regions, playerCountry, onRegionSelect, onUnitSelect]
   );
 
   const handleContextMenu = useCallback(
@@ -210,8 +210,8 @@ export default function GameMap({
 
   // Calculate markers
   const unitMarkers = useMemo(
-    () => calculateUnitMarkers(regions, regionCentroids, selectedUnitRegion, playerFaction),
-    [regions, regionCentroids, selectedUnitRegion, playerFaction]
+    () => calculateUnitMarkers(regions, regionCentroids, selectedUnitRegion, playerCountry),
+    [regions, regionCentroids, selectedUnitRegion, playerCountry]
   );
 
   const movingUnitMarkers = useMemo(
@@ -328,7 +328,7 @@ export default function GameMap({
           selectedUnitRegion={selectedUnitRegion}
           regions={regions}
           adjacency={adjacency}
-          playerFaction={playerFaction}
+          playerCountry={playerCountry}
           unitsInReserve={unitsInReserve}
           activeCombats={activeCombats}
           coreRegions={coreRegions}

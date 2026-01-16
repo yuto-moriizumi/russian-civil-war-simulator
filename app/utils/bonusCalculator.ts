@@ -1,4 +1,4 @@
-import { Mission, FactionBonuses, CountryId, FactionId } from '../types/game';
+import { Mission, CountryBonuses, CountryId } from '../types/game';
 
 /**
  * Base stats for divisions
@@ -16,18 +16,18 @@ export const BASE_DIVISION_STATS = {
 export const BASE_PRODUCTION_TIME_HOURS = 24;
 
 /**
- * Calculate faction bonuses from all claimed missions
+ * Calculate country bonuses from all claimed missions
  * @param missions - All game missions
- * @param factionId - Faction to calculate bonuses for
- * @returns Aggregated bonuses for the faction
+ * @param countryId - Country to calculate bonuses for
+ * @returns Aggregated bonuses for the country
  */
-export function calculateFactionBonuses(
+export function calculateCountryBonuses(
   missions: Mission[],
-  factionId: CountryId
-): FactionBonuses {
-  // Filter to claimed missions for this faction
+  countryId: CountryId
+): CountryBonuses {
+  // Filter to claimed missions for this country
   const claimedMissions = missions.filter(
-    m => m.faction === factionId && m.claimed
+    m => m.country === countryId && m.claimed
   );
 
   // Aggregate all bonuses (additive stacking)
@@ -76,37 +76,37 @@ export function calculateFactionBonuses(
 }
 
 /**
- * Get modified production time based on faction bonuses
- * @param factionBonuses - Faction's current bonuses
+ * Get modified production time based on country bonuses
+ * @param countryBonuses - Country's current bonuses
  * @returns Production time in hours
  */
-export function getBaseProductionTime(factionBonuses: FactionBonuses): number {
-  return BASE_PRODUCTION_TIME_HOURS * factionBonuses.productionSpeedMultiplier;
+export function getBaseProductionTime(countryBonuses: CountryBonuses): number {
+  return BASE_PRODUCTION_TIME_HOURS * countryBonuses.productionSpeedMultiplier;
 }
 
 /**
  * Get division stats with bonuses applied
- * @param factionId - Faction that owns the division
- * @param factionBonuses - Faction's current bonuses
+ * @param countryId - Country that owns the division
+ * @param countryBonuses - Country's current bonuses
  * @returns Division stats with bonuses
  */
 export function getDivisionStats(
-  factionId: FactionId,
-  factionBonuses: FactionBonuses
+  countryId: CountryId,
+  countryBonuses: CountryBonuses
 ): { attack: number; defence: number; hp: number; maxHp: number } {
   return {
-    attack: BASE_DIVISION_STATS.attack + factionBonuses.attackBonus,
-    defence: BASE_DIVISION_STATS.defence + factionBonuses.defenceBonus,
-    hp: BASE_DIVISION_STATS.hp + factionBonuses.hpBonus,
-    maxHp: BASE_DIVISION_STATS.maxHp + factionBonuses.maxHpBonus,
+    attack: BASE_DIVISION_STATS.attack + countryBonuses.attackBonus,
+    defence: BASE_DIVISION_STATS.defence + countryBonuses.defenceBonus,
+    hp: BASE_DIVISION_STATS.hp + countryBonuses.hpBonus,
+    maxHp: BASE_DIVISION_STATS.maxHp + countryBonuses.maxHpBonus,
   };
 }
 
 /**
- * Get initial (zero) bonuses for a faction
+ * Get initial (zero) bonuses for a country
  * Used when initializing game state
  */
-export function getInitialFactionBonuses(): FactionBonuses {
+export function getInitialCountryBonuses(): CountryBonuses {
   return {
     attackBonus: 0,
     defenceBonus: 0,
