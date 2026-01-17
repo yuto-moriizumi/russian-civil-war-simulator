@@ -17,13 +17,15 @@ export async function GET() {
       { easternEuropeOwnership },
       { centralEuropeOwnership },
       { asiaOwnership },
-      { middleEastOwnership }
+      { middleEastOwnership },
+      { otherOwnership }
     ] = await Promise.all([
       import('../../../data/map/ownership/russia'),
       import('../../../data/map/ownership/easternEurope'),
       import('../../../data/map/ownership/centralEurope'),
       import('../../../data/map/ownership/asia'),
-      import('../../../data/map/ownership/middleEast')
+      import('../../../data/map/ownership/middleEast'),
+      import('../../../data/map/ownership/other')
     ]);
 
     const ownership = {
@@ -31,7 +33,8 @@ export async function GET() {
       ...easternEuropeOwnership,
       ...centralEuropeOwnership,
       ...asiaOwnership,
-      ...middleEastOwnership
+      ...middleEastOwnership,
+      ...otherOwnership
     };
 
     return NextResponse.json({ ownership });

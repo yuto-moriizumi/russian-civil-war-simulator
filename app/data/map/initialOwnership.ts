@@ -4,6 +4,7 @@ import { easternEuropeOwnership } from './ownership/easternEurope';
 import { centralEuropeOwnership } from './ownership/centralEurope';
 import { asiaOwnership } from './ownership/asia';
 import { middleEastOwnership } from './ownership/middleEast';
+import { otherOwnership } from './ownership/other';
 
 /**
  * Initial region ownership at game start (November 20, 1917 - Ukrainian People's Republic declared)
@@ -17,4 +18,5 @@ export const initialRegionOwnership: Record<string, CountryId> = {
   ...centralEuropeOwnership,
   ...asiaOwnership,
   ...middleEastOwnership,
+  ...otherOwnership,
 };
