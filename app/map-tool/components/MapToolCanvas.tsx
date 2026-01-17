@@ -83,7 +83,7 @@ export default function MapToolCanvas({
     } else {
       // In core regions mode, show the selected country's color for its core regions
       const selectedCountryCoreRegions = coreRegions[selectedCountry] || [];
-      for (const [regionId, owner] of Object.entries(ownership)) {
+      for (const regionId of Object.keys(ownership)) {
         if (selectedCountryCoreRegions.includes(regionId)) {
           // Core region - show bright color
           expression.push(regionId, getCountryColor(selectedCountry));
@@ -375,7 +375,7 @@ export default function MapToolCanvas({
             <div className="mt-1 text-xs text-gray-400">
               Core of: {
                 Object.entries(coreRegions)
-                  .filter(([_, regions]) => regions.includes(hoveredRegion))
+                  .filter(([, regions]) => regions.includes(hoveredRegion))
                   .map(([countryId]) => countryId)
                   .join(', ') || 'none'
               }
