@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200">
+  <!-- Red background -->
+  <rect width="300" height="200" fill="#E41E20"/>
+  
+  <!-- Double-headed eagle (black) -->
+  <g transform="translate(150, 100)">
+    <!-- Eagle body -->
+    <ellipse cx="0" cy="0" rx="20" ry="25" fill="#000000"/>
+    
+    <!-- Left head -->
+    <circle cx="-30" cy="-15" r="12" fill="#000000"/>
+    <polygon points="-38,-15 -45,-12 -42,-18" fill="#000000"/>
+    
+    <!-- Right head -->
+    <circle cx="30" cy="-15" r="12" fill="#000000"/>
+    <polygon points="38,-15 45,-12 42,-18" fill="#000000"/>
+    
+    <!-- Left wing -->
+    <path d="M -20,-5 Q -50,-20 -55,5 Q -50,10 -20,0" fill="#000000"/>
+    
+    <!-- Right wing -->
+    <path d="M 20,-5 Q 50,-20 55,5 Q 50,10 20,0" fill="#000000"/>
+    
+    <!-- Tail -->
+    <path d="M 0,25 L -8,40 L 0,38 L 8,40 Z" fill="#000000"/>
+    
+    <!-- Shield/center detail -->
+    <circle cx="0" cy="5" r="8" fill="#000000" opacity="0.8"/>
+  </g>
+</svg>
