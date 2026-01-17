@@ -173,8 +173,8 @@ function deserializeGameState(data: SerializedGameState): GameState {
         armyGroupId: p.armyGroupId,
       }));
     }
-   } else if (data.productionQueue) {
-     // Legacy format: migrate from single queue to per-country queues
+  } else if (data.productionQueue) {
+    // Legacy format: migrate from single queue to per-country queues
      console.log('Migrating legacy production queue format to per-country queues');
      productionQueues = {
        soviet: [],
@@ -263,29 +263,29 @@ function deserializeGameState(data: SerializedGameState): GameState {
     productionQueues,
     relationships: data.relationships || [], // Default to empty array if not present
     mapMode: data.mapMode || 'country', // Default to country map mode
-    regionCentroids: {}, // Will be re-loaded from map data
-    scheduledEvents: data.scheduledEvents || [], // Default to empty array if not present
-    countryBonuses: data.countryBonuses || {
-      soviet: getInitialCountryBonuses(),
-      white: getInitialCountryBonuses(),
-      finland: getInitialCountryBonuses(),
-      ukraine: getInitialCountryBonuses(),
-      don: getInitialCountryBonuses(),
-      fswr: getInitialCountryBonuses(),
-      iskolat: getInitialCountryBonuses(),
-      neutral: getInitialCountryBonuses(),
-      foreign: getInitialCountryBonuses(),
-      germany: getInitialCountryBonuses(),
-      bulgaria: getInitialCountryBonuses(),
-      poland: getInitialCountryBonuses(),
-      austriahungary: getInitialCountryBonuses(),
-      romania: getInitialCountryBonuses(),
-      greece: getInitialCountryBonuses(),
-      ottoman: getInitialCountryBonuses(),
-      serbia: getInitialCountryBonuses(),
-      albania: getInitialCountryBonuses(),
-    },
-  };
+     regionCentroids: {}, // Will be re-loaded from map data
+     scheduledEvents: data.scheduledEvents || [], // Default to empty array if not present
+     countryBonuses: data.countryBonuses || {
+       soviet: getInitialCountryBonuses(),
+       white: getInitialCountryBonuses(),
+       finland: getInitialCountryBonuses(),
+       ukraine: getInitialCountryBonuses(),
+       don: getInitialCountryBonuses(),
+       fswr: getInitialCountryBonuses(),
+       iskolat: getInitialCountryBonuses(),
+       neutral: getInitialCountryBonuses(),
+       foreign: getInitialCountryBonuses(),
+       germany: getInitialCountryBonuses(),
+       bulgaria: getInitialCountryBonuses(),
+       poland: getInitialCountryBonuses(),
+       austriahungary: getInitialCountryBonuses(),
+       romania: getInitialCountryBonuses(),
+        greece: getInitialCountryBonuses(),
+        ottoman: getInitialCountryBonuses(),
+        serbia: getInitialCountryBonuses(),
+        albania: getInitialCountryBonuses(),
+      },
+   };
 }
 
 // Save game to localStorage

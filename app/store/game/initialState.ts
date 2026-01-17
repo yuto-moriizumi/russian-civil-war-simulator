@@ -28,33 +28,40 @@ export const initialGameState: GameState = {
   activeCombats: [],
   theaters: [],
   armyGroups: [],
-   productionQueues: {
-     soviet: [],
-     white: [],
-     finland: [],
-     ukraine: [],
-     don: [],
-     fswr: [],
-     iskolat: [],
-     neutral: [],
-     foreign: [],
-     germany: [],
-     bulgaria: [],
-     poland: [],
-     austriahungary: [],
-     romania: [],
+  productionQueues: {
+    soviet: [],
+    white: [],
+    finland: [],
+    ukraine: [],
+    don: [],
+    fswr: [],
+    iskolat: [],
+    neutral: [],
+    foreign: [],
+    germany: [],
+    bulgaria: [],
+    poland: [],
+    austriahungary: [],
+    romania: [],
      greece: [],
      ottoman: [],
      serbia: [],
      albania: [],
    },
-  relationships: [
-    { fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy' },
-    { fromCountry: 'soviet', toCountry: 'iskolat', type: 'autonomy' },
-    { fromCountry: 'germany', toCountry: 'poland', type: 'autonomy' },
-    { fromCountry: 'germany', toCountry: 'romania', type: 'war' },
-    { fromCountry: 'germany', toCountry: 'bulgaria', type: 'military_access' }
-  ], // Initial relationships (autonomy = puppet state)
+   relationships: [
+     { fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy' },
+     { fromCountry: 'soviet', toCountry: 'iskolat', type: 'autonomy' },
+     { fromCountry: 'germany', toCountry: 'poland', type: 'autonomy' },
+     { fromCountry: 'germany', toCountry: 'romania', type: 'war' },
+     { fromCountry: 'germany', toCountry: 'bulgaria', type: 'military_access' },
+     // Ottoman Empire relationships (November 1917)
+     { fromCountry: 'ottoman', toCountry: 'germany', type: 'military_access' },
+     { fromCountry: 'ottoman', toCountry: 'austriahungary', type: 'military_access' },
+     { fromCountry: 'ottoman', toCountry: 'greece', type: 'war' },
+     // Serbia relationships
+     { fromCountry: 'serbia', toCountry: 'austriahungary', type: 'war' },
+     { fromCountry: 'serbia', toCountry: 'germany', type: 'war' }
+   ], // Initial relationships (autonomy = puppet state)
   mapMode: 'country', // Default map mode
   regionCentroids: {}, // Will be loaded asynchronously
   scheduledEvents: scheduledEvents, // Historical events
@@ -73,9 +80,9 @@ export const initialGameState: GameState = {
      poland: getInitialCountryBonuses(),
      austriahungary: getInitialCountryBonuses(),
      romania: getInitialCountryBonuses(),
-     greece: getInitialCountryBonuses(),
-     ottoman: getInitialCountryBonuses(),
-     serbia: getInitialCountryBonuses(),
-     albania: getInitialCountryBonuses(),
-   },
-};
+      greece: getInitialCountryBonuses(),
+      ottoman: getInitialCountryBonuses(),
+      serbia: getInitialCountryBonuses(),
+      albania: getInitialCountryBonuses(),
+    },
+  };
