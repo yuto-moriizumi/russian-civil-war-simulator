@@ -16,6 +16,7 @@ export async function GET() {
       { russiaOwnership },
       { easternEuropeOwnership },
       { centralEuropeOwnership },
+      { balkansOwnership },
       { asiaOwnership },
       { middleEastOwnership },
       { otherOwnership }
@@ -23,6 +24,7 @@ export async function GET() {
       import('../../../data/map/ownership/russia'),
       import('../../../data/map/ownership/easternEurope'),
       import('../../../data/map/ownership/centralEurope'),
+      import('../../../data/map/ownership/balkans'),
       import('../../../data/map/ownership/asia'),
       import('../../../data/map/ownership/middleEast'),
       import('../../../data/map/ownership/other')
@@ -32,6 +34,7 @@ export async function GET() {
       ...russiaOwnership,
       ...easternEuropeOwnership,
       ...centralEuropeOwnership,
+      ...balkansOwnership,
       ...asiaOwnership,
       ...middleEastOwnership,
       ...otherOwnership
