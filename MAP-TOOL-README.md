@@ -54,11 +54,13 @@ Navigate to: **http://localhost:3000/map-tool** (when running `npm run dev`)
 3. Make changes using the paint tool
 4. Click "Save to TypeScript Files" to update source files
 5. Changes are automatically grouped into files:
-   - `russia.ts` - Russian regions (RU-*)
-   - `easternEurope.ts` - Ukraine, Belarus, Finland, etc.
-   - `centralEurope.ts` - Poland, Germany, Austria, etc.
-   - `asia.ts` - Kazakhstan, Central Asia, etc.
-   - `middleEast.ts` - Turkey, Iran, etc.
+   - `russia.ts` - Russian regions (RU-*, RUS)
+   - `easternEurope.ts` - Ukraine, Belarus, Finland, Baltics, Moldova
+   - `centralEurope.ts` - Poland, Germany, Austria, Czechia, Slovakia, Hungary, Romania
+   - `balkans.ts` - Croatia, Serbia, Slovenia, Bosnia, Albania, Macedonia, Bulgaria, Greece, Montenegro, Kosovo
+   - `asia.ts` - Kazakhstan, Central Asia, China, Mongolia, Japan, Korea
+   - `middleEast.ts` - Turkey, Iran, Iraq, Caucasus, Arabian Peninsula
+   - `other.ts` - Regions that don't fit other categories (should be minimal)
 
 ## API Routes (Dev Mode Only)
 
@@ -148,13 +150,16 @@ GeoJSON Load → Parse Features → Initialize Ownership → Paint Tool → Expo
 ```
 
 ### Region Categorization Logic
-Regions are categorized by their ISO prefix:
-- `RU-*` → `russia.ts`
-- `UA-*, BY-*, MD-*, EE-*, LV-*, LT-*, FI-*` → `easternEurope.ts`
-- `PL-*, DE-*, CZ-*, SK-*, HU-*, AT-*, RO-*, BG-*, GR-*` → `centralEurope.ts`
-- `KZ-*, UZ-*, TM-*, KG-*, TJ-*, MN-*, CN-*` → `asia.ts`
-- `TR-*, IR-*, IQ-*, SY-*, SA-*, AZ-*, AM-*, GE-*` → `middleEast.ts`
-- Others → `other.ts`
+Regions are automatically categorized by their ISO codes for better organization:
+- **Russia** (`RU-*`, `RUS`) → `russia.ts`
+- **Eastern Europe** (`UA-*`, `BY-*`, `MD-*`, `EE-*`, `LV-*`, `LT-*`, `FI-*`) → `easternEurope.ts`
+- **Central Europe** (`PL-*`, `DE-*`, `CZ-*`, `SK-*`, `HU-*`, `AT-*`, `RO-*`) → `centralEurope.ts`
+- **Balkans** (`HR-*`, `RS-*`, `SI-*`, `BA-*`, `MK-*`, `AL-*`, `BG-*`, `GR-*`, `ME-*`, `XK-*`) → `balkans.ts`
+- **Asia** (`KZ-*`, `UZ-*`, `TM-*`, `KG-*`, `TJ-*`, `MN-*`, `CN-*`, `JP-*`, `KR-*`, `KP-*`) → `asia.ts`
+- **Middle East** (`TR-*`, `IR-*`, `IQ-*`, `SY-*`, `SA-*`, `AZ-*`, `AM-*`, `GE-*`, and other Arabian Peninsula countries) → `middleEast.ts`
+- **Other** - Fallback for regions without clear categorization → `other.ts`
+
+The categorization uses both `shapeISO` (regional codes like `RU-MOW`) and `countryIso3` (country codes like `RUS`) properties from the GeoJSON to ensure all regions are properly categorized.
 
 ## Future Enhancements
 

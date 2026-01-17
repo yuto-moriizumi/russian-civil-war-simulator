@@ -23,17 +23,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Load GeoJSON to get shapeISO for categorization
+    // Load GeoJSON to get shapeISO and countryIso3 for categorization
     const geojsonPath = path.join(process.cwd(), 'public', 'map', 'regions.geojson');
     const geojsonData = JSON.parse(await readFile(geojsonPath, 'utf-8'));
     
-    // Create mapping from shapeID to shapeISO for categorization
-    const shapeIdToISO: Record<string, string> = {};
-    geojsonData.features.forEach((feature: { properties?: { shapeID?: string; shapeISO?: string } }) => {
+    // Create mapping from shapeID to country info for categorization
+    const shapeIdToCountry: Record<string, { shapeISO: string; countryIso3: string }> = {};
+    geojsonData.features.forEach((feature: { 
+      properties?: { 
+        shapeID?: string; 
+        shapeISO?: string; 
+        countryIso3?: string;
+      } 
+    }) => {
       const shapeID = feature.properties?.shapeID;
-      const shapeISO = feature.properties?.shapeISO;
-      if (shapeID && shapeISO) {
-        shapeIdToISO[shapeID] = shapeISO;
+      const shapeISO = feature.properties?.shapeISO || '';
+      const countryIso3 = feature.properties?.countryIso3 || '';
+      if (shapeID) {
+        shapeIdToCountry[shapeID] = { shapeISO, countryIso3 };
       }
     });
 
@@ -42,6 +49,7 @@ export async function POST(request: NextRequest) {
       russia: {},
       easternEurope: {},
       centralEurope: {},
+      balkans: {},
       asia: {},
       middleEast: {},
       other: {},
@@ -50,26 +58,46 @@ export async function POST(request: NextRequest) {
     for (const [shapeId, countryId] of Object.entries(ownership)) {
       if (typeof countryId !== 'string') continue;
       
-      // Get the ISO code for categorization
-      const isoCode = shapeIdToISO[shapeId];
-      if (!isoCode) {
-        // If we can't find ISO code, put in 'other'
+      // Get country info for categorization
+      const countryInfo = shapeIdToCountry[shapeId];
+      if (!countryInfo) {
+        // If region doesn't exist in GeoJSON, put in 'other'
         regionsByFile.other[shapeId] = countryId;
         continue;
       }
       
-      const prefix = isoCode.substring(0, 2);
+      // Use shapeISO if available, otherwise use countryIso3 for categorization
+      // Treat 'None' as empty string (some regions have literal 'None' string)
+      const shapeISO = countryInfo.shapeISO === 'None' ? '' : countryInfo.shapeISO;
+      const isoCode = shapeISO || countryInfo.countryIso3;
+      if (!isoCode) {
+        // If we can't determine country, put in 'other'
+        regionsByFile.other[shapeId] = countryId;
+        continue;
+      }
       
-      // Categorize by region prefix
-      if (prefix === 'RU') {
+      // Extract prefix (first 2 characters for regional codes like RU-ALT)
+      // For 3-letter ISO3 codes (ARM, CHN), use full code
+      const prefix = isoCode.length > 3 ? isoCode.substring(0, 2) : '';
+      const iso3 = countryInfo.countryIso3;
+      
+      // Categorize by region prefix or country ISO3
+      if (prefix === 'RU' || iso3 === 'RUS') {
         regionsByFile.russia[shapeId] = countryId;
-      } else if (['UA', 'BY', 'MD', 'EE', 'LV', 'LT', 'FI'].includes(prefix)) {
+      } else if (['UA', 'BY', 'MD', 'EE', 'LV', 'LT', 'FI'].includes(prefix) ||
+                 ['UKR', 'BLR', 'MDA', 'EST', 'LVA', 'LTU', 'FIN'].includes(iso3)) {
         regionsByFile.easternEurope[shapeId] = countryId;
-      } else if (['PL', 'DE', 'CZ', 'SK', 'HU', 'AT', 'RO', 'BG', 'GR'].includes(prefix)) {
+      } else if (['PL', 'DE', 'CZ', 'SK', 'HU', 'AT', 'RO'].includes(prefix) ||
+                 ['POL', 'DEU', 'CZE', 'SVK', 'HUN', 'AUT', 'ROU'].includes(iso3)) {
         regionsByFile.centralEurope[shapeId] = countryId;
-      } else if (['KZ', 'UZ', 'TM', 'KG', 'TJ', 'MN', 'CN'].includes(prefix)) {
+      } else if (['HR', 'RS', 'SI', 'BA', 'MK', 'AL', 'BG', 'GR', 'ME', 'XK'].includes(prefix) ||
+                 ['HRV', 'SRB', 'SVN', 'BIH', 'MKD', 'ALB', 'BGR', 'GRC', 'MNE', 'XKX'].includes(iso3)) {
+        regionsByFile.balkans[shapeId] = countryId;
+      } else if (['KZ', 'UZ', 'TM', 'KG', 'TJ', 'MN', 'CN', 'JP', 'KR', 'KP'].includes(prefix) ||
+                 ['KAZ', 'UZB', 'TKM', 'KGZ', 'TJK', 'MNG', 'CHN', 'JPN', 'KOR', 'PRK'].includes(iso3)) {
         regionsByFile.asia[shapeId] = countryId;
-      } else if (['TR', 'IR', 'IQ', 'SY', 'SA', 'AZ', 'AM', 'GE'].includes(prefix)) {
+      } else if (['TR', 'IR', 'IQ', 'SY', 'SA', 'AZ', 'AM', 'GE', 'YE', 'OM', 'AE', 'KW', 'QA', 'BH', 'JO', 'LB', 'IL', 'PS'].includes(prefix) ||
+                 ['TUR', 'IRN', 'IRQ', 'SYR', 'SAU', 'AZE', 'ARM', 'GEO', 'YEM', 'OMN', 'ARE', 'KWT', 'QAT', 'BHR', 'JOR', 'LBN', 'ISR', 'PSE'].includes(iso3)) {
         regionsByFile.middleEast[shapeId] = countryId;
       } else {
         regionsByFile.other[shapeId] = countryId;
