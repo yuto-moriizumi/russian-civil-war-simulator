@@ -322,21 +322,15 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
       divisionPrefix: 'Serbian Guard',
       selectable: false,
     },
-    albania: {
-      id: 'albania',
-      name: 'Principality of Albania',
-      combatName: 'Albanian Forces',
-      flag: '/images/flags/albania.svg',
-      color: '#E41E20',
-      adjective: 'Albanian',
-      firstArmyGroupName: 'Albanian Army Group',
-      divisionPrefix: 'Albanian Guard',
-      selectable: false,
-      coreRegions: [
-        // Historical Albanian territories as of November 1917 (start of game)
-        // The Principality of Albania existed but was heavily occupied by Central Powers
-        // Core territories in the Balkans - Albania proper
-        // (specific regions would be defined in map.ts based on available regions)
-      ],
-    },
+     albania: {
+       id: 'albania',
+       name: 'Principality of Albania',
+       combatName: 'Albanian Forces',
+       flag: '/images/flags/albania.svg',
+       color: '#E41E20',
+       adjective: 'Albanian',
+       firstArmyGroupName: 'Albanian Army Group',
+       divisionPrefix: 'Albanian Guard',
+       selectable: false,
+     },
 };
