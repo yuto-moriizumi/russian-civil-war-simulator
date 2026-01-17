@@ -73,7 +73,7 @@
     {
       "iso3": "AZE",
       "name": "Azerbaijan",
-      "admLevel": "ADM2"
+      "admLevel": "ADM0"
     },
     {
       "iso3": "DEU",
@@ -83,7 +83,7 @@
     {
       "iso3": "POL",
       "name": "Poland",
-      "admLevel": "ADM2"
+      "admLevel": "ADM1"
     },
     {
       "iso3": "AUT",
