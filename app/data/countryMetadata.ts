@@ -333,4 +333,19 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
       divisionPrefix: 'Albanian Guard',
       selectable: false,
     },
+    persia: {
+      id: 'persia',
+      name: 'Qajar Iran (Persia)',
+      combatName: 'Persian Gendarmerie',
+      flag: '/images/flags/persia.svg',
+      color: '#239f40',
+      adjective: 'Persian',
+      firstArmyGroupName: 'Persian Cossack Brigade',
+      divisionPrefix: 'Persian',
+      selectable: false,
+      coreRegions: [
+        // Historical Qajar Iran territories (circa 1917)
+        // Core Persian regions - will be configured in initial state
+      ],
+    },
 };

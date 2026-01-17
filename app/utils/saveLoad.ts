@@ -195,6 +195,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
        ottoman: [],
        serbia: [],
        albania: [],
+       persia: [],
      };
 
     // Sort legacy queue items into country-specific queues
@@ -235,6 +236,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
        ottoman: [],
        serbia: [],
        albania: [],
+       persia: [],
      };
    }
   
@@ -284,6 +286,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
         ottoman: getInitialCountryBonuses(),
         serbia: getInitialCountryBonuses(),
         albania: getInitialCountryBonuses(),
+        persia: getInitialCountryBonuses(),
       },
   };
 }

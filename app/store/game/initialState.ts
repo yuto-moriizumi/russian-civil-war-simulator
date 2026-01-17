@@ -47,6 +47,7 @@ export const initialGameState: GameState = {
      ottoman: [],
      serbia: [],
      albania: [],
+     persia: [],
    },
    relationships: [
      { fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy' },
@@ -84,5 +85,6 @@ export const initialGameState: GameState = {
       ottoman: getInitialCountryBonuses(),
       serbia: getInitialCountryBonuses(),
       albania: getInitialCountryBonuses(),
+      persia: getInitialCountryBonuses(),
     },
 };
