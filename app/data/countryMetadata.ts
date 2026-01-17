@@ -404,4 +404,20 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
       // that could interact diplomatically and militarily with players
     ],
   },
+  serbia: {
+    id: 'serbia',
+    name: 'Kingdom of Serbia',
+    combatName: 'Serbian Army',
+    flag: '/images/flags/serbia.svg',
+    color: '#ED4135',
+    adjective: 'Serbian',
+    firstArmyGroupName: 'Serbian Army Group',
+    divisionPrefix: 'Serbian Guard',
+    selectable: false,
+    coreRegions: [
+      // Historical Serbian territories in the Balkans
+      // Serbia itself is not in the game map (Russian Civil War focus), but metadata
+      // is provided for potential Balkan theater integration or historical context
+    ],
+  },
 };
