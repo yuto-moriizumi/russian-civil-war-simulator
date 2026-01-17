@@ -383,4 +383,25 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
       // in southern Russia (primarily around Crimea and Black Sea coast)
     ],
   },
+  ottoman: {
+    id: 'ottoman',
+    name: 'Ottoman Empire',
+    combatName: 'Ottoman Army',
+    flag: '/images/flags/ottoman.svg',
+    color: '#C7002B',
+    adjective: 'Ottoman',
+    firstArmyGroupName: 'Ottoman Army',
+    divisionPrefix: 'Ottoman',
+    selectable: false,
+    coreRegions: [
+      // Historical Ottoman territories as of November 1917
+      // The Ottoman Empire was in severe decline but still controlled:
+      // Anatolia (core Turkish heartland)
+      // Palestine and Syria (under attack by British)
+      // Mesopotamia (Iraq - under attack by British)
+      // Note: Exact implementation depends on map regions available
+      // The Ottoman Empire existed as a non-playable historical faction
+      // that could interact diplomatically and militarily with players
+    ],
+  },
 };
