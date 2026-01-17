@@ -15,7 +15,16 @@ export default function GeoJSONLoader({ onLoad }: GeoJSONLoaderProps) {
   const handleLoadCurrent = useCallback(async () => {
     setLoadError(null);
     try {
-      const response = await fetch('/map/regions.geojson');
+      // Add cache-busting query parameter to force fresh GeoJSON
+      const timestamp = Date.now();
+      const response = await fetch(`/map/regions.geojson?t=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       if (!response.ok) throw new Error('Failed to fetch GeoJSON');
       const data = await response.json();
       onLoad(data, 'Current project (regions.geojson)');
