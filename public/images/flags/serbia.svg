@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600">
+  <!-- Historical flag of the Kingdom of Serbia (1882-1918) -->
+  <!-- Red, blue, and white horizontal tricolor -->
+  
+  <!-- Red stripe (top) -->
+  <rect width="900" height="200" fill="#ED4135"/>
+  
+  <!-- Blue stripe (middle) -->
+  <rect y="200" width="900" height="200" fill="#003DA5"/>
+  
+  <!-- White stripe (bottom) -->
+  <rect y="400" width="900" height="200" fill="#FFFFFF"/>
+  
+  <!-- Optional: Add Serbian cross in center (historical coat of arms) -->
+  <!-- The Serbian cross (Serbian Orthodox cross with 4 fire-steels) -->
+  <g transform="translate(450, 300)">
+    <!-- Main cross -->
+    <rect x="-30" y="-100" width="60" height="200" fill="#000000" opacity="0.15"/>
+    <rect x="-100" y="-30" width="200" height="60" fill="#000000" opacity="0.15"/>
+    
+    <!-- Four fire-steels in corners (simplified C-shapes) -->
+    <circle cx="-50" cy="-50" r="15" fill="none" stroke="#000000" stroke-width="3" opacity="0.15" stroke-dasharray="5,5"/>
+    <circle cx="50" cy="-50" r="15" fill="none" stroke="#000000" stroke-width="3" opacity="0.15" stroke-dasharray="5,5"/>
+    <circle cx="-50" cy="50" r="15" fill="none" stroke="#000000" stroke-width="3" opacity="0.15" stroke-dasharray="5,5"/>
+    <circle cx="50" cy="50" r="15" fill="none" stroke="#000000" stroke-width="3" opacity="0.15" stroke-dasharray="5,5"/>
+  </g>
+</svg>
