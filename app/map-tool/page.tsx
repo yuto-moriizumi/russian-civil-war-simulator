@@ -7,7 +7,6 @@ import MapToolCanvas from "./components/MapToolCanvas";
 import GeoJSONLoader from "./components/GeoJSONLoader";
 import CountryPalette from "./components/CountryPalette";
 import ExportPanel from "./components/ExportPanel";
-import { initialRegionOwnership } from "../data/map/initialOwnership";
 
 export default function MapToolPage() {
   // Data state
@@ -34,20 +33,42 @@ export default function MapToolPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Load initial ownership data from API (bypasses module caching)
+  useEffect(() => {
+    const loadInitialOwnership = async () => {
+      try {
+        const response = await fetch('/api/map-tool/load-ownership');
+        if (!response.ok) throw new Error('Failed to load ownership data');
+        const data = await response.json();
+        return data.ownership || {};
+      } catch (error) {
+        console.error('Error loading ownership:', error);
+        return {};
+      }
+    };
+
+    loadInitialOwnership().then(initialOwnership => {
+      // Store for later use in GeoJSON handler
+      (window as any).__initialRegionOwnership = initialOwnership;
+    });
+  }, []);
+
   // Load GeoJSON handler
   const handleGeoJSONLoad = useCallback(
     (data: FeatureCollection, source: string) => {
       setGeojson(data);
       setGeojsonSource(source);
 
-      // Initialize ownership from features or use default
+      // Initialize ownership from features or use dynamically loaded data
       const newOwnership: Record<string, CountryId> = {};
+      const initialOwnershipData = (window as any).__initialRegionOwnership || {};
+      
       data.features.forEach((feature) => {
         const shapeId = feature.properties?.shapeID;
         if (shapeId) {
           // Try to get existing ownership, fallback to neutral
           newOwnership[shapeId] =
-            (initialRegionOwnership[shapeId] as CountryId) || "neutral";
+            (initialOwnershipData[shapeId] as CountryId) || "neutral";
         }
       });
 
