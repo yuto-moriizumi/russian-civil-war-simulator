@@ -368,35 +368,56 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
       'MD-CU', // Chișinău
     ],
   },
-   greece: {
-     id: 'greece',
-     name: 'Kingdom of Greece',
-     combatName: 'Greek Army',
-     flag: '/images/flags/greece.svg',
-     color: '#0D5EAF',
-     adjective: 'Greek',
-     firstArmyGroupName: 'Hellenic Army',
-     divisionPrefix: 'Greek',
-     selectable: false,
-     coreRegions: [
-       // Greece did not control territory in Russia, but participated in Allied intervention
-       // in southern Russia (primarily around Crimea and Black Sea coast)
-     ],
-   },
-   serbia: {
-     id: 'serbia',
-     name: 'Kingdom of Serbia',
-     combatName: 'Serbian Army',
-     flag: '/images/flags/serbia.svg',
-     color: '#ED4135',
-     adjective: 'Serbian',
-     firstArmyGroupName: 'Serbian Army Group',
-     divisionPrefix: 'Serbian Guard',
-     selectable: false,
-     coreRegions: [
-       // Historical Serbian territories in the Balkans
-       // Serbia itself is not in the game map (Russian Civil War focus), but metadata
-       // is provided for potential Balkan theater integration or historical context
-     ],
-   },
- };
+  greece: {
+    id: 'greece',
+    name: 'Kingdom of Greece',
+    combatName: 'Greek Army',
+    flag: '/images/flags/greece.svg',
+    color: '#0D5EAF',
+    adjective: 'Greek',
+    firstArmyGroupName: 'Hellenic Army',
+    divisionPrefix: 'Greek',
+    selectable: false,
+    coreRegions: [
+      // Greece did not control territory in Russia, but participated in Allied intervention
+      // in southern Russia (primarily around Crimea and Black Sea coast)
+    ],
+  },
+  ottoman: {
+    id: 'ottoman',
+    name: 'Ottoman Empire',
+    combatName: 'Ottoman Army',
+    flag: '/images/flags/ottoman.svg',
+    color: '#C7002B',
+    adjective: 'Ottoman',
+    firstArmyGroupName: 'Ottoman Army',
+    divisionPrefix: 'Ottoman',
+    selectable: false,
+    coreRegions: [
+      // Historical Ottoman territories as of November 1917
+      // The Ottoman Empire was in severe decline but still controlled:
+      // Anatolia (core Turkish heartland)
+      // Palestine and Syria (under attack by British)
+      // Mesopotamia (Iraq - under attack by British)
+      // Note: Exact implementation depends on map regions available
+      // The Ottoman Empire existed as a non-playable historical faction
+      // that could interact diplomatically and militarily with players
+    ],
+  },
+  serbia: {
+    id: 'serbia',
+    name: 'Kingdom of Serbia',
+    combatName: 'Serbian Army',
+    flag: '/images/flags/serbia.svg',
+    color: '#ED4135',
+    adjective: 'Serbian',
+    firstArmyGroupName: 'Serbian Army Group',
+    divisionPrefix: 'Serbian Guard',
+    selectable: false,
+    coreRegions: [
+      // Historical Serbian territories in the Balkans
+      // Serbia itself is not in the game map (Russian Civil War focus), but metadata
+      // is provided for potential Balkan theater integration or historical context
+    ],
+  },
+};
