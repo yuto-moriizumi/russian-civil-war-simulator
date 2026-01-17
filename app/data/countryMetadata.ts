@@ -368,19 +368,35 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
       'MD-CU', // Chișinău
     ],
   },
-  greece: {
-    id: 'greece',
-    name: 'Kingdom of Greece',
-    combatName: 'Greek Army',
-    flag: '/images/flags/greece.svg',
-    color: '#0D5EAF',
-    adjective: 'Greek',
-    firstArmyGroupName: 'Hellenic Army',
-    divisionPrefix: 'Greek',
-    selectable: false,
-    coreRegions: [
-      // Greece did not control territory in Russia, but participated in Allied intervention
-      // in southern Russia (primarily around Crimea and Black Sea coast)
-    ],
-  },
-};
+   greece: {
+     id: 'greece',
+     name: 'Kingdom of Greece',
+     combatName: 'Greek Army',
+     flag: '/images/flags/greece.svg',
+     color: '#0D5EAF',
+     adjective: 'Greek',
+     firstArmyGroupName: 'Hellenic Army',
+     divisionPrefix: 'Greek',
+     selectable: false,
+     coreRegions: [
+       // Greece did not control territory in Russia, but participated in Allied intervention
+       // in southern Russia (primarily around Crimea and Black Sea coast)
+     ],
+   },
+   serbia: {
+     id: 'serbia',
+     name: 'Kingdom of Serbia',
+     combatName: 'Serbian Army',
+     flag: '/images/flags/serbia.svg',
+     color: '#ED4135',
+     adjective: 'Serbian',
+     firstArmyGroupName: 'Serbian Army Group',
+     divisionPrefix: 'Serbian Guard',
+     selectable: false,
+     coreRegions: [
+       // Historical Serbian territories in the Balkans
+       // Serbia itself is not in the game map (Russian Civil War focus), but metadata
+       // is provided for potential Balkan theater integration or historical context
+     ],
+   },
+ };
