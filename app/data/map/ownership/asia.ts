@@ -75,4 +75,5 @@ export const asiaOwnership: Record<string, CountryId> = {
   '4885205B91155372132343': 'neutral',
   '4885205B31052891590801': 'neutral',
   '4885205B19700274577063': 'neutral',
+  '43563684B38891657012300': 'neutral',
 };

@@ -117,4 +117,6 @@ export const middleEastOwnership: Record<string, CountryId> = {
   '25984515B30869354278170': 'neutral',
   '25984515B63638727958144': 'neutral',
   '25984515B87415935832289': 'neutral',
+  '17685810B50760377364469': 'neutral',
+  '83012948B33275177430490': 'neutral',
 };

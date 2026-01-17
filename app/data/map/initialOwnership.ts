@@ -2,6 +2,7 @@ import { CountryId } from '../../types/game';
 import { russiaOwnership } from './ownership/russia';
 import { easternEuropeOwnership } from './ownership/easternEurope';
 import { centralEuropeOwnership } from './ownership/centralEurope';
+import { balkansOwnership } from './ownership/balkans';
 import { asiaOwnership } from './ownership/asia';
 import { middleEastOwnership } from './ownership/middleEast';
 import { otherOwnership } from './ownership/other';
@@ -16,6 +17,7 @@ export const initialRegionOwnership: Record<string, CountryId> = {
   ...russiaOwnership,
   ...easternEuropeOwnership,
   ...centralEuropeOwnership,
+  ...balkansOwnership,
   ...asiaOwnership,
   ...middleEastOwnership,
   ...otherOwnership,
