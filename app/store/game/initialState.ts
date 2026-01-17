@@ -44,32 +44,43 @@ export const initialGameState: GameState = {
     austriahungary: [],
     romania: [],
     greece: [],
+    ottoman: [],
+    serbia: [],
   },
-  relationships: [
-    { fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy' },
-    { fromCountry: 'soviet', toCountry: 'iskolat', type: 'autonomy' },
-    { fromCountry: 'germany', toCountry: 'poland', type: 'autonomy' },
-    { fromCountry: 'germany', toCountry: 'romania', type: 'war' },
-    { fromCountry: 'germany', toCountry: 'bulgaria', type: 'military_access' }
-  ], // Initial relationships (autonomy = puppet state)
+   relationships: [
+     { fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy' },
+     { fromCountry: 'soviet', toCountry: 'iskolat', type: 'autonomy' },
+     { fromCountry: 'germany', toCountry: 'poland', type: 'autonomy' },
+     { fromCountry: 'germany', toCountry: 'romania', type: 'war' },
+     { fromCountry: 'germany', toCountry: 'bulgaria', type: 'military_access' },
+     // Ottoman Empire relationships (November 1917)
+     { fromCountry: 'ottoman', toCountry: 'germany', type: 'military_access' },
+     { fromCountry: 'ottoman', toCountry: 'austriahungary', type: 'military_access' },
+     { fromCountry: 'ottoman', toCountry: 'greece', type: 'war' },
+     // Serbia relationships
+     { fromCountry: 'serbia', toCountry: 'austriahungary', type: 'war' },
+     { fromCountry: 'serbia', toCountry: 'germany', type: 'war' }
+   ], // Initial relationships (autonomy = puppet state)
   mapMode: 'country', // Default map mode
   regionCentroids: {}, // Will be loaded asynchronously
   scheduledEvents: scheduledEvents, // Historical events
-  countryBonuses: {
-    soviet: getInitialCountryBonuses(),
-    white: getInitialCountryBonuses(),
-    finland: getInitialCountryBonuses(),
-    ukraine: getInitialCountryBonuses(),
-    don: getInitialCountryBonuses(),
-    fswr: getInitialCountryBonuses(),
-    iskolat: getInitialCountryBonuses(),
-    neutral: getInitialCountryBonuses(),
-    foreign: getInitialCountryBonuses(),
-    germany: getInitialCountryBonuses(),
-    bulgaria: getInitialCountryBonuses(),
-    poland: getInitialCountryBonuses(),
-    austriahungary: getInitialCountryBonuses(),
-    romania: getInitialCountryBonuses(),
-    greece: getInitialCountryBonuses(),
-  },
+   countryBonuses: {
+     soviet: getInitialCountryBonuses(),
+     white: getInitialCountryBonuses(),
+     finland: getInitialCountryBonuses(),
+     ukraine: getInitialCountryBonuses(),
+     don: getInitialCountryBonuses(),
+     fswr: getInitialCountryBonuses(),
+     iskolat: getInitialCountryBonuses(),
+     neutral: getInitialCountryBonuses(),
+     foreign: getInitialCountryBonuses(),
+     germany: getInitialCountryBonuses(),
+     bulgaria: getInitialCountryBonuses(),
+     poland: getInitialCountryBonuses(),
+     austriahungary: getInitialCountryBonuses(),
+     romania: getInitialCountryBonuses(),
+     greece: getInitialCountryBonuses(),
+     ottoman: getInitialCountryBonuses(),
+     serbia: getInitialCountryBonuses(),
+   },
 };

@@ -192,6 +192,8 @@ function deserializeGameState(data: SerializedGameState): GameState {
       austriahungary: [],
       romania: [],
       greece: [],
+      ottoman: [],
+      serbia: [],
     };
 
     // Sort legacy queue items into country-specific queues
@@ -229,6 +231,8 @@ function deserializeGameState(data: SerializedGameState): GameState {
       austriahungary: [],
       romania: [],
       greece: [],
+      ottoman: [],
+      serbia: [],
     };
   }
   
@@ -257,25 +261,27 @@ function deserializeGameState(data: SerializedGameState): GameState {
     productionQueues,
     relationships: data.relationships || [], // Default to empty array if not present
     mapMode: data.mapMode || 'country', // Default to country map mode
-    regionCentroids: {}, // Will be re-loaded from map data
-    scheduledEvents: data.scheduledEvents || [], // Default to empty array if not present
-    countryBonuses: data.countryBonuses || {
-      soviet: getInitialCountryBonuses(),
-      white: getInitialCountryBonuses(),
-      finland: getInitialCountryBonuses(),
-      ukraine: getInitialCountryBonuses(),
-      don: getInitialCountryBonuses(),
-      fswr: getInitialCountryBonuses(),
-      iskolat: getInitialCountryBonuses(),
-      neutral: getInitialCountryBonuses(),
-      foreign: getInitialCountryBonuses(),
-      germany: getInitialCountryBonuses(),
-      bulgaria: getInitialCountryBonuses(),
-      poland: getInitialCountryBonuses(),
-      austriahungary: getInitialCountryBonuses(),
-      romania: getInitialCountryBonuses(),
-      greece: getInitialCountryBonuses(),
-    },
+     regionCentroids: {}, // Will be re-loaded from map data
+     scheduledEvents: data.scheduledEvents || [], // Default to empty array if not present
+     countryBonuses: data.countryBonuses || {
+       soviet: getInitialCountryBonuses(),
+       white: getInitialCountryBonuses(),
+       finland: getInitialCountryBonuses(),
+       ukraine: getInitialCountryBonuses(),
+       don: getInitialCountryBonuses(),
+       fswr: getInitialCountryBonuses(),
+       iskolat: getInitialCountryBonuses(),
+       neutral: getInitialCountryBonuses(),
+       foreign: getInitialCountryBonuses(),
+       germany: getInitialCountryBonuses(),
+       bulgaria: getInitialCountryBonuses(),
+       poland: getInitialCountryBonuses(),
+       austriahungary: getInitialCountryBonuses(),
+       romania: getInitialCountryBonuses(),
+       greece: getInitialCountryBonuses(),
+       ottoman: getInitialCountryBonuses(),
+       serbia: getInitialCountryBonuses(),
+     },
   };
 }
 

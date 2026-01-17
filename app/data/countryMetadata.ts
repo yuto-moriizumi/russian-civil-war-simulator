@@ -31,160 +31,77 @@ export interface CountryMetadata {
  * Complete country metadata registry
  */
 export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
-  soviet: {
-    id: 'soviet',
-    name: 'Soviet Russia',
-    combatName: 'Red Army',
-    flag: '/images/flags/soviet.svg',
-    color: '#CC0000',
-    adjective: 'Soviet',
-    firstArmyGroupName: 'Red Army Group',
-    divisionPrefix: 'Red Guard',
-    coreRegions: [
-      // Central Russia - Industrial heartland
-      'RU-MOW', // Moscow (city) - Capital
-      'RU-MOS', // Moscow Oblast
-      'RU-SPE', // Saint Petersburg (city)
-      'RU-LEN', // Leningrad Oblast
-      'RU-TVE', // Tver Oblast
-      'RU-IVA', // Ivanovo Oblast
-      'RU-VLA', // Vladimir Oblast
-      'RU-KOS', // Kostroma Oblast
-      'RU-YAR', // Yaroslavl Oblast
-      'RU-NIZ', // Nizhny Novgorod Oblast
-      'RU-VOR', // Voronezh Oblast
-      'RU-BEL', // Belgorod Oblast
-      // Volga region
-      'RU-SAM', // Samara Oblast
-      'RU-SAR', // Saratov Oblast
-      'RU-ULY', // Ulyanovsk Oblast
-      'RU-TA',  // Tatarstan
-      // Urals - Industrial base
-      'RU-SVE', // Sverdlovsk Oblast
-      'RU-CHE', // Chelyabinsk Oblast
-      'RU-PER', // Perm Krai
-    ],
-  },
-  white: {
-    id: 'white',
-    name: 'White Army',
-    combatName: 'White Army',
-    flag: '/images/flags/white.svg',
-    color: '#0d3b0d',
-    adjective: 'White',
-    firstArmyGroupName: 'Volunteer Army',
-    divisionPrefix: 'White Guard',
-    coreRegions: [
-      // Historical White strongholds - Southern Russia, Siberia, North
-      'RU-ROS', // Rostov Oblast - Don region
-      'RU-KDA', // Krasnodar Krai
-      'RU-STA', // Stavropol Krai
-      'RU-VGG', // Volgograd Oblast
-      // Siberia
-      'RU-OMS', // Omsk Oblast - White capital
-      'RU-TYU', // Tyumen Oblast
-      'RU-NVS', // Novosibirsk Oblast
-      'RU-TOM', // Tomsk Oblast
-      'RU-IRK', // Irkutsk Oblast
-      // Northern Russia
-      'RU-ARK', // Arkhangelsk Oblast
-      'RU-VLG', // Vologda Oblast
-      // Far East
-      'RU-PRI', // Primorsky Krai (Vladivostok)
-      'RU-KHA', // Khabarovsk Krai
-    ],
-  },
-  finland: {
-    id: 'finland',
-    name: 'Finland',
-    combatName: 'Finnish Army',
-    flag: '/images/flags/finland.svg',
-    color: '#FFFFFF',
-    adjective: 'Finnish',
-    firstArmyGroupName: 'Finnish Defense Forces',
-    divisionPrefix: 'Finnish Guard',
-    coreRegions: [
-      // All Finnish regions (ADM-1)
-      'FI-01', // Ahvenanmaa
-      'FI-02', // Etelä-Karjala
-      'FI-03', // Etelä-Pohjanmaa
-      'FI-04', // Etelä-Savo
-      'FI-05', // Kainuu
-      'FI-06', // Kanta-Häme
-      'FI-07', // Keski-Pohjanmaa
-      'FI-08', // Keski-Suomi
-      'FI-09', // Kymenlaakso
-      'FI-10', // Lappi
-      'FI-11', // Pirkanmaa
-      'FI-12', // Pohjanmaa
-      'FI-13', // Pohjois-Karjala
-      'FI-14', // Pohjois-Pohjanmaa
-      'FI-15', // Pohjois-Savo
-      'FI-16', // Päijät-Häme
-      'FI-17', // Satakunta
-      'FI-18', // Uusimaa (Helsinki)
-      'FI-19', // Varsinais-Suomi
-      // Karelia expansion goals
-      'RU-KR',  // Republic of Karelia
-    ],
-  },
-  ukraine: {
-    id: 'ukraine',
-    name: 'Ukraine',
-    combatName: 'Ukrainian Army',
-    flag: '/images/flags/ukraine.svg',
-    color: '#0057B7',
-    adjective: 'Ukrainian',
-    firstArmyGroupName: 'Ukrainian Army',
-    divisionPrefix: 'Ukrainian Guard',
-    coreRegions: [
-      // Central and Eastern Ukraine
-      'UA-30', // Kyiv (city)
-      'UA-32', // Kyiv Oblast
-      'UA-71', // Cherkasy Oblast
-      'UA-74', // Chernihiv Oblast
-      'UA-77', // Chernivtsi Oblast
-      'UA-12', // Dnipropetrovsk Oblast
-      'UA-14', // Donetsk Oblast
-      'UA-63', // Kharkiv Oblast
-      'UA-65', // Kherson Oblast
-      'UA-18', // Ivano-Frankivsk Oblast
-      'UA-61', // Kirovohrad Oblast
-      'UA-09', // Luhansk Oblast
-      'UA-46', // Lviv Oblast
-      'UA-48', // Mykolaiv Oblast
-      'UA-51', // Odesa Oblast
-      'UA-53', // Poltava Oblast
-      'UA-56', // Rivne Oblast
-      'UA-59', // Sumy Oblast
-      'UA-05', // Vinnytsia Oblast
-      'UA-07', // Volyn Oblast
-      'UA-21', // Zakarpattia Oblast
-      'UA-23', // Zaporizhzhia Oblast
-      'UA-26', // Zhytomyr Oblast
-      // Crimea
-      'UA-43', // Crimea
-    ],
-  },
-  don: {
-    id: 'don',
-    name: 'Don Republic',
-    combatName: 'Don Cossacks',
-    flag: '/images/flags/don.svg',
-    color: '#FFD700',
-    adjective: 'Don',
-    firstArmyGroupName: 'Don Cossack Host',
-    divisionPrefix: 'Don Cossack',
-    selectable: false,
-    coreRegions: [
-      // Don Cossack homeland
-      'RU-ROS', // Rostov Oblast - Capital (Novocherkassk)
-      'RU-VGG', // Volgograd Oblast - Don Cossack lands
-      'RU-KDA', // Krasnodar Krai - Kuban Cossack alliance
-      'RU-STA', // Stavropol Krai
-      'RU-AST', // Astrakhan Oblast
-    ],
-  },
+   soviet: {
+     id: 'soviet',
+     name: 'Soviet Russia',
+     combatName: 'Red Army',
+     flag: '/images/flags/soviet.svg',
+     color: '#CC0000',
+     adjective: 'Soviet',
+     firstArmyGroupName: 'Red Army Group',
+     divisionPrefix: 'Red Guard',
+     coreRegions: [
+       'RU-MOW', 'RU-MOS', 'RU-SPE', 'RU-LEN', 'RU-TVE', 'RU-IVA', 'RU-VLA', 'RU-KOS',
+       'RU-YAR', 'RU-NIZ', 'RU-VOR', 'RU-BEL', 'RU-SAM', 'RU-SAR', 'RU-ULY', 'RU-TA',
+       'RU-SVE', 'RU-CHE', 'RU-PER',
+     ],
+   },
+   white: {
+     id: 'white',
+     name: 'White Army',
+     combatName: 'White Army',
+     flag: '/images/flags/white.svg',
+     color: '#0d3b0d',
+     adjective: 'White',
+     firstArmyGroupName: 'Volunteer Army',
+     divisionPrefix: 'White Guard',
+     coreRegions: [
+       'RU-ROS', 'RU-KDA', 'RU-STA', 'RU-VGG', 'RU-OMS', 'RU-TYU', 'RU-NVS', 'RU-TOM',
+       'RU-IRK', 'RU-ARK', 'RU-VLG', 'RU-PRI', 'RU-KHA',
+     ],
+   },
+   finland: {
+     id: 'finland',
+     name: 'Finland',
+     combatName: 'Finnish Army',
+     flag: '/images/flags/finland.svg',
+     color: '#FFFFFF',
+     adjective: 'Finnish',
+     firstArmyGroupName: 'Finnish Defense Forces',
+     divisionPrefix: 'Finnish Guard',
+     coreRegions: [
+       'FI-01', 'FI-02', 'FI-03', 'FI-04', 'FI-05', 'FI-06', 'FI-07', 'FI-08', 'FI-09',
+       'FI-10', 'FI-11', 'FI-12', 'FI-13', 'FI-14', 'FI-15', 'FI-16', 'FI-17', 'FI-18',
+       'FI-19', 'RU-KR',
+     ],
+   },
+   ukraine: {
+     id: 'ukraine',
+     name: 'Ukraine',
+     combatName: 'Ukrainian Army',
+     flag: '/images/flags/ukraine.svg',
+     color: '#0057B7',
+     adjective: 'Ukrainian',
+     firstArmyGroupName: 'Ukrainian Army',
+     divisionPrefix: 'Ukrainian Guard',
+     coreRegions: [
+       'UA-30', 'UA-32', 'UA-71', 'UA-74', 'UA-77', 'UA-12', 'UA-14', 'UA-63', 'UA-65',
+       'UA-18', 'UA-61', 'UA-09', 'UA-46', 'UA-48', 'UA-51', 'UA-53', 'UA-56', 'UA-59',
+       'UA-05', 'UA-07', 'UA-21', 'UA-23', 'UA-26', 'UA-43',
+     ],
+   },
+   don: {
+     id: 'don',
+     name: 'Don Republic',
+     combatName: 'Don Cossacks',
+     flag: '/images/flags/don.svg',
+     color: '#FFD700',
+     adjective: 'Don',
+     firstArmyGroupName: 'Don Cossack Host',
+     divisionPrefix: 'Don Cossack',
+     selectable: false,
+     coreRegions: ['RU-ROS', 'RU-VGG', 'RU-KDA', 'RU-STA', 'RU-AST'],
+   },
   fswr: {
     id: 'fswr',
     name: "Finnish Socialist Workers' Republic",
@@ -383,41 +300,26 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
       // in southern Russia (primarily around Crimea and Black Sea coast)
     ],
   },
-  ottoman: {
-    id: 'ottoman',
-    name: 'Ottoman Empire',
-    combatName: 'Ottoman Army',
-    flag: '/images/flags/ottoman.svg',
-    color: '#C7002B',
-    adjective: 'Ottoman',
-    firstArmyGroupName: 'Ottoman Army',
-    divisionPrefix: 'Ottoman',
-    selectable: false,
-    coreRegions: [
-      // Historical Ottoman territories as of November 1917
-      // The Ottoman Empire was in severe decline but still controlled:
-      // Anatolia (core Turkish heartland)
-      // Palestine and Syria (under attack by British)
-      // Mesopotamia (Iraq - under attack by British)
-      // Note: Exact implementation depends on map regions available
-      // The Ottoman Empire existed as a non-playable historical faction
-      // that could interact diplomatically and militarily with players
-    ],
-  },
-  serbia: {
-    id: 'serbia',
-    name: 'Kingdom of Serbia',
-    combatName: 'Serbian Army',
-    flag: '/images/flags/serbia.svg',
-    color: '#ED4135',
-    adjective: 'Serbian',
-    firstArmyGroupName: 'Serbian Army Group',
-    divisionPrefix: 'Serbian Guard',
-    selectable: false,
-    coreRegions: [
-      // Historical Serbian territories in the Balkans
-      // Serbia itself is not in the game map (Russian Civil War focus), but metadata
-      // is provided for potential Balkan theater integration or historical context
-    ],
-  },
+   ottoman: {
+     id: 'ottoman',
+     name: 'Ottoman Empire',
+     combatName: 'Ottoman Army',
+     flag: '/images/flags/ottoman.svg',
+     color: '#C7002B',
+     adjective: 'Ottoman',
+     firstArmyGroupName: 'Ottoman Army',
+     divisionPrefix: 'Ottoman',
+     selectable: false,
+   },
+   serbia: {
+     id: 'serbia',
+     name: 'Kingdom of Serbia',
+     combatName: 'Serbian Army',
+     flag: '/images/flags/serbia.svg',
+     color: '#ED4135',
+     adjective: 'Serbian',
+     firstArmyGroupName: 'Serbian Army Group',
+     divisionPrefix: 'Serbian Guard',
+     selectable: false,
+   },
 };
