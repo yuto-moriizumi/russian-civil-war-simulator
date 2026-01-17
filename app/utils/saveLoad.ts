@@ -173,26 +173,29 @@ function deserializeGameState(data: SerializedGameState): GameState {
         armyGroupId: p.armyGroupId,
       }));
     }
-  } else if (data.productionQueue) {
-    // Legacy format: migrate from single queue to per-country queues
-    console.log('Migrating legacy production queue format to per-country queues');
-    productionQueues = {
-      soviet: [],
-      white: [],
-      finland: [],
-      ukraine: [],
-      don: [],
-      fswr: [],
-      iskolat: [],
-      neutral: [],
-      foreign: [],
-      germany: [],
-      bulgaria: [],
-      poland: [],
-      austriahungary: [],
-      romania: [],
-      greece: [],
-    };
+   } else if (data.productionQueue) {
+     // Legacy format: migrate from single queue to per-country queues
+     console.log('Migrating legacy production queue format to per-country queues');
+     productionQueues = {
+       soviet: [],
+       white: [],
+       finland: [],
+       ukraine: [],
+       don: [],
+       fswr: [],
+       iskolat: [],
+       neutral: [],
+       foreign: [],
+       germany: [],
+       bulgaria: [],
+       poland: [],
+       austriahungary: [],
+       romania: [],
+       greece: [],
+       ottoman: [],
+       serbia: [],
+       albania: [],
+     };
 
     // Sort legacy queue items into country-specific queues
     for (const item of data.productionQueue) {
@@ -211,26 +214,29 @@ function deserializeGameState(data: SerializedGameState): GameState {
       }
       productionQueues[item.owner].push(deserialized);
     }
-  } else {
-    // No production queue data, initialize empty
-    productionQueues = {
-      soviet: [],
-      white: [],
-      finland: [],
-      ukraine: [],
-      don: [],
-      fswr: [],
-      iskolat: [],
-      neutral: [],
-      foreign: [],
-      germany: [],
-      bulgaria: [],
-      poland: [],
-      austriahungary: [],
-      romania: [],
-      greece: [],
-    };
-  }
+   } else {
+     // No production queue data, initialize empty
+     productionQueues = {
+       soviet: [],
+       white: [],
+       finland: [],
+       ukraine: [],
+       don: [],
+       fswr: [],
+       iskolat: [],
+       neutral: [],
+       foreign: [],
+       germany: [],
+       bulgaria: [],
+       poland: [],
+       austriahungary: [],
+       romania: [],
+       greece: [],
+       ottoman: [],
+       serbia: [],
+       albania: [],
+     };
+   }
   
   return {
     ...data,
@@ -275,6 +281,9 @@ function deserializeGameState(data: SerializedGameState): GameState {
       austriahungary: getInitialCountryBonuses(),
       romania: getInitialCountryBonuses(),
       greece: getInitialCountryBonuses(),
+      ottoman: getInitialCountryBonuses(),
+      serbia: getInitialCountryBonuses(),
+      albania: getInitialCountryBonuses(),
     },
   };
 }

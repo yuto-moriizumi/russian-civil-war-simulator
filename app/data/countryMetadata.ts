@@ -41,28 +41,9 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     firstArmyGroupName: 'Red Army Group',
     divisionPrefix: 'Red Guard',
     coreRegions: [
-      // Central Russia - Industrial heartland
-      'RU-MOW', // Moscow (city) - Capital
-      'RU-MOS', // Moscow Oblast
-      'RU-SPE', // Saint Petersburg (city)
-      'RU-LEN', // Leningrad Oblast
-      'RU-TVE', // Tver Oblast
-      'RU-IVA', // Ivanovo Oblast
-      'RU-VLA', // Vladimir Oblast
-      'RU-KOS', // Kostroma Oblast
-      'RU-YAR', // Yaroslavl Oblast
-      'RU-NIZ', // Nizhny Novgorod Oblast
-      'RU-VOR', // Voronezh Oblast
-      'RU-BEL', // Belgorod Oblast
-      // Volga region
-      'RU-SAM', // Samara Oblast
-      'RU-SAR', // Saratov Oblast
-      'RU-ULY', // Ulyanovsk Oblast
-      'RU-TA',  // Tatarstan
-      // Urals - Industrial base
-      'RU-SVE', // Sverdlovsk Oblast
-      'RU-CHE', // Chelyabinsk Oblast
-      'RU-PER', // Perm Krai
+      'RU-MOW', 'RU-MOS', 'RU-SPE', 'RU-LEN', 'RU-TVE', 'RU-IVA', 'RU-VLA', 'RU-KOS',
+      'RU-YAR', 'RU-NIZ', 'RU-VOR', 'RU-BEL', 'RU-SAM', 'RU-SAR', 'RU-ULY', 'RU-TA',
+      'RU-SVE', 'RU-CHE', 'RU-PER',
     ],
   },
   white: {
@@ -75,23 +56,8 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     firstArmyGroupName: 'Volunteer Army',
     divisionPrefix: 'White Guard',
     coreRegions: [
-      // Historical White strongholds - Southern Russia, Siberia, North
-      'RU-ROS', // Rostov Oblast - Don region
-      'RU-KDA', // Krasnodar Krai
-      'RU-STA', // Stavropol Krai
-      'RU-VGG', // Volgograd Oblast
-      // Siberia
-      'RU-OMS', // Omsk Oblast - White capital
-      'RU-TYU', // Tyumen Oblast
-      'RU-NVS', // Novosibirsk Oblast
-      'RU-TOM', // Tomsk Oblast
-      'RU-IRK', // Irkutsk Oblast
-      // Northern Russia
-      'RU-ARK', // Arkhangelsk Oblast
-      'RU-VLG', // Vologda Oblast
-      // Far East
-      'RU-PRI', // Primorsky Krai (Vladivostok)
-      'RU-KHA', // Khabarovsk Krai
+      'RU-ROS', 'RU-KDA', 'RU-STA', 'RU-VGG', 'RU-OMS', 'RU-TYU', 'RU-NVS', 'RU-TOM',
+      'RU-IRK', 'RU-ARK', 'RU-VLG', 'RU-PRI', 'RU-KHA',
     ],
   },
   finland: {
@@ -104,28 +70,9 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     firstArmyGroupName: 'Finnish Defense Forces',
     divisionPrefix: 'Finnish Guard',
     coreRegions: [
-      // All Finnish regions (ADM-1)
-      'FI-01', // Ahvenanmaa
-      'FI-02', // Etelä-Karjala
-      'FI-03', // Etelä-Pohjanmaa
-      'FI-04', // Etelä-Savo
-      'FI-05', // Kainuu
-      'FI-06', // Kanta-Häme
-      'FI-07', // Keski-Pohjanmaa
-      'FI-08', // Keski-Suomi
-      'FI-09', // Kymenlaakso
-      'FI-10', // Lappi
-      'FI-11', // Pirkanmaa
-      'FI-12', // Pohjanmaa
-      'FI-13', // Pohjois-Karjala
-      'FI-14', // Pohjois-Pohjanmaa
-      'FI-15', // Pohjois-Savo
-      'FI-16', // Päijät-Häme
-      'FI-17', // Satakunta
-      'FI-18', // Uusimaa (Helsinki)
-      'FI-19', // Varsinais-Suomi
-      // Karelia expansion goals
-      'RU-KR',  // Republic of Karelia
+      'FI-01', 'FI-02', 'FI-03', 'FI-04', 'FI-05', 'FI-06', 'FI-07', 'FI-08', 'FI-09',
+      'FI-10', 'FI-11', 'FI-12', 'FI-13', 'FI-14', 'FI-15', 'FI-16', 'FI-17', 'FI-18',
+      'FI-19', 'RU-KR',
     ],
   },
   ukraine: {
@@ -138,32 +85,9 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     firstArmyGroupName: 'Ukrainian Army',
     divisionPrefix: 'Ukrainian Guard',
     coreRegions: [
-      // Central and Eastern Ukraine
-      'UA-30', // Kyiv (city)
-      'UA-32', // Kyiv Oblast
-      'UA-71', // Cherkasy Oblast
-      'UA-74', // Chernihiv Oblast
-      'UA-77', // Chernivtsi Oblast
-      'UA-12', // Dnipropetrovsk Oblast
-      'UA-14', // Donetsk Oblast
-      'UA-63', // Kharkiv Oblast
-      'UA-65', // Kherson Oblast
-      'UA-18', // Ivano-Frankivsk Oblast
-      'UA-61', // Kirovohrad Oblast
-      'UA-09', // Luhansk Oblast
-      'UA-46', // Lviv Oblast
-      'UA-48', // Mykolaiv Oblast
-      'UA-51', // Odesa Oblast
-      'UA-53', // Poltava Oblast
-      'UA-56', // Rivne Oblast
-      'UA-59', // Sumy Oblast
-      'UA-05', // Vinnytsia Oblast
-      'UA-07', // Volyn Oblast
-      'UA-21', // Zakarpattia Oblast
-      'UA-23', // Zaporizhzhia Oblast
-      'UA-26', // Zhytomyr Oblast
-      // Crimea
-      'UA-43', // Crimea
+      'UA-30', 'UA-32', 'UA-71', 'UA-74', 'UA-77', 'UA-12', 'UA-14', 'UA-63', 'UA-65',
+      'UA-18', 'UA-61', 'UA-09', 'UA-46', 'UA-48', 'UA-51', 'UA-53', 'UA-56', 'UA-59',
+      'UA-05', 'UA-07', 'UA-21', 'UA-23', 'UA-26', 'UA-43',
     ],
   },
   don: {
@@ -177,12 +101,7 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     divisionPrefix: 'Don Cossack',
     selectable: false,
     coreRegions: [
-      // Don Cossack homeland
-      'RU-ROS', // Rostov Oblast - Capital (Novocherkassk)
-      'RU-VGG', // Volgograd Oblast - Don Cossack lands
-      'RU-KDA', // Krasnodar Krai - Kuban Cossack alliance
-      'RU-STA', // Stavropol Krai
-      'RU-AST', // Astrakhan Oblast
+      'RU-ROS', 'RU-VGG', 'RU-KDA', 'RU-STA', 'RU-AST',
     ],
   },
   fswr: {
@@ -196,12 +115,7 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     divisionPrefix: 'Red Guard',
     selectable: false,
     coreRegions: [
-      // Red Finland - Southern urban centers
-      'FI-18', // Uusimaa (Helsinki)
-      'FI-09', // Kymenlaakso
-      'FI-11', // Pirkanmaa (Tampere)
-      'FI-06', // Kanta-Häme
-      'FI-16', // Päijät-Häme
+      'FI-18', 'FI-09', 'FI-11', 'FI-06', 'FI-16',
     ],
   },
   iskolat: {
@@ -215,8 +129,7 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     divisionPrefix: 'Latvian Guard',
     selectable: false,
     coreRegions: [
-      // Latvia
-      'LVA', // Latvia (ADM0)
+      'LVA',
     ],
   },
   neutral: {
@@ -263,35 +176,9 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     divisionPrefix: 'Bulgarian Guard',
     selectable: false,
     coreRegions: [
-      // All Bulgarian provinces (oblasts) - circa 1917
-      'BG-01', // Blagoevgrad
-      'BG-02', // Burgas
-      'BG-03', // Varna
-      'BG-04', // Veliko Tarnovo
-      'BG-05', // Vidin
-      'BG-06', // Vratsa
-      'BG-07', // Gabrovo
-      'BG-08', // Dobrich
-      'BG-09', // Kardzhali
-      'BG-10', // Kyustendil
-      'BG-11', // Lovech
-      'BG-12', // Montana
-      'BG-13', // Pazardzhik
-      'BG-14', // Pernik
-      'BG-15', // Pleven
-      'BG-16', // Plovdiv
-      'BG-17', // Razgrad
-      'BG-18', // Ruse
-      'BG-19', // Silistra
-      'BG-20', // Sliven
-      'BG-21', // Smolyan
-      'BG-22', // Sofia (city) - Capital
-      'BG-23', // Sofia Province
-      'BG-24', // Stara Zagora
-      'BG-25', // Targovishte
-      'BG-26', // Haskovo
-      'BG-27', // Shumen
-      'BG-28', // Yambol
+      'BG-01', 'BG-02', 'BG-03', 'BG-04', 'BG-05', 'BG-06', 'BG-07', 'BG-08', 'BG-09',
+      'BG-10', 'BG-11', 'BG-12', 'BG-13', 'BG-14', 'BG-15', 'BG-16', 'BG-17', 'BG-18',
+      'BG-19', 'BG-20', 'BG-21', 'BG-22', 'BG-23', 'BG-24', 'BG-25', 'BG-26', 'BG-27', 'BG-28',
     ],
   },
   poland: {
@@ -305,23 +192,8 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     divisionPrefix: 'Polish Guard',
     selectable: false,
     coreRegions: [
-      // Polish voivodeships
-      'PL-DS', // Lower Silesian
-      'PL-KP', // Kuyavian-Pomeranian
-      'PL-LB', // Lubusz
-      'PL-LD', // Łódź
-      'PL-LU', // Lublin
-      'PL-MA', // Lesser Poland (Małopolskie)
-      'PL-MZ', // Masovian (Warsaw) - Capital
-      'PL-OP', // Opole
-      'PL-PD', // Pomeranian
-      'PL-PK', // Podkarpackie
-      'PL-PM', // Pomeranian
-      'PL-SK', // Świętokrzyskie
-      'PL-SL', // Silesian
-      'PL-WN', // Warmian-Masurian
-      'PL-WP', // Greater Poland (Wielkopolskie)
-      'PL-ZP', // West Pomeranian
+      'PL-DS', 'PL-KP', 'PL-LB', 'PL-LD', 'PL-LU', 'PL-MA', 'PL-MZ', 'PL-OP', 'PL-PD',
+      'PL-PK', 'PL-PM', 'PL-SK', 'PL-SL', 'PL-WN', 'PL-WP', 'PL-ZP',
     ],
   },
   austriahungary: {
@@ -404,20 +276,37 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
       // that could interact diplomatically and militarily with players
     ],
   },
-  serbia: {
-    id: 'serbia',
-    name: 'Kingdom of Serbia',
-    combatName: 'Serbian Army',
-    flag: '/images/flags/serbia.svg',
-    color: '#ED4135',
-    adjective: 'Serbian',
-    firstArmyGroupName: 'Serbian Army Group',
-    divisionPrefix: 'Serbian Guard',
-    selectable: false,
-    coreRegions: [
-      // Historical Serbian territories in the Balkans
-      // Serbia itself is not in the game map (Russian Civil War focus), but metadata
-      // is provided for potential Balkan theater integration or historical context
-    ],
-  },
+   serbia: {
+     id: 'serbia',
+     name: 'Kingdom of Serbia',
+     combatName: 'Serbian Army',
+     flag: '/images/flags/serbia.svg',
+     color: '#ED4135',
+     adjective: 'Serbian',
+     firstArmyGroupName: 'Serbian Army Group',
+     divisionPrefix: 'Serbian Guard',
+     selectable: false,
+     coreRegions: [
+       // Historical Serbian territories in the Balkans
+       // Serbia itself is not in the game map (Russian Civil War focus), but metadata
+       // is provided for potential Balkan theater integration or historical context
+     ],
+   },
+   albania: {
+     id: 'albania',
+     name: 'Principality of Albania',
+     combatName: 'Albanian Forces',
+     flag: '/images/flags/albania.svg',
+     color: '#E41E20',
+     adjective: 'Albanian',
+     firstArmyGroupName: 'Albanian Army Group',
+     divisionPrefix: 'Albanian Guard',
+     selectable: false,
+     coreRegions: [
+       // Historical Albanian territories as of November 1917 (start of game)
+       // The Principality of Albania existed but was heavily occupied by Central Powers
+       // Core territories in the Balkans - Albania proper
+       // (specific regions would be defined in map.ts based on available regions)
+     ],
+   },
 };
