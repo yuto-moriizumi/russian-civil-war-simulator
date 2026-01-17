@@ -19,11 +19,14 @@ export default function MapToolPage() {
   const [adjacency, setAdjacency] = useState<Record<string, string[]> | null>(
     null
   );
+  const [coreRegions, setCoreRegions] = useState<Record<CountryId, string[]>>({} as Record<CountryId, string[]>);
+  const [originalCoreRegions, setOriginalCoreRegions] = useState<Record<CountryId, string[]>>({} as Record<CountryId, string[]>);
 
   // UI state
   const [selectedCountry, setSelectedCountry] = useState<CountryId>("soviet");
   const [showAdjacency, setShowAdjacency] = useState(false);
   const [isPaintEnabled, setIsPaintEnabled] = useState(false);
+  const [editMode, setEditMode] = useState<'ownership' | 'core'>('ownership');
 
   // History state
   const [history, setHistory] = useState<Record<string, CountryId>[]>([]);
@@ -33,7 +36,7 @@ export default function MapToolPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Load initial ownership data from API (bypasses module caching)
+  // Load initial ownership and core regions data from API (bypasses module caching)
   useEffect(() => {
     const loadInitialOwnership = async () => {
       try {
@@ -47,10 +50,30 @@ export default function MapToolPage() {
       }
     };
 
-    loadInitialOwnership().then(initialOwnership => {
+    const loadInitialCoreRegions = async () => {
+      try {
+        const response = await fetch('/api/map-tool/load-core-regions');
+        if (!response.ok) throw new Error('Failed to load core regions data');
+        const data = await response.json() as { coreRegions: Record<CountryId, string[]> };
+        return data.coreRegions || {} as Record<CountryId, string[]>;
+      } catch (error) {
+        console.error('Error loading core regions:', error);
+        return {} as Record<CountryId, string[]>;
+      }
+    };
+
+    Promise.all([loadInitialOwnership(), loadInitialCoreRegions()]).then(([initialOwnership, initialCoreRegions]) => {
       // Store for later use in GeoJSON handler
-      const win = window as unknown as { __initialRegionOwnership?: Record<string, CountryId> };
+      const win = window as unknown as { 
+        __initialRegionOwnership?: Record<string, CountryId>;
+        __initialCoreRegions?: Record<CountryId, string[]>;
+      };
       win.__initialRegionOwnership = initialOwnership;
+      win.__initialCoreRegions = initialCoreRegions;
+      
+      // Initialize core regions state
+      setCoreRegions(initialCoreRegions as Record<CountryId, string[]>);
+      setOriginalCoreRegions({ ...initialCoreRegions } as Record<CountryId, string[]>);
     });
   }, []);
 
@@ -87,17 +110,35 @@ export default function MapToolPage() {
     (regionId: string) => {
       if (!selectedCountry) return;
 
-      setOwnership((prev) => {
-        const updated = { ...prev, [regionId]: selectedCountry };
+      if (editMode === 'ownership') {
+        setOwnership((prev) => {
+          const updated = { ...prev, [regionId]: selectedCountry };
 
-        // Add to history
-        setHistory((h) => [...h.slice(0, historyIndex + 1), updated]);
-        setHistoryIndex((i) => i + 1);
+          // Add to history
+          setHistory((h) => [...h.slice(0, historyIndex + 1), updated]);
+          setHistoryIndex((i) => i + 1);
 
-        return updated;
-      });
+          return updated;
+        });
+      } else if (editMode === 'core') {
+        setCoreRegions((prev) => {
+          const updated = { ...prev };
+          const countryRegions = updated[selectedCountry] || [];
+          
+          // Toggle core region
+          if (countryRegions.includes(regionId)) {
+            // Remove from core regions
+            updated[selectedCountry] = countryRegions.filter(r => r !== regionId);
+          } else {
+            // Add to core regions
+            updated[selectedCountry] = [...countryRegions, regionId];
+          }
+          
+          return updated;
+        });
+      }
     },
-    [selectedCountry, historyIndex]
+    [selectedCountry, historyIndex, editMode]
   );
 
   // Undo/Redo
@@ -119,20 +160,35 @@ export default function MapToolPage() {
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
-      const response = await fetch("/api/map-tool/save-ownership", {
+      // Save ownership
+      const ownershipResponse = await fetch("/api/map-tool/save-ownership", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ownership, format: "typescript" }),
       });
 
-      const result = await response.json();
-      if (result.success) {
-        alert(`Successfully saved!\n${result.message}`);
+      const ownershipResult = await ownershipResponse.json();
+      
+      // Save core regions
+      const coreRegionsResponse = await fetch("/api/map-tool/save-core-regions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ coreRegions }),
+      });
+
+      const coreRegionsResult = await coreRegionsResponse.json();
+      
+      if (ownershipResult.success && coreRegionsResult.success) {
+        alert(`Successfully saved!\nOwnership: ${ownershipResult.message}\nCore Regions: ${coreRegionsResult.message}`);
         setOriginalOwnership({ ...ownership });
+        setOriginalCoreRegions({ ...coreRegions });
         setHistory([ownership]);
         setHistoryIndex(0);
       } else {
-        alert(`Save failed: ${result.message}`);
+        const errors = [];
+        if (!ownershipResult.success) errors.push(`Ownership: ${ownershipResult.message}`);
+        if (!coreRegionsResult.success) errors.push(`Core Regions: ${coreRegionsResult.message}`);
+        alert(`Save failed:\n${errors.join('\n')}`);
       }
     } catch (error) {
       alert(
@@ -143,16 +199,17 @@ export default function MapToolPage() {
     } finally {
       setIsSaving(false);
     }
-  }, [ownership]);
+  }, [ownership, coreRegions]);
 
   // Reset to original
   const handleReset = useCallback(() => {
-    if (confirm("Reset all changes to original ownership?")) {
+    if (confirm("Reset all changes to original ownership and core regions?")) {
       setOwnership({ ...originalOwnership });
+      setCoreRegions({ ...originalCoreRegions });
       setHistory([{ ...originalOwnership }]);
       setHistoryIndex(0);
     }
-  }, [originalOwnership]);
+  }, [originalOwnership, originalCoreRegions]);
 
   // Generate adjacency
   const handleGenerateAdjacency = useCallback(async () => {
@@ -188,7 +245,8 @@ export default function MapToolPage() {
   }, [geojson]);
 
   const hasChanges =
-    JSON.stringify(ownership) !== JSON.stringify(originalOwnership);
+    JSON.stringify(ownership) !== JSON.stringify(originalOwnership) ||
+    JSON.stringify(coreRegions) !== JSON.stringify(originalCoreRegions);
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
 
@@ -302,6 +360,37 @@ export default function MapToolPage() {
               />
 
               <div className="rounded border border-gray-700 bg-gray-900 p-3">
+                <h3 className="mb-2 text-sm font-semibold">Edit Mode</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setEditMode('ownership')}
+                    className={`rounded px-3 py-2 text-sm transition-colors ${
+                      editMode === 'ownership'
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                    }`}
+                  >
+                    Ownership
+                  </button>
+                  <button
+                    onClick={() => setEditMode('core')}
+                    className={`rounded px-3 py-2 text-sm transition-colors ${
+                      editMode === 'core'
+                        ? "bg-purple-600 text-white"
+                        : "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                    }`}
+                  >
+                    Core States
+                  </button>
+                </div>
+                <p className="mt-2 text-xs text-gray-400">
+                  {editMode === 'ownership' 
+                    ? "Paint regions to assign ownership" 
+                    : "Paint regions to toggle core states"}
+                </p>
+              </div>
+
+              <div className="rounded border border-gray-700 bg-gray-900 p-3">
                 <h3 className="mb-2 text-sm font-semibold">Paint Mode</h3>
                 <button
                   onClick={() => setIsPaintEnabled(!isPaintEnabled)}
@@ -341,6 +430,8 @@ export default function MapToolPage() {
               adjacency={adjacency}
               showAdjacency={showAdjacency}
               isPaintEnabled={isPaintEnabled}
+              editMode={editMode}
+              coreRegions={coreRegions}
               onRegionPaint={handleRegionPaint}
               onRegionHover={() => {}}
               onCountryPick={setSelectedCountry}
