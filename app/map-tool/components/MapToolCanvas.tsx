@@ -20,6 +20,8 @@ interface MapToolCanvasProps {
   adjacency: Record<string, string[]> | null;
   showAdjacency: boolean;
   isPaintEnabled: boolean;
+  editMode: 'ownership' | 'core';
+  coreRegions: Record<CountryId, string[]>;
   onRegionPaint: (regionId: string) => void;
   onRegionHover: (regionId: string | null) => void;
   onCountryPick: (country: CountryId) => void;
@@ -32,6 +34,8 @@ export default function MapToolCanvas({
   adjacency,
   showAdjacency,
   isPaintEnabled,
+  editMode,
+  coreRegions,
   onRegionPaint,
   onRegionHover,
   onCountryPick,
@@ -66,21 +70,35 @@ export default function MapToolCanvas({
     return names;
   }, [geojson]);
 
-  // Create fill color expression based on ownership
+  // Create fill color expression based on ownership or core regions
   const fillColorExpression = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const expression: any[] = ["match", ["get", "shapeID"]];
 
-    // Add all region colors
-    for (const [regionId, owner] of Object.entries(ownership)) {
-      expression.push(regionId, getCountryColor(owner));
+    if (editMode === 'ownership') {
+      // Add all region colors
+      for (const [regionId, owner] of Object.entries(ownership)) {
+        expression.push(regionId, getCountryColor(owner));
+      }
+    } else {
+      // In core regions mode, show the selected country's color for its core regions
+      const selectedCountryCoreRegions = coreRegions[selectedCountry] || [];
+      for (const regionId of Object.keys(ownership)) {
+        if (selectedCountryCoreRegions.includes(regionId)) {
+          // Core region - show bright color
+          expression.push(regionId, getCountryColor(selectedCountry));
+        } else {
+          // Non-core region - show dimmed color
+          expression.push(regionId, "#404040");
+        }
+      }
     }
 
     // Default color for unmatched regions
     expression.push("#808080");
 
     return expression;
-  }, [ownership]);
+  }, [ownership, editMode, coreRegions, selectedCountry]);
 
   // Line color expression for highlighting
   const lineColorExpression = useMemo(() => {
@@ -353,6 +371,16 @@ export default function MapToolCanvas({
           <div className="text-xs text-gray-400">
             Owner: {ownership[hoveredRegion]}
           </div>
+          {editMode === 'core' && (
+            <div className="mt-1 text-xs text-gray-400">
+              Core of: {
+                Object.entries(coreRegions)
+                  .filter(([, regions]) => regions.includes(hoveredRegion))
+                  .map(([countryId]) => countryId)
+                  .join(', ') || 'none'
+              }
+            </div>
+          )}
           {showAdjacency && adjacency && adjacency[hoveredRegion] && (
             <div className="mt-1 text-xs text-gray-400">
               Adjacent: {adjacency[hoveredRegion].length}
@@ -369,7 +397,7 @@ export default function MapToolCanvas({
         />
         <span className="font-semibold">{selectedCountry}</span>
         <span className="text-xs text-gray-400">
-          ({isPaintEnabled ? "Left: Paint | Right: Pan" : "Paint disabled"})
+          ({editMode === 'ownership' ? 'Ownership' : 'Core States'} | {isPaintEnabled ? "Left: Paint | Right: Pan" : "Paint disabled"})
         </span>
       </div>
     </div>

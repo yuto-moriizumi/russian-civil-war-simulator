@@ -7,6 +7,10 @@ import MapToolCanvas from "./components/MapToolCanvas";
 import GeoJSONLoader from "./components/GeoJSONLoader";
 import CountryPalette from "./components/CountryPalette";
 import ExportPanel from "./components/ExportPanel";
+import EditModePanel from "./components/EditModePanel";
+import GeoJSONInfoPanel from "./components/GeoJSONInfoPanel";
+import MapToolHeader from "./components/MapToolHeader";
+import { useMapToolData } from "./hooks/useMapToolData";
 
 export default function MapToolPage() {
   // Data state
@@ -19,11 +23,13 @@ export default function MapToolPage() {
   const [adjacency, setAdjacency] = useState<Record<string, string[]> | null>(
     null
   );
+  const { coreRegions, originalCoreRegions, setCoreRegions, setOriginalCoreRegions } = useMapToolData();
 
   // UI state
   const [selectedCountry, setSelectedCountry] = useState<CountryId>("soviet");
   const [showAdjacency, setShowAdjacency] = useState(false);
   const [isPaintEnabled, setIsPaintEnabled] = useState(false);
+  const [editMode, setEditMode] = useState<'ownership' | 'core'>('ownership');
 
   // History state
   const [history, setHistory] = useState<Record<string, CountryId>[]>([]);
@@ -32,27 +38,6 @@ export default function MapToolPage() {
   // Loading states
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
-  // Load initial ownership data from API (bypasses module caching)
-  useEffect(() => {
-    const loadInitialOwnership = async () => {
-      try {
-        const response = await fetch('/api/map-tool/load-ownership');
-        if (!response.ok) throw new Error('Failed to load ownership data');
-        const data = await response.json() as { ownership: Record<string, CountryId> };
-        return data.ownership || {};
-      } catch (error) {
-        console.error('Error loading ownership:', error);
-        return {};
-      }
-    };
-
-    loadInitialOwnership().then(initialOwnership => {
-      // Store for later use in GeoJSON handler
-      const win = window as unknown as { __initialRegionOwnership?: Record<string, CountryId> };
-      win.__initialRegionOwnership = initialOwnership;
-    });
-  }, []);
 
   // Load GeoJSON handler
   const handleGeoJSONLoad = useCallback(
@@ -87,17 +72,35 @@ export default function MapToolPage() {
     (regionId: string) => {
       if (!selectedCountry) return;
 
-      setOwnership((prev) => {
-        const updated = { ...prev, [regionId]: selectedCountry };
+      if (editMode === 'ownership') {
+        setOwnership((prev) => {
+          const updated = { ...prev, [regionId]: selectedCountry };
 
-        // Add to history
-        setHistory((h) => [...h.slice(0, historyIndex + 1), updated]);
-        setHistoryIndex((i) => i + 1);
+          // Add to history
+          setHistory((h) => [...h.slice(0, historyIndex + 1), updated]);
+          setHistoryIndex((i) => i + 1);
 
-        return updated;
-      });
+          return updated;
+        });
+      } else if (editMode === 'core') {
+        setCoreRegions((prev) => {
+          const updated = { ...prev };
+          const countryRegions = updated[selectedCountry] || [];
+          
+          // Toggle core region
+          if (countryRegions.includes(regionId)) {
+            // Remove from core regions
+            updated[selectedCountry] = countryRegions.filter(r => r !== regionId);
+          } else {
+            // Add to core regions
+            updated[selectedCountry] = [...countryRegions, regionId];
+          }
+          
+          return updated;
+        });
+      }
     },
-    [selectedCountry, historyIndex]
+    [selectedCountry, historyIndex, editMode, setCoreRegions]
   );
 
   // Undo/Redo
@@ -119,20 +122,35 @@ export default function MapToolPage() {
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
-      const response = await fetch("/api/map-tool/save-ownership", {
+      // Save ownership
+      const ownershipResponse = await fetch("/api/map-tool/save-ownership", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ownership, format: "typescript" }),
       });
 
-      const result = await response.json();
-      if (result.success) {
-        alert(`Successfully saved!\n${result.message}`);
+      const ownershipResult = await ownershipResponse.json();
+      
+      // Save core regions
+      const coreRegionsResponse = await fetch("/api/map-tool/save-core-regions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ coreRegions }),
+      });
+
+      const coreRegionsResult = await coreRegionsResponse.json();
+      
+      if (ownershipResult.success && coreRegionsResult.success) {
+        alert(`Successfully saved!\nOwnership: ${ownershipResult.message}\nCore Regions: ${coreRegionsResult.message}`);
         setOriginalOwnership({ ...ownership });
+        setOriginalCoreRegions({ ...coreRegions });
         setHistory([ownership]);
         setHistoryIndex(0);
       } else {
-        alert(`Save failed: ${result.message}`);
+        const errors = [];
+        if (!ownershipResult.success) errors.push(`Ownership: ${ownershipResult.message}`);
+        if (!coreRegionsResult.success) errors.push(`Core Regions: ${coreRegionsResult.message}`);
+        alert(`Save failed:\n${errors.join('\n')}`);
       }
     } catch (error) {
       alert(
@@ -143,16 +161,17 @@ export default function MapToolPage() {
     } finally {
       setIsSaving(false);
     }
-  }, [ownership]);
+  }, [ownership, coreRegions, setOriginalCoreRegions]);
 
   // Reset to original
   const handleReset = useCallback(() => {
-    if (confirm("Reset all changes to original ownership?")) {
+    if (confirm("Reset all changes to original ownership and core regions?")) {
       setOwnership({ ...originalOwnership });
+      setCoreRegions({ ...originalCoreRegions });
       setHistory([{ ...originalOwnership }]);
       setHistoryIndex(0);
     }
-  }, [originalOwnership]);
+  }, [originalOwnership, originalCoreRegions, setCoreRegions]);
 
   // Generate adjacency
   const handleGenerateAdjacency = useCallback(async () => {
@@ -188,7 +207,8 @@ export default function MapToolPage() {
   }, [geojson]);
 
   const hasChanges =
-    JSON.stringify(ownership) !== JSON.stringify(originalOwnership);
+    JSON.stringify(ownership) !== JSON.stringify(originalOwnership) ||
+    JSON.stringify(coreRegions) !== JSON.stringify(originalCoreRegions);
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
 
@@ -233,36 +253,14 @@ export default function MapToolPage() {
 
   return (
     <div className="flex h-screen w-screen flex-col bg-gray-900 text-white">
-      {/* Header */}
-      <header className="flex items-center justify-between border-b border-gray-700 bg-gray-800 px-6 py-4">
-        <div>
-          <h1 className="text-2xl font-bold">Map Tool</h1>
-          <p className="text-sm text-gray-400">
-            {geojsonSource || "No GeoJSON loaded"}
-            {hasChanges && (
-              <span className="ml-2 text-yellow-400">• Unsaved changes</span>
-            )}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={handleUndo}
-            disabled={!canUndo}
-            className="rounded bg-gray-700 px-3 py-1 text-sm hover:bg-gray-600 disabled:opacity-50"
-            title="Undo (Ctrl+Z)"
-          >
-            ↶ Undo
-          </button>
-          <button
-            onClick={handleRedo}
-            disabled={!canRedo}
-            className="rounded bg-gray-700 px-3 py-1 text-sm hover:bg-gray-600 disabled:opacity-50"
-            title="Redo (Ctrl+Shift+Z)"
-          >
-            ↷ Redo
-          </button>
-        </div>
-      </header>
+      <MapToolHeader
+        geojsonSource={geojsonSource}
+        hasChanges={hasChanges}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+      />
 
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
@@ -272,53 +270,26 @@ export default function MapToolPage() {
 
           {geojson && (
             <>
-              <div className="rounded border border-gray-700 bg-gray-900 p-3">
-                <h3 className="mb-2 text-sm font-semibold">GeoJSON Info</h3>
-                <p className="text-xs text-gray-400">
-                  Features: {geojson.features.length}
-                </p>
-                <button
-                  onClick={handleGenerateAdjacency}
-                  disabled={isLoading}
-                  className="mt-2 w-full rounded bg-blue-600 px-3 py-2 text-sm hover:bg-blue-500 disabled:opacity-50"
-                >
-                  {isLoading ? "Generating..." : "Generate Adjacency"}
-                </button>
-                {adjacency && (
-                  <label className="mt-2 flex items-center gap-2 text-xs">
-                    <input
-                      type="checkbox"
-                      checked={showAdjacency}
-                      onChange={(e) => setShowAdjacency(e.target.checked)}
-                    />
-                    Show adjacency on hover
-                  </label>
-                )}
-              </div>
+              <GeoJSONInfoPanel
+                geojson={geojson}
+                adjacency={adjacency}
+                showAdjacency={showAdjacency}
+                isLoading={isLoading}
+                onGenerateAdjacency={handleGenerateAdjacency}
+                onShowAdjacencyChange={setShowAdjacency}
+              />
 
               <CountryPalette
                 selectedCountry={selectedCountry}
                 onSelectCountry={setSelectedCountry}
               />
 
-              <div className="rounded border border-gray-700 bg-gray-900 p-3">
-                <h3 className="mb-2 text-sm font-semibold">Paint Mode</h3>
-                <button
-                  onClick={() => setIsPaintEnabled(!isPaintEnabled)}
-                  className={`w-full rounded px-3 py-2 text-sm ${
-                    isPaintEnabled
-                      ? "bg-green-600 hover:bg-green-500"
-                      : "bg-gray-700 hover:bg-gray-600"
-                  }`}
-                >
-                  {isPaintEnabled ? "✓ Paint Enabled" : "Paint Disabled"}
-                </button>
-                <p className="mt-2 text-xs text-gray-400">
-                  {isPaintEnabled
-                    ? "Click regions to paint"
-                    : "Toggle on to enable painting"}
-                </p>
-              </div>
+              <EditModePanel
+                editMode={editMode}
+                isPaintEnabled={isPaintEnabled}
+                onEditModeChange={setEditMode}
+                onPaintToggle={() => setIsPaintEnabled(!isPaintEnabled)}
+              />
 
               <ExportPanel
                 ownership={ownership}
@@ -341,6 +312,8 @@ export default function MapToolPage() {
               adjacency={adjacency}
               showAdjacency={showAdjacency}
               isPaintEnabled={isPaintEnabled}
+              editMode={editMode}
+              coreRegions={coreRegions}
               onRegionPaint={handleRegionPaint}
               onRegionHover={() => {}}
               onCountryPick={setSelectedCountry}
