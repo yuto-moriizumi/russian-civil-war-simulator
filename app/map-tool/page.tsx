@@ -39,7 +39,7 @@ export default function MapToolPage() {
       try {
         const response = await fetch('/api/map-tool/load-ownership');
         if (!response.ok) throw new Error('Failed to load ownership data');
-        const data = await response.json();
+        const data = await response.json() as { ownership: Record<string, CountryId> };
         return data.ownership || {};
       } catch (error) {
         console.error('Error loading ownership:', error);
@@ -49,7 +49,8 @@ export default function MapToolPage() {
 
     loadInitialOwnership().then(initialOwnership => {
       // Store for later use in GeoJSON handler
-      (window as any).__initialRegionOwnership = initialOwnership;
+      const win = window as unknown as { __initialRegionOwnership?: Record<string, CountryId> };
+      win.__initialRegionOwnership = initialOwnership;
     });
   }, []);
 
@@ -61,7 +62,8 @@ export default function MapToolPage() {
 
       // Initialize ownership from features or use dynamically loaded data
       const newOwnership: Record<string, CountryId> = {};
-      const initialOwnershipData = (window as any).__initialRegionOwnership || {};
+      const win = window as unknown as { __initialRegionOwnership?: Record<string, CountryId> };
+      const initialOwnershipData = win.__initialRegionOwnership || {};
       
       data.features.forEach((feature) => {
         const shapeId = feature.properties?.shapeID;
