@@ -12,7 +12,6 @@ import { useMapToolData } from "./hooks/useMapToolData";
 export default function MapToolPage() {
   // Data state
   const [geojson, setGeojson] = useState<FeatureCollection | null>(null);
-  const [geojsonSource, setGeojsonSource] = useState<string>("");
   const [ownership, setOwnership] = useState<Record<string, CountryId>>({});
   const [originalOwnership, setOriginalOwnership] = useState<
     Record<string, CountryId>
@@ -40,7 +39,6 @@ export default function MapToolPage() {
   const handleGeoJSONLoad = useCallback(
     (data: FeatureCollection, source: string) => {
       setGeojson(data);
-      setGeojsonSource(source);
 
       // Initialize ownership from features or use dynamically loaded data
       const newOwnership: Record<string, CountryId> = {};
