@@ -15,6 +15,7 @@ import {
   Relationship,
   MapMode,
   ScheduledEvent,
+  CountryBonuses,
 } from '../types/game';
 import { getInitialCountryBonuses } from './bonusCalculator';
 import { countries } from '../data/countries';
@@ -210,7 +211,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
     }
   
   // Initialize country bonuses if missing
-  const initialBonuses: Record<CountryId, any> = {} as Record<CountryId, any>;
+  const initialBonuses: Record<CountryId, CountryBonuses> = {} as Record<CountryId, CountryBonuses>;
   if (!data.countryBonuses) {
     countries.forEach(country => {
       initialBonuses[country.id] = getInitialCountryBonuses();
