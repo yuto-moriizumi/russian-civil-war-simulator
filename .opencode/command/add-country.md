@@ -61,23 +61,34 @@ Add a new non-playable country that exists from the start of the game: $ARGUMENT
    - Otherwise, create a simple placeholder SVG with the country's color
    - Use a simple design (e.g., solid color with emblem, or tricolor)
 
-7. **Document initial setup**: Based on historical research, create a comment or documentation explaining:
-   - Which regions should initially belong to this country at game start (November 20, 1917) based on historical territories
+7. **Add core regions**: Based on historical research, add the country's core regions to `app/data/coreStates.ts`:
+   - Add a new entry in the `coreStates` object with the country ID as the key
+   - List all region IDs that should be considered core territories for this country
+   - Core regions are historically significant territories that the country considers its rightful homeland
+   - Example:
+     ```typescript
+     '<country-id>': ['region-id-1', 'region-id-2', 'region-id-3'],
+     ```
+   - Use the historical research to determine which regions should be cores based on:
+     - Historical territories controlled in late 1917/early 1918
+     - Ethnic/cultural territories of the country's people
+     - Regions with historical claims or strategic importance
+   
+8. **Document initial setup**: Based on historical research, create a comment or documentation explaining:
    - Which countries it should be at war with from the beginning based on historical conflicts
    - Suggested starting units and strength for game balance (consider historical military strength)
    
    **Note**: This country will exist from the beginning of the game. Actual initial state configuration must be set in:
-   - `app/data/map.ts` - for initial region ownership at game start
-   - `app/store/game/initialState.ts` - for starting units, divisions, and relationships
+   - `app/store/game/initialState.ts` - for starting units, divisions, initial region ownership, and relationships
 
-8. **Verify types compile**: Run `npm run build` to ensure TypeScript types are correct
+9. **Verify types compile**: Run `npm run build` to ensure TypeScript types are correct
 
-9. **Provide next steps**: Inform the user that:
+10. **Provide next steps**: Inform the user that:
     - All changes have been made in the isolated worktree `.worktrees/add-country-<country-id>`
     - They should review the changes, test the game, and verify everything works correctly
     - When ready, they can merge the branch into main manually
     - They still need to manually configure:
-      - Initial region ownership in `app/data/map.ts`
+      - Initial region ownership in `app/store/game/initialState.ts`
       - Starting military units in `app/store/game/initialState.ts`
       - Initial diplomatic relationships (wars, access) in initial state
       - AI behavior configuration (if custom AI is needed)
@@ -104,5 +115,6 @@ This will:
 3. Create a git worktree `add-country-kuban` for isolated development
 4. Create a new non-playable country with historically accurate details in the worktree
 5. Generate historically accurate flag design
-6. Provide recommendations for initial territories and military setup
-7. Leave the worktree for you to review, test, and manually merge when ready
+6. Add core regions for the country based on historical territories
+7. Provide recommendations for initial setup and military configuration
+8. Leave the worktree for you to review, test, and manually merge when ready
