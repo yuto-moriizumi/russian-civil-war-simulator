@@ -6,9 +6,6 @@ import { CountryId } from "../types/game";
 import MapToolCanvas from "./components/MapToolCanvas";
 import GeoJSONLoader from "./components/GeoJSONLoader";
 import CountryPalette from "./components/CountryPalette";
-import ExportPanel from "./components/ExportPanel";
-import EditModePanel from "./components/EditModePanel";
-import GeoJSONInfoPanel from "./components/GeoJSONInfoPanel";
 import MapToolHeader from "./components/MapToolHeader";
 import { useMapToolData } from "./hooks/useMapToolData";
 
@@ -256,6 +253,8 @@ export default function MapToolPage() {
 
   return (
     <div className="flex h-screen w-screen flex-col bg-gray-900 text-white">
+      <GeoJSONLoader onLoad={handleGeoJSONLoad} isLoading={isLoading} />
+      
       <MapToolHeader
         geojsonSource={geojsonSource}
         hasChanges={hasChanges}
@@ -263,47 +262,33 @@ export default function MapToolPage() {
         canRedo={canRedo}
         onUndo={handleUndo}
         onRedo={handleRedo}
+        geojson={geojson}
+        adjacency={adjacency}
+        showAdjacency={showAdjacency}
+        isLoading={isLoading}
+        onGenerateAdjacency={handleGenerateAdjacency}
+        onShowAdjacencyChange={setShowAdjacency}
+        editMode={editMode}
+        isPaintEnabled={isPaintEnabled}
+        onEditModeChange={setEditMode}
+        onPaintToggle={() => setIsPaintEnabled(!isPaintEnabled)}
+        ownership={ownership}
+        isSaving={isSaving}
+        onSave={handleSave}
+        onReset={handleReset}
       />
 
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left sidebar */}
-        <aside className="flex w-80 flex-col gap-4 overflow-y-auto border-r border-gray-700 bg-gray-800 p-4">
-          <GeoJSONLoader onLoad={handleGeoJSONLoad} isLoading={isLoading} />
-
-          {geojson && (
-            <>
-              <GeoJSONInfoPanel
-                geojson={geojson}
-                adjacency={adjacency}
-                showAdjacency={showAdjacency}
-                isLoading={isLoading}
-                onGenerateAdjacency={handleGenerateAdjacency}
-                onShowAdjacencyChange={setShowAdjacency}
-              />
-
-              <CountryPalette
-                selectedCountry={selectedCountry}
-                onSelectCountry={setSelectedCountry}
-              />
-
-              <EditModePanel
-                editMode={editMode}
-                isPaintEnabled={isPaintEnabled}
-                onEditModeChange={setEditMode}
-                onPaintToggle={() => setIsPaintEnabled(!isPaintEnabled)}
-              />
-
-              <ExportPanel
-                ownership={ownership}
-                hasChanges={hasChanges}
-                isSaving={isSaving}
-                onSave={handleSave}
-                onReset={handleReset}
-              />
-            </>
-          )}
-        </aside>
+        {/* Left sidebar - Only Country Palette */}
+        {geojson && (
+          <aside className="flex w-80 flex-col overflow-y-auto border-r border-gray-700 bg-gray-800 p-4">
+            <CountryPalette
+              selectedCountry={selectedCountry}
+              onSelectCountry={setSelectedCountry}
+            />
+          </aside>
+        )}
 
         {/* Map canvas */}
         <main className="flex-1">
