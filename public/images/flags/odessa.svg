@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600">
+  <!-- Red background -->
+  <rect width="900" height="600" fill="#DC143C"/>
+  
+  <!-- Hammer and Sickle in gold -->
+  <g transform="translate(450, 300)">
+    <!-- Sickle -->
+    <g transform="translate(-80, -40)">
+      <path d="M 0 0 Q 30 0 40 30 Q 50 60 30 80 Q 10 100 -20 80" 
+            fill="none" stroke="#FFD700" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="0" cy="0" r="8" fill="#FFD700"/>
+    </g>
+    
+    <!-- Hammer -->
+    <g transform="translate(80, -40)">
+      <!-- Handle -->
+      <rect x="-4" y="0" width="8" height="100" fill="#FFD700"/>
+      <!-- Head -->
+      <rect x="-30" y="100" width="60" height="35" fill="#FFD700" rx="4"/>
+      <!-- Strike side -->
+      <rect x="-35" y="135" width="70" height="20" fill="#FFD700" rx="3"/>
+    </g>
+    
+    <!-- Gold star above hammer and sickle -->
+    <g transform="translate(0, -120)">
+      <polygon points="0,-30 8,-10 30,-10 15,5 22,25 0,15 -22,25 -15,5 -30,-10 -8,-10" fill="#FFD700"/>
+    </g>
+  </g>
+</svg>

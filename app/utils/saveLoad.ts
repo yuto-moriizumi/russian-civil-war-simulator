@@ -199,6 +199,9 @@ function deserializeGameState(data: SerializedGameState): GameState {
         persia: [],
         ukrainesoviet: [],
         lithuania: [],
+        balticdutchy: [],
+        stavropol: [],
+        odessa: [],
       };
 
      // Sort legacy queue items into country-specific queues
@@ -243,6 +246,9 @@ function deserializeGameState(data: SerializedGameState): GameState {
         persia: [],
         ukrainesoviet: [],
         lithuania: [],
+        balticdutchy: [],
+        stavropol: [],
+        odessa: [],
       };
     }
   
@@ -294,9 +300,12 @@ function deserializeGameState(data: SerializedGameState): GameState {
          serbia: getInitialCountryBonuses(),
          albania: getInitialCountryBonuses(),
          persia: getInitialCountryBonuses(),
-         ukrainesoviet: getInitialCountryBonuses(),
-         lithuania: getInitialCountryBonuses(),
-       },
+          ukrainesoviet: getInitialCountryBonuses(),
+          lithuania: getInitialCountryBonuses(),
+          balticdutchy: getInitialCountryBonuses(),
+          stavropol: getInitialCountryBonuses(),
+          odessa: getInitialCountryBonuses(),
+        },
   };
 }
 
