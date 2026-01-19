@@ -49,10 +49,14 @@ export const initialGameState: GameState = {
      serbia: [],
       albania: [],
       persia: [],
-      ukrainesoviet: [],
-      lithuania: [],
-    },
-   relationships: [
+       ukrainesoviet: [],
+       lithuania: [],
+       balticdutchy: [],
+       stavropol: [],
+       terek: [],
+     },
+    relationships: [
+
      { fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy' },
      { fromCountry: 'soviet', toCountry: 'iskolat', type: 'autonomy' },
      { fromCountry: 'germany', toCountry: 'poland', type: 'autonomy' },
@@ -90,7 +94,11 @@ export const initialGameState: GameState = {
       serbia: getInitialCountryBonuses(),
        albania: getInitialCountryBonuses(),
        persia: getInitialCountryBonuses(),
-       ukrainesoviet: getInitialCountryBonuses(),
-       lithuania: getInitialCountryBonuses(),
-     },
+        ukrainesoviet: getInitialCountryBonuses(),
+        lithuania: getInitialCountryBonuses(),
+        balticdutchy: getInitialCountryBonuses(),
+        stavropol: getInitialCountryBonuses(),
+        terek: getInitialCountryBonuses(),
+      },
 };
+

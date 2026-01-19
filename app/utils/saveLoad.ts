@@ -197,9 +197,13 @@ function deserializeGameState(data: SerializedGameState): GameState {
         serbia: [],
         albania: [],
         persia: [],
-        ukrainesoviet: [],
-        lithuania: [],
-      };
+         ukrainesoviet: [],
+         lithuania: [],
+         balticdutchy: [],
+         stavropol: [],
+         terek: [],
+       };
+
 
      // Sort legacy queue items into country-specific queues
     for (const item of data.productionQueue) {
@@ -241,9 +245,13 @@ function deserializeGameState(data: SerializedGameState): GameState {
         serbia: [],
         albania: [],
         persia: [],
-        ukrainesoviet: [],
-        lithuania: [],
-      };
+         ukrainesoviet: [],
+         lithuania: [],
+         balticdutchy: [],
+         stavropol: [],
+         terek: [],
+       };
+
     }
   
   return {
@@ -294,9 +302,13 @@ function deserializeGameState(data: SerializedGameState): GameState {
          serbia: getInitialCountryBonuses(),
          albania: getInitialCountryBonuses(),
          persia: getInitialCountryBonuses(),
-         ukrainesoviet: getInitialCountryBonuses(),
-         lithuania: getInitialCountryBonuses(),
-       },
+          ukrainesoviet: getInitialCountryBonuses(),
+          lithuania: getInitialCountryBonuses(),
+          balticdutchy: getInitialCountryBonuses(),
+          stavropol: getInitialCountryBonuses(),
+          terek: getInitialCountryBonuses(),
+        },
+
   };
 }
 

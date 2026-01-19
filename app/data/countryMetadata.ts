@@ -450,7 +450,25 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
         coreRegions: [
           // Stavropol Governorate territory - core Soviet territory in the North Caucasus
           // Established January 1, 1918 - dissolved July 7, 1918 (merged into North Caucasian SR)
-          'RU-STA', // Stavropol Krai - historical heart of the republic
-        ],
-      },
+       'RU-STA', // Stavropol Krai - historical heart of the republic
+     ],
+   },
+   terek: {
+     id: 'terek',
+     name: 'Terek Soviet Republic',
+     combatName: 'Terek Red Guards',
+     flag: '/images/flags/terek.svg',
+     color: '#B22222',
+     adjective: 'Terek Soviet',
+     firstArmyGroupName: 'Terek Red Army',
+     divisionPrefix: 'Terek Guard',
+     selectable: false,
+     coreRegions: [
+       'RU-CE', // Chechnya
+       'RU-IN', // Ingushetia
+       'RU-SE', // North Ossetia
+       'RU-KB', // Kabardino-Balkaria
+     ],
+   },
 };
+
