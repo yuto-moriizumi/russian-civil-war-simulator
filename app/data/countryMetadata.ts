@@ -471,21 +471,37 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
           'MD-01', // Moldova (Bessarabia regions)
         ],
       },
-      terek: {
-        id: 'terek',
-        name: 'Terek Soviet Republic',
-        combatName: 'Terek Red Guards',
-        flag: '/images/flags/terek.svg',
-        color: '#B22222',
-        adjective: 'Terek Soviet',
-        firstArmyGroupName: 'Terek Red Army',
-        divisionPrefix: 'Terek Guard',
-        selectable: false,
-        coreRegions: [
-          'RU-CE', // Chechnya
-          'RU-IN', // Ingushetia
-          'RU-SE', // North Ossetia
-          'RU-KB', // Kabardino-Balkaria
-        ],
-      },
+       terek: {
+         id: 'terek',
+         name: 'Terek Soviet Republic',
+         combatName: 'Terek Red Guards',
+         flag: '/images/flags/terek.svg',
+         color: '#B22222',
+         adjective: 'Terek Soviet',
+         firstArmyGroupName: 'Terek Red Army',
+         divisionPrefix: 'Terek Guard',
+         selectable: false,
+         coreRegions: [
+           'RU-CE', // Chechnya
+           'RU-IN', // Ingushetia
+           'RU-SE', // North Ossetia
+           'RU-KB', // Kabardino-Balkaria
+         ],
+       },
+       taurida: {
+         id: 'taurida',
+         name: 'Taurida Soviet Socialist Republic',
+         combatName: 'Taurida Red Guards',
+         flag: '/images/flags/taurida.svg',
+         color: '#8B0000',
+         adjective: 'Taurida Soviet',
+         firstArmyGroupName: 'Taurida Red Army',
+         divisionPrefix: 'Taurida Guard',
+         selectable: false,
+         coreRegions: [
+           // Crimea and surrounding Taurida regions - established March 19-21, 1918
+           // Historical territories of Taurida Soviet Socialist Republic
+           'RU-Cr', // Crimea (primary territory of Taurida)
+         ],
+       },
 };
