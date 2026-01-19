@@ -37,7 +37,7 @@ export default function MapToolPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   // Track painted regions in current drag session to prevent toggle flickering
-  const [paintedRegionsInDrag, setPaintedRegionsInDrag] = useState<Set<string>>(new Set());
+  const [, setPaintedRegionsInDrag] = useState<Set<string>>(new Set());
 
   // Load GeoJSON handler
   const handleGeoJSONLoad = useCallback(
