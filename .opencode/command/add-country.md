@@ -1,10 +1,10 @@
 ---
-description: Add a new non-playable country that exists from the beginning of the game
+description: Add a new non-playable country to the game
 ---
 
-Add a new non-playable country that exists from the start of the game: $ARGUMENTS
+Add a new non-playable country: $ARGUMENTS
 
-**Important**: This command is for adding countries that exist at game start (November 20, 1917), not for countries that emerge during gameplay. The country will be added to the initial game state with starting territories, units, and diplomatic relationships.
+The country will be added to the game data with its flag, color, and core territories. You can configure when it appears and its initial state through the game's state configuration files.
 
 ## Steps to execute:
 
@@ -12,7 +12,7 @@ Add a new non-playable country that exists from the start of the game: $ARGUMENT
    
    **Use web search** to research the specified country and gather:
    - Historical context and background (founding date, key events during Russian Civil War)
-   - Geographic territories controlled in late 1917/early 1918
+   - Geographic territories controlled during its existence
    - Diplomatic relationships and alliances
    - **Historical flag image**: Search for "flag of [country] 1917-1923", "flag of [country] Wikimedia Commons", or "flag of [country] historical". Look for a reliable source URL (e.g., Wikimedia Commons) that provides the historically accurate flag for the period.
    - Key historical goals and objectives
@@ -79,16 +79,18 @@ Add a new non-playable country that exists from the start of the game: $ARGUMENT
      '<country-id>': ['region-id-1', 'region-id-2', 'region-id-3'],
      ```
    - Use the historical research to determine which regions should be cores based on:
-     - Historical territories controlled in late 1917/early 1918
+     - Historical territories controlled during the country's existence
      - Ethnic/cultural territories of the country's people
      - Regions with historical claims or strategic importance
    
 8. **Document initial setup**: Based on historical research, create a comment or documentation explaining:
-   - Which countries it should be at war with from the beginning based on historical conflicts
+   - Which countries it should be at war with based on historical conflicts
    - Suggested starting units and strength for game balance (consider historical military strength)
+   - When the country should appear in the game (at start or during gameplay)
    
-   **Note**: This country will exist from the beginning of the game. Actual initial state configuration must be set in:
-   - `app/store/game/initialState.ts` - for starting units, divisions, initial region ownership, and relationships
+   **Note**: Actual configuration must be set in:
+   - `app/store/game/initialState.ts` - for starting units, divisions, initial region ownership, and relationships (if the country exists at game start)
+   - Game event system - if the country should emerge during gameplay based on certain conditions
 
 9. **Verify types compile**: Run `npm run build` to ensure TypeScript types are correct
 
@@ -97,9 +99,10 @@ Add a new non-playable country that exists from the start of the game: $ARGUMENT
     - They should review the changes, test the game, and verify everything works correctly
     - When ready, they can merge the branch into main manually
     - They still need to manually configure:
-      - Initial region ownership in `app/store/game/initialState.ts`
-      - Starting military units in `app/store/game/initialState.ts`
-      - Initial diplomatic relationships (wars, access) in initial state
+      - When the country appears (at game start in `app/store/game/initialState.ts`, or during gameplay via events)
+      - Initial region ownership (if at game start)
+      - Starting military units (if at game start)
+      - Initial diplomatic relationships (wars, access)
       - AI behavior configuration (if custom AI is needed)
 
 ## Important notes:
@@ -109,7 +112,7 @@ Add a new non-playable country that exists from the start of the game: $ARGUMENT
 - NPC countries must have `selectable: false` to prevent players from selecting them
 - Colors should be distinct from existing countries for map clarity (consider historical flag colors)
 - The country will be controlled by the default CPU player AI
-- This is for countries that exist at game start, not countries that emerge during gameplay
+- The command adds the country to game data; you'll configure when it appears (at start or during gameplay) separately
 - Historical accuracy is important for immersion and educational value
 - Changes are made in an isolated worktree for manual review and merging
 
