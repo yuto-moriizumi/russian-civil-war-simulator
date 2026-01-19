@@ -137,6 +137,25 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
       'LVA', // Latvia (ADM0)
     ],
   },
+  dkr: {
+    id: 'dkr',
+    name: 'Donetsk–Krivoy Rog Soviet Republic',
+    combatName: 'Donetsk-Krivoy Rog Red Guards',
+    flag: '/images/flags/dkr.svg',
+    color: '#A52A2A',
+    adjective: 'DKR',
+    firstArmyGroupName: 'Southern Red Guard',
+    divisionPrefix: 'Industrial Guard',
+    selectable: false,
+    coreRegions: [
+      // Industrial heartland of eastern Ukraine - Donbas and Krivoy Rog
+      'UA-63', // Kharkiv Oblast (capital: Kharkiv)
+      'UA-12', // Dnipropetrovsk Oblast (includes Krivoy Rog)
+      'UA-14', // Donetsk Oblast (Donbas coal basin)
+      'UA-09', // Luhansk Oblast (Donbas)
+      'UA-65', // Kherson Oblast (southern parts)
+    ],
+  },
   neutral: {
     id: 'neutral',
     name: 'Neutral',
