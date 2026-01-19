@@ -400,23 +400,39 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
          'UA-32', // Kyiv - contested, historically taken by force
        ],
      },
-     balticdutchy: {
-       id: 'balticdutchy',
-       name: 'United Baltic Duchy',
-       combatName: 'Baltische Landeswehr',
-       flag: '/images/flags/balticdutchy.svg',
-       color: '#4B7BA7',
-       adjective: 'Baltic',
-       firstArmyGroupName: 'Baltische Landeswehr',
-       divisionPrefix: 'Baltic Guard',
-       selectable: false,
-       coreRegions: [
-         // Estonia, Latvia (including Riga), and Courland
-         // Based on historical territories controlled in late 1917/early 1918
-         'EE-01', // Estonia
-         'EE-02', // Estonia
-         'EE-03', // Estonia
-         'LVA', // Latvia (entire country as administrative unit)
-       ],
-     },
+      balticdutchy: {
+        id: 'balticdutchy',
+        name: 'United Baltic Duchy',
+        combatName: 'Baltische Landeswehr',
+        flag: '/images/flags/balticdutchy.svg',
+        color: '#4B7BA7',
+        adjective: 'Baltic',
+        firstArmyGroupName: 'Baltische Landeswehr',
+        divisionPrefix: 'Baltic Guard',
+        selectable: false,
+        coreRegions: [
+          // Estonia, Latvia (including Riga), and Courland
+          // Based on historical territories controlled in late 1917/early 1918
+          'EE-01', // Estonia
+          'EE-02', // Estonia
+          'EE-03', // Estonia
+          'LVA', // Latvia (entire country as administrative unit)
+        ],
+      },
+      stavropol: {
+        id: 'stavropol',
+        name: 'Stavropol Soviet Republic',
+        combatName: 'Stavropol Red Guards',
+        flag: '/images/flags/stavropol.svg',
+        color: '#CE1126',
+        adjective: 'Stavropol Soviet',
+        firstArmyGroupName: 'Stavropol Red Guard',
+        divisionPrefix: 'Stavropol Guard',
+        selectable: false,
+        coreRegions: [
+          // Stavropol Governorate territory - core Soviet territory in the North Caucasus
+          // Established January 1, 1918 - dissolved July 7, 1918 (merged into North Caucasian SR)
+          'RU-STA', // Stavropol Krai - historical heart of the republic
+        ],
+      },
 };
