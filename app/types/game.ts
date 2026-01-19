@@ -1,7 +1,7 @@
 export type Screen = 'title' | 'countrySelect' | 'main' | 'mission';
 
 // All countries in the game - some playable, some neutral
-export type CountryId = 'soviet' | 'white' | 'finland' | 'ukraine' | 'don' | 'fswr' | 'iskolat' | 'dkr' | 'neutral' | 'foreign' | 'germany' | 'bulgaria' | 'poland' | 'austriahungary' | 'romania' | 'greece' | 'ottoman' | 'serbia' | 'albania' | 'persia' | 'ukrainesoviet' | 'balticdutchy' | 'stavropol' | 'lithuania' | 'odessa' | 'terek';
+export type CountryId = 'soviet' | 'white' | 'finland' | 'ukraine' | 'don' | 'fswr' | 'iskolat' | 'dkr' | 'neutral' | 'foreign' | 'germany' | 'bulgaria' | 'poland' | 'austriahungary' | 'romania' | 'greece' | 'ottoman' | 'serbia' | 'albania' | 'persia' | 'ukrainesoviet' | 'balticdutchy' | 'stavropol' | 'lithuania' | 'odessa' | 'terek' | 'taurida';
 
 export interface Country {
   id: CountryId;
