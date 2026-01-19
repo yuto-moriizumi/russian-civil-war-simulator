@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { CountryId } from '../types/game';
 
 /**
