@@ -14,12 +14,12 @@ Add a new non-playable country that exists from the start of the game: $ARGUMENT
    - Historical context and background (founding date, key events during Russian Civil War)
    - Geographic territories controlled in late 1917/early 1918
    - Diplomatic relationships and alliances
-   - Historical flag design and colors (use these to determine the country color)
+   - **Historical flag image**: Search for "flag of [country] 1917-1923", "flag of [country] Wikimedia Commons", or "flag of [country] historical". Look for a reliable source URL (e.g., Wikimedia Commons) that provides the historically accurate flag for the period.
    - Key historical goals and objectives
    
    **Automatically determine**:
    - Country ID: Create a short identifier from the country name (lowercase, no spaces, e.g., "Kuban People's Republic" → "kuban", "Alash Autonomy" → "alash")
-   - Country color: Extract a hex color from the historical flag colors found in research, or choose a color that represents the country (ensure it's distinct from existing countries)
+   - Country color: Extract a hex color from the found flag image, or choose a color that represents the country (ensure it's distinct from existing countries)
    
    This research will inform initial territories and narrative elements.
 
@@ -54,12 +54,21 @@ Add a new non-playable country that exists from the start of the game: $ARGUMENT
      ```
    - **Important**: Set `selectable: false` to mark this as a non-playable country
 
-6. **Create flag SVG** at `public/images/flags/<country-id>.svg`:
-   - **Use the historical research** to find the actual historical flag design
-   - If the user provides a flag design, create it
-   - If historical flag design is found, recreate it in SVG format
-   - Otherwise, create a simple placeholder SVG with the country's color
-   - Use a simple design (e.g., solid color with emblem, or tricolor)
+6. **Acquire flag image** at `public/images/flags/<country-id>.<ext>`:
+   - **Option A (Preferred): Download existing SVG**
+     - **Why SVG?** They scale perfectly without pixelation and have very small file sizes.
+     - Search for a public domain or Creative Commons SVG file (e.g., from Wikimedia Commons).
+     - **Important**: Ensure the URL points to the **raw** `.svg` file content.
+     - Use `curl` to download it:
+       ```bash
+       curl -L -o public/images/flags/<country-id>.svg "<url_to_raw_svg>"
+       ```
+     - Check the file size and content to ensure it downloaded correctly.
+   
+   - **Option B: Download PNG/JPG**
+     - If no SVG is available, a high-quality PNG or JPG is acceptable.
+     - Download it to `public/images/flags/<country-id>.png` (or .jpg).
+     - Update the reference in `app/data/countries.ts` to point to the correct file extension.
 
 7. **Add core regions**: Based on historical research, add the country's core regions to `app/data/coreStates.ts`:
    - Add a new entry in the `coreStates` object with the country ID as the key
@@ -114,7 +123,7 @@ This will:
 2. Automatically determine country ID as "kuban" and extract appropriate color from historical flag
 3. Create a git worktree `add-country-kuban` for isolated development
 4. Create a new non-playable country with historically accurate details in the worktree
-5. Generate historically accurate flag design
+5. Download historically accurate flag
 6. Add core regions for the country based on historical territories
 7. Provide recommendations for initial setup and military configuration
 8. Leave the worktree for you to review, test, and manually merge when ready
