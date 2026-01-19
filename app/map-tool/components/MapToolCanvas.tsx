@@ -25,6 +25,7 @@ interface MapToolCanvasProps {
   onRegionPaint: (regionId: string) => void;
   onRegionHover: (regionId: string | null) => void;
   onCountryPick: (country: CountryId) => void;
+  onPaintEnd: () => void;
 }
 
 export default function MapToolCanvas({
@@ -39,6 +40,7 @@ export default function MapToolCanvas({
   onRegionPaint,
   onRegionHover,
   onCountryPick,
+  onPaintEnd,
 }: MapToolCanvasProps) {
   const mapRef = useRef<MapRef>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -256,7 +258,8 @@ export default function MapToolCanvas({
     setIsPainting(false);
     setIsPanning(false);
     setPanStart(null);
-  }, []);
+    onPaintEnd(); // Reset painted regions set when drag ends
+  }, [onPaintEnd]);
 
   // Handle drag start
   const handleDragStart = useCallback(() => {
