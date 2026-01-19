@@ -319,18 +319,36 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
       // Greece did not control territory in Russia, but participated in Allied intervention
       // in southern Russia (primarily around Crimea and Black Sea coast)
     ],
-  },
-   ottoman: {
-     id: 'ottoman',
-     name: 'Ottoman Empire',
-     combatName: 'Ottoman Army',
-     flag: '/images/flags/ottoman.svg',
-     color: '#C7002B',
-     adjective: 'Ottoman',
-     firstArmyGroupName: 'Ottoman Army',
-     divisionPrefix: 'Ottoman',
-     selectable: false,
    },
+    lithuania: {
+      id: 'lithuania',
+      name: 'Kingdom of Lithuania',
+      combatName: 'Lithuanian Army',
+      flag: '/images/flags/lithuania.svg',
+      color: '#FFCC00',
+      adjective: 'Lithuanian',
+      firstArmyGroupName: 'Lithuanian Defense Forces',
+      divisionPrefix: 'Lithuanian Guard',
+      selectable: false,
+      coreRegions: [
+        // Historical Lithuanian territories (SSR regions)
+        // These represent core Lithuanian ethnic territories during the Civil War period
+        // Vilnius region, Kaunas region, and surrounding areas where Lithuanians held control
+        // Note: Specific GeoJSON IDs would need to be mapped to Lithuanian regions on the game map
+        // For now, using placeholder pattern - update with actual map region IDs during initial state setup
+      ],
+    },
+    ottoman: {
+      id: 'ottoman',
+      name: 'Ottoman Empire',
+      combatName: 'Ottoman Army',
+      flag: '/images/flags/ottoman.svg',
+      color: '#C7002B',
+      adjective: 'Ottoman',
+      firstArmyGroupName: 'Ottoman Army',
+      divisionPrefix: 'Ottoman',
+      selectable: false,
+    },
     serbia: {
       id: 'serbia',
       name: 'Kingdom of Serbia',
