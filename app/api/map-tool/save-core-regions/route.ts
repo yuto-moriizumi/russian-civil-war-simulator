@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, readFile } from 'fs/promises';
 import path from 'path';
 import { CountryId } from '../../../types/game';
+import { Project, SyntaxKind } from 'ts-morph';
 
 export async function POST(request: NextRequest) {
   // Only allow in development mode
@@ -23,41 +23,71 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Read the existing countryMetadata.ts file
+    // Create a ts-morph project
+    const project = new Project();
     const countryMetadataPath = path.join(process.cwd(), 'app', 'data', 'countryMetadata.ts');
-    let fileContent = await readFile(countryMetadataPath, 'utf-8');
+    
+    // Add the source file to the project
+    const sourceFile = project.addSourceFileAtPath(countryMetadataPath);
+
+    // Find the COUNTRY_METADATA object literal
+    const countryMetadataVar = sourceFile.getVariableDeclaration('COUNTRY_METADATA');
+    if (!countryMetadataVar) {
+      throw new Error('Could not find COUNTRY_METADATA variable declaration');
+    }
+
+    const initializer = countryMetadataVar.getInitializer();
+    if (!initializer || !initializer.getKind || initializer.getKind() !== SyntaxKind.ObjectLiteralExpression) {
+      throw new Error('COUNTRY_METADATA is not initialized with an object literal');
+    }
+
+    const countryMetadataObj = initializer.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
 
     // Update each country's coreRegions property
     for (const [countryId, regions] of Object.entries(coreRegions)) {
-      // Find the country block in the file
-      const countryBlockRegex = new RegExp(
-        `(${countryId}:\\s*{[^}]*?coreRegions:\\s*)(\\[[^\\]]*?\\])`,
-        's'
-      );
-
-      const newCoreRegionsArray = formatCoreRegionsArray(regions);
+      // Find the country property
+      const countryProperty = countryMetadataObj.getProperty(countryId);
       
-      if (countryBlockRegex.test(fileContent)) {
-        // Update existing coreRegions
-        fileContent = fileContent.replace(countryBlockRegex, `$1${newCoreRegionsArray}`);
-      } else {
-        // If coreRegions doesn't exist, add it before the closing brace
-        const countryEndRegex = new RegExp(
-          `(${countryId}:\\s*{[^}]*?)(\\s*},)`,
-          's'
-        );
-        
-        if (countryEndRegex.test(fileContent)) {
-          fileContent = fileContent.replace(
-            countryEndRegex,
-            `$1\n    coreRegions: ${newCoreRegionsArray},\n  },$2`
-          );
+      if (!countryProperty) {
+        console.warn(`Country "${countryId}" not found in COUNTRY_METADATA`);
+        continue;
+      }
+
+      // Get the country object literal
+      const countryObjectInitializer = countryProperty.asKind(SyntaxKind.PropertyAssignment)?.getInitializer();
+      if (!countryObjectInitializer || countryObjectInitializer.getKind() !== SyntaxKind.ObjectLiteralExpression) {
+        console.warn(`Country "${countryId}" is not an object literal`);
+        continue;
+      }
+
+      const countryObj = countryObjectInitializer.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+
+      // Check if coreRegions property exists
+      const coreRegionsProp = countryObj.getProperty('coreRegions');
+
+      // Sort regions for consistency
+      const sortedRegions = [...regions].sort();
+
+      // Format the array as a multiline string for better readability
+      const formattedArray = formatCoreRegionsForTsMorph(sortedRegions);
+
+      if (coreRegionsProp) {
+        // Update existing coreRegions property
+        const propAssignment = coreRegionsProp.asKind(SyntaxKind.PropertyAssignment);
+        if (propAssignment) {
+          propAssignment.setInitializer(formattedArray);
         }
+      } else {
+        // Add new coreRegions property
+        countryObj.addPropertyAssignment({
+          name: 'coreRegions',
+          initializer: formattedArray,
+        });
       }
     }
 
-    // Write the updated content back to the file
-    await writeFile(countryMetadataPath, fileContent, 'utf-8');
+    // Save the file with proper formatting
+    await sourceFile.save();
 
     return NextResponse.json({
       success: true,
@@ -72,30 +102,24 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function formatCoreRegionsArray(regions: string[]): string {
+/**
+ * Format core regions array for ts-morph insertion
+ * Creates a multiline array with proper indentation
+ */
+function formatCoreRegionsForTsMorph(regions: string[]): string {
   if (regions.length === 0) {
     return '[]';
   }
 
-  // Sort regions for consistency
-  const sortedRegions = [...regions].sort();
+  // Group regions in lines of ~8 items for readability
+  const itemsPerLine = 8;
+  const lines: string[] = [];
   
-  // Format with proper indentation
-  let result = '[\n';
-  
-  // Group regions in lines of ~5 items for readability
-  const itemsPerLine = 5;
-  for (let i = 0; i < sortedRegions.length; i += itemsPerLine) {
-    const group = sortedRegions.slice(i, i + itemsPerLine);
-    result += '      ' + group.map(r => `'${r}'`).join(', ');
-    if (i + itemsPerLine < sortedRegions.length) {
-      result += ',\n';
-    } else {
-      result += ',\n';
-    }
+  for (let i = 0; i < regions.length; i += itemsPerLine) {
+    const group = regions.slice(i, i + itemsPerLine);
+    lines.push(group.map(r => `'${r}'`).join(', '));
   }
   
-  result += '    ]';
-  
-  return result;
+  // Create multiline array with proper formatting
+  return `[\n      ${lines.join(',\n      ')},\n    ]`;
 }
