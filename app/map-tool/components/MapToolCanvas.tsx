@@ -70,12 +70,6 @@ export default function MapToolCanvas({
     return names;
   }, [geojson]);
 
-  // Generate a version number that changes when core regions data changes
-  // This ensures paint properties update correctly
-  const layerVersion = useMemo(() => {
-    return JSON.stringify(coreRegions);
-  }, [coreRegions]);
-
   // Create fill color expression based on ownership or core regions
   const fillColorExpression = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -318,12 +312,11 @@ export default function MapToolCanvas({
   );
 
   // Memoize paint objects to ensure proper updates
-  // Include layerVersion to force paint updates when core regions change
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fillPaint: any = useMemo(() => ({
     "fill-color": fillColorExpression,
     "fill-opacity": 0.8,
-  }), [fillColorExpression, layerVersion]);
+  }), [fillColorExpression]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const linePaint: any = useMemo(() => ({

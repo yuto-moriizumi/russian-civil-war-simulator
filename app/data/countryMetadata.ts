@@ -404,12 +404,24 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
               'RU-Cr',
             ],
   },
+  /**
+   * Don Soviet Republic (March-May 1918)
+   * Historical Context: Proclaimed after the retreat of the Volunteer Army from Rostov.
+   * Controlled the Don region until overthrown by the Don Cossack revolt and German advance.
+   * Relationships: 
+   * - War with 'white' (Volunteer Army) and 'don' (Don Republic/Don Cossacks).
+   * - Opposed by 'germany' (historical German intervention in May 1918).
+   * Initial State Suggestion:
+   * - Appears around March 1918.
+   * - Core regions: RU-ROS, RU-VGG, RU-AST.
+   * - Starting units: Moderate Red Guard strength in Rostov and surrounding areas.
+   */
   donsoviets: {
     id: "donsoviets",
     name: "Don Soviet Republic",
     combatName: "Don Red Army",
     flag: "/images/flags/donsoviets.svg",
-    color: "#B22222",
+    color: "#DC143C",
     adjective: "Don Soviet",
     firstArmyGroupName: "Don Soviet Army",
     divisionPrefix: "Don Soviet Guard",

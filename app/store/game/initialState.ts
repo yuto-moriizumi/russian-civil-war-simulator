@@ -53,7 +53,7 @@ export const initialGameState: GameState = {
         lithuania: [],
         balticdutchy: [],
         stavropol: [],
-        odessa: [],
+         odessa: [],
          terek: [],
          taurida: [],
          donsoviets: [],
@@ -108,5 +108,4 @@ export const initialGameState: GameState = {
           donsoviets: getInitialCountryBonuses(),
           kuban_soviet: getInitialCountryBonuses(),
         },
-
 };
