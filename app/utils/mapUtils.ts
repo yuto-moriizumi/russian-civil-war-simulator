@@ -124,13 +124,17 @@ export function createInitialOwnership(
     const props = feature.properties;
     if (!props) continue;
     
-    const id = props.shapeID;
+    // Use shapeISO (e.g., 'RU-TA') as the region ID for consistency with adjacency data
+    const id = props.shapeISO || props.regionId || props.shapeID;
     if (!id) continue;
+    
+    // Use shapeID for looking up ownership data
+    const shapeID = props.shapeID;
     
     const countryIso3 = props.countryIso3 || props.shapeGroup || 'UNK';
     
     // Get ownership from master data, default to neutral if not defined
-    const owner = initialRegionOwnership[id] ?? 'neutral';
+    const owner = initialRegionOwnership[shapeID] ?? 'neutral';
     
     state[id] = {
       id,
@@ -138,7 +142,7 @@ export function createInitialOwnership(
       countryIso3,
       owner,
       divisions: [],
-      value: regionValues[id] ?? 1,  // Default value of 1 if not specified
+      value: regionValues[shapeID] ?? 1,  // Default value of 1 if not specified
     };
   }
   
