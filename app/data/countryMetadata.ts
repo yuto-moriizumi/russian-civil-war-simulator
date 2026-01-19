@@ -450,25 +450,42 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
         coreRegions: [
           // Stavropol Governorate territory - core Soviet territory in the North Caucasus
           // Established January 1, 1918 - dissolved July 7, 1918 (merged into North Caucasian SR)
-       'RU-STA', // Stavropol Krai - historical heart of the republic
-     ],
-   },
-   terek: {
-     id: 'terek',
-     name: 'Terek Soviet Republic',
-     combatName: 'Terek Red Guards',
-     flag: '/images/flags/terek.svg',
-     color: '#B22222',
-     adjective: 'Terek Soviet',
-     firstArmyGroupName: 'Terek Red Army',
-     divisionPrefix: 'Terek Guard',
-     selectable: false,
-     coreRegions: [
-       'RU-CE', // Chechnya
-       'RU-IN', // Ingushetia
-       'RU-SE', // North Ossetia
-       'RU-KB', // Kabardino-Balkaria
-     ],
-   },
+          'RU-STA', // Stavropol Krai - historical heart of the republic
+        ],
+      },
+      odessa: {
+        id: 'odessa',
+        name: 'Odessa Soviet Republic',
+        combatName: 'Odessa Red Guards',
+        flag: '/images/flags/odessa.svg',
+        color: '#DC143C',
+        adjective: 'Odessa Soviet',
+        firstArmyGroupName: 'Odessa Red Guard',
+        divisionPrefix: 'Odessa Guard',
+        selectable: false,
+        coreRegions: [
+          // Odessa Soviet Republic territory - formed from Kherson and Bessarabia Governorates
+          // Proclaimed January 30, 1918 (January 17, O.S.) - dissolved March 13, 1918
+          // Controlled southern Ukrainian territories around Odessa
+          'UA-65', // Kherson Oblast (includes Odessa)
+          'MD-01', // Moldova (Bessarabia regions)
+        ],
+      },
+      terek: {
+        id: 'terek',
+        name: 'Terek Soviet Republic',
+        combatName: 'Terek Red Guards',
+        flag: '/images/flags/terek.svg',
+        color: '#B22222',
+        adjective: 'Terek Soviet',
+        firstArmyGroupName: 'Terek Red Army',
+        divisionPrefix: 'Terek Guard',
+        selectable: false,
+        coreRegions: [
+          'RU-CE', // Chechnya
+          'RU-IN', // Ingushetia
+          'RU-SE', // North Ossetia
+          'RU-KB', // Kabardino-Balkaria
+        ],
+      },
 };
-
