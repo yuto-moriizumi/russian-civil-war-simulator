@@ -390,18 +390,44 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
               'RU-CE', 'RU-IN', 'RU-KB', 'RU-SE',
             ],
   },
-  taurida: {
-    id: "taurida",
-    name: "Taurida Soviet Socialist Republic",
-    combatName: "Taurida Red Guards",
-    flag: "/images/flags/taurida.svg",
-    color: "#8B0000",
-    adjective: "Taurida Soviet",
-    firstArmyGroupName: "Taurida Red Army",
-    divisionPrefix: "Taurida Guard",
-    selectable: false,
-    coreRegions: [
-              'RU-Cr',
-            ],
-  },
+   taurida: {
+     id: "taurida",
+     name: "Taurida Soviet Socialist Republic",
+     combatName: "Taurida Red Guards",
+     flag: "/images/flags/taurida.svg",
+     color: "#8B0000",
+     adjective: "Taurida Soviet",
+     firstArmyGroupName: "Taurida Red Army",
+     divisionPrefix: "Taurida Guard",
+     selectable: false,
+     coreRegions: [
+               'RU-Cr',
+             ],
+   },
+   /**
+    * Don Soviet Republic (March-May 1918)
+    * Historical Context: Proclaimed after the retreat of the Volunteer Army from Rostov.
+    * Controlled the Don region until overthrown by the Don Cossack revolt and German advance.
+    * Relationships: 
+    * - War with 'white' (Volunteer Army) and 'don' (Don Republic/Don Cossacks).
+    * - Opposed by 'germany' (historical German intervention in May 1918).
+    * Initial State Suggestion:
+    * - Appears around March 1918.
+    * - Core regions: RU-ROS, RU-VGG, RU-AST.
+    * - Starting units: Moderate Red Guard strength in Rostov and surrounding areas.
+    */
+   donsoviets: {
+     id: "donsoviets",
+     name: "Don Soviet Republic",
+     combatName: "Don Red Army",
+     flag: "/images/flags/donsoviets.svg",
+     color: "#DC143C",
+     adjective: "Don Soviet",
+     firstArmyGroupName: "Don Soviet Army",
+     divisionPrefix: "Don Soviet Guard",
+     selectable: false,
+     coreRegions: [
+               'RU-ROS', 'RU-VGG', 'RU-AST',
+             ],
+   },
 };
