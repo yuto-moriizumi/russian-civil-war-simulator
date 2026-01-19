@@ -358,4 +358,26 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
         '17685810B98247647047819', '17685810B99097995033086',
       ],
     },
+    ukrainesoviet: {
+      id: 'ukrainesoviet',
+      name: "Ukrainian People's Republic of Soviets",
+      combatName: 'Red Ukrainian Forces',
+      flag: '/images/flags/ukrainesoviet.svg',
+      color: '#8B0000',
+      adjective: 'Soviet Ukrainian',
+      firstArmyGroupName: 'Soviet Ukrainian Army',
+      divisionPrefix: 'Red Ukrainian Guard',
+      selectable: false,
+      coreRegions: [
+        // Eastern Ukraine - industrial regions where Bolsheviks had support
+        // Historically controlled Kharkiv (capital) and surrounding eastern regions
+        'UA-63', // Kharkiv - Capital of Soviet Ukrainian Republic
+        'UA-65', // Luhansk
+        'UA-14', // Donetsk
+        'UA-53', // Poltava
+        'UA-59', // Sumy
+        'UA-12', // Dnipropetrovsk
+        'UA-32', // Kyiv - contested, historically taken by force
+      ],
+    },
 };
