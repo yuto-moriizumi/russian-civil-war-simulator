@@ -4,7 +4,6 @@ import type { FeatureCollection } from "geojson";
 import { CountryId } from "../../types/game";
 
 interface MapToolHeaderProps {
-  geojsonSource: string;
   hasChanges: boolean;
   canUndo: boolean;
   canRedo: boolean;
@@ -30,7 +29,6 @@ interface MapToolHeaderProps {
 }
 
 export default function MapToolHeader({
-  geojsonSource,
   hasChanges,
   canUndo,
   canRedo,

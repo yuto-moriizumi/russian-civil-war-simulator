@@ -256,7 +256,6 @@ export default function MapToolPage() {
       <GeoJSONLoader onLoad={handleGeoJSONLoad} isLoading={isLoading} />
       
       <MapToolHeader
-        geojsonSource={geojsonSource}
         hasChanges={hasChanges}
         canUndo={canUndo}
         canRedo={canRedo}
