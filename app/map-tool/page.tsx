@@ -83,6 +83,7 @@ export default function MapToolPage() {
           return updated;
         });
       } else if (editMode === 'core') {
+        // Use a timeout to debounce rapid state updates
         setCoreRegions((prev) => {
           const updated = { ...prev };
           const countryRegions = updated[selectedCountry] || [];
@@ -91,9 +92,11 @@ export default function MapToolPage() {
           if (countryRegions.includes(regionId)) {
             // Remove from core regions
             updated[selectedCountry] = countryRegions.filter(r => r !== regionId);
+            console.log(`Removed ${regionId} from ${selectedCountry} core regions. Now:`, updated[selectedCountry]);
           } else {
             // Add to core regions
             updated[selectedCountry] = [...countryRegions, regionId];
+            console.log(`Added ${regionId} to ${selectedCountry} core regions. Now:`, updated[selectedCountry]);
           }
           
           return updated;

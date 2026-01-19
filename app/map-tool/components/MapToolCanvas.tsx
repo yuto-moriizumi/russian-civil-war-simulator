@@ -70,6 +70,12 @@ export default function MapToolCanvas({
     return names;
   }, [geojson]);
 
+  // Generate a version number that changes when core regions data changes
+  // This ensures paint properties update correctly
+  const layerVersion = useMemo(() => {
+    return JSON.stringify(coreRegions);
+  }, [coreRegions]);
+
   // Create fill color expression based on ownership or core regions
   const fillColorExpression = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -135,15 +141,18 @@ export default function MapToolCanvas({
       // Don't process clicks that were part of a drag
       if (isDragging) return;
 
+      // Don't process clicks in paint mode - handled by mouseDown instead
+      if (isPaintEnabled) return;
+
       const features = e.features;
       if (features && features.length > 0) {
         const shapeId = features[0].properties?.shapeID;
-        if (shapeId && isPaintEnabled) {
+        if (shapeId) {
           onRegionPaint(shapeId);
         }
       }
     },
-    [onRegionPaint, isPaintEnabled, isDragging]
+    [onRegionPaint, isDragging, isPaintEnabled]
   );
 
   // Handle right-click (eyedropper)
@@ -308,17 +317,19 @@ export default function MapToolCanvas({
     []
   );
 
+  // Memoize paint objects to ensure proper updates
+  // Include layerVersion to force paint updates when core regions change
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const fillPaint: any = {
+  const fillPaint: any = useMemo(() => ({
     "fill-color": fillColorExpression,
     "fill-opacity": 0.8,
-  };
+  }), [fillColorExpression, layerVersion]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const linePaint: any = {
+  const linePaint: any = useMemo(() => ({
     "line-color": lineColorExpression,
     "line-width": lineWidthExpression,
-  };
+  }), [lineColorExpression, lineWidthExpression]);
 
   return (
     <div className="relative h-full w-full">
@@ -348,8 +359,16 @@ export default function MapToolCanvas({
         touchPitch={false}
       >
         <Source id="regions" type="geojson" data={geojson} promoteId="shapeID">
-          <Layer id="regions-fill" type="fill" paint={fillPaint} />
-          <Layer id="regions-border" type="line" paint={linePaint} />
+          <Layer 
+            id="regions-fill" 
+            type="fill" 
+            paint={fillPaint}
+          />
+          <Layer 
+            id="regions-border" 
+            type="line" 
+            paint={linePaint}
+          />
         </Source>
 
         <NavigationControl position="bottom-right" />
