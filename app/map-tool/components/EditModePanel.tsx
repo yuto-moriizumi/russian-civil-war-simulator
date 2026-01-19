@@ -36,13 +36,13 @@ export default function EditModePanel({
                 : "bg-gray-700 hover:bg-gray-600 text-gray-300"
             }`}
           >
-            Core States
+            Core Regions
           </button>
         </div>
         <p className="mt-2 text-xs text-gray-400">
           {editMode === 'ownership' 
             ? "Paint regions to assign ownership" 
-            : "Paint regions to toggle core states"}
+            : "Paint regions to toggle core regions"}
         </p>
       </div>
 
