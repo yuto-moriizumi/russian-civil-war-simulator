@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600">
+  <!-- Historical representation of the Baltic region's cultural colors -->
+  <!-- Top stripe: Blue representing Estonia -->
+  <rect width="900" height="200" fill="#4169E1"/>
+  
+  <!-- Middle stripe: White representing Livonia/unity -->
+  <rect y="200" width="900" height="200" fill="#FFFFFF"/>
+  
+  <!-- Bottom stripe: Red representing Latvia -->
+  <rect y="400" width="900" height="200" fill="#A6192E"/>
+  
+  <!-- Central emblem/shield outline (simplified heraldic design) -->
+  <g opacity="0.8">
+    <!-- Shield outline -->
+    <path d="M 350 150 L 550 150 L 550 450 Q 450 500 450 500 Q 350 500 350 450 Z" 
+          fill="none" stroke="#1a1a1a" stroke-width="3"/>
+    
+    <!-- Decorative cross in center (representing unity of three regions) -->
+    <line x1="450" y1="220" x2="450" y2="430" stroke="#1a1a1a" stroke-width="4" opacity="0.6"/>
+    <line x1="380" y1="325" x2="520" y2="325" stroke="#1a1a1a" stroke-width="4" opacity="0.6"/>
+  </g>
+</svg>
