@@ -37,7 +37,7 @@ export default function MapToolPage() {
 
   // Load GeoJSON handler
   const handleGeoJSONLoad = useCallback(
-    (data: FeatureCollection, _source: string) => {
+    (data: FeatureCollection) => {
       setGeojson(data);
 
       // Initialize ownership from features or use dynamically loaded data
