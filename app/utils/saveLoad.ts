@@ -17,6 +17,7 @@ import {
   ScheduledEvent,
 } from '../types/game';
 import { getInitialCountryBonuses } from './bonusCalculator';
+import { countries } from '../data/countries';
 
 const STORAGE_KEY = 'rcw-save';
 const SAVE_VERSION = 6; // Bumped version for countryBonuses
@@ -176,34 +177,12 @@ function deserializeGameState(data: SerializedGameState): GameState {
   } else if (data.productionQueue) {
      // Legacy format: migrate from single queue to per-country queues
      console.log('Migrating legacy production queue format to per-country queues');
-      productionQueues = {
-        soviet: [],
-        white: [],
-        finland: [],
-        ukraine: [],
-        don: [],
-        fswr: [],
-        iskolat: [],
-        dkr: [],
-        neutral: [],
-        foreign: [],
-        germany: [],
-        bulgaria: [],
-        poland: [],
-        austriahungary: [],
-        romania: [],
-        greece: [],
-        ottoman: [],
-        serbia: [],
-        albania: [],
-        persia: [],
-        ukrainesoviet: [],
-        lithuania: [],
-        balticdutchy: [],
-        stavropol: [],
-        odessa: [],
-        terek: [],
-      };
+      productionQueues = {} as Record<CountryId, ProductionQueueItem[]>;
+      
+      // Initialize empty queues for all countries
+      countries.forEach(country => {
+        productionQueues[country.id] = [];
+      });
 
      // Sort legacy queue items into country-specific queues
     for (const item of data.productionQueue) {
@@ -224,36 +203,20 @@ function deserializeGameState(data: SerializedGameState): GameState {
     }
     } else {
       // No production queue data, initialize empty
-      productionQueues = {
-        soviet: [],
-        white: [],
-        finland: [],
-        ukraine: [],
-        don: [],
-        fswr: [],
-        iskolat: [],
-        dkr: [],
-        neutral: [],
-        foreign: [],
-        germany: [],
-        bulgaria: [],
-        poland: [],
-        austriahungary: [],
-        romania: [],
-        greece: [],
-        ottoman: [],
-        serbia: [],
-        albania: [],
-        persia: [],
-        ukrainesoviet: [],
-        lithuania: [],
-        balticdutchy: [],
-        stavropol: [],
-        odessa: [],
-        terek: [],
-      };
+      productionQueues = {} as Record<CountryId, ProductionQueueItem[]>;
+      countries.forEach(country => {
+        productionQueues[country.id] = [];
+      });
     }
   
+  // Initialize country bonuses if missing
+  const initialBonuses: Record<CountryId, any> = {} as Record<CountryId, any>;
+  if (!data.countryBonuses) {
+    countries.forEach(country => {
+      initialBonuses[country.id] = getInitialCountryBonuses();
+    });
+  }
+
   return {
     ...data,
     dateTime: new Date(data.dateTime),
@@ -281,34 +244,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
     mapMode: data.mapMode || 'country', // Default to country map mode
      regionCentroids: {}, // Will be re-loaded from map data
      scheduledEvents: data.scheduledEvents || [], // Default to empty array if not present
-       countryBonuses: data.countryBonuses || {
-         soviet: getInitialCountryBonuses(),
-         white: getInitialCountryBonuses(),
-         finland: getInitialCountryBonuses(),
-         ukraine: getInitialCountryBonuses(),
-         don: getInitialCountryBonuses(),
-         fswr: getInitialCountryBonuses(),
-         iskolat: getInitialCountryBonuses(),
-         dkr: getInitialCountryBonuses(),
-         neutral: getInitialCountryBonuses(),
-         foreign: getInitialCountryBonuses(),
-         germany: getInitialCountryBonuses(),
-         bulgaria: getInitialCountryBonuses(),
-         poland: getInitialCountryBonuses(),
-         austriahungary: getInitialCountryBonuses(),
-         romania: getInitialCountryBonuses(),
-         greece: getInitialCountryBonuses(),
-         ottoman: getInitialCountryBonuses(),
-         serbia: getInitialCountryBonuses(),
-         albania: getInitialCountryBonuses(),
-         persia: getInitialCountryBonuses(),
-         ukrainesoviet: getInitialCountryBonuses(),
-         lithuania: getInitialCountryBonuses(),
-         balticdutchy: getInitialCountryBonuses(),
-         stavropol: getInitialCountryBonuses(),
-         odessa: getInitialCountryBonuses(),
-         terek: getInitialCountryBonuses(),
-       },
+       countryBonuses: data.countryBonuses || initialBonuses,
   };
 }
 
