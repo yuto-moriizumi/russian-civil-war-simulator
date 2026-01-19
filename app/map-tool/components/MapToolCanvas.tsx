@@ -397,7 +397,7 @@ export default function MapToolCanvas({
         />
         <span className="font-semibold">{selectedCountry}</span>
         <span className="text-xs text-gray-400">
-          ({editMode === 'ownership' ? 'Ownership' : 'Core States'} | {isPaintEnabled ? "Left: Paint | Right: Pan" : "Paint disabled"})
+          ({editMode === 'ownership' ? 'Ownership' : 'Core Regions'} | {isPaintEnabled ? "Left: Paint | Right: Pan" : "Paint disabled"})
         </span>
       </div>
     </div>
