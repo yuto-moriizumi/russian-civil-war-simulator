@@ -153,7 +153,7 @@ export function createInitialOwnership(
 export function generateOwnershipColorExpression(
   regions: RegionState
 ): ['match', ['get', string], ...Array<string>] {
-  const expression: ['match', ['get', string], ...Array<string>] = ['match', ['get', 'shapeID']];
+  const expression: ['match', ['get', string], ...Array<string>] = ['match', ['get', 'shapeISO']];
   
   for (const [id, region] of Object.entries(regions)) {
     expression.push(id, COUNTRY_COLORS[region.owner]);
