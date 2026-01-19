@@ -404,4 +404,32 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
               'RU-Cr',
             ],
   },
+  donsoviets: {
+    id: "donsoviets",
+    name: "Don Soviet Republic",
+    combatName: "Don Red Army",
+    flag: "/images/flags/donsoviets.svg",
+    color: "#B22222",
+    adjective: "Don Soviet",
+    firstArmyGroupName: "Don Soviet Army",
+    divisionPrefix: "Don Soviet Guard",
+    selectable: false,
+    coreRegions: [
+              'RU-ROS', 'RU-VGG', 'RU-AST',
+            ],
+  },
+  kuban_soviet: {
+    id: "kuban_soviet",
+    name: "Kuban Soviet Republic",
+    combatName: "Kuban Red Army",
+    flag: "/images/flags/kuban_soviet.svg",
+    color: "#D32F2F",
+    adjective: "Kuban Soviet",
+    firstArmyGroupName: "Kuban Revolutionary Army",
+    divisionPrefix: "Kuban Red Guard",
+    selectable: false,
+    coreRegions: [
+              'RU-KDA', 'RU-AD',
+            ],
+  },
 };

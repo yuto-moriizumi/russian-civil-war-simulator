@@ -54,9 +54,12 @@ export const initialGameState: GameState = {
         balticdutchy: [],
         stavropol: [],
         odessa: [],
-        terek: [],
-        taurida: [],
-      },
+         terek: [],
+         taurida: [],
+         donsoviets: [],
+         kuban_soviet: [],
+       },
+
     relationships: [
      { fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy' },
      { fromCountry: 'soviet', toCountry: 'iskolat', type: 'autonomy' },
@@ -100,7 +103,10 @@ export const initialGameState: GameState = {
          balticdutchy: getInitialCountryBonuses(),
          stavropol: getInitialCountryBonuses(),
          odessa: getInitialCountryBonuses(),
-         terek: getInitialCountryBonuses(),
-         taurida: getInitialCountryBonuses(),
-       },
+          terek: getInitialCountryBonuses(),
+          taurida: getInitialCountryBonuses(),
+          donsoviets: getInitialCountryBonuses(),
+          kuban_soviet: getInitialCountryBonuses(),
+        },
+
 };
