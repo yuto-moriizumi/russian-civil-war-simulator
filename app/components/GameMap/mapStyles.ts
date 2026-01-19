@@ -11,11 +11,24 @@ const DIPLOMACY_COLORS = {
 };
 
 /**
+ * Helper to get the consistent region ID expression used for matching.
+ * Logic matches createInitialOwnership in mapUtils.ts
+ */
+function getRegionIdExpression() {
+  return [
+    'case',
+    ['all', ['has', 'shapeISO'], ['!=', ['get', 'shapeISO'], '']], ['get', 'shapeISO'],
+    ['all', ['has', 'regionId'], ['!=', ['get', 'regionId'], '']], ['get', 'regionId'],
+    ['get', 'shapeID']
+  ];
+}
+
+/**
  * Build color expression for region fill based on ownership (country map mode)
  */
 export function createFillColorExpression(regions: RegionState) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const expression: any[] = ['match', ['get', 'shapeISO']];
+  const expression: any[] = ['match', getRegionIdExpression()];
   
   for (const [id, region] of Object.entries(regions)) {
     expression.push(id, COUNTRY_COLORS[region.owner]);
@@ -36,7 +49,7 @@ export function createDiplomacyFillColorExpression(
   getRelationship: (from: CountryId, to: CountryId) => string
 ) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const expression: any[] = ['match', ['get', 'shapeISO']];
+  const expression: any[] = ['match', getRegionIdExpression()];
   
   for (const [id, region] of Object.entries(regions)) {
     const owner = region.owner;
@@ -78,7 +91,7 @@ export function createDiplomacyFillColorExpression(
  */
 export function createValueFillColorExpression(regions: RegionState) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const expression: any[] = ['match', ['get', 'shapeISO']];
+  const expression: any[] = ['match', getRegionIdExpression()];
   
   // Calculate command power contribution for each region (base + major city bonus)
   const getCapContribution = (regionId: string): number => {

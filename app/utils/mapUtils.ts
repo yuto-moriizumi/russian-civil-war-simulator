@@ -152,8 +152,15 @@ export function createInitialOwnership(
 // Generate color expression for MapLibre based on region ownership
 export function generateOwnershipColorExpression(
   regions: RegionState
-): ['match', ['get', string], ...Array<string>] {
-  const expression: ['match', ['get', string], ...Array<string>] = ['match', ['get', 'shapeISO']];
+): unknown[] {
+  const regionIdExpression = [
+    'case',
+    ['all', ['has', 'shapeISO'], ['!=', ['get', 'shapeISO'], '']], ['get', 'shapeISO'],
+    ['all', ['has', 'regionId'], ['!=', ['get', 'regionId'], '']], ['get', 'regionId'],
+    ['get', 'shapeID']
+  ];
+  
+  const expression: unknown[] = ['match', regionIdExpression];
   
   for (const [id, region] of Object.entries(regions)) {
     expression.push(id, COUNTRY_COLORS[region.owner]);
