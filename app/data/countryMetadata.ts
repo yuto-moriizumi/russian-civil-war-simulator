@@ -957,4 +957,50 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
                 'RU-Cr',
               ],
     },
+    /**
+     * Transcaspian Provisional Government (1918-1920)
+     * Historical Context: Anti-Bolshevik administration formed in Ashgabat on July 14, 1918, 
+     * following a revolt by railway workers on the Trans-Caspian Railway. Initially led by 
+     * Mensheviks and Socialist-Revolutionaries, it was supported by the British Malleson Mission.
+     * 
+     * Key Historical Events:
+     * - July 14, 1918: Formation of the Ashkhabad Executive Committee after anti-Bolshevik revolt.
+     * - September 20, 1918: Execution of the 26 Baku Commissars under Fyodor Funtikov's leadership.
+     * - November 1918: Formally took the name Transcaspian Provisional Government.
+     * - January 1919: Merged with Denikin's forces to form the White Turkestan Army.
+     * - February 1920: Final collapse after British withdrawal and Red Army offensive.
+     * 
+     * Territories: Controlled the Transcaspian Oblast (modern Turkmenistan), including 
+     * Ashgabat (capital), Krasnovodsk, and Merv.
+     * 
+     * Diplomatic Relations:
+     * - War with: Soviet Russia (Bolsheviks in Tashkent).
+     * - Allied with: British Empire (Malleson Mission), White Army (Armed Forces of South Russia).
+     * - Recognition: Supported by the British, later integrated into the wider White movement.
+     * 
+     * Military Strength: Initially weak (around 1000 armed men), bolstered by British Anglo-Indian 
+     * troops and later by Denikin's officers.
+     * 
+     * Game Configuration Recommendations:
+     * - Should appear around July 1918.
+     * - Core Regions: TM-A (Ahal/Ashgabat), TM-B (Balkan/Krasnovodsk), TM-M (Mary/Merv).
+     * - Starting Relationships:
+     *   * War with 'soviet'.
+     *   * Allied with 'foreign' (British support).
+     *   * Later allied/subordinate to 'white'.
+     */
+    transcaspia: {
+      id: "transcaspia",
+      name: "Transcaspian Provisional Government",
+      combatName: "Transcaspian Army",
+      flag: "/images/flags/transcaspia.svg",
+      color: "#D2B48C",
+      adjective: "Transcaspian",
+      firstArmyGroupName: "Transcaspian Army Group",
+      divisionPrefix: "Transcaspian",
+      selectable: false,
+      coreRegions: [
+        'TM-A', 'TM-B', 'TM-M',
+      ],
+    },
 };
