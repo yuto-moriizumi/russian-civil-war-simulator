@@ -42,7 +42,7 @@ export default function EditModePanel({
         <p className="mt-2 text-xs text-gray-400">
           {editMode === 'ownership' 
             ? "Paint regions to assign ownership" 
-            : "Paint regions to toggle core regions"}
+            : "Paint regions to add to core regions"}
         </p>
       </div>
 
