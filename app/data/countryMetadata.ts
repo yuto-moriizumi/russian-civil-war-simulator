@@ -646,8 +646,96 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
      firstArmyGroupName: "Belarusian National Army",
      divisionPrefix: "Belarusian Guard",
      selectable: false,
-     coreRegions: [
-               'RU-BEL', 'RU-MOW', 'RU-OR',
-             ],
-   },
+      coreRegions: [
+                'RU-BEL', 'RU-MOW', 'RU-OR',
+              ],
+    },
+    /**
+     * Democratic Republic of Georgia (1918-1921)
+     * Historical Context: The first independent Georgian state in the modern era, established
+     * after the collapse of the Russian Empire. Known for its democratic government led by the
+     * Mensheviks, it was recognized by major European powers but fell to Soviet invasion in 1921.
+     * 
+     * Territories: Encompassed all major Georgian regions including Tbilisi (capital), plus
+     * disputed territories with Armenia and Azerbaijan. Briefly controlled more territory (1919-1920).
+     * 
+     * Historical Facts:
+     * - Independence declared: May 26, 1918
+     * - Government type: Democratic parliamentary republic (unique in the region)
+     * - First woman suffrage in the Caucasus (and among first in Europe)
+     * - Capital: Tbilisi (Tiflis in Russian)
+     * - Key leaders: Noe Zhordania (PM), Nikolay Chkheidze (early leader), Noe Ramishvili
+     * - International recognition: Recognized by all major European powers and USA
+     * - Fall: Soviet invasion February 11 - March 17, 1921; became Georgian SSR
+     * - Government-in-exile: Continued in France until 1930s
+     * 
+     * Military Strength: Moderate - approximately 40,000-60,000 troops at peak strength.
+     * Well-organized national army with competent officer corps. Defended successfully against
+     * Ottoman and White Russian threats but unable to resist Soviet invasion (isolated after
+     * British withdrawal in 1920).
+     * 
+     * Diplomatic Relations & Historical Conflicts:
+     * - Initial allies/neutrals: Germany (1918), Britain (1918-1920) provided military support
+     * - War with: Ottoman Empire (1918 - Treaty of Batum), internally: Abkhazian and Ossetian rebels
+     * - Territorial disputes: Armenia (1918-1920 over Lori region), Azerbaijan (1918-1920 over Zaqatala)
+     * - Eventual enemy: Soviet Russia (after German withdrawal, escalated to invasion in 1921)
+     * - Neutral policy: Tried to remain neutral during Russian Civil War; signed Moscow Treaty (May 7, 1920)
+     * 
+     * Government Characteristics:
+     * - Progressive democratic constitution (February 21, 1921 - just before fall)
+     * - Women's suffrage and representation in parliament (groundbreaking for era)
+     * - Multi-ethnic representation (Armenians, Azerbaijanis, Jews, Russians, Germans)
+     * - Advanced legal system with jury trials
+     * - Attempted land reform and decentralization
+     * 
+     * Game Configuration Notes:
+     * - Should appear at game start (May 26, 1918) or as startup nation
+     * - Can be playable by advanced players for interesting diplomatic scenario, or NPC for historical accuracy
+     * - Recommended as NPC (selectable: false) for historical narrative preservation
+     * - Moderate military starting strength (well-trained but not numerous forces)
+     * - Core regions: All Georgian regions (GE-01 through GE-20) representing historical territories
+     * - Starting Relationships (May 1918):
+     *   * War with 'ottoman' (Treaty of Batum conflict - defensive)
+     *   * Neutral with 'soviet' (initially neutral, escalates after German withdrawal)
+     *   * Neutral with 'white' (shared anti-Bolshevik interest but competing territorial claims)
+     *   * Military access or alliance with 'germany' initially (protection under German occupation)
+     * - Starting war with: Ottoman Empire (defensive war over southern territories)
+     * 
+     * Suggested Historical Events (via scheduledEvents):
+     *   * June 4, 1918: Treaty of Batum - forced to cede southern territories to Ottoman Empire
+     *   * December 1918: British occupation of Tbilisi begins
+     *   * May 7, 1920: Moscow Treaty - Soviet recognition of independence (fragile peace)
+     *   * August 1920: Kars Treaty - Ottoman defeat, Georgia gains some territory back
+     *   * February 11, 1921: Soviet invasion begins - change to 'war' status with 'soviet'
+     *   * March 17, 1921: Full Soviet occupation - dissolution event (transfer territories to Soviet)
+     * 
+     * AI Strategy Notes:
+     * - Early Game (May-Dec 1918): Secure against Ottoman threat, defend from internal rebels
+     * - Mid Game (1919-1920): Consolidate democratic institutions, expand influence in Caucasus
+     * - Late Game (1920-1921): Prepare for inevitable Soviet invasion, maintain independence as long as possible
+     * - Victory Condition (Historical): Survive until March 1921 with territorial integrity (nearly impossible in reality)
+     * - Alternative Victory: Build alliances to resist Soviet pressure
+     * 
+     * Military Unit Recommendations:
+     * - Style: Professional national army (similar to Polish or Scandinavian armies)
+     * - Division types: Infantry, Mountain Infantry (Caucasus terrain), Artillery
+     * - Starting deployment: Distributed across major regions for defense
+     * - Notable units: Georgian National Guard (elite), Tbilisi garrison, frontier defense forces
+     */
+    georgia: {
+      id: "georgia",
+      name: "Democratic Republic of Georgia",
+      combatName: "Georgian Army",
+      flag: "/images/flags/georgia.svg",
+      color: "#ED1C24", // Historical red color from DRG flag
+      adjective: "Georgian",
+      firstArmyGroupName: "Georgian National Army",
+      divisionPrefix: "Georgian Guard",
+      selectable: false,
+      coreRegions: [
+                'GE-01', 'GE-02', 'GE-03', 'GE-04', 'GE-05', 'GE-06', 'GE-07', 'GE-08',
+                'GE-09', 'GE-10', 'GE-11', 'GE-12', 'GE-13', 'GE-14', 'GE-15', 'GE-16',
+                'GE-17', 'GE-18', 'GE-19', 'GE-20',
+              ],
+    },
 };
