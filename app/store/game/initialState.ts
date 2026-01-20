@@ -71,6 +71,7 @@ export const initialGameState: GameState = {
     crimea: [],
     northcaucasian: [],
     transcaspia: [],
+    shs: [],
   },
 
   relationships: [
@@ -133,5 +134,6 @@ export const initialGameState: GameState = {
     crimea: getInitialCountryBonuses(),
     northcaucasian: getInitialCountryBonuses(),
     transcaspia: getInitialCountryBonuses(),
+    shs: getInitialCountryBonuses(),
   },
 };

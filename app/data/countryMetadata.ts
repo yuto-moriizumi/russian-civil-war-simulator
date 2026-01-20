@@ -1107,4 +1107,53 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
         'TM-A', 'TM-B', 'TM-M',
       ],
     },
+    /**
+     * State of Slovenes, Croats and Serbs (October - December 1918)
+     * Historical Context: A short-lived unrecognized state formed from the southernmost territories 
+     * of the Austro-Hungarian Empire as it collapsed at the end of WWI. It was governed by the 
+     * National Council of Slovenes, Croats and Serbs. On December 1, 1918, it united with the 
+     * Kingdom of Serbia to form the Kingdom of Serbs, Croats and Slovenes.
+     * 
+     * Territories: Included Slovenia (Carniola, Styria, Carinthia), Croatia-Slavonia, Dalmatia, 
+     * Bosnia and Herzegovina, and Vojvodina (Syrmia, Banat, Bačka).
+     * 
+     * Historical Facts:
+     * - Founded: October 29, 1918
+     * - Capital: Zagreb
+     * - Disestablished: December 1, 1918 (Merger with Serbia)
+     * - Key leader: Anton Korošec (President of National Council)
+     * - Recognition: Only recognized by the Kingdom of Serbia and the Kingdom of Hungary.
+     * 
+     * Military Strength: Weak and disorganized. Primarily consisted of former Austro-Hungarian 
+     * soldiers of South Slavic ethnicity who deserted or were demobilized. Relied on local 
+     * militias (National Guard) to maintain order and resist Italian advances in Dalmatia.
+     * 
+     * Diplomatic Relations:
+     * - Seeking recognition from the Entente.
+     * - Conflict with Italy over territorial claims in Dalmatia and the Julian March.
+     * - Allied with the Kingdom of Serbia for eventual unification.
+     * 
+     * Game Configuration Notes:
+     * - Should appear around October 1918 via event.
+     * - NPC-controlled (selectable: false).
+     * - Core regions: Slovenia, Croatia, Bosnia, and parts of Vojvodina.
+     */
+    shs: {
+      id: "shs",
+      name: "State of Slovenes, Croats and Serbs",
+      combatName: "National Council Forces",
+      flag: "/images/flags/shs.svg",
+      color: "#3182CE",
+      adjective: "South Slavic",
+      firstArmyGroupName: "Army of the National Council",
+      divisionPrefix: "National Guard",
+      selectable: false,
+      coreRegions: [
+        'SI03', 'SI04',
+        'HR-01', 'HR-02', 'HR-03', 'HR-04', 'HR-05', 'HR-06', 'HR-07', 'HR-08', 'HR-09', 'HR-10',
+        'HR-11', 'HR-12', 'HR-13', 'HR-14', 'HR-15', 'HR-16', 'HR-17', 'HR-18', 'HR-19', 'HR-20', 'HR-21',
+        'BA-BRC*', 'BA-SRP*', 'BA-BIH*',
+        'RS-01', 'RS-02', 'RS-03', 'RS-04', 'RS-05', 'RS-06', 'RS-07'
+      ],
+    },
 };
