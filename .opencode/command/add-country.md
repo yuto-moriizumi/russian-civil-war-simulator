@@ -109,6 +109,7 @@ The country will be added to the game data with its flag, color, and core territ
 - **Always use web search** to research the historical country before implementation
 - **Create a git worktree** to work in an isolated environment for safe development
 - **Skip worktree creation** if the country already exists in the game
+- **When solving conflicts, do not work on main worktree** - always resolve merge conflicts within the feature worktree, never on main
 - NPC countries must have `selectable: false` to prevent players from selecting them
 - Colors should be distinct from existing countries for map clarity (consider historical flag colors)
 - The country will be controlled by the default CPU player AI
