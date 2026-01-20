@@ -547,6 +547,64 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
              ],
    },
    /**
+    * Transcaucasian Democratic Federative Republic (April 22 - May 28, 1918)
+    * Historical Context: The first and only attempt at a unified Transcaucasian state.
+    * A coalition government representing Armenians, Azerbaijanis, and Georgians formed
+    * to negotiate with the Ottoman Empire and maintain territorial integrity. Lasted only
+    * one month before ethnic tensions and Ottoman military pressure led to its dissolution.
+    * 
+    * Territories: Encompassed modern-day Georgia, Armenia, and Azerbaijan plus parts
+    * of eastern Turkey (Kars, Batum) and southern Russia.
+    * 
+    * Historical Facts:
+    * - Founded: April 22, 1918 (Declaration of independence)
+    * - Dissolved: May 28, 1918 (After Georgia's independence declaration on May 26)
+    * - Capital: Tiflis (Tbilisi)
+    * - Key leaders: Nikolay Chkheidze (Seim Chairman), Akaki Chkhenkeli (PM)
+    * - Duration: 36 days - the shortest-lived independent state in the region
+    * - Reason for dissolution: Ottoman invasion, internal ethnic conflicts, diverging goals
+    * 
+    * Military Strength: Weak to moderate. Faced overwhelming Ottoman military superiority.
+    * Some Armenian units showed competence (defended Kars, Sardarapat), but overall
+    * lacked coordination and suffered from ethnic tensions (Azerbaijanis reluctant to fight Ottomans).
+    * 
+    * Diplomatic Relations:
+    * - War with: Ottoman Empire (from April 14, 1918)
+    * - Initially negotiated with: Germans (General von Lossow mediated)
+    * - Opposed by: Bolshevik government (refused to recognize TDFR)
+    * - Internal conflicts: Between Armenian nationalists, Azerbaijani moderates, and Georgian interests
+    * 
+    * Game Configuration Notes:
+    * - NPC-controlled (non-playable) to represent historical weakness and short existence
+    * - Appears: Should emerge around April 1918 (recommend event-driven start)
+    * - Starting position: Weak military force, reliant on defensive operations
+    * - Core regions: Georgia (GE-01+), Armenia (AM-01, AM-02), Azerbaijan proper (AZ-BA)
+    * - Should face war declarations from Ottoman Empire shortly after formation
+    * - Good for scenario: Representing fragile coalitions and ethnic tensions
+    * - Can be conquered by Soviet forces (historically absorbed into Soviet Union in 1922)
+    */
+   tdfr: {
+     id: "tdfr",
+     name: "Transcaucasian Democratic Federative Republic",
+     combatName: "Transcaucasian Federative Forces",
+     flag: "/images/flags/tdfr.svg",
+     color: "#FFD700", // Gold - representing the unified coalition
+     adjective: "Transcaucasian",
+     firstArmyGroupName: "Transcaucasian Defense Force",
+     divisionPrefix: "Transcaucasian Guard",
+     selectable: false,
+     coreRegions: [
+               // Georgia core regions
+               'GE-01', 'GE-02', 'GE-03', 'GE-04', 'GE-05', 'GE-06', 'GE-07', 'GE-08',
+               'GE-09', 'GE-10', 'GE-11', 'GE-12', 'GE-13', 'GE-14', 'GE-15', 'GE-16',
+               'GE-17', 'GE-18', 'GE-19', 'GE-20',
+               // Armenia core regions
+               'AM-01', 'AM-02', 'AM-03', 'AM-04',
+               // Azerbaijan core regions (Caucasia proper, not including historical Persian Azerbaijan)
+               'AZ-BA', 'AZ-GA', 'AZ-LA', 'AZ-SH',
+             ],
+   },
+   /**
     * Belarusian People's Republic (1918-1919)
     * Historical Context: Proclaimed March 6, 1918 (Second Charter), independence declared March 25, 1918 (Third Charter).
     * Short-lived state during Russian Civil War that attempted to establish an independent Belarus.
@@ -592,4 +650,4 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
                'RU-BEL', 'RU-MOW', 'RU-OR',
              ],
    },
- };
+};
