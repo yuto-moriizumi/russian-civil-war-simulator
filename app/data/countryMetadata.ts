@@ -706,4 +706,75 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
                 'RU-CE', 'RU-IN', 'RU-KB', 'RU-SE',  // Core North Caucasus regions (Chechen, Ingushetia, Kabardino-Balkaria, North Ossetia)
               ],
     },
+    /**
+     * Azerbaijan Democratic Republic (1918-1920)
+     * Historical Context: The first secular democratic republic in the Turkic and Muslim worlds.
+     * Proclaimed on May 28, 1918, after the collapse of the Transcaucasian Democratic Federative Republic.
+     * Lasted until April 28, 1920, when invaded by the Red Army.
+     * 
+     * Historical Facts:
+     * - Founded: May 28, 1918 (Independence declaration)
+     * - Capital: Ganja (1918-September), then Baku
+     * - Fall: April 28, 1920 (Soviet invasion)
+     * - Population: ~3 million
+     * - First country to grant women's suffrage (1918)
+     * - Area: ~99,909 km²
+     * 
+     * Key Historical Events:
+     * - May 28, 1918: Declaration of independence
+     * - June-July 1918: Armed conflict with Armenia over territorial disputes
+     * - July 1918: Ottoman intervention and alliance
+     * - 1918-1919: Conflict with First Republic of Armenia
+     * - April 28, 1920: Red Army invasion and occupation
+     * 
+     * Diplomatic Recognition:
+     * - Recognized by: Ottoman Empire, German Empire, Georgia, Ukraine, Kuban People's Republic
+     * - Opposed by: Soviet Russia, First Republic of Armenia
+     * - Neutral/Trade relations: Persia, other Caucasian states
+     * 
+     * Military Characteristics:
+     * - Mixed Ottoman and modern European-style forces
+     * - Limited military resources initially
+     * - Estimated 20,000-30,000 combatants at peak
+     * - Relied heavily on Ottoman support against Armenian forces (1918-1919)
+     * 
+     * Territorial Disputes:
+     * - Claimed regions: Baku, Ganja, Shaki, Lenkoran (Southern Azerbaijan proper)
+     * - Disputed with Armenia: Karabakh, Zangezur regions
+     * - Border with Ottoman Empire: Treaty of Batum (June 4, 1918)
+     * 
+     * Game Configuration Recommendations:
+     * - Appears: At game start (May 28, 1918) or via historical event
+     * - Core Regions: AZ-BA (Baku), AZ-GA (Ganja), AZ-SH (Shaki), AZ-LA (Lenkoran)
+     * - Starting Relationships (May 1918):
+     *   * War with 'armenia' (First Republic of Armenia) over Karabakh
+     *   * Military access/alliance with 'ottoman' (Treaty of Batum)
+     *   * Opposed by 'soviet' (Bolshevik forces)
+     *   * Good relations with 'ukraine', 'kuban', 'don' (anti-Bolshevik allies)
+     * - Suggested Historical Events (via scheduledEvents):
+     *   * June 4, 1918: Alliance with Ottoman Empire formalized (Treaty of Batum)
+     *   * June-September 1918: War escalates with Armenia
+     *   * September 1918: Capital moves to Baku (Ganja lost/secured)
+     *   * April 28, 1920: Soviet invasion begins - transfer territory to Soviet Azerbaijan
+     * 
+     * AI Strategy Notes:
+     * - Early Game (May-June 1918): Seek Ottoman alliance, defend borders
+     * - Mid Game (June 1918-1919): Hold Baku oil fields, contest Armenian territories
+     * - Late Game (1919-April 1920): Prepare for inevitable Soviet invasion
+     * - Victory Conditions: Control oil-rich Baku region + maintain independence until late 1919
+     */
+    adr: {
+      id: "adr",
+      name: "Azerbaijan Democratic Republic",
+      combatName: "Azerbaijani Forces",
+      flag: "/images/flags/adr.svg",
+      color: "#13A538", // Green from the ADR flag
+      adjective: "Azerbaijani",
+      firstArmyGroupName: "Azerbaijani National Army",
+      divisionPrefix: "Azerbaijani Guard",
+      selectable: false,
+      coreRegions: [
+                'AZ-BA', 'AZ-GA', 'AZ-SH', 'AZ-LA',
+              ],
+    },
 };
