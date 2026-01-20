@@ -1,13 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { GameEventType, NotificationItem } from '../types/game';
-
-interface NotificationToastProps {
-  notifications: NotificationItem[];
-  currentGameTime: Date;
-  onDismiss: (id: string) => void;
-}
+import { useGameStore } from '../store/useGameStore';
+import { GameEventType } from '../types/game';
 
 const eventIcons: Record<GameEventType, string> = {
   combat_victory: '⚔️',
@@ -39,11 +34,11 @@ const eventColors: Record<GameEventType, string> = {
   game_victory: 'border-yellow-600/70 bg-yellow-900/90',
 };
 
-export default function NotificationToast({ 
-  notifications, 
-  currentGameTime,
-  onDismiss 
-}: NotificationToastProps) {
+export default function NotificationToast() { 
+  const notifications = useGameStore(state => state.notifications);
+  const currentGameTime = useGameStore(state => state.dateTime);
+  const onDismiss = useGameStore(state => state.dismissNotification);
+
   // Filter notifications that haven't expired yet (derived state, no useState needed)
   const visibleNotifications = notifications.filter(n => 
     new Date(n.expiresAt).getTime() > new Date(currentGameTime).getTime()

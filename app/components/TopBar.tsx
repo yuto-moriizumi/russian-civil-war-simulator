@@ -1,48 +1,65 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import { Country, GameSpeed, GameEvent, ProductionQueueItem, MapMode, CountryId } from '../types/game';
+import { useMemo } from 'react';
+import { useGameStore } from '../store/useGameStore';
+import { countCountryUnits } from '../utils/mapUtils';
+import { getCommandPowerInfo } from '../utils/commandPower';
 import SpeedControl from './SpeedControl';
 
 interface TopBarProps {
-  country: Country;
-  dateTime: Date;
-  isPlaying: boolean;
-  gameSpeed: GameSpeed;
-  unitCount: number;
-  gameEvents: GameEvent[];
   showSavedIndicator: boolean;
-  productionQueue: Record<CountryId, ProductionQueueItem[]>;
-  mapMode: MapMode;
-  divisionCap?: number;
-  inProduction?: number;
-  onTogglePlay: () => void;
-  onChangeSpeed: (speed: GameSpeed) => void;
-  onSaveGame: () => void;
-  onOpenEvents: () => void;
-  onOpenProductionQueue: () => void;
-  onSetMapMode: (mode: MapMode) => void;
 }
 
-export default function TopBar({
-  country,
-  dateTime,
-  isPlaying,
-  gameSpeed,
-  unitCount,
-  gameEvents,
-  showSavedIndicator,
-  productionQueue,
-  mapMode,
-  divisionCap,
-  inProduction,
-  onTogglePlay,
-  onChangeSpeed,
-  onSaveGame,
-  onOpenEvents,
-  onOpenProductionQueue,
-  onSetMapMode,
-}: TopBarProps) {
+export default function TopBar({ showSavedIndicator }: TopBarProps) {
+  // Store selectors
+  const country = useGameStore(state => state.selectedCountry);
+  const dateTime = useGameStore(state => state.dateTime);
+  const isPlaying = useGameStore(state => state.isPlaying);
+  const gameSpeed = useGameStore(state => state.gameSpeed);
+  const gameEvents = useGameStore(state => state.gameEvents);
+  const productionQueue = useGameStore(state => state.productionQueues);
+  const mapMode = useGameStore(state => state.mapMode);
+  const regions = useGameStore(state => state.regions);
+  const movingUnits = useGameStore(state => state.movingUnits);
+  const countryBonuses = useGameStore(state => state.countryBonuses);
+  
+  // Actions
+  const togglePlay = useGameStore(state => state.togglePlay);
+  const setGameSpeed = useGameStore(state => state.setGameSpeed);
+  const saveGame = useGameStore(state => state.saveGame);
+  const setIsEventsModalOpen = useGameStore(state => state.setIsEventsModalOpen);
+  const setIsProductionModalOpen = useGameStore(state => state.setIsProductionModalOpen);
+  const setIsCountrySidebarOpen = useGameStore(state => state.setIsCountrySidebarOpen);
+  const setMapMode = useGameStore(state => state.setMapMode);
+  
+  // Calculate derived values
+  const unitCount = useMemo(() => 
+    country ? countCountryUnits(regions, country.id, movingUnits) : 0,
+    [regions, country, movingUnits]
+  );
+  
+  const commandPowerInfo = useMemo(() => 
+    country ? getCommandPowerInfo(
+      country.id,
+      regions,
+      movingUnits,
+      productionQueue,
+      countryBonuses[country.id],
+      country.coreRegions
+    ) : { cap: 0, inProduction: 0 },
+    [country, regions, movingUnits, productionQueue, countryBonuses]
+  );
+  
+  const divisionCap = commandPowerInfo.cap;
+  const inProduction = commandPowerInfo.inProduction;
+  
+  const handleOpenProductionQueue = () => {
+    setIsCountrySidebarOpen(false);
+    setIsProductionModalOpen(true);
+  };
+  
+  if (!country) return null;
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -95,7 +112,7 @@ export default function TopBar({
 
         {/* Production Queue Button */}
         <button
-          onClick={onOpenProductionQueue}
+          onClick={handleOpenProductionQueue}
           className="relative rounded bg-emerald-700 px-3 py-1 text-stone-200 transition-colors hover:bg-emerald-600"
           title="Production Queue"
         >
@@ -109,7 +126,7 @@ export default function TopBar({
 
         {/* Events Button */}
         <button
-          onClick={onOpenEvents}
+          onClick={() => setIsEventsModalOpen(true)}
           className="relative rounded bg-stone-700 px-3 py-1 text-stone-300 transition-colors hover:bg-stone-600"
         >
           Events
@@ -123,7 +140,7 @@ export default function TopBar({
         {/* Map Mode Selector */}
         <div className="flex rounded border border-stone-600 bg-stone-800/80 overflow-hidden">
           <button
-            onClick={() => onSetMapMode('country')}
+            onClick={() => setMapMode('country')}
             className={`px-3 py-1 text-xs transition-colors ${
               mapMode === 'country'
                 ? 'bg-blue-600 text-white font-semibold'
@@ -134,7 +151,7 @@ export default function TopBar({
             Country
           </button>
           <button
-            onClick={() => onSetMapMode('diplomacy')}
+            onClick={() => setMapMode('diplomacy')}
             className={`px-3 py-1 text-xs transition-colors ${
               mapMode === 'diplomacy'
                 ? 'bg-blue-600 text-white font-semibold'
@@ -145,7 +162,7 @@ export default function TopBar({
             Diplomacy
           </button>
           <button
-            onClick={() => onSetMapMode('value')}
+            onClick={() => setMapMode('value')}
             className={`px-3 py-1 text-xs transition-colors ${
               mapMode === 'value'
                 ? 'bg-blue-600 text-white font-semibold'
@@ -170,13 +187,13 @@ export default function TopBar({
         <SpeedControl
           isPlaying={isPlaying}
           gameSpeed={gameSpeed}
-          onTogglePlay={onTogglePlay}
-          onChangeSpeed={onChangeSpeed}
+          onTogglePlay={togglePlay}
+          onChangeSpeed={setGameSpeed}
         />
 
         {/* Save Button */}
         <button
-          onClick={onSaveGame}
+          onClick={saveGame}
           className="rounded bg-amber-700 px-3 py-1 text-stone-200 transition-colors hover:bg-amber-600"
           title="Save Game"
         >

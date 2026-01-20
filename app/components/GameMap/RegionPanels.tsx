@@ -1,16 +1,17 @@
 'use client';
 
-import { RegionState, Adjacency, CountryId, ActiveCombat } from '../../types/game';
+import { useGameStore } from '../../store/useGameStore';
 import { COUNTRY_COLORS, getAdjacentRegions } from '../../utils/mapUtils';
 import { MAJOR_CITY_CAP_BONUS, DIVISIONS_PER_STATE } from '../../utils/commandPower';
 import { getCountriesWithCoreRegion, getCountryName, getCountryColor } from '../../data/countries';
 
 interface RegionTooltipProps {
   hoveredRegion: string;
-  regions: RegionState;
 }
 
-export function RegionTooltip({ hoveredRegion, regions }: RegionTooltipProps) {
+export function RegionTooltip({ hoveredRegion }: RegionTooltipProps) {
+  const regions = useGameStore(state => state.regions);
+  
   const region = regions[hoveredRegion];
   if (!region) return null;
 
@@ -41,33 +42,18 @@ export function RegionTooltip({ hoveredRegion, regions }: RegionTooltipProps) {
   );
 }
 
-interface RegionInfoPanelProps {
-  selectedRegion: string;
-  selectedUnitRegion: string | null;
-  regions: RegionState;
-  adjacency: Adjacency;
-  playerCountry: CountryId;
-  unitsInReserve: number;
-  activeCombats: ActiveCombat[];
-  coreRegions?: string[];
-  onRegionSelect: (regionId: string | null) => void;
-  onUnitSelect: (regionId: string | null) => void;
-  onDeployUnit: () => void;
-}
+export function RegionInfoPanel() {
+  const selectedRegion = useGameStore(state => state.selectedRegion);
+  const selectedUnitRegion = useGameStore(state => state.selectedUnitRegion);
+  const regions = useGameStore(state => state.regions);
+  const adjacency = useGameStore(state => state.adjacency);
+  const playerCountry = useGameStore(state => state.selectedCountry?.id);
+  const coreRegions = useGameStore(state => state.selectedCountry?.coreRegions);
+  
+  const setSelectedRegion = useGameStore(state => state.setSelectedRegion);
+  const setSelectedUnitRegion = useGameStore(state => state.setSelectedUnitRegion);
 
-export function RegionInfoPanel({
-  selectedRegion,
-  selectedUnitRegion,
-  regions,
-  adjacency,
-  playerCountry,
-  unitsInReserve,
-  activeCombats,
-  coreRegions,
-  onRegionSelect,
-  onUnitSelect,
-  onDeployUnit,
-}: RegionInfoPanelProps) {
+  if (!selectedRegion) return null;
   const region = regions[selectedRegion];
   if (!region) return null;
 
@@ -199,29 +185,7 @@ export function RegionInfoPanel({
       {region.owner === playerCountry && (
         <div className="mt-3 space-y-2 border-t border-stone-700 pt-3">
           {/* Deploy unit button */}
-          {unitsInReserve > 0 && (() => {
-            const hasActiveCombat = activeCombats.some(c => c.regionId === selectedRegion && !c.isComplete);
-            return (
-              <>
-                <button
-                  onClick={onDeployUnit}
-                  disabled={hasActiveCombat}
-                  className={`w-full rounded py-2 text-sm font-semibold text-white ${
-                    hasActiveCombat
-                      ? 'bg-stone-600 cursor-not-allowed'
-                      : 'bg-green-700 hover:bg-green-600'
-                  }`}
-                >
-                  Deploy Unit ({unitsInReserve} available)
-                </button>
-                {hasActiveCombat && (
-                  <p className="text-xs text-red-400">
-                    Cannot deploy to regions with ongoing combat
-                  </p>
-                )}
-              </>
-            );
-          })()}
+          {/* Note: reserve units logic might need updating if we use it, but currently units are created via deployToArmyGroup */}
           
           {/* Unit selection info */}
           {region.divisions.length > 0 && selectedUnitRegion === selectedRegion && (
@@ -237,7 +201,7 @@ export function RegionInfoPanel({
           
           {region.divisions.length > 0 && selectedUnitRegion !== selectedRegion && (
             <button
-              onClick={() => onUnitSelect(selectedRegion)}
+              onClick={() => setSelectedUnitRegion(selectedRegion)}
               className="w-full rounded bg-blue-700 py-2 text-sm font-semibold text-white hover:bg-blue-600"
             >
               Select Divisions ({region.divisions.length})
@@ -292,8 +256,8 @@ export function RegionInfoPanel({
       
       <button
         onClick={() => {
-          onRegionSelect(null);
-          onUnitSelect(null);
+          setSelectedRegion(null);
+          setSelectedUnitRegion(null);
         }}
         className="mt-3 w-full rounded bg-stone-700 py-1 text-xs text-stone-300 hover:bg-stone-600"
       >

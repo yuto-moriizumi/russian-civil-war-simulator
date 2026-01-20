@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import Map, { MapRef, Source, Layer, NavigationControl } from 'react-map-gl/maplibre';
 import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { RegionState, Adjacency, CountryId, Movement, ActiveCombat, Theater, ArmyGroup, MapMode, RelationshipType } from '../types/game';
+import { useGameStore } from '../store/useGameStore';
 import { getAdjacentRegions } from '../utils/mapUtils';
 
 import { UnitMarker, MovingUnitMarker, CombatMarker } from './GameMap/MapMarkers';
@@ -25,69 +25,42 @@ import {
   calculateCombatMarkers,
 } from './GameMap/mapCalculations';
 
-interface GameMapProps {
-  regions: RegionState;
-  adjacency: Adjacency;
-  selectedRegion: string | null;
-  selectedUnitRegion: string | null;
-  movingUnits: Movement[];
-  activeCombats: ActiveCombat[];
-  currentDateTime: Date;
-  playerCountry: CountryId;
-  unitsInReserve: number;
-  theaters: Theater[];
-  selectedTheaterId: string | null;
-  selectedGroupId: string | null;
-  armyGroups: ArmyGroup[];
-  mapMode: MapMode;
-  regionCentroids: Record<string, [number, number]>;
-  coreRegions?: string[];
-  getRelationship: (fromCountry: CountryId, toCountry: CountryId) => RelationshipType;
-  onRegionSelect: (regionId: string | null) => void;
-  onUnitSelect: (regionId: string | null) => void;
-  onRegionHover?: (regionId: string | null) => void;
-  onDeployUnit: () => void;
-  onMoveUnits: (fromRegion: string, toRegion: string, count: number) => void;
-  onSelectCombat: (combatId: string | null) => void;
-  onCountrySelect: (countryId: CountryId | null) => void;
-  onSidebarOpen: (isOpen: boolean) => void;
-}
-
-export default function GameMap({
-  regions,
-  adjacency,
-  selectedRegion,
-  selectedUnitRegion,
-  movingUnits,
-  activeCombats,
-  currentDateTime,
-  playerCountry,
-  unitsInReserve,
-  theaters,
-  selectedTheaterId,
-  selectedGroupId,
-  armyGroups,
-  mapMode,
-  regionCentroids,
-  coreRegions,
-  getRelationship,
-  onRegionSelect,
-  onUnitSelect,
-  onRegionHover,
-  onDeployUnit,
-  onMoveUnits,
-  onSelectCombat,
-  onCountrySelect,
-  onSidebarOpen,
-}: GameMapProps) {
+export default function GameMap() {
+  // Store selectors
+  const regions = useGameStore(state => state.regions);
+  const adjacency = useGameStore(state => state.adjacency);
+  const selectedRegion = useGameStore(state => state.selectedRegion);
+  const selectedUnitRegion = useGameStore(state => state.selectedUnitRegion);
+  const movingUnits = useGameStore(state => state.movingUnits);
+  const activeCombats = useGameStore(state => state.activeCombats);
+  const currentDateTime = useGameStore(state => state.dateTime);
+  const playerCountry = useGameStore(state => state.selectedCountry?.id);
+  const theaters = useGameStore(state => state.theaters);
+  const selectedTheaterId = useGameStore(state => state.selectedTheaterId);
+  const selectedGroupId = useGameStore(state => state.selectedGroupId);
+  const armyGroups = useGameStore(state => state.armyGroups);
+  const mapMode = useGameStore(state => state.mapMode);
+  const regionCentroids = useGameStore(state => state.regionCentroids);
+  const getRelationship = useGameStore(state => state.getRelationship);
+  
+  // Actions
+  const setSelectedRegion = useGameStore(state => state.setSelectedRegion);
+  const setSelectedUnitRegion = useGameStore(state => state.setSelectedUnitRegion);
+  const moveUnits = useGameStore(state => state.moveUnits);
+  const setSelectedCombatId = useGameStore(state => state.setSelectedCombatId);
+  const setSelectedCountryId = useGameStore(state => state.setSelectedCountryId);
+  const setIsCountrySidebarOpen = useGameStore(state => state.setIsCountrySidebarOpen);
+  
+  // Local refs and state
+  // Local refs and state
   const mapRef = useRef<MapRef>(null);
   const selectedUnitRegionRef = useRef<string | null>(null);
-  const regionsRef = useRef<RegionState>(regions);
-  const adjacencyRef = useRef<Adjacency>(adjacency);
-  const onMoveUnitsRef = useRef(onMoveUnits);
-  const onUnitSelectRef = useRef(onUnitSelect);
-  const onCountrySelectRef = useRef(onCountrySelect);
-  const onSidebarOpenRef = useRef(onSidebarOpen);
+  const regionsRef = useRef(regions);
+  const adjacencyRef = useRef(adjacency);
+  const moveUnitsRef = useRef(moveUnits);
+  const setSelectedUnitRegionRef = useRef(setSelectedUnitRegion);
+  const setSelectedCountryIdRef = useRef(setSelectedCountryId);
+  const setIsCountrySidebarOpenRef = useRef(setIsCountrySidebarOpen);
   const [mapLoaded, setMapLoaded] = useState(false);
 
   const { hoveredRegion } = useMapState({
@@ -100,7 +73,7 @@ export default function GameMap({
     selectedTheaterId,
     selectedGroupId,
     armyGroups,
-    onRegionHover,
+    onRegionHover: undefined,
   });
 
   // Keep refs in sync with props for use in event handlers
@@ -117,20 +90,20 @@ export default function GameMap({
   }, [adjacency]);
 
   useEffect(() => {
-    onMoveUnitsRef.current = onMoveUnits;
-  }, [onMoveUnits]);
+    moveUnitsRef.current = moveUnits;
+  }, [moveUnits]);
 
   useEffect(() => {
-    onUnitSelectRef.current = onUnitSelect;
-  }, [onUnitSelect]);
+    setSelectedUnitRegionRef.current = setSelectedUnitRegion;
+  }, [setSelectedUnitRegion]);
 
   useEffect(() => {
-    onCountrySelectRef.current = onCountrySelect;
-  }, [onCountrySelect]);
+    setSelectedCountryIdRef.current = setSelectedCountryId;
+  }, [setSelectedCountryId]);
 
   useEffect(() => {
-    onSidebarOpenRef.current = onSidebarOpen;
-  }, [onSidebarOpen]);
+    setIsCountrySidebarOpenRef.current = setIsCountrySidebarOpen;
+  }, [setIsCountrySidebarOpen]);
 
   const handleMapLoad = useCallback(() => {
     setMapLoaded(true);
@@ -138,7 +111,7 @@ export default function GameMap({
 
   // Map style expressions
   const fillColorExpression = useMemo(() => 
-    createMapModeFillColorExpression(mapMode, regions, playerCountry, getRelationship), 
+    playerCountry ? createMapModeFillColorExpression(mapMode, regions, playerCountry, getRelationship) : ['case', ['has', 'shapeISO'], '#555', '#000'], 
     [mapMode, regions, playerCountry, getRelationship]
   );
   const lineColorExpression = useMemo(() => createLineColorExpression(), []);
@@ -155,22 +128,22 @@ export default function GameMap({
         if (regionId) {
           // If clicking on same region, deselect
           if (regionId === selectedRegion) {
-            onRegionSelect(null);
-            onUnitSelect(null);
+            setSelectedRegion(null);
+            setSelectedUnitRegion(null);
           } else {
-            onRegionSelect(regionId);
+            setSelectedRegion(regionId);
             // If this region has units owned by player, also select as unit
             const region = regions[regionId];
             if (region && region.owner === playerCountry && region.divisions.length > 0) {
-              onUnitSelect(regionId);
+              setSelectedUnitRegion(regionId);
             } else {
-              onUnitSelect(null);
+              setSelectedUnitRegion(null);
             }
           }
         }
       }
     },
-    [selectedRegion, regions, playerCountry, onRegionSelect, onUnitSelect]
+    [selectedRegion, regions, playerCountry, setSelectedRegion, setSelectedUnitRegion]
   );
 
   const handleContextMenu = useCallback(
@@ -190,8 +163,8 @@ export default function GameMap({
             const sourceRegion = regionsRef.current[currentSelectedUnit];
             if (sourceRegion && sourceRegion.divisions.length > 0) {
               // Move all units (or could use unitsToMove for partial)
-              onMoveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.divisions.length);
-              onUnitSelectRef.current(null);
+              moveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.divisions.length);
+              setSelectedUnitRegionRef.current(null);
               moved = true;
             }
           }
@@ -201,8 +174,8 @@ export default function GameMap({
         if (!moved && targetRegionId) {
           const targetRegion = regionsRef.current[targetRegionId];
           if (targetRegion) {
-            onCountrySelectRef.current(targetRegion.owner);
-            onSidebarOpenRef.current(true);
+            setSelectedCountryIdRef.current(targetRegion.owner);
+            setIsCountrySidebarOpenRef.current(true);
           }
         }
       }
@@ -212,7 +185,7 @@ export default function GameMap({
 
   // Calculate markers
   const unitMarkers = useMemo(
-    () => calculateUnitMarkers(regions, regionCentroids, selectedUnitRegion, playerCountry),
+    () => playerCountry ? calculateUnitMarkers(regions, regionCentroids, selectedUnitRegion, playerCountry) : [],
     [regions, regionCentroids, selectedUnitRegion, playerCountry]
   );
 
@@ -279,8 +252,8 @@ export default function GameMap({
               centroid={centroid}
               isSelected={isSelected}
               isPlayerUnit={isPlayerUnit}
-              onRegionSelect={onRegionSelect}
-              onUnitSelect={onUnitSelect}
+              onRegionSelect={setSelectedRegion}
+              onUnitSelect={setSelectedUnitRegion}
             />
           );
         })}
@@ -309,7 +282,7 @@ export default function GameMap({
               key={combat.id}
               combat={combat}
               centroid={centroid}
-              onSelectCombat={onSelectCombat}
+              onSelectCombat={setSelectedCombatId}
             />
           );
         })}
@@ -318,26 +291,11 @@ export default function GameMap({
       </Map>
       
       {!selectedRegion && hoveredRegion && regions[hoveredRegion] && (
-        <RegionTooltip
-          hoveredRegion={hoveredRegion}
-          regions={regions}
-        />
+        <RegionTooltip hoveredRegion={hoveredRegion} />
       )}
 
-      {selectedRegion && regions[selectedRegion] && (
-        <RegionInfoPanel
-          selectedRegion={selectedRegion}
-          selectedUnitRegion={selectedUnitRegion}
-          regions={regions}
-          adjacency={adjacency}
-          playerCountry={playerCountry}
-          unitsInReserve={unitsInReserve}
-          activeCombats={activeCombats}
-          coreRegions={coreRegions}
-          onRegionSelect={onRegionSelect}
-          onUnitSelect={onUnitSelect}
-          onDeployUnit={onDeployUnit}
-        />
+      {selectedRegion && regions[selectedRegion] && playerCountry && (
+        <RegionInfoPanel />
       )}
     </div>
   );

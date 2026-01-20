@@ -81,81 +81,15 @@ function CountrySelectScreenView() {
 }
 
 function MainScreenView() {
-  const state = useGameStore();
+  const selectedCountry = useGameStore(state => state.selectedCountry);
   
-  return (
-    <MainScreen
-      country={state.selectedCountry!}
-      dateTime={state.dateTime}
-      isPlaying={state.isPlaying}
-      gameSpeed={state.gameSpeed}
-      missions={state.missions}
-      movingUnits={state.movingUnits}
-      activeCombats={state.activeCombats}
-      regions={state.regions}
-      adjacency={state.adjacency}
-      selectedRegion={state.selectedRegion}
-      selectedUnitRegion={state.selectedUnitRegion}
-      mapDataLoaded={state.mapDataLoaded}
-      gameEvents={state.gameEvents}
-      notifications={state.notifications}
-      productionQueue={state.productionQueues}
-      countryBonuses={state.countryBonuses}
-      theaters={state.theaters}
-      armyGroups={state.armyGroups}
-      selectedGroupId={state.selectedGroupId}
-      selectedTheaterId={state.selectedTheaterId}
-      relationships={state.relationships}
-      selectedCountryId={state.selectedCountryId}
-      isCountrySidebarOpen={state.isCountrySidebarOpen}
-      mapMode={state.mapMode}
-      regionCentroids={state.regionCentroids}
-      getRelationship={state.getRelationship}
-      onTogglePlay={state.togglePlay}
-      onChangeSpeed={state.setGameSpeed}
-      onOpenMissions={state.openMissions}
-      onOpenEvents={() => state.setIsEventsModalOpen(true)}
-      onClaimMission={state.claimMission}
-      onRegionSelect={state.setSelectedRegion}
-      onUnitSelect={state.setSelectedUnitRegion}
-      onDeployUnit={state.deployUnit}
-      onMoveUnits={state.moveUnits}
-      onSelectCombat={state.setSelectedCombatId}
-      onSaveGame={state.saveGame}
-      lastSaveTime={state.lastSaveTime}
-      selectedCombatId={state.selectedCombatId}
-      isEventsModalOpen={state.isEventsModalOpen}
-      isProductionModalOpen={state.isProductionModalOpen}
-      onCloseEvents={() => state.setIsEventsModalOpen(false)}
-      onOpenProductionQueue={() => state.setIsProductionModalOpen(true)}
-      onCloseProductionQueue={() => state.setIsProductionModalOpen(false)}
-      onCancelProduction={state.cancelProduction}
-      onDismissNotification={state.dismissNotification}
-      onCreateArmyGroup={state.createArmyGroup}
-      onDeleteArmyGroup={state.deleteArmyGroup}
-      onRenameArmyGroup={state.renameArmyGroup}
-      onSelectArmyGroup={state.selectArmyGroup}
-      onSetArmyGroupMode={state.setArmyGroupMode}
-      onDeployToArmyGroup={state.deployToArmyGroup}
-      onAssignTheater={state.assignTheaterToGroup}
-      onSetRelationship={state.setRelationship}
-      onCountrySelect={state.setSelectedCountryId}
-      onSidebarOpen={state.setIsCountrySidebarOpen}
-      onSetMapMode={state.setMapMode}
-    />
-  );
+  if (!selectedCountry) {
+    return <CountrySelectScreenView />;
+  }
+  
+  return <MainScreen />;
 }
 
 function MissionScreenView() {
-  const missions = useGameStore(state => state.missions);
-  const navigateToScreen = useGameStore(state => state.navigateToScreen);
-  const claimMission = useGameStore(state => state.claimMission);
-  
-  return (
-    <MissionScreen
-      missions={missions}
-      onBack={() => navigateToScreen('main')}
-      onClaimMission={claimMission}
-    />
-  );
+  return <MissionScreen />;
 }

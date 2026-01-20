@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { Country, GameSpeed, Mission, RegionState, Adjacency, Movement, GameEvent, NotificationItem, ActiveCombat, ArmyGroup, Theater, ProductionQueueItem, Relationship, RelationshipType, CountryId, MapMode, CountryBonuses } from '../types/game';
+import { useGameStore } from '../store/useGameStore';
 import CombatPopup from '../components/CombatPopup';
 import EventsModal from '../components/EventsModal';
 import TheaterPanel from '../components/TheaterPanel';
@@ -11,8 +11,6 @@ import TopBar from '../components/TopBar';
 import MissionPanel from '../components/MissionPanel';
 import ProductionQueuePanel from '../components/ProductionQueuePanel';
 import CountrySidebar from '../components/CountrySidebar';
-import { countCountryUnits } from '../utils/mapUtils';
-import { getCommandPowerInfo } from '../utils/commandPower';
 
 // Dynamic import for GameMap to avoid SSR issues with MapLibre
 const GameMap = dynamic(() => import('../components/GameMap'), {
@@ -24,127 +22,13 @@ const GameMap = dynamic(() => import('../components/GameMap'), {
   ),
 });
 
-interface MainScreenProps {
-  country: Country;
-  dateTime: Date;
-  isPlaying: boolean;
-  gameSpeed: GameSpeed;
-  missions: Mission[];
-  movingUnits: Movement[];
-  activeCombats: ActiveCombat[];
-  regions: RegionState;
-  adjacency: Adjacency;
-  selectedRegion: string | null;
-  selectedUnitRegion: string | null;
-  mapDataLoaded: boolean;
-  gameEvents: GameEvent[];
-  notifications: NotificationItem[];
-  productionQueue: Record<CountryId, ProductionQueueItem[]>;
-  countryBonuses: Record<CountryId, CountryBonuses>;
-  // Theater and Army Groups props
-  theaters: Theater[];
-  armyGroups: ArmyGroup[];
-  selectedGroupId: string | null;
-  selectedTheaterId: string | null;
-  relationships: Relationship[];
-  selectedCountryId: CountryId | null;
-  isCountrySidebarOpen: boolean;
-  mapMode: MapMode;
-  regionCentroids: Record<string, [number, number]>;
-  getRelationship: (fromCountry: CountryId, toCountry: CountryId) => RelationshipType;
-  onTogglePlay: () => void;
-  onChangeSpeed: (speed: GameSpeed) => void;
-  onOpenMissions: () => void;
-  onOpenEvents: () => void;
-  onClaimMission: (missionId: string) => void;
-  onRegionSelect: (regionId: string | null) => void;
-  onUnitSelect: (regionId: string | null) => void;
-  onDeployUnit: () => void;
-  onMoveUnits: (fromRegion: string, toRegion: string, count: number) => void;
-  onSelectCombat: (combatId: string | null) => void;
-  onSaveGame: () => void;
-  lastSaveTime?: Date | null;
-  selectedCombatId: string | null;
-  isEventsModalOpen: boolean;
-  isProductionModalOpen: boolean;
-  onCloseEvents: () => void;
-  onOpenProductionQueue: () => void;
-  onCloseProductionQueue: () => void;
-  onCancelProduction: (productionId: string) => void;
-  onDismissNotification: (notificationId: string) => void;
-  onSetRelationship: (fromCountry: CountryId, toCountry: CountryId, type: RelationshipType) => void;
-  // Theater and Army Groups action props
-  onCreateArmyGroup: (name: string, regionIds: string[], theaterId?: string | null) => void;
-  onDeleteArmyGroup: (groupId: string) => void;
-  onRenameArmyGroup: (groupId: string, name: string) => void;
-  onSelectArmyGroup: (groupId: string | null) => void;
-  onSetArmyGroupMode: (groupId: string, mode: 'none' | 'advance' | 'defend') => void;
-  onDeployToArmyGroup: (groupId: string, count?: number) => void;
-  onAssignTheater: (groupId: string, theaterId: string | null) => void;
-  onCountrySelect: (countryId: CountryId | null) => void;
-  onSidebarOpen: (isOpen: boolean) => void;
-  onSetMapMode: (mode: MapMode) => void;
-}
-
-export default function MainScreen({
-  country,
-  dateTime,
-  isPlaying,
-  gameSpeed,
-  missions,
-  movingUnits,
-  activeCombats,
-  regions,
-  adjacency,
-  selectedRegion,
-  selectedUnitRegion,
-  mapDataLoaded,
-  gameEvents,
-  notifications,
-  productionQueue,
-  countryBonuses,
-  theaters,
-  armyGroups,
-  selectedGroupId,
-  selectedTheaterId,
-  relationships,
-  selectedCountryId,
-  isCountrySidebarOpen,
-  mapMode,
-  regionCentroids,
-  getRelationship,
-  onTogglePlay,
-  onChangeSpeed,
-  onOpenMissions,
-  onOpenEvents,
-  onClaimMission,
-  onRegionSelect,
-  onUnitSelect,
-  onDeployUnit,
-  onMoveUnits,
-  onSelectCombat,
-  onSaveGame,
-  lastSaveTime,
-  selectedCombatId,
-  isEventsModalOpen,
-  isProductionModalOpen,
-  onCloseEvents,
-  onOpenProductionQueue,
-  onCloseProductionQueue,
-  onCancelProduction,
-  onDismissNotification,
-  onSetRelationship,
-  onCreateArmyGroup,
-  onDeleteArmyGroup,
-  onRenameArmyGroup,
-  onSelectArmyGroup,
-  onSetArmyGroupMode,
-  onDeployToArmyGroup,
-  onAssignTheater,
-  onCountrySelect,
-  onSidebarOpen,
-  onSetMapMode,
-}: MainScreenProps) {
+export default function MainScreen() {
+  // Store selectors
+  const country = useGameStore(state => state.selectedCountry);
+  const mapDataLoaded = useGameStore(state => state.mapDataLoaded);
+  const lastSaveTime = useGameStore(state => state.lastSaveTime);
+  
+  // Local state for saved indicator
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);
   
   // Store lastSaveTime timestamp in a ref to compare and trigger indicator
@@ -178,66 +62,14 @@ export default function MainScreen({
     }
   }, [lastSaveTime]);
 
-  // Calculate unit count
-  const unitCount = countCountryUnits(regions, country.id, movingUnits);
-
-  // Calculate command power info
-  const commandPowerInfo = getCommandPowerInfo(
-    country.id,
-    regions,
-    movingUnits,
-    productionQueue,
-    countryBonuses[country.id],
-    country.coreRegions
-  );
-
-  const selectedCombat = selectedCombatId 
-    ? activeCombats.find(c => c.id === selectedCombatId) 
-    : null;
-
-  const handleOpenProductionQueue = () => {
-    onSidebarOpen(false);
-    onOpenProductionQueue();
-  };
-
-  const handleCountrySelect = (countryId: CountryId | null) => {
-    if (countryId) {
-      onCloseProductionQueue();
-    }
-    onCountrySelect(countryId);
-  };
+  if (!country) return null;
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       {/* Map Background */}
       <div className="absolute inset-0">
         {mapDataLoaded ? (
-          <GameMap
-            regions={regions}
-            adjacency={adjacency}
-            selectedRegion={selectedRegion}
-            selectedUnitRegion={selectedUnitRegion}
-            movingUnits={movingUnits}
-            activeCombats={activeCombats}
-            currentDateTime={dateTime}
-            playerCountry={country.id}
-            unitsInReserve={0}
-            theaters={theaters}
-            selectedTheaterId={selectedTheaterId}
-            selectedGroupId={selectedGroupId}
-            armyGroups={armyGroups}
-            mapMode={mapMode}
-            regionCentroids={regionCentroids}
-            coreRegions={country.coreRegions}
-            getRelationship={getRelationship}
-            onRegionSelect={onRegionSelect}
-            onUnitSelect={onUnitSelect}
-            onDeployUnit={onDeployUnit}
-            onMoveUnits={onMoveUnits}
-            onSelectCombat={onSelectCombat}
-            onCountrySelect={handleCountrySelect}
-            onSidebarOpen={onSidebarOpen}
-          />
+          <GameMap />
         ) : (
           <div 
             className="h-full w-full bg-cover bg-center"
@@ -259,102 +91,30 @@ export default function MainScreen({
       </div>
 
       {/* Top Bar */}
-      <TopBar
-        country={country}
-        dateTime={dateTime}
-        isPlaying={isPlaying}
-        gameSpeed={gameSpeed}
-        unitCount={unitCount}
-        gameEvents={gameEvents}
-        showSavedIndicator={showSavedIndicator}
-        productionQueue={productionQueue}
-        mapMode={mapMode}
-        divisionCap={commandPowerInfo.cap}
-        inProduction={commandPowerInfo.inProduction}
-        onTogglePlay={onTogglePlay}
-        onChangeSpeed={onChangeSpeed}
-        onSaveGame={onSaveGame}
-        onOpenEvents={onOpenEvents}
-        onOpenProductionQueue={handleOpenProductionQueue}
-        onSetMapMode={onSetMapMode}
-      />
+      <TopBar showSavedIndicator={showSavedIndicator} />
 
       {/* Country Sidebar */}
-      {selectedCountryId && (
-        <CountrySidebar
-          isOpen={isCountrySidebarOpen}
-          onClose={() => onSidebarOpen(false)}
-          countryId={selectedCountryId}
-          playerCountry={country.id}
-          relationships={relationships}
-          onSetRelationship={onSetRelationship}
-        />
-      )}
+      <CountrySidebar />
 
       {/* Production Queue Panel */}
-      <ProductionQueuePanel
-        isOpen={isProductionModalOpen}
-        onClose={onCloseProductionQueue}
-        productionQueue={productionQueue}
-        regions={regions}
-        armyGroups={armyGroups}
-        playerCountry={country.id}
-        currentDateTime={dateTime}
-        onAddProduction={() => {}} // Disabled - use Deploy button instead
-        onCancelProduction={onCancelProduction}
-        viewOnly={true}
-      />
+      <ProductionQueuePanel viewOnly={true} />
 
       {/* Mission Panel */}
-      <MissionPanel
-        missions={missions}
-        onOpenMissions={onOpenMissions}
-        onClaimMission={onClaimMission}
-      />
+      <MissionPanel />
 
       {/* Theater Panel - now at bottom center */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 w-fit max-w-[95vw]">
-        <TheaterPanel
-          theaters={theaters}
-          armyGroups={armyGroups}
-          regions={regions}
-          playerCountry={country.id}
-          selectedGroupId={selectedGroupId}
-          movingUnits={movingUnits}
-          productionQueue={productionQueue}
-          countryBonuses={countryBonuses[country.id]}
-          coreRegions={country.coreRegions}
-          onCreateGroup={onCreateArmyGroup}
-          onDeleteGroup={onDeleteArmyGroup}
-          onRenameGroup={onRenameArmyGroup}
-          onSelectGroup={onSelectArmyGroup}
-          onSetGroupMode={onSetArmyGroupMode}
-          onDeployToGroup={onDeployToArmyGroup}
-          onAssignTheater={onAssignTheater}
-        />
+        <TheaterPanel />
       </div>
 
       {/* Combat Popup */}
-      {selectedCombat && (
-        <CombatPopup
-          combat={selectedCombat}
-          onClose={() => onSelectCombat(null)}
-        />
-      )}
+      <CombatPopup />
 
       {/* Events Modal */}
-      <EventsModal
-        isOpen={isEventsModalOpen}
-        onClose={onCloseEvents}
-        events={gameEvents}
-      />
+      <EventsModal />
 
       {/* Notification Toasts */}
-      <NotificationToast
-        notifications={notifications}
-        currentGameTime={dateTime}
-        onDismiss={onDismissNotification}
-      />
+      <NotificationToast />
     </div>
   );
 }

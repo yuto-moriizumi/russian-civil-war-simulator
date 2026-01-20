@@ -1,18 +1,23 @@
 'use client';
 
-import { ActiveCombat, Division, CountryId } from '../types/game';
+import { useGameStore } from '../store/useGameStore';
+import { Division, CountryId } from '../types/game';
 import { getCountryCombatName } from '../data/countries';
-
-interface CombatPopupProps {
-  combat: ActiveCombat;
-  onClose: () => void;
-}
 
 /**
  * Detailed combat popup showing battle progress
  * Similar to Hearts of Iron battle interface
  */
-export default function CombatPopup({ combat, onClose }: CombatPopupProps) {
+export default function CombatPopup() {
+  const selectedCombatId = useGameStore(state => state.selectedCombatId);
+  const activeCombats = useGameStore(state => state.activeCombats);
+  const setSelectedCombatId = useGameStore(state => state.setSelectedCombatId);
+
+  const combat = activeCombats.find(c => c.id === selectedCombatId);
+  const onClose = () => setSelectedCombatId(null);
+
+  if (!combat) return null;
+
   const attackerHp = combat.attackerDivisions.reduce((sum, d) => sum + d.hp, 0);
   const defenderHp = combat.defenderDivisions.reduce((sum, d) => sum + d.hp, 0);
   

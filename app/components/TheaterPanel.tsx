@@ -1,61 +1,50 @@
 'use client';
 
-import { useState } from 'react';
-import { Theater, ArmyGroup, CountryId, RegionState, Movement, ProductionQueueItem, CountryBonuses } from '../types/game';
+import { useState, useMemo } from 'react';
+import { useGameStore } from '../store/useGameStore';
 import { getArmyGroupUnitCount } from '../utils/mapUtils';
 import { canProduceDivision } from '../utils/commandPower';
 
-interface TheaterPanelProps {
-  theaters: Theater[];
-  armyGroups: ArmyGroup[];
-  regions: RegionState;
-  playerCountry: CountryId;
-  selectedGroupId: string | null;
-  movingUnits: Movement[];
-  productionQueue: Record<CountryId, ProductionQueueItem[]>;
-  countryBonuses: CountryBonuses;
-  coreRegions?: string[];
-  onCreateGroup: (name: string, regionIds: string[], theaterId: string | null) => void;
-  onDeleteGroup: (groupId: string) => void;
-  onRenameGroup: (groupId: string, name: string) => void;
-  onSelectGroup: (groupId: string | null) => void;
-  onSetGroupMode: (groupId: string, mode: 'none' | 'advance' | 'defend') => void;
-  onDeployToGroup: (groupId: string, count?: number) => void;
-  onAssignTheater: (groupId: string, theaterId: string | null) => void;
-}
-
-export default function TheaterPanel({
-  theaters,
-  armyGroups,
-  regions,
-  playerCountry,
-  selectedGroupId,
-  movingUnits,
-  productionQueue,
-  countryBonuses,
-  coreRegions,
-  onCreateGroup,
-  onDeleteGroup,
-  onRenameGroup,
-  onSelectGroup,
-  onSetGroupMode,
-  onDeployToGroup,
-  onAssignTheater,
-}: TheaterPanelProps) {
+export default function TheaterPanel() {
+  // Store selectors
+  const theaters = useGameStore(state => state.theaters);
+  const armyGroups = useGameStore(state => state.armyGroups);
+  const regions = useGameStore(state => state.regions);
+  const playerCountry = useGameStore(state => state.selectedCountry?.id);
+  const selectedGroupId = useGameStore(state => state.selectedGroupId);
+  const movingUnits = useGameStore(state => state.movingUnits);
+  const productionQueue = useGameStore(state => state.productionQueues);
+  const countryBonuses = useGameStore(state => state.countryBonuses);
+  const coreRegions = useGameStore(state => state.selectedCountry?.coreRegions);
+  
+  // Actions
+  const createArmyGroup = useGameStore(state => state.createArmyGroup);
+  const deleteArmyGroup = useGameStore(state => state.deleteArmyGroup);
+  const renameArmyGroup = useGameStore(state => state.renameArmyGroup);
+  const selectArmyGroup = useGameStore(state => state.selectArmyGroup);
+  const setArmyGroupMode = useGameStore(state => state.setArmyGroupMode);
+  const deployToArmyGroup = useGameStore(state => state.deployToArmyGroup);
+  const assignTheaterToGroup = useGameStore(state => state.assignTheaterToGroup);
+  
+  // Local state
+  // Local state
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
 
   // Get all player's army groups
-  const playerGroups = armyGroups.filter(g => g.owner === playerCountry);
+  const playerGroups = useMemo(() => 
+    playerCountry ? armyGroups.filter(g => g.owner === playerCountry) : [],
+    [armyGroups, playerCountry]
+  );
 
-  const handleStartRename = (group: ArmyGroup) => {
-    setEditingGroupId(group.id);
-    setEditingName(group.name);
+  const handleStartRename = (groupId: string, currentName: string) => {
+    setEditingGroupId(groupId);
+    setEditingName(currentName);
   };
 
   const handleFinishRename = () => {
     if (editingGroupId && editingName.trim()) {
-      onRenameGroup(editingGroupId, editingName.trim());
+      renameArmyGroup(editingGroupId, editingName.trim());
     }
     setEditingGroupId(null);
     setEditingName('');
@@ -69,6 +58,8 @@ export default function TheaterPanel({
       setEditingName('');
     }
   };
+  
+  if (!playerCountry) return null;
 
   return (
     <div className="flex items-end gap-1 overflow-x-auto pb-4 px-4 scrollbar-hide select-none">
@@ -77,7 +68,7 @@ export default function TheaterPanel({
         const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerCountry, group.id, movingUnits);
         const queueCount = (productionQueue[playerCountry] || []).filter(p => p.armyGroupId === group.id).length;
         const isGroupSelected = selectedGroupId === group.id;
-        const canProduce = canProduceDivision(playerCountry, regions, movingUnits, productionQueue, countryBonuses, coreRegions);
+        const canProduce = canProduceDivision(playerCountry, regions, movingUnits, productionQueue, countryBonuses[playerCountry], coreRegions);
 
         return (
           <div
@@ -88,7 +79,7 @@ export default function TheaterPanel({
                 : 'border-stone-700 bg-stone-900/90 hover:border-stone-500 hover:bg-stone-800'
             }`}
             onClick={() => {
-              onSelectGroup(isGroupSelected ? null : group.id);
+              selectArmyGroup(isGroupSelected ? null : group.id);
             }}
           >
             {/* Color stripe at top */}
@@ -112,7 +103,7 @@ export default function TheaterPanel({
                   className="truncate text-[11px] font-bold text-stone-300 uppercase tracking-tighter"
                   onDoubleClick={(e) => {
                     e.stopPropagation();
-                    handleStartRename(group);
+                    handleStartRename(group.id, group.name);
                   }}
                   title="Double-click to rename"
                 >
@@ -122,7 +113,7 @@ export default function TheaterPanel({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDeleteGroup(group.id);
+                  deleteArmyGroup(group.id);
                 }}
                 className="text-stone-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-500"
               >
@@ -137,7 +128,7 @@ export default function TheaterPanel({
                 onChange={(e) => {
                   e.stopPropagation();
                   const theaterId = e.target.value || null;
-                  onAssignTheater(group.id, theaterId);
+                  assignTheaterToGroup(group.id, theaterId);
                 }}
                 onClick={(e) => e.stopPropagation()}
                 className="w-full bg-transparent text-[10px] text-center font-bold text-stone-500 uppercase tracking-tighter outline-none cursor-pointer appearance-none hover:text-stone-300"
@@ -157,7 +148,7 @@ export default function TheaterPanel({
                 onClick={(e) => {
                   e.stopPropagation();
                   const newMode = group.mode === 'advance' ? 'none' : 'advance';
-                  onSetGroupMode(group.id, newMode);
+                  setArmyGroupMode(group.id, newMode);
                 }}
                 className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${
                   group.mode === 'advance' 
@@ -173,7 +164,7 @@ export default function TheaterPanel({
                 onClick={(e) => {
                   e.stopPropagation();
                   const newMode = group.mode === 'defend' ? 'none' : 'defend';
-                  onSetGroupMode(group.id, newMode);
+                  setArmyGroupMode(group.id, newMode);
                 }}
                 className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${
                   group.mode === 'defend' 
@@ -208,7 +199,7 @@ export default function TheaterPanel({
                 onClick={(e) => {
                   e.stopPropagation();
                   if (canProduce) {
-                    onDeployToGroup(group.id, 1);
+                    deployToArmyGroup(group.id, 1);
                   }
                 }}
                 disabled={!canProduce}
@@ -225,7 +216,7 @@ export default function TheaterPanel({
                 onClick={(e) => {
                   e.stopPropagation();
                   if (canProduce) {
-                    onDeployToGroup(group.id, 5);
+                    deployToArmyGroup(group.id, 5);
                   }
                 }}
                 disabled={!canProduce}
@@ -242,7 +233,7 @@ export default function TheaterPanel({
                 onClick={(e) => {
                   e.stopPropagation();
                   if (canProduce) {
-                    onDeployToGroup(group.id, 10);
+                    deployToArmyGroup(group.id, 10);
                   }
                 }}
                 disabled={!canProduce}
@@ -263,7 +254,7 @@ export default function TheaterPanel({
       {/* Add New Group Button - Large Plus */}
       <button
         onClick={() => {
-          onCreateGroup('', [], theaters[0]?.id || null);
+          createArmyGroup('', [], theaters[0]?.id || null);
         }}
         className="flex h-44 w-36 flex-col items-center justify-center border-2 border-dashed border-stone-700 bg-stone-900/40 text-stone-600 transition-all hover:border-stone-500 hover:bg-stone-800/60 hover:text-stone-400"
         title="Create New Army Group"

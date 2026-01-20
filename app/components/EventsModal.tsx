@@ -1,13 +1,8 @@
 'use client';
 
-import { GameEvent, GameEventType } from '../types/game';
+import { useGameStore } from '../store/useGameStore';
+import { GameEventType } from '../types/game';
 import Modal from './Modal';
-
-interface EventsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  events: GameEvent[];
-}
 
 const eventIcons: Record<GameEventType, string> = {
   combat_victory: '',
@@ -49,7 +44,13 @@ function formatEventTime(timestamp: Date): string {
   });
 }
 
-export default function EventsModal({ isOpen, onClose, events }: EventsModalProps) {
+export default function EventsModal() {
+  const isOpen = useGameStore(state => state.isEventsModalOpen);
+  const setIsOpen = useGameStore(state => state.setIsEventsModalOpen);
+  const events = useGameStore(state => state.gameEvents);
+
+  const onClose = () => setIsOpen(false);
+
   // Sort events by timestamp, newest first
   const sortedEvents = [...events].sort((a, b) => 
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()

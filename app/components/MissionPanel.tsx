@@ -1,18 +1,12 @@
 'use client';
 
-import { Mission } from '../types/game';
+import { useGameStore } from '../store/useGameStore';
 
-interface MissionPanelProps {
-  missions: Mission[];
-  onOpenMissions: () => void;
-  onClaimMission: (missionId: string) => void;
-}
-
-export default function MissionPanel({
-  missions,
-  onOpenMissions,
-  onClaimMission,
-}: MissionPanelProps) {
+export default function MissionPanel() {
+  const missions = useGameStore(state => state.missions);
+  const openMissions = useGameStore(state => state.openMissions);
+  const claimMission = useGameStore(state => state.claimMission);
+  
   const completedMissions = missions.filter(m => m.completed && !m.claimed);
 
   return (
@@ -20,7 +14,7 @@ export default function MissionPanel({
       <div className="mb-4 flex items-center justify-between border-b border-stone-700 pb-2">
         <h2 className="text-sm font-bold tracking-wider text-stone-300">MISSIONS</h2>
         <button
-          onClick={onOpenMissions}
+          onClick={openMissions}
           className="rounded bg-stone-700 px-3 py-1 text-xs text-stone-300 transition-colors hover:bg-stone-600"
         >
           View All
@@ -38,7 +32,7 @@ export default function MissionPanel({
                 ? 'border-green-600 bg-green-900/30 cursor-pointer hover:bg-green-900/50'
                 : 'border-stone-600 bg-stone-800'
             }`}
-            onClick={() => mission.completed && !mission.claimed && onClaimMission(mission.id)}
+            onClick={() => mission.completed && !mission.claimed && claimMission(mission.id)}
           >
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold text-white">{mission.name}</span>

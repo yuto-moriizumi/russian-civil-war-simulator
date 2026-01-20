@@ -1,19 +1,11 @@
 'use client';
 
-import { CountryId, Relationship, RelationshipType } from '../types/game';
+import { useGameStore } from '../store/useGameStore';
+import { CountryId, RelationshipType } from '../types/game';
 import SidebarPanel from './SidebarPanel';
 import { countries } from '../data/gameData';
 import { COUNTRY_NAMES } from '../data/countries';
 import Image from 'next/image';
-
-interface CountrySidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
-  countryId: CountryId;
-  playerCountry: CountryId;
-  relationships: Relationship[];
-  onSetRelationship: (fromCountry: CountryId, toCountry: CountryId, type: RelationshipType) => void;
-}
 
 const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
   neutral: 'Neutral',
@@ -29,14 +21,20 @@ const RELATIONSHIP_COLORS: Record<RelationshipType, string> = {
   autonomy: 'text-purple-400',
 };
 
-export default function CountrySidebar({
-  isOpen,
-  onClose,
-  countryId,
-  playerCountry,
-  relationships,
-  onSetRelationship,
-}: CountrySidebarProps) {
+export default function CountrySidebar() {
+  // Store selectors
+  const isOpen = useGameStore(state => state.isCountrySidebarOpen);
+  const countryId = useGameStore(state => state.selectedCountryId);
+  const playerCountry = useGameStore(state => state.selectedCountry?.id);
+  const relationships = useGameStore(state => state.relationships);
+  
+  // Actions
+  const setIsCountrySidebarOpen = useGameStore(state => state.setIsCountrySidebarOpen);
+  const setRelationship = useGameStore(state => state.setRelationship);
+  
+  if (!countryId || !playerCountry) return null;
+  
+  const onClose = () => setIsCountrySidebarOpen(false);
   const country = countries.find(c => c.id === countryId);
   const countryName = country?.name || COUNTRY_NAMES[countryId];
 
@@ -55,14 +53,14 @@ export default function CountrySidebar({
   const handleMilitaryAccessToggle = (isChecked: boolean) => {
     const currentStatus = getRelationshipStatus(playerCountry, countryId);
     if (isChecked && currentStatus !== 'war') {
-      onSetRelationship(playerCountry, countryId, 'military_access');
+      setRelationship(playerCountry, countryId, 'military_access');
     } else if (!isChecked && currentStatus === 'military_access') {
-      onSetRelationship(playerCountry, countryId, 'neutral');
+      setRelationship(playerCountry, countryId, 'neutral');
     }
   };
 
   const handleDeclareWar = () => {
-    onSetRelationship(playerCountry, countryId, 'war');
+    setRelationship(playerCountry, countryId, 'war');
   };
 
   const playerToTargetStatus = getRelationshipStatus(playerCountry, countryId);

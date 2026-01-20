@@ -9,25 +9,22 @@ import {
 import '@xyflow/react/dist/style.css';
 import './MissionScreen.css';
 
+import { useGameStore } from '../store/useGameStore';
 import { Mission } from '../types/game';
 import {
   getLayoutedElements,
 } from '../utils/missionLayout';
 import MissionNode from '../components/MissionNode';
 
-interface MissionScreenProps {
-  missions: Mission[];
-  onBack: () => void;
-  onClaimMission: (missionId: string) => void;
-}
-
 const nodeTypes = { missionNode: MissionNode };
 
-export default function MissionScreen({
-  missions,
-  onBack,
-  onClaimMission,
-}: MissionScreenProps) {
+export default function MissionScreen() {
+  const missions = useGameStore(state => state.missions);
+  const navigateToScreen = useGameStore(state => state.navigateToScreen);
+  const claimMission = useGameStore(state => state.claimMission);
+
+  const onBack = () => navigateToScreen('main');
+
   // Check if prerequisites are met for claiming
   const canClaimMission = useCallback((mission: Mission) => {
     if (!mission.completed || mission.claimed) return false;
@@ -58,12 +55,12 @@ export default function MissionScreen({
       ...node,
       data: {
         ...node.data,
-        onClaim: onClaimMission,
+        onClaim: claimMission,
       },
     }));
 
     return { nodes: nodesWithCallback, edges: layoutedEdges };
-  }, [missions, canClaimMission, isMissionUnlocked, onClaimMission]);
+  }, [missions, canClaimMission, isMissionUnlocked, claimMission]);
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-gradient-to-b from-stone-900 via-stone-800 to-stone-900">
