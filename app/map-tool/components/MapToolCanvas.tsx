@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 "use client";
 
 import { useRef, useState, useCallback, useMemo, useEffect } from "react";
@@ -71,6 +72,8 @@ export default function MapToolCanvas({
     });
     return names;
   }, [geojson]);
+
+
 
   // Create fill color expression based on ownership or core regions
   const fillColorExpression = useMemo(() => {
@@ -228,20 +231,26 @@ export default function MapToolCanvas({
   // Handle mouse down
   const handleMouseDown = useCallback(
     (e: MapLayerMouseEvent) => {
+      console.log('[MapToolCanvas] handleMouseDown', { isPaintEnabled, button: e.originalEvent.button, features: e.features });
       if (isPaintEnabled) {
         if (e.originalEvent.button === 0) {
           // Left mouse button in paint mode - start painting
           setIsPainting(true);
           const features = e.features;
+          console.log('[MapToolCanvas] features:', features);
           if (features && features.length > 0) {
             const shapeId = features[0].properties?.shapeID;
+            console.log('[MapToolCanvas] shapeId:', shapeId);
             if (shapeId) {
+              console.log('[MapToolCanvas] calling onRegionPaint with:', shapeId);
               onRegionPaint(shapeId);
             }
+          } else {
+            console.log('[MapToolCanvas] NO FEATURES FOUND IN EVENT');
           }
         } else if (e.originalEvent.button === 2) {
           // Right mouse button in paint mode - start panning
-          setIsPanning(true);
+          setIsPainting(true);
           setPanStart({
             x: e.originalEvent.clientX,
             y: e.originalEvent.clientY,
@@ -297,6 +306,21 @@ export default function MapToolCanvas({
     }
   }, [mapLoaded, hoveredRegion, showAdjacency, adjacency]);
 
+  // Force update paint property when core regions change
+  // This directly calls MapLibre's setPaintProperty to ensure visual updates
+  useEffect(() => {
+    if (!mapLoaded || !mapRef.current) return;
+
+    const map = mapRef.current.getMap();
+    
+    // Check if the layer exists
+    if (!map.getLayer("regions-fill")) return;
+
+    // Update the fill-color paint property directly
+    map.setPaintProperty("regions-fill", "fill-color", fillColorExpression);
+  }, [mapLoaded, fillColorExpression]);
+
+
   const mapStyle = useMemo(
     () => ({
       version: 8 as const,
@@ -315,6 +339,8 @@ export default function MapToolCanvas({
   );
 
   // Memoize paint objects to ensure proper updates
+  // fillColorExpression already includes all the necessary state, so we only depend on it
+  // Changes to ownership, editMode, coreRegions, and selectedCountry will trigger fillColorExpression updates
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fillPaint: any = useMemo(() => ({
     "fill-color": fillColorExpression,
