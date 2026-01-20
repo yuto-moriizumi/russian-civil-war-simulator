@@ -444,4 +444,48 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
               'RU-KDA', 'RU-AD',
             ],
   },
+  /**
+   * Moldavian Democratic Republic (December 1917 - April 1918)
+   * Historical Context: Proclaimed by Sfatul Țării (National Council) on December 2/15, 1917,
+   * following the February Revolution and collapse of the Russian Empire. Initially autonomous
+   * within Russia, briefly independent (January-April 1918), then united with Romania.
+   * 
+   * Territories: Controlled Bessarabia (modern-day Moldova) with capital in Chișinău.
+   * 
+   * Historical Facts:
+   * - Founded: December 15, 1917 (OS: December 2, 1917)
+   * - Independence declared: February 6, 1918 (OS: January 24, 1918)
+   * - Union with Romania: April 9, 1918 (OS: March 27, 1918)
+   * - Key leader: Ion Inculeț (President of Sfatul Țării)
+   * - Anthem: "Deșteaptă-te, române!" (Awaken thee, Romanian!)
+   * 
+   * Military Strength: Weak, relied on Romanian military intervention; internal conflicts
+   * between nationalist and Bolshevik factions.
+   * 
+   * Diplomatic Relations:
+   * - War with: Soviet Russia (Bolshevik forces), briefly with Odessa Soviet Republic
+   * - Allied with: Romania (after invasion in January 1918)
+   * - Hostile to: Bolshevik forces under Rumcherod
+   * 
+   * Game Configuration Notes:
+   * - Appears mid-game around January 1918
+   * - Weak starting units to reflect historical weak military
+   * - Should be AI-controlled (NPC) as a minor state
+   * - Can be conquered by Soviet or Romanian forces
+   * - Good for narrative missions about small states caught between powers
+   */
+  moldavia: {
+    id: "moldavia",
+    name: "Moldavian Democratic Republic",
+    combatName: "Moldavian Militia",
+    flag: "/images/flags/moldavia.svg",
+    color: "#0057B7",
+    adjective: "Moldavian",
+    firstArmyGroupName: "Moldavian National Guard",
+    divisionPrefix: "Moldavian Guard",
+    selectable: false,
+    coreRegions: [
+              'MD-01', 'MD-02',
+            ],
+  },
 };
