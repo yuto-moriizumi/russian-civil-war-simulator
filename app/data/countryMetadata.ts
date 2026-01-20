@@ -429,6 +429,64 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     coreRegions: [
               'RU-ROS', 'RU-VGG', 'RU-AST',
             ],
+   },
+   /**
+    * Kuban People's Republic (January 1918 - March 1920)
+    * Historical Context: Anti-Bolshevik Cossack state in the Kuban region, proclaimed on January 28, 1918.
+    * Led by the Kuban Rada (parliament), it sought independence from Russia and briefly attempted union with Ukraine.
+    * 
+    * Key Historical Events:
+    * - February 16, 1918: Declared independence from Bolshevik Russia
+    * - March 1918: Placed itself under Lavr Kornilov's authority after his successful offensive
+    * - June 1918: Growing friction between leadership and Cossacks (Chernomortsy vs Lineitsy factions)
+    * - December 1918: Sent delegation to Paris Peace Conference seeking international recognition
+    * - April 1919: Announced break from Denikin and refusal to further cooperate with White Movement
+    * - November 6, 1919: De facto occupied by Anton Denikin's forces; government members arrested
+    * - March 17, 1920: Fully occupied and dissolved by Soviet forces
+    * 
+    * Diplomatic Recognition:
+    * - De jure recognized by: Ukrainian People's Republic, Azerbaijan Democratic Republic, Germany, 
+    *   Ottoman Empire, Democratic Republic of Georgia, and the Mountainous Republic of the Northern Caucasus
+    * - Not recognized by: French Third Republic, British Empire, or White Russian government
+    * 
+    * Military Characteristics:
+    * - Primarily consisted of Kuban Cossack regiments (cavalry-heavy, mobile units)
+    * - Limited artillery and logistics compared to Volunteer Army
+    * - Skilled in mounted warfare and irregular tactics
+    * - Estimated combat strength: 15,000-25,000 combatants at peak
+    * 
+    * Game Configuration Recommendations:
+    * - Should appear at game start or be manifested as playable/NPC starting in January 1918
+    * - Core Regions: RU-KDA (Krasnodar), RU-STA (Stavropol), RU-AD (Adygea) - Kuban heartland
+    * - Starting Relationships (January 1918):
+    *   * War with 'soviet' (Bolsheviks) and 'fswr' (Finnish Socialist Workers)
+    *   * Military access from 'ukraine' and 'don' (temporary Cossack alliance)
+    *   * Neutral with 'white', but joins White cause by June 1918 → war change recommended by June
+    *   * Neutral/Trade with 'ottoman' and 'germany' (some arms smuggling in early 1918)
+    * - Suggested Historical Events (via scheduledEvents):
+    *   * November 6, 1919: Submit to 'white' control (Denikin occupation) - AI becomes subordinate to White
+    *   * December 1919: Attempt to re-establish independence (AI returns to autonomous status)
+    *   * March 17, 1920: Dissolution and Soviet annexation - transfer all territory to 'kuban_soviet'
+    * 
+    * AI Strategy Notes:
+    * - Early Game (Jan-June 1918): Defend homeland, resist Soviet expansion, build alliances with Don Cossacks
+    * - Mid Game (June 1918-Nov 1919): Shift to supporting White Army against Reds, maintain territorial control
+    * - Late Game (Nov 1919-Mar 1920): Historical defeat is inevitable; preserve forces, consider evacuation
+    * - Victory Conditions: Control Kuban core regions + resist Soviet control until Nov 1919 (historical survival)
+    */
+   kuban: {
+    id: "kuban",
+    name: "Kuban People's Republic",
+    combatName: "Kuban Cossacks",
+    flag: "/images/flags/kuban.svg",
+    color: "#ED1C24",
+    adjective: "Kuban",
+    firstArmyGroupName: "Kuban Cossack Host",
+    divisionPrefix: "Kuban Cossack",
+    selectable: false,
+    coreRegions: [
+              'RU-KDA', 'RU-STA', 'RU-AD',
+            ],
   },
   kuban_soviet: {
     id: "kuban_soviet",
