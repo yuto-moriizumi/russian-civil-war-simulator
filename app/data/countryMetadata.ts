@@ -923,6 +923,64 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
               ],
     },
     /**
+     * Crimean People's Republic (1917-1918)
+     * Historical Context: A short-lived independent republic declared by the Crimean Tatars 
+     * in the wake of the Russian Revolution. It was one of the first attempts to create a 
+     * secular democratic state in the Muslim world.
+     * 
+     * Historical Facts:
+     * - Founded: December 13, 1917 (Proclamation)
+     * - Capital: Bakhchysarai (initially), then Simferopol
+     * - President: Noman Çelebicihan (executed by Bolsheviks in Feb 1918)
+     * - Disestablished: January 1918 (captured by Bolshevik Black Sea Fleet)
+     * - Population: ~800,000 (Multi-ethnic: Tatar, Russian, Ukrainian, Jewish, Greek)
+     * 
+     * Key Historical Events:
+     * - Nov-Dec 1917: Formation of the Kurultai (National Assembly)
+     * - Dec 13, 1917: Declaration of the Crimean People's Republic
+     * - Jan 1918: Bolshevik uprising in Sevastopol and Simferopol
+     * - Feb 23, 1918: Execution of Noman Çelebicihan in Sevastopol
+     * - April 1918: Crimea liberated by Ukrainian and German forces (Crimean Offensive)
+     * 
+     * Diplomatic Relationships:
+     * - Allied with: Ukrainian People's Republic (mutual recognition)
+     * - Opposed by: Soviet Russia (Bolsheviks), Black Sea Fleet sailors
+     * - Supported by: Ottoman Empire (ideologically/culturally)
+     * 
+     * Military Strength:
+     * - Small, cavalry-based force: "Escadron" (primarily Crimean Tatar cavalry)
+     * - Estimated strength: 2,000-5,000 men
+     * - Heavy reliance on local militia and support from Ukrainian units
+     * 
+     * Game Configuration Recommendations:
+     * - Appears: December 1917 (historical start)
+     * - Core Regions: UA-43 (Crimea), UA-40 (Sevastopol)
+     * - Starting Relationships:
+     *   * War with 'soviet' (Bolsheviks)
+     *   * Military access/alliance with 'ukraine'
+     * - Suggested Historical Events:
+     *   * Jan 1918: Bolshevik takeover - transfer regions to 'soviet' or 'taurida'
+     *   * April 1918: German-Ukrainian offensive - transfer regions to 'ukraine' or 'germany'
+     * 
+     * AI Strategy Notes:
+     * - Early Game: Defend the peninsula, secure Simferopol, resist Sevastopol-based Bolsheviks
+     * - Victory Conditions: Maintain independence throughout 1918 (ahistorical)
+     */
+    crimea: {
+      id: "crimea",
+      name: "Crimean People's Republic",
+      combatName: "Crimean Tatar Forces",
+      flag: "/images/flags/crimea.svg",
+      color: "#00AEEF", // Sky blue from the Crimean Tatar flag
+      adjective: "Crimean",
+      firstArmyGroupName: "Crimean National Army",
+      divisionPrefix: "Crimean Guard",
+      selectable: false,
+      coreRegions: [
+                'UA-43', 'UA-40',
+              ],
+    },
+    /**
      * Crimean Regional Government (1918-1919)
      * Historical Context: An anti-Bolshevik government in the Crimean Peninsula. 
      * The first government (June-November 1918) was led by General Maciej Sulkiewicz, 
@@ -997,3 +1055,4 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     ],
   },
 };
+
