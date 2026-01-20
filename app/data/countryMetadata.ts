@@ -513,6 +513,13 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     * - Mid Game (June 1918-Nov 1919): Shift to supporting White Army against Reds, maintain territorial control
     * - Late Game (Nov 1919-Mar 1920): Historical defeat is inevitable; preserve forces, consider evacuation
     * - Victory Conditions: Control Kuban core regions + resist Soviet control until Nov 1919 (historical survival)
+    * - Alternative Victory: Build alliances to resist Soviet pressure
+    * 
+    * Military Unit Recommendations:
+    * - Style: Professional national army (similar to Polish or Scandinavian armies)
+    * - Division types: Infantry, Mountain Infantry (Caucasus terrain), Artillery
+    * - Starting deployment: Distributed across major regions for defense
+    * - Notable units: Georgian National Guard (elite), Tbilisi garrison, frontier defense forces
     */
    kuban: {
     id: "kuban",
@@ -923,6 +930,64 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
               ],
     },
     /**
+     * Crimean People's Republic (1917-1918)
+     * Historical Context: A short-lived independent republic declared by the Crimean Tatars 
+     * in the wake of the Russian Revolution. It was one of the first attempts to create a 
+     * secular democratic state in the Muslim world.
+     * 
+     * Historical Facts:
+     * - Founded: December 13, 1917 (Proclamation)
+     * - Capital: Bakhchysarai (initially), then Simferopol
+     * - President: Noman Çelebicihan (executed by Bolsheviks in Feb 1918)
+     * - Disestablished: January 1918 (captured by Bolshevik Black Sea Fleet)
+     * - Population: ~800,000 (Multi-ethnic: Tatar, Russian, Ukrainian, Jewish, Greek)
+     * 
+     * Key Historical Events:
+     * - Nov-Dec 1917: Formation of the Kurultai (National Assembly)
+     * - Dec 13, 1917: Declaration of the Crimean People's Republic
+     * - Jan 1918: Bolshevik uprising in Sevastopol and Simferopol
+     * - Feb 23, 1918: Execution of Noman Çelebicihan in Sevastopol
+     * - April 1918: Crimea liberated by Ukrainian and German forces (Crimean Offensive)
+     * 
+     * Diplomatic Relationships:
+     * - Allied with: Ukrainian People's Republic (mutual recognition)
+     * - Opposed by: Soviet Russia (Bolsheviks), Black Sea Fleet sailors
+     * - Supported by: Ottoman Empire (ideologically/culturally)
+     * 
+     * Military Strength:
+     * - Small, cavalry-based force: "Escadron" (primarily Crimean Tatar cavalry)
+     * - Estimated strength: 2,000-5,000 men
+     * - Heavy reliance on local militia and support from Ukrainian units
+     * 
+     * Game Configuration Recommendations:
+     * - Appears: December 1917 (historical start)
+     * - Core Regions: UA-43 (Crimea), UA-40 (Sevastopol)
+     * - Starting Relationships:
+     *   * War with 'soviet' (Bolsheviks)
+     *   * Military access/alliance with 'ukraine'
+     * - Suggested Historical Events:
+     *   * Jan 1918: Bolshevik takeover - transfer regions to 'soviet' or 'taurida'
+     *   * April 1918: German-Ukrainian offensive - transfer regions to 'ukraine' or 'germany'
+     * 
+     * AI Strategy Notes:
+     * - Early Game: Defend the peninsula, secure Simferopol, resist Sevastopol-based Bolsheviks
+     * - Victory Conditions: Maintain independence throughout 1918 (ahistorical)
+     */
+    crimea: {
+      id: "crimea",
+      name: "Crimean People's Republic",
+      combatName: "Crimean Tatar Forces",
+      flag: "/images/flags/crimea.svg",
+      color: "#00AEEF", // Sky blue from the Crimean Tatar flag
+      adjective: "Crimean",
+      firstArmyGroupName: "Crimean National Army",
+      divisionPrefix: "Crimean Guard",
+      selectable: false,
+      coreRegions: [
+                'UA-43', 'UA-40',
+              ],
+    },
+    /**
      * Crimean Regional Government (1918-1919)
      * Historical Context: An anti-Bolshevik government in the Crimean Peninsula. 
      * The first government (June-November 1918) was led by General Maciej Sulkiewicz, 
@@ -956,6 +1021,45 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
       coreRegions: [
                 'RU-Cr',
               ],
+    },
+    /**
+     * North Caucasian Soviet Republic (July 1918 - January 1919)
+     * Historical Context: Short-lived Soviet republic created by merging the Kuban-Black Sea,
+     * Stavropol, and Terek Soviet republics to consolidate Bolshevik rule in the North Caucasus.
+     * Its capital moved from Yekaterinodar (Krasnodar) to Pyatigorsk after White advances.
+     * 
+     * Territories: Northern Caucasus including Kuban, Stavropol, and Terek regions.
+     * 
+     * Key Historical Events:
+     * - July 7, 1918: Established as part of the Russian SFSR
+     * - August 1918: Yekaterinodar captured by White forces, capital moved to Pyatigorsk
+     * - Late 1918: White Army advances capture most territory
+     * - January 11, 1919: Republic abolished by All-Russian Central Executive Committee
+     * 
+     * Diplomatic & Military Context:
+     * - Aligned with Soviet Russia as an RSFSR republic
+     * - War with White Volunteer Army (Denikin) and anti-Bolshevik Cossack forces
+     * - Hostile to the Mountainous Republic of the Northern Caucasus
+     * 
+     * Game Configuration Notes:
+     * - Should appear around July 1918 via event or mid-game start
+     * - War with 'white', 'kuban', 'don', and 'mrnc' recommended
+     * - Suggested units: 4-7 divisions of Red Guards with modest strength
+     * - Core regions: Kuban, Stavropol, and Terek Soviet territories
+     */
+    northcaucasian: {
+      id: "northcaucasian",
+      name: "North Caucasian Soviet Republic",
+      combatName: "North Caucasian Reds",
+      flag: "/images/flags/northcaucasian.svg",
+      color: "#DD0000",
+      adjective: "North Caucasian Soviet",
+      firstArmyGroupName: "North Caucasian Red Army",
+      divisionPrefix: "Caucasian Red Guard",
+      selectable: false,
+      coreRegions: [
+        'RU-KDA', 'RU-AD', 'RU-STA', 'RU-CE', 'RU-IN', 'RU-KB', 'RU-SE',
+      ],
     },
     /**
      * Transcaspian Provisional Government (1918-1920)
