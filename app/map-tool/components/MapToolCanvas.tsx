@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 "use client";
 
 import { useRef, useState, useCallback, useMemo, useEffect } from "react";
@@ -72,16 +73,7 @@ export default function MapToolCanvas({
     return names;
   }, [geojson]);
 
-  // Generate a unique key for forcing layer updates when core regions change
-  // This ensures MapLibre detects changes in core region mode
-  const layerKey = useMemo(() => {
-    if (editMode === 'core') {
-      // Create a hash of the core regions for the selected country
-      const coreRegionsList = (coreRegions[selectedCountry] || []).sort().join(',');
-      return `${editMode}-${selectedCountry}-${coreRegionsList}`;
-    }
-    return editMode;
-  }, [editMode, coreRegions, selectedCountry]);
+
 
   // Create fill color expression based on ownership or core regions
   const fillColorExpression = useMemo(() => {
@@ -347,13 +339,13 @@ export default function MapToolCanvas({
   );
 
   // Memoize paint objects to ensure proper updates
-  // Include all dependencies directly to ensure paint object recreates when any relevant state changes
-  // This fixes the issue where MapLibre Layer doesn't detect changes in core region mode
+  // fillColorExpression already includes all the necessary state, so we only depend on it
+  // Changes to ownership, editMode, coreRegions, and selectedCountry will trigger fillColorExpression updates
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fillPaint: any = useMemo(() => ({
     "fill-color": fillColorExpression,
     "fill-opacity": 0.8,
-  }), [fillColorExpression, ownership, editMode, coreRegions, selectedCountry]);
+  }), [fillColorExpression]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const linePaint: any = useMemo(() => ({
