@@ -922,4 +922,39 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
                 'AZ-BA', 'AZ-GA', 'AZ-SH', 'AZ-LA',
               ],
     },
+    /**
+     * Crimean Regional Government (1918-1919)
+     * Historical Context: An anti-Bolshevik government in the Crimean Peninsula. 
+     * The first government (June-November 1918) was led by General Maciej Sulkiewicz, 
+     * pro-German and seeking independence. The second (November 1918-April 1919) was 
+     * led by Solomon Crimea, pro-Entente and aligned with the White movement.
+     * 
+     * Territories: Crimean Peninsula.
+     * 
+     * Military Characteristics: Modest forces, initially supported by the German Empire, 
+     * later by the Volunteer Army and Entente forces.
+     * 
+     * Game Configuration Recommendations:
+     * - Should appear around June 1918 (Sulkiewicz government).
+     * - Core Regions: RU-Cr (Crimea).
+     * - Starting Relationships:
+     *   * Allied with 'germany' (initially).
+     *   * War with 'soviet' (Bolsheviks).
+     *   * War with 'taurida' (Soviet Crimea).
+     *   * Later neutral/allied with 'white'.
+     */
+    crimean: {
+      id: "crimean",
+      name: "Crimean Regional Government",
+      combatName: "Crimean Forces",
+      flag: "/images/flags/crimean.svg",
+      color: "#4169E1",
+      adjective: "Crimean",
+      firstArmyGroupName: "Crimean Army Group",
+      divisionPrefix: "Crimean",
+      selectable: false,
+      coreRegions: [
+                'RU-Cr',
+              ],
+    },
 };
