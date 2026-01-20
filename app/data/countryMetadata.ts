@@ -430,18 +430,55 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
               'RU-ROS', 'RU-VGG', 'RU-AST',
             ],
   },
-  kuban_soviet: {
-    id: "kuban_soviet",
-    name: "Kuban Soviet Republic",
-    combatName: "Kuban Red Army",
-    flag: "/images/flags/kuban_soviet.svg",
-    color: "#D32F2F",
-    adjective: "Kuban Soviet",
-    firstArmyGroupName: "Kuban Revolutionary Army",
-    divisionPrefix: "Kuban Red Guard",
-    selectable: false,
-    coreRegions: [
-              'RU-KDA', 'RU-AD',
-            ],
-  },
-};
+   kuban_soviet: {
+     id: "kuban_soviet",
+     name: "Kuban Soviet Republic",
+     combatName: "Kuban Red Army",
+     flag: "/images/flags/kuban_soviet.svg",
+     color: "#D32F2F",
+     adjective: "Kuban Soviet",
+     firstArmyGroupName: "Kuban Revolutionary Army",
+     divisionPrefix: "Kuban Red Guard",
+     selectable: false,
+     coreRegions: [
+               'RU-KDA', 'RU-AD',
+             ],
+   },
+   /**
+    * Mountain Autonomous Soviet Socialist Republic (1921–1924)
+    * Historical Context: Established on January 20, 1921, after the Red Army conquered the Northern Caucasus 
+    * during the Russian Civil War. Created from parts of the former Kuban and Terek Oblasts. The republic 
+    * comprised six okrugs (districts): Balkar, Chechen, Kabardian, Karachay, Nazran (Ingushetia), and 
+    * Vladikavkaz (Ossetia). Capital: Vladikavkaz. Population: approximately 800,000.
+    * 
+    * The Mountain ASSR was short-lived, dissolving on July 7, 1924, when its territory was partitioned into
+    * separate autonomous oblasts (North Ossetian AO, Ingush AO, Chechen AO, Kabardin-Balkar AO, etc.) as
+    * part of Soviet administrative restructuring.
+    * 
+    * Relationships: 
+    * - War with 'white' (ongoing Civil War resistance in the Caucasus until 1922).
+    * - Opposed by various anti-Bolshevik forces and White Army remnants.
+    * - Part of the Soviet system but competing with regional autonomy movements.
+    * 
+    * Initial State Suggestion:
+    * - Appears in 1921 (after Red Army consolidation of the Caucasus).
+    * - Core regions: RU-CE (Chechen), RU-KB (Kabardian), RU-KK (Karachay), RU-IN (Ingush), RU-SE (North Ossetia).
+    * - Starting units: Moderate Red Army strength reflecting Soviet consolidation.
+    * - Should be at war with 'white' (historical Civil War context).
+    * - Dissolves or transfers to Soviet control in 1924 (later implementation for dynamic gameplay).
+    */
+   mountainassr: {
+     id: "mountainassr",
+     name: "Mountain Autonomous Soviet Socialist Republic",
+     combatName: "Mountain Red Army",
+     flag: "/images/flags/mountainassr.svg",
+     color: "#B71C1C",
+     adjective: "Mountain Soviet",
+     firstArmyGroupName: "Mountain Revolutionary Army",
+     divisionPrefix: "Mountain Guard",
+     selectable: false,
+     coreRegions: [
+               'RU-CE', 'RU-KB', 'RU-KK', 'RU-IN', 'RU-SE', 'RU-AD',
+             ],
+   },
+ };

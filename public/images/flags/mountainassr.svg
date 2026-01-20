@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600">
+  <!-- Red background (Soviet standard) -->
+  <rect width="900" height="600" fill="#B71C1C"/>
+  
+  <!-- Gold hammer and sickle (Soviet symbols) -->
+  <g transform="translate(150, 150)" fill="#FFD700" stroke="#FFD700" stroke-width="8">
+    <!-- Hammer -->
+    <rect x="20" y="90" width="80" height="20" rx="5"/>
+    <rect x="95" y="50" width="20" height="60" rx="5"/>
+    <circle cx="115" cy="40" r="25"/>
+    
+    <!-- Sickle -->
+    <path d="M 200 80 Q 230 80 240 110 Q 235 140 200 150" fill="none" stroke="#FFD700" stroke-width="24" stroke-linecap="round"/>
+    <circle cx="205" cy="75" r="12" fill="#FFD700"/>
+  </g>
+  
+  <!-- Stylized mountain peaks (representing the Northern Caucasus) -->
+  <g transform="translate(550, 200)" fill="#FFD700" opacity="0.8">
+    <!-- Left peak -->
+    <polygon points="0,150 40,0 80,150"/>
+    <!-- Center peak (tallest) -->
+    <polygon points="60,150 120,0 180,150"/>
+    <!-- Right peak -->
+    <polygon points="140,150 180,50 220,150"/>
+  </g>
+  
+  <!-- Five-pointed star (symbol of Soviet republics) centered top -->
+  <g transform="translate(450, 80)">
+    <polygon points="0,-40 10,-12 40,-12 15,8 25,35 0,15 -25,35 -15,8 -40,-12 -10,-12" fill="#FFD700" stroke="#FFD700" stroke-width="2"/>
+  </g>
+  
+  <!-- Decorative border -->
+  <rect x="10" y="10" width="880" height="580" fill="none" stroke="#FFD700" stroke-width="3"/>
+</svg>
