@@ -72,6 +72,17 @@ export default function MapToolCanvas({
     return names;
   }, [geojson]);
 
+  // Generate a unique key for forcing layer updates when core regions change
+  // This ensures MapLibre detects changes in core region mode
+  const layerKey = useMemo(() => {
+    if (editMode === 'core') {
+      // Create a hash of the core regions for the selected country
+      const coreRegionsList = (coreRegions[selectedCountry] || []).sort().join(',');
+      return `${editMode}-${selectedCountry}-${coreRegionsList}`;
+    }
+    return editMode;
+  }, [editMode, coreRegions, selectedCountry]);
+
   // Create fill color expression based on ownership or core regions
   const fillColorExpression = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -228,20 +239,26 @@ export default function MapToolCanvas({
   // Handle mouse down
   const handleMouseDown = useCallback(
     (e: MapLayerMouseEvent) => {
+      console.log('[MapToolCanvas] handleMouseDown', { isPaintEnabled, button: e.originalEvent.button, features: e.features });
       if (isPaintEnabled) {
         if (e.originalEvent.button === 0) {
           // Left mouse button in paint mode - start painting
           setIsPainting(true);
           const features = e.features;
+          console.log('[MapToolCanvas] features:', features);
           if (features && features.length > 0) {
             const shapeId = features[0].properties?.shapeID;
+            console.log('[MapToolCanvas] shapeId:', shapeId);
             if (shapeId) {
+              console.log('[MapToolCanvas] calling onRegionPaint with:', shapeId);
               onRegionPaint(shapeId);
             }
+          } else {
+            console.log('[MapToolCanvas] NO FEATURES FOUND IN EVENT');
           }
         } else if (e.originalEvent.button === 2) {
           // Right mouse button in paint mode - start panning
-          setIsPanning(true);
+          setIsPainting(true);
           setPanStart({
             x: e.originalEvent.clientX,
             y: e.originalEvent.clientY,
@@ -297,6 +314,21 @@ export default function MapToolCanvas({
     }
   }, [mapLoaded, hoveredRegion, showAdjacency, adjacency]);
 
+  // Force update paint property when core regions change
+  // This directly calls MapLibre's setPaintProperty to ensure visual updates
+  useEffect(() => {
+    if (!mapLoaded || !mapRef.current) return;
+
+    const map = mapRef.current.getMap();
+    
+    // Check if the layer exists
+    if (!map.getLayer("regions-fill")) return;
+
+    // Update the fill-color paint property directly
+    map.setPaintProperty("regions-fill", "fill-color", fillColorExpression);
+  }, [mapLoaded, fillColorExpression]);
+
+
   const mapStyle = useMemo(
     () => ({
       version: 8 as const,
@@ -315,11 +347,13 @@ export default function MapToolCanvas({
   );
 
   // Memoize paint objects to ensure proper updates
+  // Include all dependencies directly to ensure paint object recreates when any relevant state changes
+  // This fixes the issue where MapLibre Layer doesn't detect changes in core region mode
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fillPaint: any = useMemo(() => ({
     "fill-color": fillColorExpression,
     "fill-opacity": 0.8,
-  }), [fillColorExpression]);
+  }), [fillColorExpression, ownership, editMode, coreRegions, selectedCountry]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const linePaint: any = useMemo(() => ({

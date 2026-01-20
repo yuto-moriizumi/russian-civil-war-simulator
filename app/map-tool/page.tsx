@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import type { FeatureCollection } from "geojson";
 import { CountryId } from "../types/game";
 import MapToolCanvas from "./components/MapToolCanvas";
@@ -38,6 +38,10 @@ export default function MapToolPage() {
   // Track painted regions in current drag session to prevent toggle flickering
   const [, setPaintedRegionsInDrag] = useState<Set<string>>(new Set());
 
+  // Prevent double-processing of the same paint action (React strict mode issue)
+  const lastPaintAction = useRef<{ regionId: string; timestamp: number } | null>(null);
+
+
   // Load GeoJSON handler
   const handleGeoJSONLoad = useCallback(
     (data: FeatureCollection) => {
@@ -68,7 +72,24 @@ export default function MapToolPage() {
   // Paint handler
   const handleRegionPaint = useCallback(
     (regionId: string) => {
-      if (!selectedCountry) return;
+      console.log('[handleRegionPaint] called with:', { regionId, selectedCountry, editMode });
+      console.log('[handleRegionPaint] lastPaintAction.current:', lastPaintAction.current);
+      
+      // Prevent double-processing within 100ms (React Strict Mode can cause double calls)
+      const now = Date.now();
+      if (lastPaintAction.current && 
+          lastPaintAction.current.regionId === regionId && 
+          now - lastPaintAction.current.timestamp < 100) {
+        console.log('[handleRegionPaint] skipping double-call within 100ms', now - lastPaintAction.current.timestamp, 'ms ago');
+        return;
+      }
+      lastPaintAction.current = { regionId, timestamp: now };
+      console.log('[handleRegionPaint] set lastPaintAction.current to:', lastPaintAction.current);
+      
+      if (!selectedCountry) {
+        console.log('[handleRegionPaint] no selectedCountry, returning');
+        return;
+      }
 
       if (editMode === 'ownership') {
         setOwnership((prev) => {
@@ -81,35 +102,40 @@ export default function MapToolPage() {
           return updated;
         });
       } else if (editMode === 'core') {
-        // Prevent toggling the same region multiple times in one drag session
+        console.log('[handleRegionPaint] core mode');
+        
+        // Check if already painted in this drag session
         setPaintedRegionsInDrag((prevPainted) => {
           if (prevPainted.has(regionId)) {
-            // Already painted in this drag session, skip
+            console.log('[handleRegionPaint] region already painted in drag, skipping');
             return prevPainted;
           }
-
-          // Mark this region as painted in current drag
+          // Mark as painted
           const newPainted = new Set(prevPainted);
           newPainted.add(regionId);
-
-          // Update core regions
-          setCoreRegions((prev) => {
-            const updated = { ...prev };
-            const countryRegions = updated[selectedCountry] || [];
-            
-            // Toggle core region
-            if (countryRegions.includes(regionId)) {
-              // Remove from core regions
-              updated[selectedCountry] = countryRegions.filter(r => r !== regionId);
-            } else {
-              // Add to core regions
-              updated[selectedCountry] = [...countryRegions, regionId];
-            }
-            
-            return updated;
-          });
-
           return newPainted;
+        });
+        
+        // Update core regions OUTSIDE of setState callback to avoid multiple calls
+        setCoreRegions((prev) => {
+          console.log('[setCoreRegions] prev:', prev, 'selectedCountry:', selectedCountry);
+          const updated = { ...prev };
+          const countryRegions = updated[selectedCountry] || [];
+          console.log('[setCoreRegions] countryRegions:', countryRegions);
+          
+          // Toggle core region
+          if (countryRegions.includes(regionId)) {
+            // Remove from core regions
+            console.log('[setCoreRegions] removing region from core');
+            updated[selectedCountry] = countryRegions.filter(r => r !== regionId);
+          } else {
+            // Add to core regions
+            console.log('[setCoreRegions] adding region to core');
+            updated[selectedCountry] = [...countryRegions, regionId];
+          }
+          console.log('[setCoreRegions] updated:', updated);
+          
+          return updated;
         });
       }
     },
