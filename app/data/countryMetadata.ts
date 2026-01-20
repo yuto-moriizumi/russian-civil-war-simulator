@@ -943,18 +943,57 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
      *   * War with 'taurida' (Soviet Crimea).
      *   * Later neutral/allied with 'white'.
      */
-    crimean: {
-      id: "crimean",
-      name: "Crimean Regional Government",
-      combatName: "Crimean Forces",
-      flag: "/images/flags/crimean.svg",
-      color: "#4169E1",
-      adjective: "Crimean",
-      firstArmyGroupName: "Crimean Army Group",
-      divisionPrefix: "Crimean",
-      selectable: false,
-      coreRegions: [
-                'RU-Cr',
-              ],
-    },
+  crimean: {
+    id: "crimean",
+    name: "Crimean Regional Government",
+    combatName: "Crimean Forces",
+    flag: "/images/flags/crimean.svg",
+    color: "#4169E1",
+    adjective: "Crimean",
+    firstArmyGroupName: "Crimean Army Group",
+    divisionPrefix: "Crimean",
+    selectable: false,
+    coreRegions: [
+      'RU-Cr',
+    ],
+  },
+  /**
+   * North Caucasian Soviet Republic (July 1918 - January 1919)
+   * Historical Context: Short-lived Soviet republic created by merging the Kuban-Black Sea,
+   * Stavropol, and Terek Soviet republics to consolidate Bolshevik rule in the North Caucasus.
+   * Its capital moved from Yekaterinodar (Krasnodar) to Pyatigorsk after White advances.
+   * 
+   * Territories: Northern Caucasus including Kuban, Stavropol, and Terek regions.
+   * 
+   * Key Historical Events:
+   * - July 7, 1918: Established as part of the Russian SFSR
+   * - August 1918: Yekaterinodar captured by White forces, capital moved to Pyatigorsk
+   * - Late 1918: White Army advances capture most territory
+   * - January 11, 1919: Republic abolished by All-Russian Central Executive Committee
+   * 
+   * Diplomatic & Military Context:
+   * - Aligned with Soviet Russia as an RSFSR republic
+   * - War with White Volunteer Army (Denikin) and anti-Bolshevik Cossack forces
+   * - Hostile to the Mountainous Republic of the Northern Caucasus
+   * 
+   * Game Configuration Notes:
+   * - Should appear around July 1918 via event or mid-game start
+   * - War with 'white', 'kuban', 'don', and 'mrnc' recommended
+   * - Suggested units: 4-7 divisions of Red Guards with modest strength
+   * - Core regions: Kuban, Stavropol, and Terek Soviet territories
+   */
+  northcaucasian: {
+    id: "northcaucasian",
+    name: "North Caucasian Soviet Republic",
+    combatName: "North Caucasian Reds",
+    flag: "/images/flags/northcaucasian.svg",
+    color: "#DD0000",
+    adjective: "North Caucasian Soviet",
+    firstArmyGroupName: "North Caucasian Red Army",
+    divisionPrefix: "Caucasian Red Guard",
+    selectable: false,
+    coreRegions: [
+      'RU-KDA', 'RU-AD', 'RU-STA', 'RU-CE', 'RU-IN', 'RU-KB', 'RU-SE',
+    ],
+  },
 };
