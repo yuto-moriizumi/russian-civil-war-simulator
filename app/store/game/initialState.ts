@@ -31,6 +31,7 @@ export const initialGameState: GameState = {
     productionQueues: {
        soviet: [],
        white: [],
+       siberian: [],
        finland: [],
        ukraine: [],
        don: [],
@@ -89,8 +90,9 @@ export const initialGameState: GameState = {
    scheduledEvents: scheduledEvents, // Historical events
    countryBonuses: {
      soviet: getInitialCountryBonuses(),
-     white: getInitialCountryBonuses(),
-     finland: getInitialCountryBonuses(),
+      white: getInitialCountryBonuses(),
+      siberian: getInitialCountryBonuses(),
+      finland: getInitialCountryBonuses(),
      ukraine: getInitialCountryBonuses(),
      don: getInitialCountryBonuses(),
      fswr: getInitialCountryBonuses(),
