@@ -883,7 +883,6 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
               ],
     },
     /**
-    /**
      * Crimean People's Republic (1917-1918)
      * Historical Context: A short-lived independent republic declared by the Crimean Tatars 
      * in the wake of the Russian Revolution. It was one of the first attempts to create a 
