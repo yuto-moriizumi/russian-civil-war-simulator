@@ -67,6 +67,7 @@ export const initialGameState: GameState = {
               adr: [],
               armenia: [],
               crimean: [],
+              crimea: [],
             },
 
     relationships: [
@@ -125,5 +126,6 @@ export const initialGameState: GameState = {
        adr: getInitialCountryBonuses(),
        armenia: getInitialCountryBonuses(),
        crimean: getInitialCountryBonuses(),
+       crimea: getInitialCountryBonuses(),
      },
 };
