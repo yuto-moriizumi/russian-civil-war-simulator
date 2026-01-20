@@ -513,6 +513,13 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     * - Mid Game (June 1918-Nov 1919): Shift to supporting White Army against Reds, maintain territorial control
     * - Late Game (Nov 1919-Mar 1920): Historical defeat is inevitable; preserve forces, consider evacuation
     * - Victory Conditions: Control Kuban core regions + resist Soviet control until Nov 1919 (historical survival)
+    * - Alternative Victory: Build alliances to resist Soviet pressure
+    * 
+    * Military Unit Recommendations:
+    * - Style: Professional national army (similar to Polish or Scandinavian armies)
+    * - Division types: Infantry, Mountain Infantry (Caucasus terrain), Artillery
+    * - Starting deployment: Distributed across major regions for defense
+    * - Notable units: Georgian National Guard (elite), Tbilisi garrison, frontier defense forces
     */
    kuban: {
     id: "kuban",
@@ -1001,58 +1008,103 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
      *   * War with 'taurida' (Soviet Crimea).
      *   * Later neutral/allied with 'white'.
      */
-  crimean: {
-    id: "crimean",
-    name: "Crimean Regional Government",
-    combatName: "Crimean Forces",
-    flag: "/images/flags/crimean.svg",
-    color: "#4169E1",
-    adjective: "Crimean",
-    firstArmyGroupName: "Crimean Army Group",
-    divisionPrefix: "Crimean",
-    selectable: false,
-    coreRegions: [
-      'RU-Cr',
-    ],
-  },
-  /**
-   * North Caucasian Soviet Republic (July 1918 - January 1919)
-   * Historical Context: Short-lived Soviet republic created by merging the Kuban-Black Sea,
-   * Stavropol, and Terek Soviet republics to consolidate Bolshevik rule in the North Caucasus.
-   * Its capital moved from Yekaterinodar (Krasnodar) to Pyatigorsk after White advances.
-   * 
-   * Territories: Northern Caucasus including Kuban, Stavropol, and Terek regions.
-   * 
-   * Key Historical Events:
-   * - July 7, 1918: Established as part of the Russian SFSR
-   * - August 1918: Yekaterinodar captured by White forces, capital moved to Pyatigorsk
-   * - Late 1918: White Army advances capture most territory
-   * - January 11, 1919: Republic abolished by All-Russian Central Executive Committee
-   * 
-   * Diplomatic & Military Context:
-   * - Aligned with Soviet Russia as an RSFSR republic
-   * - War with White Volunteer Army (Denikin) and anti-Bolshevik Cossack forces
-   * - Hostile to the Mountainous Republic of the Northern Caucasus
-   * 
-   * Game Configuration Notes:
-   * - Should appear around July 1918 via event or mid-game start
-   * - War with 'white', 'kuban', 'don', and 'mrnc' recommended
-   * - Suggested units: 4-7 divisions of Red Guards with modest strength
-   * - Core regions: Kuban, Stavropol, and Terek Soviet territories
-   */
-  northcaucasian: {
-    id: "northcaucasian",
-    name: "North Caucasian Soviet Republic",
-    combatName: "North Caucasian Reds",
-    flag: "/images/flags/northcaucasian.svg",
-    color: "#DD0000",
-    adjective: "North Caucasian Soviet",
-    firstArmyGroupName: "North Caucasian Red Army",
-    divisionPrefix: "Caucasian Red Guard",
-    selectable: false,
-    coreRegions: [
-      'RU-KDA', 'RU-AD', 'RU-STA', 'RU-CE', 'RU-IN', 'RU-KB', 'RU-SE',
-    ],
-  },
+    crimean: {
+      id: "crimean",
+      name: "Crimean Regional Government",
+      combatName: "Crimean Forces",
+      flag: "/images/flags/crimean.svg",
+      color: "#4169E1",
+      adjective: "Crimean",
+      firstArmyGroupName: "Crimean Army Group",
+      divisionPrefix: "Crimean",
+      selectable: false,
+      coreRegions: [
+                'RU-Cr',
+              ],
+    },
+    /**
+     * North Caucasian Soviet Republic (July 1918 - January 1919)
+     * Historical Context: Short-lived Soviet republic created by merging the Kuban-Black Sea,
+     * Stavropol, and Terek Soviet republics to consolidate Bolshevik rule in the North Caucasus.
+     * Its capital moved from Yekaterinodar (Krasnodar) to Pyatigorsk after White advances.
+     * 
+     * Territories: Northern Caucasus including Kuban, Stavropol, and Terek regions.
+     * 
+     * Key Historical Events:
+     * - July 7, 1918: Established as part of the Russian SFSR
+     * - August 1918: Yekaterinodar captured by White forces, capital moved to Pyatigorsk
+     * - Late 1918: White Army advances capture most territory
+     * - January 11, 1919: Republic abolished by All-Russian Central Executive Committee
+     * 
+     * Diplomatic & Military Context:
+     * - Aligned with Soviet Russia as an RSFSR republic
+     * - War with White Volunteer Army (Denikin) and anti-Bolshevik Cossack forces
+     * - Hostile to the Mountainous Republic of the Northern Caucasus
+     * 
+     * Game Configuration Notes:
+     * - Should appear around July 1918 via event or mid-game start
+     * - War with 'white', 'kuban', 'don', and 'mrnc' recommended
+     * - Suggested units: 4-7 divisions of Red Guards with modest strength
+     * - Core regions: Kuban, Stavropol, and Terek Soviet territories
+     */
+    northcaucasian: {
+      id: "northcaucasian",
+      name: "North Caucasian Soviet Republic",
+      combatName: "North Caucasian Reds",
+      flag: "/images/flags/northcaucasian.svg",
+      color: "#DD0000",
+      adjective: "North Caucasian Soviet",
+      firstArmyGroupName: "North Caucasian Red Army",
+      divisionPrefix: "Caucasian Red Guard",
+      selectable: false,
+      coreRegions: [
+        'RU-KDA', 'RU-AD', 'RU-STA', 'RU-CE', 'RU-IN', 'RU-KB', 'RU-SE',
+      ],
+    },
+    /**
+     * Transcaspian Provisional Government (1918-1920)
+     * Historical Context: Anti-Bolshevik administration formed in Ashgabat on July 14, 1918, 
+     * following a revolt by railway workers on the Trans-Caspian Railway. Initially led by 
+     * Mensheviks and Socialist-Revolutionaries, it was supported by the British Malleson Mission.
+     * 
+     * Key Historical Events:
+     * - July 14, 1918: Formation of the Ashkhabad Executive Committee after anti-Bolshevik revolt.
+     * - September 20, 1918: Execution of the 26 Baku Commissars under Fyodor Funtikov's leadership.
+     * - November 1918: Formally took the name Transcaspian Provisional Government.
+     * - January 1919: Merged with Denikin's forces to form the White Turkestan Army.
+     * - February 1920: Final collapse after British withdrawal and Red Army offensive.
+     * 
+     * Territories: Controlled the Transcaspian Oblast (modern Turkmenistan), including 
+     * Ashgabat (capital), Krasnovodsk, and Merv.
+     * 
+     * Diplomatic Relations:
+     * - War with: Soviet Russia (Bolsheviks in Tashkent).
+     * - Allied with: British Empire (Malleson Mission), White Army (Armed Forces of South Russia).
+     * - Recognition: Supported by the British, later integrated into the wider White movement.
+     * 
+     * Military Strength: Initially weak (around 1000 armed men), bolstered by British Anglo-Indian 
+     * troops and later by Denikin's officers.
+     * 
+     * Game Configuration Recommendations:
+     * - Should appear around July 1918.
+     * - Core Regions: TM-A (Ahal/Ashgabat), TM-B (Balkan/Krasnovodsk), TM-M (Mary/Merv).
+     * - Starting Relationships:
+     *   * War with 'soviet'.
+     *   * Allied with 'foreign' (British support).
+     *   * Later allied/subordinate to 'white'.
+     */
+    transcaspia: {
+      id: "transcaspia",
+      name: "Transcaspian Provisional Government",
+      combatName: "Transcaspian Army",
+      flag: "/images/flags/transcaspia.svg",
+      color: "#D2B48C",
+      adjective: "Transcaspian",
+      firstArmyGroupName: "Transcaspian Army Group",
+      divisionPrefix: "Transcaspian",
+      selectable: false,
+      coreRegions: [
+        'TM-A', 'TM-B', 'TM-M',
+      ],
+    },
 };
-

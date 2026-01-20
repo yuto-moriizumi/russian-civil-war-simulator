@@ -70,25 +70,26 @@ export const initialGameState: GameState = {
     crimean: [],
     crimea: [],
     northcaucasian: [],
+    transcaspia: [],
   },
 
-    relationships: [
-     { fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy' },
-     { fromCountry: 'soviet', toCountry: 'iskolat', type: 'autonomy' },
-     { fromCountry: 'germany', toCountry: 'poland', type: 'autonomy' },
-     { fromCountry: 'germany', toCountry: 'romania', type: 'war' },
-     { fromCountry: 'germany', toCountry: 'bulgaria', type: 'military_access' },
-     // Ottoman Empire relationships (November 1917)
-     { fromCountry: 'ottoman', toCountry: 'germany', type: 'military_access' },
-     { fromCountry: 'ottoman', toCountry: 'austriahungary', type: 'military_access' },
-     { fromCountry: 'ottoman', toCountry: 'greece', type: 'war' },
-     // Serbia relationships
-     { fromCountry: 'serbia', toCountry: 'austriahungary', type: 'war' },
-     { fromCountry: 'serbia', toCountry: 'germany', type: 'war' }
-   ], // Initial relationships (autonomy = puppet state)
-   mapMode: 'country', // Default map mode
-   regionCentroids: {}, // Will be loaded asynchronously
-   scheduledEvents: scheduledEvents, // Historical events
+  relationships: [
+    { fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy' },
+    { fromCountry: 'soviet', toCountry: 'iskolat', type: 'autonomy' },
+    { fromCountry: 'germany', toCountry: 'poland', type: 'autonomy' },
+    { fromCountry: 'germany', toCountry: 'romania', type: 'war' },
+    { fromCountry: 'germany', toCountry: 'bulgaria', type: 'military_access' },
+    // Ottoman Empire relationships (November 1917)
+    { fromCountry: 'ottoman', toCountry: 'germany', type: 'military_access' },
+    { fromCountry: 'ottoman', toCountry: 'austriahungary', type: 'military_access' },
+    { fromCountry: 'ottoman', toCountry: 'greece', type: 'war' },
+    // Serbia relationships
+    { fromCountry: 'serbia', toCountry: 'austriahungary', type: 'war' },
+    { fromCountry: 'serbia', toCountry: 'germany', type: 'war' }
+  ], // Initial relationships (autonomy = puppet state)
+  mapMode: 'country', // Default map mode
+  regionCentroids: {}, // Will be loaded asynchronously
+  scheduledEvents: scheduledEvents, // Historical events
   countryBonuses: {
     soviet: getInitialCountryBonuses(),
     white: getInitialCountryBonuses(),
@@ -131,5 +132,6 @@ export const initialGameState: GameState = {
     crimean: getInitialCountryBonuses(),
     crimea: getInitialCountryBonuses(),
     northcaucasian: getInitialCountryBonuses(),
+    transcaspia: getInitialCountryBonuses(),
   },
 };
