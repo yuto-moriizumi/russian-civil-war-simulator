@@ -123,15 +123,14 @@ export default function MapToolPage() {
           const countryRegions = updated[selectedCountry] || [];
           console.log('[setCoreRegions] countryRegions:', countryRegions);
           
-          // Toggle core region
-          if (countryRegions.includes(regionId)) {
-            // Remove from core regions
-            console.log('[setCoreRegions] removing region from core');
-            updated[selectedCountry] = countryRegions.filter(r => r !== regionId);
-          } else {
+          // Add to core regions (don't remove if already present)
+          if (!countryRegions.includes(regionId)) {
             // Add to core regions
             console.log('[setCoreRegions] adding region to core');
             updated[selectedCountry] = [...countryRegions, regionId];
+          } else {
+            // Already a core region, do nothing
+            console.log('[setCoreRegions] region already in core, skipping');
           }
           console.log('[setCoreRegions] updated:', updated);
           
