@@ -63,6 +63,7 @@ export const initialGameState: GameState = {
             bpr: [],
             tdfr: [],
             georgia: [],
+            mrnc: [],
           },
 
     relationships: [
@@ -117,5 +118,6 @@ export const initialGameState: GameState = {
        bpr: getInitialCountryBonuses(),
        tdfr: getInitialCountryBonuses(),
        georgia: getInitialCountryBonuses(),
+       mrnc: getInitialCountryBonuses(),
      },
 };

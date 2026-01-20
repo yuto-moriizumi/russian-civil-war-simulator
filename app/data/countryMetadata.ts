@@ -636,16 +636,16 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
     * - Core regions based on historically claimed territories during 1918
     * - Flag: White-red-white tricolor (historically accurate for 1918-1919 period)
     */
-   bpr: {
-     id: "bpr",
-     name: "Belarusian People's Republic",
-     combatName: "Belarusian National Guard",
-     flag: "/images/flags/bpr.svg",
-     color: "#E63946",
-     adjective: "Belarusian",
-     firstArmyGroupName: "Belarusian National Army",
-     divisionPrefix: "Belarusian Guard",
-     selectable: false,
+    bpr: {
+      id: "bpr",
+      name: "Belarusian People's Republic",
+      combatName: "Belarusian National Guard",
+      flag: "/images/flags/bpr.svg",
+      color: "#E63946",
+      adjective: "Belarusian",
+      firstArmyGroupName: "Belarusian National Army",
+      divisionPrefix: "Belarusian Guard",
+      selectable: false,
       coreRegions: [
                 'RU-BEL', 'RU-MOW', 'RU-OR',
               ],
@@ -736,6 +736,62 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
                 'GE-01', 'GE-02', 'GE-03', 'GE-04', 'GE-05', 'GE-06', 'GE-07', 'GE-08',
                 'GE-09', 'GE-10', 'GE-11', 'GE-12', 'GE-13', 'GE-14', 'GE-15', 'GE-16',
                 'GE-17', 'GE-18', 'GE-19', 'GE-20',
+              ],
+    },
+    /**
+     * Mountainous Republic of the Northern Caucasus (1918-1919)
+     * Historical Context: Short-lived independent state representing various North Caucasian ethnic groups
+     * during the Russian Civil War. Declared independence on May 11, 1918, and existed until 1919.
+     * 
+     * Territories: Encompassed Terek Oblast and Dagestan Oblast regions, including lands of:
+     * - Chechens, Circassians, Ossetians, Dagestanis, Ingush, Abazins, Balkars, Karachays, Kumyks
+     * 
+     * Historical Facts:
+     * - Founded: May 11, 1918
+     * - Capital: Initially Vladikavkaz, relocated to Temir-Khan-Shura (Buynaksk)
+     * - Recognized by: Ottoman Empire, Germany, Austria-Hungary, Bulgaria, Georgia, Azerbaijan, 
+     *   Ukrainian People's Republic, Kuban People's Republic, UK (briefly)
+     * - Collapsed: 1919 when Russian Volunteer Army (White Army) captured the territory
+     * - Legacy: Succeeded by North Caucasian Emirate (September 1919), then absorbed into Soviet Union
+     * 
+     * Military Strength: Moderate cavalry-based forces, primarily irregular units and local militia.
+     * Featured Caucasian cavalry regiments and Ottoman support (Ottoman pashas arrived with forces).
+     * Estimated fighting strength: 10,000-20,000 combatants at peak (1918).
+     * 
+     * Diplomatic Relations:
+     * - War with: Soviet Russia (Red Army), Russian White Army (Volunteer Army), internal conflicts
+     * - Allied with: Ottoman Empire (primary supporter until WW1 end), Germany, Austria-Hungary,
+     *   Central Powers during early period
+     * - Neutral/Trade with: Georgian Democratic Republic, Azerbaijan Democratic Republic
+     * - Leadership: Tapa Tchermoeff (Chairman), Rashid Khan Kaplanov (Second Chairman), 
+     *   Pshemakho Kotsev (Second PM after late 1918)
+     * 
+     * Game Configuration Notes:
+     * - Should appear mid-game (around May 1918) or via historical event
+     * - Moderate starting units reflecting historical strength (cavalry-heavy composition)
+     * - Should be AI-controlled (NPC) representing North Caucasian confederation
+     * - Historically captured by White Army in May 1919 - should be conquered or transformed
+     * - Core regions: Caucasus territories (Chechnya, Dagestan, North Ossetia areas)
+     * - Flag: Green and white horizontal stripes with 7 yellow stars (Islamic star symbols)
+     * 
+     * Strategic Notes for AI:
+     * - Early Game (May-Nov 1918): Consolidate control, resist Red expansion from north, Ottoman support
+     * - Mid Game (Dec 1918-May 1919): Struggle against White Army invasion, seek alliances
+     * - Late Game (May 1919+): Historical defeat inevitable; focus on survival/negotiation
+     * - Victory Condition: Maintain independence and control core regions through 1918-1919
+     */
+    mrnc: {
+      id: "mrnc",
+      name: "Mountainous Republic of the Northern Caucasus",
+      combatName: "Caucasian Mountain Forces",
+      flag: "/images/flags/mrnc.svg",
+      color: "#228B22",  // Forest green - extracted from flag's dominant color
+      adjective: "North Caucasian",
+      firstArmyGroupName: "Caucasian Defense Force",
+      divisionPrefix: "Mountain Guard",
+      selectable: false,
+      coreRegions: [
+                'RU-CE', 'RU-IN', 'RU-KB', 'RU-SE',  // Core North Caucasus regions (Chechen, Ingushetia, Kabardino-Balkaria, North Ossetia)
               ],
     },
 };
