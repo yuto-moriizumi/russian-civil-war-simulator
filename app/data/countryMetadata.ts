@@ -61,6 +61,46 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
               'RU-STA', 'RU-TOM', 'RU-TYU', 'RU-VGG', 'RU-VLG',
             ],
   },
+  /**
+   * Siberian Republic (July-November 1918)
+   * Historical Context: Short-lived regionalist state formed by the Provisional Siberian Government
+   * after the July 4, 1918 Declaration of Independence in Omsk. Intended to secure Siberian autonomy
+   * while coordinating anti-Bolshevik forces, it merged into the Provisional All-Russian Government
+   * on September 23, 1918 and formally disestablished on November 3, 1918.
+   *
+   * Key Historical Events:
+   * - July 4, 1918: Declaration of Independence of Siberia (Omsk)
+   * - July 1918: Provisional Siberian Government consolidates control
+   * - September 23, 1918: Joins Provisional All-Russian Government (Ufa Directory)
+   * - November 3, 1918: Formal self-liquidation, absorbed into White Russian State
+   *
+   * Diplomatic & Military Context:
+   * - Core anti-Bolshevik state, aligned with White Movement
+   * - Conflict with Soviet Russia and Red partisan forces in Siberia
+   * - Allied/merged with White Russian State under Kolchak
+   * - Relied on Siberian Army (tens of thousands of troops) and regional militias
+   *
+   * Game Configuration Notes:
+   * - Recommended appearance: mid-1918 via event (July 4, 1918)
+   * - Suggested war: 'soviet' (primary), neutral/ally with 'white' (merge event)
+   * - Suggested units: 6-10 divisions, moderate strength (reflecting Siberian Army)
+   * - Core regions: West and Central Siberia (Omsk, Tomsk, Novosibirsk, Krasnoyarsk, etc.)
+   */
+  siberian: {
+    id: "siberian",
+    name: "Siberian Republic",
+    combatName: "Siberian Army",
+    flag: "/images/flags/siberian.svg",
+    color: "#14604E",
+    adjective: "Siberian",
+    firstArmyGroupName: "Siberian Army Group",
+    divisionPrefix: "Siberian",
+    selectable: false,
+    coreRegions: [
+      'RU-ALT', 'RU-KEM', 'RU-KGN', 'RU-KK', 'RU-KYA', 'RU-AL', 'RU-NVS', 'RU-OMS',
+      'RU-TOM', 'RU-TYU', 'RU-IRK',
+    ],
+  },
   finland: {
     id: "finland",
     name: "Finland",
