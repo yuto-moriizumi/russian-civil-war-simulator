@@ -64,9 +64,10 @@ export const initialGameState: GameState = {
             tdfr: [],
             georgia: [],
              mrnc: [],
-             adr: [],
-             armenia: [],
-           },
+              adr: [],
+              armenia: [],
+              crimean: [],
+            },
 
     relationships: [
      { fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy' },
@@ -121,7 +122,8 @@ export const initialGameState: GameState = {
       tdfr: getInitialCountryBonuses(),
       georgia: getInitialCountryBonuses(),
       mrnc: getInitialCountryBonuses(),
-      adr: getInitialCountryBonuses(),
-      armenia: getInitialCountryBonuses(),
-    },
+       adr: getInitialCountryBonuses(),
+       armenia: getInitialCountryBonuses(),
+       crimean: getInitialCountryBonuses(),
+     },
 };
