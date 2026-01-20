@@ -739,6 +739,23 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
               ],
     },
     /**
+     * First Republic of Armenia (1918-1920)
+     */
+    armenia: {
+      id: "armenia",
+      name: "First Republic of Armenia",
+      combatName: "Armenian Army",
+      flag: "/images/flags/armenia.svg",
+      color: "#F2A800",
+      adjective: "Armenian",
+      firstArmyGroupName: "Armenian Army Group",
+      divisionPrefix: "Armenian Guard",
+      selectable: false,
+      coreRegions: [
+                'AM-01', 'AM-02', 'AM-03', 'AM-04',
+              ],
+    },
+    /**
      * Mountainous Republic of the Northern Caucasus (1918-1919)
      * Historical Context: Short-lived independent state representing various North Caucasian ethnic groups
      * during the Russian Civil War. Declared independence on May 11, 1918, and existed until 1919.
