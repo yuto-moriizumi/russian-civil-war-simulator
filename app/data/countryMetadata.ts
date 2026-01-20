@@ -474,18 +474,64 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
    * - Can be conquered by Soviet or Romanian forces
    * - Good for narrative missions about small states caught between powers
    */
-  moldavia: {
-    id: "moldavia",
-    name: "Moldavian Democratic Republic",
-    combatName: "Moldavian Militia",
-    flag: "/images/flags/moldavia.svg",
-    color: "#0057B7",
-    adjective: "Moldavian",
-    firstArmyGroupName: "Moldavian National Guard",
-    divisionPrefix: "Moldavian Guard",
-    selectable: false,
-    coreRegions: [
-              'MD-01', 'MD-02',
-            ],
-  },
-};
+   moldavia: {
+     id: "moldavia",
+     name: "Moldavian Democratic Republic",
+     combatName: "Moldavian Militia",
+     flag: "/images/flags/moldavia.svg",
+     color: "#0057B7",
+     adjective: "Moldavian",
+     firstArmyGroupName: "Moldavian National Guard",
+     divisionPrefix: "Moldavian Guard",
+     selectable: false,
+     coreRegions: [
+               'MD-01', 'MD-02',
+             ],
+   },
+   /**
+    * Belarusian People's Republic (1918-1919)
+    * Historical Context: Proclaimed March 6, 1918 (Second Charter), independence declared March 25, 1918 (Third Charter).
+    * Short-lived state during Russian Civil War that attempted to establish an independent Belarus.
+    * 
+    * Territories: Claimed Mogilev, Minsk, Grodno, Vilna, Vitebsk Governorates, and parts of Smolensk Governorate.
+    * Capital: Minsk (until December 1918 when captured by Red Army), then Vilnius and Hrodna.
+    * 
+    * Historical Facts:
+    * - Proclaimed: March 6, 1918 (Second Charter as autonomous)
+    * - Independence: March 25, 1918 (Third Charter, under German occupation)
+    * - Fall: December 10, 1918 (Red Army captured Minsk)
+    * - Went into exile in spring 1919, continued as government-in-exile for decades
+    * - Key figures: Jan Sierada, Jazep Losik, Anton Łuckievič, Stanisław Bułak-Bałachowicz
+    * 
+    * Military Strength: Modest - approximately 11,000 volunteers attempted to establish armed forces.
+    * Notable military action: Slutsk defence action (late 1920) against Bolsheviks.
+    * 
+    * Diplomatic Relations:
+    * - War with: Soviet Russia/RSFSR (primary enemy), briefly aligned against Bolsheviks
+    * - Recognition by: Estonia (October 1919), Finland (December 1919), Lithuania (November 1920)
+    * - Negotiated with: Soviet Russia (seeking recognition), Germany (under occupation)
+    * - Allied with: Ukrainian People's Republic (food supplies), anti-communist forces
+    * 
+    * Game Configuration Notes:
+    * - Should appear at game start (March 1918) or via historical event
+    * - Weak starting units reflecting historical weakness (mostly volunteer militia)
+    * - Should be AI-controlled (NPC) as a minor state
+    * - Likely to be crushed by Soviet forces historically
+    * - Core regions based on historically claimed territories during 1918
+    * - Flag: White-red-white tricolor (historically accurate for 1918-1919 period)
+    */
+   bpr: {
+     id: "bpr",
+     name: "Belarusian People's Republic",
+     combatName: "Belarusian National Guard",
+     flag: "/images/flags/bpr.svg",
+     color: "#E63946",
+     adjective: "Belarusian",
+     firstArmyGroupName: "Belarusian National Army",
+     divisionPrefix: "Belarusian Guard",
+     selectable: false,
+     coreRegions: [
+               'RU-BEL', 'RU-MOW', 'RU-OR',
+             ],
+   },
+ };
