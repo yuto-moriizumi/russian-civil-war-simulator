@@ -1,5 +1,4 @@
 /* eslint-disable max-lines */
-import { CountryId } from "../types/game";
 
 /**
  * Centralized country configuration
@@ -7,7 +6,7 @@ import { CountryId } from "../types/game";
  */
 
 export interface CountryMetadata {
-  id: CountryId;
+  id: string;
   /** Official/full country name */
   name: string;
   /** Display name for combat contexts (short, action-oriented) */
@@ -31,7 +30,7 @@ export interface CountryMetadata {
 /**
  * Complete country metadata registry
  */
-export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
+export const COUNTRY_METADATA = {
   soviet: {
     id: "soviet",
     name: "Soviet Russia",
@@ -1156,4 +1155,12 @@ export const COUNTRY_METADATA: Record<CountryId, CountryMetadata> = {
         'RS-01', 'RS-02', 'RS-03', 'RS-04', 'RS-05', 'RS-06', 'RS-07'
       ],
     },
-};
+} satisfies Record<string, CountryMetadata>;
+
+/**
+ * Helper function to get all country IDs with proper typing
+ * This is used throughout the codebase to iterate over countries
+ */
+export function getAllCountryIds(): (keyof typeof COUNTRY_METADATA)[] {
+  return Object.keys(COUNTRY_METADATA) as (keyof typeof COUNTRY_METADATA)[];
+}

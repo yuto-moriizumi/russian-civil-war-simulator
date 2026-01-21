@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useRef, useEffect } from 'react';
-import { COUNTRY_METADATA } from '../../data/countries';
+import { COUNTRY_METADATA, getAllCountryIds } from '../../data/countryMetadata';
 import { CountryId } from '../../types/game';
 
 interface CountryPaletteProps {
@@ -12,7 +12,16 @@ interface CountryPaletteProps {
 export default function CountryPalette({ selectedCountry, onSelectCountry }: CountryPaletteProps) {
   // Get paintable countries (include all countries for map tool)
   const countries = useMemo(() => {
-    return Object.values(COUNTRY_METADATA);
+    return getAllCountryIds().map(id => {
+      const meta = COUNTRY_METADATA[id];
+      return {
+        id,
+        name: meta.name,
+        color: meta.color,
+        flag: meta.flag,
+        adjective: meta.adjective
+      };
+    });
   }, []);
 
   // Combo-box state

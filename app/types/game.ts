@@ -1,7 +1,8 @@
 export type Screen = 'title' | 'countrySelect' | 'main' | 'mission';
 
-// All countries in the game - some playable, some neutral
-export type CountryId = 'soviet' | 'white' | 'siberian' | 'finland' | 'ukraine' | 'don' | 'fswr' | 'iskolat' | 'dkr' | 'neutral' | 'foreign' | 'germany' | 'bulgaria' | 'poland' | 'austriahungary' | 'romania' | 'greece' | 'ottoman' | 'serbia' | 'albania' | 'persia' | 'ukrainesoviet' | 'balticdutchy' | 'stavropol' | 'lithuania' | 'odessa' | 'terek' | 'taurida' | 'donsoviets' | 'kuban' | 'kuban_soviet' | 'moldavia' | 'bpr' | 'tdfr' | 'adr' | 'georgia' | 'mrnc' | 'armenia' | 'crimean' | 'crimea' | 'northcaucasian' | 'transcaspia' | 'shs';
+// All countries in the game - automatically derived from COUNTRY_METADATA keys
+// This eliminates merge conflicts when adding new countries
+export type CountryId = keyof typeof import('../data/countryMetadata').COUNTRY_METADATA;
 
 export interface Country {
   id: CountryId;

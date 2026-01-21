@@ -1,5 +1,5 @@
 import { CountryId } from '../types/game';
-import { COUNTRY_METADATA, CountryMetadata } from './countryMetadata';
+import { COUNTRY_METADATA, CountryMetadata, getAllCountryIds } from './countryMetadata';
 
 export type { CountryMetadata };
 export { COUNTRY_METADATA };
@@ -47,9 +47,11 @@ export function getDivisionPrefix(countryId: CountryId): string {
 export function getCountriesWithCoreRegion(regionId: string): CountryId[] {
   const countries: CountryId[] = [];
   
-  for (const [countryId, metadata] of Object.entries(COUNTRY_METADATA)) {
-    if (metadata.coreRegions?.includes(regionId)) {
-      countries.push(countryId as CountryId);
+  for (const countryId of getAllCountryIds()) {
+    const metadata = COUNTRY_METADATA[countryId];
+    const coreRegions = metadata.coreRegions as readonly string[] | undefined;
+    if (coreRegions?.includes(regionId)) {
+      countries.push(countryId);
     }
   }
   
@@ -79,11 +81,14 @@ export const COUNTRY_FLAGS: Record<CountryId, string> = Object.fromEntries(
  * Countries array for backward compatibility
  * This is derived from COUNTRY_METADATA and maintains compatibility with existing code
  */
-export const countries = Object.values(COUNTRY_METADATA).map(meta => ({
-  id: meta.id,
-  name: meta.name,
-  flag: meta.flag,
-  color: meta.color,
-  selectable: meta.selectable,
-  coreRegions: meta.coreRegions,
-}));
+export const countries = getAllCountryIds().map(countryId => {
+  const meta = COUNTRY_METADATA[countryId];
+  return {
+    id: countryId,
+    name: meta.name,
+    flag: meta.flag,
+    color: meta.color,
+    selectable: 'selectable' in meta ? meta.selectable : true,
+    coreRegions: meta.coreRegions,
+  };
+});
