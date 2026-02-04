@@ -36,8 +36,24 @@ export async function POST(request: NextRequest) {
       throw new Error('Could not find COUNTRY_METADATA variable declaration');
     }
 
-    const initializer = countryMetadataVar.getInitializer();
-    if (!initializer || !initializer.getKind || initializer.getKind() !== SyntaxKind.ObjectLiteralExpression) {
+    let initializer = countryMetadataVar.getInitializer();
+    if (!initializer) {
+      throw new Error('COUNTRY_METADATA has no initializer');
+    }
+
+    // Handle 'satisfies' expressions (e.g., {...} satisfies Record<string, CountryMetadata>)
+    if (initializer.getKind() === SyntaxKind.SatisfiesExpression) {
+      const satisfiesExpr = initializer.asKindOrThrow(SyntaxKind.SatisfiesExpression);
+      initializer = satisfiesExpr.getExpression();
+    }
+
+    // Handle 'as' expressions (e.g., {...} as const)
+    if (initializer.getKind() === SyntaxKind.AsExpression) {
+      const asExpr = initializer.asKindOrThrow(SyntaxKind.AsExpression);
+      initializer = asExpr.getExpression();
+    }
+
+    if (initializer.getKind() !== SyntaxKind.ObjectLiteralExpression) {
       throw new Error('COUNTRY_METADATA is not initialized with an object literal');
     }
 
