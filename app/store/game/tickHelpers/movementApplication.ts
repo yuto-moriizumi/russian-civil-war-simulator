@@ -5,6 +5,8 @@ import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 interface MovementApplicationContext {
   regions: Record<string, Region>;
   combats: ActiveCombat[];
+  /** Combats that completed this tick (their result is handled by applyFinishedCombats) */
+  finishedCombats?: ActiveCombat[];
   events: GameEvent[];
   notifications: NotificationItem[];
   relationships: Relationship[];
@@ -42,6 +44,19 @@ export function applyCompletedMovements(
     const { toRegion, fromRegion, divisions, owner } = movement;
     const to = nextRegions[toRegion];
     if (!to) return;
+
+    // If this movement was linked to a combat it initiated, the combat result
+    // is handled by applyFinishedCombats — skip normal movement application.
+    if (movement.pendingCombatId) {
+      const allKnownCombats = [...context.combats, ...(context.finishedCombats ?? [])];
+      const linkedCombat = allKnownCombats.find(c => c.id === movement.pendingCombatId);
+      if (linkedCombat) {
+        // Combat result (victor, surviving divisions) is applied by applyFinishedCombats.
+        // Nothing to do here for this movement.
+        return;
+      }
+      // Combat not found — fall through to normal logic (shouldn't normally happen)
+    }
 
     if (to.owner === owner) {
       // Friendly region - just add divisions

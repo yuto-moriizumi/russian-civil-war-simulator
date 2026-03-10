@@ -89,6 +89,12 @@ export interface Movement {
   departureTime: Date;
   arrivalTime: Date;
   owner: CountryId;
+  /**
+   * When set, this movement initiated a combat at the destination region.
+   * The movement's progress is paused while the referenced combat is active.
+   * Once the combat completes the movement is unpaused and arrives normally.
+   */
+  pendingCombatId?: string;
 }
 
 // Production queue item - represents a division being produced

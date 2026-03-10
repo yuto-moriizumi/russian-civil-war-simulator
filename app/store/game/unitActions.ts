@@ -1,5 +1,5 @@
-import { Movement, ArmyGroup } from '../../types/game';
-import { createDivision } from '../../utils/combat';
+import { Movement, ArmyGroup, ActiveCombat } from '../../types/game';
+import { createDivision, createActiveCombat } from '../../utils/combat';
 import { createGameEvent, createNotification, getOrdinalSuffix } from '../../utils/eventUtils';
 import { generateArmyGroupName } from '../../utils/armyGroupNaming';
 import { ARMY_GROUP_COLORS } from './initialState';
@@ -142,7 +142,7 @@ export const createUnitActions = (
   },
 
   moveUnits: (fromRegion: string, toRegion: string, count: number) => {
-    const { adjacency, regions, selectedCountry, dateTime, movingUnits, relationships } = get();
+    const { adjacency, regions, selectedCountry, dateTime, movingUnits, relationships, activeCombats, gameEvents, notifications } = get();
     if (!adjacency[fromRegion]?.includes(toRegion)) return;
     
     const from = regions[fromRegion];
@@ -191,7 +191,96 @@ export const createUnitActions = (
     
     const arrivalTime = new Date(dateTime);
     arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
-    
+
+    // Determine if this movement is heading into enemy territory
+    const isEnemy = targetOwner !== selectedCountry.id;
+    const theyGrantUs = relationships.find(r => r.fromCountry === targetOwner && r.toCountry === selectedCountry.id)?.type ?? 'neutral';
+    const weDeclared = relationships.find(r => r.fromCountry === selectedCountry.id && r.toCountry === targetOwner)?.type ?? 'neutral';
+    const hasAutonomy = theyGrantUs === 'autonomy' || weDeclared === 'autonomy';
+    const isHostile = isEnemy && !hasAutonomy && theyGrantUs !== 'military_access';
+
+    let newCombat: ActiveCombat | null = null;
+    let nextRegions = {
+      ...regions,
+      [fromRegion]: {
+        ...from,
+        divisions: from.divisions.slice(count),
+      },
+    };
+    let nextActiveCombats = activeCombats;
+    let nextGameEvents = gameEvents;
+    let nextNotifications = notifications;
+
+    if (isHostile) {
+      const existingCombat = activeCombats.find(c => c.regionId === toRegion && !c.isComplete);
+      if (existingCombat) {
+        // Reinforce attacker side of the existing combat
+        nextActiveCombats = activeCombats.map(c => {
+          if (c.id !== existingCombat.id) return c;
+          if (selectedCountry.id === c.attackerCountry) {
+            return {
+              ...c,
+              attackerDivisions: [...c.attackerDivisions, ...divisionsToMove],
+              initialAttackerCount: c.initialAttackerCount + divisionsToMove.length,
+              initialAttackerHp: c.initialAttackerHp + divisionsToMove.reduce((s, d) => s + d.hp, 0),
+            };
+          }
+          return c;
+        });
+        // Movement still travels but is linked to the existing combat
+        const newMovement: Movement = {
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          fromRegion,
+          toRegion,
+          divisions: divisionsToMove,
+          departureTime: new Date(dateTime),
+          arrivalTime,
+          owner: selectedCountry.id,
+          pendingCombatId: existingCombat.id,
+        };
+        set({
+          regions: nextRegions,
+          movingUnits: [...movingUnits, newMovement],
+          activeCombats: nextActiveCombats,
+        });
+        return;
+      }
+
+      // Check if there are defenders to fight
+      const defenderDivisions = to.divisions.filter(d => d.owner === to.owner);
+      if (defenderDivisions.length > 0) {
+        // Create combat immediately — divisions in transit are the attackers
+        newCombat = createActiveCombat(
+          toRegion,
+          to.name,
+          selectedCountry.id,
+          to.owner,
+          divisionsToMove,
+          defenderDivisions,
+          dateTime
+        );
+        // Clear defender divisions from region (absorbed into combat)
+        nextRegions = {
+          ...nextRegions,
+          [toRegion]: { ...to, divisions: [] },
+        };
+        nextActiveCombats = [...activeCombats, newCombat];
+
+        const battleEvent = createGameEvent(
+          'combat_victory',
+          `Battle for ${to.name} Begins!`,
+          `${selectedCountry.id === 'soviet' ? 'Soviet' : 'White'} forces (${divisionsToMove.length} divisions) are advancing on ${to.owner === 'soviet' ? 'Soviet' : 'White'} defenders (${defenderDivisions.length} divisions) at ${to.name}.`,
+          dateTime,
+          selectedCountry.id,
+          toRegion
+        );
+        nextGameEvents = [...gameEvents, battleEvent];
+        nextNotifications = [...notifications, createNotification(battleEvent, dateTime)];
+
+        console.log(`[COMBAT STARTED] ${selectedCountry.id} initiated combat at ${to.name} while divisions are in transit`);
+      }
+    }
+
     const newMovement: Movement = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       fromRegion,
@@ -200,19 +289,15 @@ export const createUnitActions = (
       departureTime: new Date(dateTime),
       arrivalTime,
       owner: selectedCountry.id,
+      ...(newCombat ? { pendingCombatId: newCombat.id } : {}),
     };
     
-    const newRegions = {
-      ...regions,
-      [fromRegion]: {
-        ...from,
-        divisions: from.divisions.slice(count),
-      },
-    };
-
     set({
-      regions: newRegions,
+      regions: nextRegions,
       movingUnits: [...movingUnits, newMovement],
+      activeCombats: nextActiveCombats,
+      gameEvents: nextGameEvents,
+      notifications: nextNotifications,
     });
   },
 

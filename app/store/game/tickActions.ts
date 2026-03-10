@@ -91,7 +91,7 @@ export const createTickActions = (
     );
     
     // Step 4: Process unit movements
-    const { remainingMovements, completedMovements } = processMovements(updatedMovingUnits, newDate);
+    const { remainingMovements, completedMovements } = processMovements(updatedMovingUnits, newDate, activeCombats);
 
     // Step 5: Process active combats
     const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements } = processCombats(activeCombats, newDate, regionsAfterEvents, adjacency, regionCentroids);
@@ -105,6 +105,7 @@ export const createTickActions = (
         {
           regions: regionsAfterEvents,
           combats: updatedCombats,
+          finishedCombats,
           events: [...gameEvents, ...newCombatEvents, ...productionEvents, ...scheduledEventEvents],
           notifications: [...notifications, ...newCombatNotifications, ...productionNotifications, ...scheduledEventNotifications],
           relationships: relationshipsAfterEvents,

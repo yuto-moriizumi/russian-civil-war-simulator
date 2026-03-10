@@ -1,6 +1,8 @@
-import { Movement } from '../../types/game';
+import { Movement, ActiveCombat } from '../../types/game';
 import { findBestMoveTowardEnemy } from '../../utils/pathfinding';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
+import { createActiveCombat } from '../../utils/combat';
+import { createGameEvent } from '../../utils/eventUtils';
 import { GameStore } from './types';
 
 /**
@@ -11,7 +13,7 @@ export function advanceArmyGroup(
   state: GameStore,
   setState: (partial: Partial<GameStore>) => void
 ) {
-  const { armyGroups, regions, adjacency, dateTime, movingUnits, selectedUnitRegion, relationships } = state;
+  const { armyGroups, regions, adjacency, dateTime, movingUnits, selectedUnitRegion, relationships, activeCombats, gameEvents } = state;
   
   const group = armyGroups.find(g => g.id === groupId);
   if (!group) return;
@@ -23,6 +25,8 @@ export function advanceArmyGroup(
   const newRegions = { ...regions };
   const movedRegions = new Set<string>();
   const targetRegions = new Set<string>();
+  const newCombats: ActiveCombat[] = [];
+  let newEvents = [...gameEvents];
 
   // Find all regions that contain divisions belonging to this army group
   // This allows divisions to be moved even after they've been relocated
@@ -90,6 +94,57 @@ export function advanceArmyGroup(
     const arrivalTime = new Date(dateTime);
     arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
 
+    // Determine if this movement is heading into enemy (hostile) territory
+    const dest = newRegions[nextStep];
+    const isEnemy = dest && dest.owner !== countryId;
+    const destTheyGrantUs = isEnemy
+      ? (relationships.find(r => r.fromCountry === dest.owner && r.toCountry === countryId)?.type ?? 'neutral')
+      : 'neutral';
+    const destWeDeclared = isEnemy
+      ? (relationships.find(r => r.fromCountry === countryId && r.toCountry === dest.owner)?.type ?? 'neutral')
+      : 'neutral';
+    const destAutonomy = destTheyGrantUs === 'autonomy' || destWeDeclared === 'autonomy';
+    const isHostile = isEnemy && !destAutonomy && destTheyGrantUs !== 'military_access';
+
+    let pendingCombatId: string | undefined;
+
+    if (isHostile && dest) {
+      const existingCombat = [...activeCombats, ...newCombats].find(c => c.regionId === nextStep && !c.isComplete);
+      if (existingCombat) {
+        // Reinforce the attacker side — no new combat needed
+        pendingCombatId = existingCombat.id;
+        console.log(`[ADVANCE] ${countryId} reinforcing existing combat at ${dest.name}`);
+      } else {
+        const defenderDivisions = dest.divisions.filter(d => d.owner === dest.owner);
+        if (defenderDivisions.length > 0) {
+          const newCombat = createActiveCombat(
+            nextStep,
+            dest.name,
+            countryId,
+            dest.owner,
+            divisionsToMove,
+            defenderDivisions,
+            dateTime
+          );
+          pendingCombatId = newCombat.id;
+          newCombats.push(newCombat);
+          // Clear defenders from region (absorbed into combat)
+          newRegions[nextStep] = { ...dest, divisions: [] };
+
+          const battleEvent = createGameEvent(
+            'combat_victory',
+            `Battle for ${dest.name} Begins!`,
+            `${countryId === 'soviet' ? 'Soviet' : 'White'} forces (${divisionsToMove.length} divisions) are advancing on ${dest.owner === 'soviet' ? 'Soviet' : 'White'} defenders (${defenderDivisions.length} divisions) at ${dest.name}.`,
+            dateTime,
+            countryId,
+            nextStep
+          );
+          newEvents = [...newEvents, battleEvent];
+          console.log(`[ADVANCE] ${countryId} initiated combat at ${dest.name} while divisions are in transit`);
+        }
+      }
+    }
+
     const newMovement: Movement = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${regionId}`,
       fromRegion: regionId,
@@ -98,6 +153,7 @@ export function advanceArmyGroup(
       departureTime: new Date(dateTime),
       arrivalTime,
       owner: countryId,
+      ...(pendingCombatId ? { pendingCombatId } : {}),
     };
 
     newMovements.push(newMovement);
@@ -126,6 +182,8 @@ export function advanceArmyGroup(
       regions: newRegions,
       movingUnits: [...movingUnits, ...newMovements],
       armyGroups: updatedArmyGroups,
+      activeCombats: [...activeCombats, ...newCombats],
+      gameEvents: newEvents,
       ...(shouldClearSelection && { selectedUnitRegion: null }),
     });
   }
