@@ -76,6 +76,8 @@ export function calculateMovingUnitMarkers(
 
     // Calculate current position based on progress
     const totalTime = movement.arrivalTime.getTime() - movement.departureTime.getTime();
+    // Guard against zero/negative totalTime (instant-arrival movements) to avoid NaN from 0/0
+    if (totalTime <= 0) return null;
     const elapsed = currentDateTime.getTime() - movement.departureTime.getTime();
     const progress = Math.min(1, Math.max(0, elapsed / totalTime));
     
