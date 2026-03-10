@@ -1,6 +1,6 @@
 import { ActiveCombat, GameEvent, NotificationItem, RegionState, Adjacency, Movement } from '../../../types/game';
 import { processCombatRound, shouldProcessCombatRound } from '../../../utils/combat';
-import { createGameEvent } from '../../../utils/eventUtils';
+import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 import { calculateDistance, calculateTravelTime } from '../../../utils/distance';
 
 interface CombatProcessingResult {
@@ -87,7 +87,34 @@ export function processCombats(
         );
         
         newCombatEvents.push(combatEvent);
-        // Notification removed - event still logged in EventsModal
+        newCombatNotifications.push(createNotification(combatEvent, currentDate));
+
+        // Also notify the relevant opposing side
+        if (attackerWon) {
+          // Notify the defender that they lost the region
+          const defenderLostEvent = createGameEvent(
+            'region_lost',
+            `${updatedCombat.regionName} Lost!`,
+            `${updatedCombat.attackerCountry === 'soviet' ? 'Soviet' : 'White'} forces captured ${updatedCombat.regionName}. Attackers lost ${attackerLosses} divisions. Defenders lost ${defenderLosses} divisions.`,
+            currentDate,
+            updatedCombat.defenderCountry,
+            updatedCombat.regionId
+          );
+          newCombatEvents.push(defenderLostEvent);
+          newCombatNotifications.push(createNotification(defenderLostEvent, currentDate));
+        } else {
+          // Notify the defender (winner) that they repelled the attack
+          const defenderWonEvent = createGameEvent(
+            'combat_victory',
+            `${updatedCombat.regionName} Defended!`,
+            `${updatedCombat.defenderCountry === 'soviet' ? 'Soviet' : 'White'} forces repelled the attack on ${updatedCombat.regionName}. Attackers lost ${attackerLosses} divisions. Defenders lost ${defenderLosses} divisions.`,
+            currentDate,
+            updatedCombat.defenderCountry,
+            updatedCombat.regionId
+          );
+          newCombatEvents.push(defenderWonEvent);
+          newCombatNotifications.push(createNotification(defenderWonEvent, currentDate));
+        }
       } else {
         updatedCombats.push(updatedCombat);
       }

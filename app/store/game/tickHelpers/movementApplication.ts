@@ -179,6 +179,7 @@ export function applyCompletedMovements(
 
           if (totalDefenderDivisions.length === 0) {
             // Undefended capture
+            const previousOwner = to.owner;
             nextRegions[toRegion] = {
               ...to,
               owner: owner,
@@ -194,6 +195,17 @@ export function applyCompletedMovements(
             );
             nextEvents.push(captureEvent);
             nextNotifications.push(createNotification(captureEvent, currentDate));
+            // Also notify the previous owner that they lost the region
+            const lostEvent = createGameEvent(
+              'region_lost',
+              `${to.name} Lost!`,
+              `${owner === 'soviet' ? 'Soviet' : 'White'} forces captured your undefended region of ${to.name}.`,
+              currentDate,
+              previousOwner,
+              toRegion
+            );
+            nextEvents.push(lostEvent);
+            nextNotifications.push(createNotification(lostEvent, currentDate));
           } else {
             // Initiate new combat
             const newCombat = createActiveCombat(

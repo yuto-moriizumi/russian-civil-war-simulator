@@ -38,10 +38,13 @@ export default function NotificationToast() {
   const notifications = useGameStore(state => state.notifications);
   const currentGameTime = useGameStore(state => state.dateTime);
   const onDismiss = useGameStore(state => state.dismissNotification);
+  const selectedCountry = useGameStore(state => state.selectedCountry);
 
-  // Filter notifications that haven't expired yet (derived state, no useState needed)
+  // Filter notifications that haven't expired yet and are relevant to the player
+  // Show notifications that belong to the player's country or have no country (global events)
   const visibleNotifications = notifications.filter(n => 
-    new Date(n.expiresAt).getTime() > new Date(currentGameTime).getTime()
+    new Date(n.expiresAt).getTime() > new Date(currentGameTime).getTime() &&
+    (n.country === undefined || n.country === selectedCountry?.id)
   );
 
   // Auto-dismiss expired notifications
