@@ -119,8 +119,15 @@ export const createTickActions = (
     // Step 6: Apply finished combats to regions
     nextRegions = applyFinishedCombats(finishedCombats, nextRegions);
 
-    // Step 6b: Add retreat movements to the moving units list, filtering out intercepted ones
-    const nextMovingUnits = [...remainingMovements, ...retreatMovements].filter(m => !interceptedMovementIds.includes(m.id));
+    // Step 6b: Add retreat movements to the moving units list, filtering out:
+    //   - intercepted movements
+    //   - movements whose linked combat just finished (their result is already
+    //     applied by applyFinishedCombats; keeping them would double the divisions)
+    const finishedCombatIds = new Set(finishedCombats.map(c => c.id));
+    const nextMovingUnits = [...remainingMovements, ...retreatMovements].filter(m =>
+      !interceptedMovementIds.includes(m.id) &&
+      !(m.pendingCombatId && finishedCombatIds.has(m.pendingCombatId))
+    );
 
     // Step 7: Regenerate HP for all stationary divisions
     nextRegions = regenerateDivisionHP(nextRegions);
