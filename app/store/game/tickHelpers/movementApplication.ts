@@ -41,7 +41,7 @@ export function applyCompletedMovements(
     // Skip if this movement was already intercepted as a counter-movement
     if (interceptedMovementIds.includes(movement.id)) return;
 
-    const { toRegion, fromRegion, divisions, owner } = movement;
+    const { toRegion, divisions, owner } = movement;
     const to = nextRegions[toRegion];
     if (!to) return;
 
@@ -101,18 +101,22 @@ export function applyCompletedMovements(
         // War state or neutral (hostile) - proceed with combat/occupation logic
 
         // INTERCEPTION LOGIC: Check for counter-movements (Meeting Engagement)
-        // If enemy units are moving FROM our destination TO our origin, they meet at our destination
-        const counterMovement = allMovements.find(m => 
-          m.fromRegion === toRegion && 
-          m.toRegion === fromRegion && 
+        // EU4/CK3 rule: if enemy units are moving OUT of our destination region (regardless
+        // of where they're heading), they are intercepted and must fight at the destination.
+        // This prevents the "division swap" bug where two armies pass through each other.
+        const counterMovements = allMovements.filter(m =>
+          m.fromRegion === toRegion &&
           m.owner !== owner &&
-          !interceptedMovementIds.includes(m.id)
+          !interceptedMovementIds.includes(m.id) &&
+          !m.pendingCombatId // don't intercept units already locked into a combat
         );
 
-        const interceptingDivisions = counterMovement ? counterMovement.divisions : [];
-        if (counterMovement) {
-          interceptedMovementIds.push(counterMovement.id);
-          console.log(`[MEETING ENGAGEMENT] ${owner} forces intercepted ${counterMovement.owner} forces moving from ${to.name} to origin`);
+        const interceptingDivisions = counterMovements.flatMap(m => m.divisions);
+        if (counterMovements.length > 0) {
+          counterMovements.forEach(m => {
+            interceptedMovementIds.push(m.id);
+            console.log(`[MEETING ENGAGEMENT] ${owner} forces intercepted ${m.owner} forces moving out of ${to.name} toward ${m.toRegion}`);
+          });
         }
 
         // Check for ongoing combat
@@ -132,8 +136,8 @@ export function applyCompletedMovements(
               initialAttackerCount: ongoingCombat.initialAttackerCount + totalDivisionsToAdd.length,
             };
 
-            // If we intercepted a counter-movement, they join the defenders
-            if (counterMovement) {
+            // If we intercepted counter-movements, they join the defenders
+            if (interceptingDivisions.length > 0) {
               updatedCombat.defenderDivisions = [...updatedCombat.defenderDivisions, ...interceptingDivisions];
               updatedCombat.initialDefenderHp += interceptingDivisions.reduce((sum, d) => sum + d.hp, 0);
               updatedCombat.initialDefenderCount += interceptingDivisions.length;
@@ -162,15 +166,27 @@ export function applyCompletedMovements(
               initialDefenderCount: ongoingCombat.initialDefenderCount + totalDivisionsToAdd.length,
             };
 
-            // If we intercepted a counter-movement, they join the attackers (if they belong to attacker country)
-            // This case is unlikely given the counter-movement check, but for completeness:
-            if (counterMovement && counterMovement.owner === ongoingCombat.attackerCountry) {
-               // This would be weird, but let's handle it
-               updatedCombat.attackerDivisions = [...updatedCombat.attackerDivisions, ...interceptingDivisions];
-               updatedCombat.initialAttackerHp += interceptingDivisions.reduce((sum, d) => sum + d.hp, 0);
-               updatedCombat.initialAttackerCount += interceptingDivisions.length;
-               // And remove them from the defender add
-               updatedCombat.defenderDivisions = updatedCombat.defenderDivisions.filter(d => !interceptingDivisions.includes(d));
+            // If we intercepted counter-movements, sort them by owner and add to the correct side.
+            // Any intercepted unit belonging to the attacker side joins the attackers;
+            // everything else (rare edge case) stays with defenders.
+            if (interceptingDivisions.length > 0) {
+              const interceptedAttackers = counterMovements
+                .filter(m => m.owner === ongoingCombat.attackerCountry)
+                .flatMap(m => m.divisions);
+              const interceptedDefenders = counterMovements
+                .filter(m => m.owner !== ongoingCombat.attackerCountry)
+                .flatMap(m => m.divisions);
+
+              if (interceptedAttackers.length > 0) {
+                updatedCombat.attackerDivisions = [...updatedCombat.attackerDivisions, ...interceptedAttackers];
+                updatedCombat.initialAttackerHp += interceptedAttackers.reduce((sum, d) => sum + d.hp, 0);
+                updatedCombat.initialAttackerCount += interceptedAttackers.length;
+                // Remove them from the defender slice added above
+                updatedCombat.defenderDivisions = updatedCombat.defenderDivisions.filter(d => !interceptedAttackers.includes(d));
+              }
+              if (interceptedDefenders.length > 0) {
+                // already included via totalDivisionsToAdd above; nothing extra needed
+              }
             }
 
             nextCombats[combatIndex] = updatedCombat;
