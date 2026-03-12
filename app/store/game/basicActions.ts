@@ -35,7 +35,13 @@ export const createBasicActions = (
     
     if (regionId && regions[regionId]) {
       const region = regions[regionId];
-      if (region.owner === selectedCountry?.id && region.divisions.length > 0) {
+      // Allow selecting units in owned regions OR ally regions where the
+      // player has their own divisions (military access / autonomy)
+      const isOwnRegion = region.owner === selectedCountry?.id;
+      const hasOwnDivisions = selectedCountry
+        ? region.divisions.some(d => d.owner === selectedCountry.id)
+        : false;
+      if ((isOwnRegion || hasOwnDivisions) && region.divisions.length > 0) {
         set({ selectedUnitRegion: regionId });
       } else {
         set({ selectedUnitRegion: null });

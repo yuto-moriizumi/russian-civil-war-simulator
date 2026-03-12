@@ -43,11 +43,13 @@ export function advanceArmyGroup(
   const newCombats: ActiveCombat[] = [];
   let newEvents = [...gameEvents];
 
-  // All regions with divisions from this group that aren't already dispatching
+  // Find all regions that contain divisions belonging to this army group.
+  // Include ally-owned regions where the group has divisions (e.g. divisions
+  // that moved into friendly territory via military access / autonomy).
   const regionsWithGroupDivisions = Object.keys(newRegions).filter(regionId => {
     const region = newRegions[regionId];
-    if (!region || region.owner !== countryId) return false;
-    return region.divisions.some(d => d.armyGroupId === groupId);
+    if (!region) return false;
+    return region.divisions.some(d => d.armyGroupId === groupId && d.owner === countryId);
   });
 
   for (const regionId of regionsWithGroupDivisions) {

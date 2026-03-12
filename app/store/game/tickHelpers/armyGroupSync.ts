@@ -26,12 +26,18 @@ export function syncArmyGroupTerritories(
       }
     });
     
-    // Filter out regions that are no longer owned by the player
-    // This ensures that if we lose a region, it's removed from the army group
-    // but "empty" regions stay in the army group as long as they are owned.
+    // Filter out regions that are no longer owned by the player AND have no
+    // divisions belonging to this group. This ensures:
+    // - Losing an empty region removes it from the army group.
+    // - Divisions that moved into an ally's territory (via military access /
+    //   autonomy) remain tracked so the army group can still maneuver them.
     const filteredRegions = Array.from(currentRegions).filter(id => {
       const region = regions[id];
-      return region && region.owner === group.owner;
+      if (!region) return false;
+      // Always keep regions owned by this group's country
+      if (region.owner === group.owner) return true;
+      // Also keep ally-owned regions where this group has divisions present
+      return region.divisions.some(d => d.owner === group.owner);
     });
     
     return { ...group, regionIds: filteredRegions };

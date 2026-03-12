@@ -59,12 +59,15 @@ export function defendArmyGroup(
     borderDivisionCounts.set(regionId, groupDivisions);
   });
 
-  // Find all divisions belonging to this army group
+  // Find all divisions belonging to this army group.
+  // Include ally-owned regions where the group has divisions (e.g. divisions
+  // that moved into friendly territory via military access / autonomy).
   const allGroupDivisions: { regionId: string; divisions: typeof regions[string]['divisions'] }[] = [];
   Object.keys(newRegions).forEach(regionId => {
     const region = newRegions[regionId];
-    if (!region || region.owner !== countryId) return;
-    const divisionsInGroup = region.divisions.filter(d => d.armyGroupId === groupId);
+    if (!region) return;
+    // Allow sourcing from owned regions OR ally regions where our divisions are present
+    const divisionsInGroup = region.divisions.filter(d => d.armyGroupId === groupId && d.owner === countryId);
     if (divisionsInGroup.length > 0) {
       allGroupDivisions.push({ regionId, divisions: divisionsInGroup });
     }
