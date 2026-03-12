@@ -35,18 +35,24 @@ export const createTickActions = (
     const state = get();
     if (!state.isPlaying) return;
 
+    console.time('[tick] total');
+
     const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, aiStates, gameEvents, notifications, armyGroups, productionQueues, relationships, regionCentroids, scheduledEvents } = state;
     
     // Step 1: Validate divisions (development mode only)
+    console.time('[tick] 1-validate');
     const { updatedRegions, updatedMovingUnits } = validateDivisions(regions, movingUnits, armyGroups);
+    console.timeEnd('[tick] 1-validate');
     
     // Step 2: Process production queue
+    console.time('[tick] 2-production');
     const { remainingProductions, updatedRegions: regionsAfterProduction, completedProductions } = processProductionQueue(
       productionQueues,
       dateTime,
       updatedRegions,
       state.countryBonuses
     );
+    console.timeEnd('[tick] 2-production');
     
     // Create events for completed productions
     const productionEvents = completedProductions
@@ -77,6 +83,7 @@ export const createTickActions = (
     newDate.setHours(newDate.getHours() + 1);
     
     // Step 3.5: Process scheduled events (historical events that trigger on specific dates)
+    console.time('[tick] 3-scheduled-events');
     const {
       updatedScheduledEvents,
       updatedRegions: regionsAfterEvents,
@@ -89,14 +96,20 @@ export const createTickActions = (
       regionsAfterProduction,
       relationships
     );
+    console.timeEnd('[tick] 3-scheduled-events');
     
     // Step 4: Process unit movements
+    console.time('[tick] 4-movements');
     const { remainingMovements, completedMovements } = processMovements(updatedMovingUnits, newDate, activeCombats);
+    console.timeEnd('[tick] 4-movements');
 
     // Step 5: Process active combats
+    console.time('[tick] 5-combats');
     const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements } = processCombats(activeCombats, newDate, regionsAfterEvents, adjacency, regionCentroids);
+    console.timeEnd('[tick] 5-combats');
 
     // Step 6: Apply completed movements to regions
+    console.time('[tick] 6-apply-movements');
     let nextRegions: typeof regionsAfterEvents;
     const { nextCombats, nextEvents, nextNotifications, interceptedMovementIds } = (() => {
       const result = applyCompletedMovements(
@@ -118,6 +131,7 @@ export const createTickActions = (
 
     // Step 6: Apply finished combats to regions
     nextRegions = applyFinishedCombats(finishedCombats, nextRegions);
+    console.timeEnd('[tick] 6-apply-movements');
 
     // Step 6b: Add retreat movements to the moving units list, filtering out:
     //   - intercepted movements
@@ -130,9 +144,12 @@ export const createTickActions = (
     );
 
     // Step 7: Regenerate HP for all stationary divisions
+    console.time('[tick] 7-hp-regen');
     nextRegions = regenerateDivisionHP(nextRegions);
+    console.timeEnd('[tick] 7-hp-regen');
 
     // Step 8: AI Tick - process AI actions and deployments for all AI countries
+    console.time('[tick] 8-ai');
     let nextAIStates = aiStates;
     let nextArmyGroups = armyGroups;
     const nextProductionQueues: Record<CountryId, ProductionQueueItem[]> = { ...remainingProductions };
@@ -185,15 +202,19 @@ export const createTickActions = (
         return aiActions.updatedAIState;
       });
     }
+    console.timeEnd('[tick] 8-ai');
 
     // Step 9: Sync army group territories with actual division locations
+    console.time('[tick] 9-army-group-sync');
     nextArmyGroups = syncArmyGroupTerritories(nextArmyGroups, nextRegions, nextMovingUnits);
+    console.timeEnd('[tick] 9-army-group-sync');
 
     // Step 9b: Process army group automatic modes (advance/defend)
     // This needs to be done before updating state to ensure actions are queued
     const armyGroupActionsNeeded = nextArmyGroups.filter(g => g.mode !== 'none');
     
     // Update state first so actions have latest data
+    console.time('[tick] 10-set-state');
     set({
       dateTime: newDate,
       movingUnits: nextMovingUnits,
@@ -207,8 +228,10 @@ export const createTickActions = (
       scheduledEvents: updatedScheduledEvents, // Update scheduled events
       relationships: relationshipsAfterEvents, // Save updated relationships from events
     });
+    console.timeEnd('[tick] 10-set-state');
 
     // Now trigger automatic actions for ALL army groups in advance/defend mode (player + AI)
+    console.time('[tick] 11-army-group-actions');
     armyGroupActionsNeeded.forEach(group => {
       if (group.mode === 'advance') {
         get().advanceArmyGroup(group.id);
@@ -216,8 +239,10 @@ export const createTickActions = (
         get().defendArmyGroup(group.id);
       }
     });
+    console.timeEnd('[tick] 11-army-group-actions');
     
     // Step 11: Check and auto-complete missions
+    console.time('[tick] 12-missions');
     if (selectedCountry) {
       const missionResults = checkAndCompleteMissions(get, selectedCountry);
       
@@ -230,8 +255,13 @@ export const createTickActions = (
         });
       }
     }
+    console.timeEnd('[tick] 12-missions');
     
     // Step 12: Update theaters after regions change
+    console.time('[tick] 13-theaters');
     get().detectAndUpdateTheaters();
+    console.timeEnd('[tick] 13-theaters');
+
+    console.timeEnd('[tick] total');
   },
 });

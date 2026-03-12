@@ -1,5 +1,5 @@
 import { Movement } from '../../types/game';
-import { getNextStepToward } from '../../utils/pathfinding';
+import { getNextStepToward, buildCanEnterPredicate } from '../../utils/pathfinding';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { GameStore } from './types';
 
@@ -18,6 +18,9 @@ export function defendArmyGroup(
   
   // Use the army group's owner country instead of selectedCountry to support AI
   const countryId = group.owner;
+
+  // Build access predicate — defend routing respects diplomacy too
+  const canEnter = buildCanEnterPredicate(countryId, regions, relationships);
 
   const newMovements: Movement[] = [];
   const newRegions = { ...regions };
@@ -127,35 +130,12 @@ export function defendArmyGroup(
           if (sourceRegionId === borderRegionId) return;
           
           // Find the next adjacent step toward the border region using pathfinding
-          const nextStep = getNextStepToward(sourceRegionId, borderRegionId, adjacency);
+          const nextStep = getNextStepToward(sourceRegionId, borderRegionId, adjacency, canEnter);
           
           // If no valid path exists or already at destination, skip
           if (!nextStep) {
             console.warn(`[DEFEND] No valid path from ${sourceRegionId} to ${borderRegionId}`);
             return;
-          }
-          
-          // Check relationship with target region owner
-          const targetRegion = newRegions[nextStep];
-          if (targetRegion && targetRegion.owner !== countryId) {
-            // ... relationship check logic ...
-            const theirRelationship = relationships.find(
-              r => r.fromCountry === targetRegion.owner && r.toCountry === countryId
-            );
-            const theyGrantUs = theirRelationship ? theirRelationship.type : 'neutral';
-            
-            const ourRelationship = relationships.find(
-              r => r.fromCountry === countryId && r.toCountry === targetRegion.owner
-            );
-            const weDeclared = ourRelationship ? ourRelationship.type : 'neutral';
-            
-            const hasAutonomy = theyGrantUs === 'autonomy' || weDeclared === 'autonomy';
-            const canMove = theyGrantUs !== 'neutral' || weDeclared === 'war' || hasAutonomy;
-            
-            if (!canMove) {
-              console.warn(`[DEFEND] Cannot move to ${targetRegion.name}: No military access or war state with ${targetRegion.owner}`);
-              return;
-            }
           }
           
           // Check if already moving from this region
