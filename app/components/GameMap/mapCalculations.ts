@@ -45,7 +45,10 @@ export function calculateUnitMarkers(
       }
       
       const isSelected = selectedUnitRegion === regionId;
-      const isPlayerUnit = region.owner === playerCountry;
+      // A marker is a player-controllable unit if the player owns the region
+      // OR if the player has their own divisions there (military access / autonomy).
+      const isPlayerUnit = region.owner === playerCountry ||
+        region.divisions.some(d => d.owner === playerCountry);
       
       return {
         regionId,

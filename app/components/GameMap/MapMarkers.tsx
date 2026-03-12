@@ -25,7 +25,23 @@ export function UnitMarker({
   onRegionSelect,
   onUnitSelect,
 }: UnitMarkerProps) {
-  const flagUrl = COUNTRY_FLAGS[region.owner];
+  // Group divisions by owner so the marker reflects who actually controls the units,
+  // not just who owns the territory. This is critical for military-access scenarios
+  // where Soviet divisions sit in a Ukraine-owned region — they should show the
+  // Soviet flag, not the Ukrainian one.
+  const ownerCounts = region.divisions.reduce<Record<string, number>>((acc, d) => {
+    acc[d.owner] = (acc[d.owner] ?? 0) + 1;
+    return acc;
+  }, {});
+  const ownerEntries = Object.entries(ownerCounts).sort((a, b) => b[1] - a[1]);
+  // Primary display owner: the one with the most divisions (fall back to region owner)
+  const primaryOwner = ownerEntries.length > 0 ? ownerEntries[0][0] : region.owner;
+  const hasMixedOwners = ownerEntries.length > 1;
+
+  const flagUrl = COUNTRY_FLAGS[primaryOwner as keyof typeof COUNTRY_FLAGS] ?? COUNTRY_FLAGS[region.owner];
+  const bgColor = COUNTRY_COLORS[primaryOwner as keyof typeof COUNTRY_COLORS] ?? COUNTRY_COLORS[region.owner];
+  const textColor = primaryOwner === 'white' ? '#000' : '#fff';
+  const textShadow = primaryOwner === 'white' ? 'none' : '1px 1px 1px rgba(0,0,0,0.5)';
   
   return (
     <Marker
@@ -43,7 +59,7 @@ export function UnitMarker({
       <div
         className="unit-marker"
         style={{
-          backgroundColor: COUNTRY_COLORS[region.owner],
+          backgroundColor: bgColor,
           border: isSelected ? '2px solid #22d3ee' : '1px solid rgba(0,0,0,0.5)',
           borderRadius: '4px',
           padding: '2px 6px',
@@ -58,7 +74,7 @@ export function UnitMarker({
         {flagUrl ? (
           <img
             src={flagUrl}
-            alt={region.owner}
+            alt={primaryOwner}
             style={{
               width: '16px',
               height: '11px',
@@ -73,11 +89,13 @@ export function UnitMarker({
           style={{
             fontSize: '12px',
             fontWeight: 'bold',
-            color: region.owner === 'white' ? '#000' : '#fff',
-            textShadow: region.owner === 'white' ? 'none' : '1px 1px 1px rgba(0,0,0,0.5)',
+            color: textColor,
+            textShadow,
           }}
         >
-          {region.divisions.length}
+          {hasMixedOwners
+            ? ownerEntries.map(([, count], i) => (i === 0 ? count : `+${count}`)).join(' ')
+            : region.divisions.length}
         </span>
       </div>
     </Marker>
