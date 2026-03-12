@@ -32,8 +32,9 @@ export async function GET() {
         const jsonStr = placementMatch[1]
           .replace(/\/\/[^\n]*/g, '') // strip line comments
           .replace(/,\s*([}\]])/g, '$1') // strip trailing commas
-          .replace(/([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$-]*)\s*:/g, '$1"$2":') // quote unquoted keys
-          .replace(/:\s*'([^']*)'/g, ': "$1"'); // single -> double quotes for string values
+          .replace(/:\s*'([^']*)'/g, ': "$1"') // single -> double quotes for string values
+          .replace(/'([^']+)'(\s*:)/g, '"$1"$2') // single-quoted keys -> double-quoted keys
+          .replace(/([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '$1"$2":'); // quote bare unquoted keys
         placement = JSON.parse(jsonStr);
       } catch {
         // If parsing fails, return empty
@@ -45,8 +46,9 @@ export async function GET() {
         const jsonStr = armyGroupMatch[1]
           .replace(/\/\/[^\n]*/g, '')
           .replace(/,\s*([}\]])/g, '$1')
-          .replace(/([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$-]*)\s*:/g, '$1"$2":')
-          .replace(/:\s*'([^']*)'/g, ': "$1"');
+          .replace(/:\s*'([^']*)'/g, ': "$1"')
+          .replace(/'([^']+)'(\s*:)/g, '"$1"$2')
+          .replace(/([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '$1"$2":');
         armyGroupDefs = JSON.parse(jsonStr);
       } catch {
         // ignore

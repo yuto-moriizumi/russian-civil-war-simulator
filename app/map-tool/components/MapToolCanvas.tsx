@@ -120,16 +120,18 @@ export default function MapToolCanvas({
     return result;
   }, [unitPlacement]);
 
-  /** Region centroids derived from GeoJSON */
+  /** Region centroids derived from GeoJSON, keyed by canonical region ID (shapeISO||regionId||shapeID) */
   const regionCentroids = useMemo(() => {
     const centroids: Record<string, [number, number]> = {};
     for (const feature of geojson.features) {
-      const shapeId = feature.properties?.shapeID;
-      if (!shapeId) continue;
+      const props = feature.properties;
+      if (!props) continue;
+      const regionId = props.shapeISO || props.regionId || props.shapeID;
+      if (!regionId) continue;
       try {
         const center = turf.centroid(feature as Feature<Geometry>);
         const [lng, lat] = center.geometry.coordinates;
-        centroids[shapeId] = [lng, lat];
+        centroids[regionId] = [lng, lat];
       } catch {
         // skip features where centroid can't be computed
       }
