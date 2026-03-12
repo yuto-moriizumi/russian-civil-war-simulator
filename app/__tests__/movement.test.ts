@@ -1,26 +1,23 @@
 /**
- * Unit tests for the movement system.
+ * Unit tests for the movement system — adjacency helpers, travel time, and
+ * processMovements tick logic.
  *
  * These tests cover pure logic functions so they run in milliseconds
  * without a browser or dev server.
+ *
+ * Tests for applyCompletedMovements and applyFinishedCombats live in
+ * movementApplication.test.ts.
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { canMoveTo, getAdjacentRegions } from '../utils/mapUtils';
 import { calculateTravelTime, MOVEMENT_SPEED_KM_PER_HOUR } from '../utils/distance';
 import { processMovements } from '../store/game/tickHelpers/movementProcessing';
-import {
-  applyCompletedMovements,
-  applyFinishedCombats,
-} from '../store/game/tickHelpers/movementApplication';
 import type {
   Division,
   Movement,
-  Region,
-  RegionState,
-  Adjacency,
   ActiveCombat,
-  Relationship,
+  Adjacency,
 } from '../types/game';
 
 // ---------------------------------------------------------------------------
@@ -37,18 +34,6 @@ function makeDiv(overrides: Partial<Division> = {}): Division {
     maxHp: 100,
     attack: 20,
     defence: 10,
-    ...overrides,
-  };
-}
-
-function makeRegion(id: string, overrides: Partial<Region> = {}): Region {
-  return {
-    id,
-    name: id,
-    countryIso3: 'RUS',
-    owner: 'soviet',
-    divisions: [],
-    value: 1,
     ...overrides,
   };
 }
@@ -279,295 +264,5 @@ describe('processMovements', () => {
     expect(completedMovements[0].id).toBe('mv-done');
     expect(remainingMovements).toHaveLength(1);
     expect(remainingMovements[0].id).toBe('mv-pending');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// 4. applyCompletedMovements
-// ---------------------------------------------------------------------------
-
-describe('applyCompletedMovements', () => {
-  const now = new Date('1918-01-01T12:00:00Z');
-  const noRelationships: Relationship[] = [];
-
-  it('adds divisions to friendly region without changing ownership', () => {
-    const regions: RegionState = {
-      A: makeRegion('A', { owner: 'soviet' }),
-      B: makeRegion('B', { owner: 'soviet', divisions: [makeDiv({ id: 'existing' })] }),
-    };
-
-    const mv = makeMovement({
-      toRegion: 'B',
-      owner: 'soviet',
-      divisions: [makeDiv({ id: 'arriving' })],
-    });
-
-    const { nextRegions } = applyCompletedMovements(
-      [mv],
-      [mv],
-      { regions, combats: [], events: [], notifications: [], relationships: noRelationships },
-      now
-    );
-
-    expect(nextRegions['B'].owner).toBe('soviet');
-    expect(nextRegions['B'].divisions).toHaveLength(2);
-  });
-
-  it('captures an undefended enemy region', () => {
-    const regions: RegionState = {
-      A: makeRegion('A', { owner: 'soviet' }),
-      B: makeRegion('B', { owner: 'white', divisions: [] }), // no defenders
-    };
-
-    const mv = makeMovement({
-      toRegion: 'B',
-      owner: 'soviet',
-      divisions: [makeDiv({ id: 'attacker' })],
-    });
-
-    const { nextRegions } = applyCompletedMovements(
-      [mv],
-      [mv],
-      { regions, combats: [], events: [], notifications: [], relationships: noRelationships },
-      now
-    );
-
-    expect(nextRegions['B'].owner).toBe('soviet');
-    expect(nextRegions['B'].divisions).toHaveLength(1);
-  });
-
-  it('emits a region_captured event when capturing an undefended region', () => {
-    const regions: RegionState = {
-      B: makeRegion('B', { owner: 'white', divisions: [] }),
-    };
-
-    const mv = makeMovement({
-      toRegion: 'B',
-      owner: 'soviet',
-      divisions: [makeDiv()],
-    });
-
-    const { nextEvents } = applyCompletedMovements(
-      [mv],
-      [mv],
-      { regions, combats: [], events: [], notifications: [], relationships: noRelationships },
-      now
-    );
-
-    const captureEvent = nextEvents.find(e => e.type === 'region_captured');
-    expect(captureEvent).toBeDefined();
-    expect(captureEvent?.country).toBe('soviet');
-  });
-
-  it('starts a new combat when moving into a defended enemy region', () => {
-    const regions: RegionState = {
-      B: makeRegion('B', {
-        owner: 'white',
-        divisions: [makeDiv({ id: 'defender', owner: 'white' })],
-      }),
-    };
-
-    const mv = makeMovement({
-      toRegion: 'B',
-      owner: 'soviet',
-      divisions: [makeDiv({ id: 'attacker' })],
-    });
-
-    const { nextCombats, nextRegions } = applyCompletedMovements(
-      [mv],
-      [mv],
-      { regions, combats: [], events: [], notifications: [], relationships: noRelationships },
-      now
-    );
-
-    expect(nextCombats).toHaveLength(1);
-    expect(nextCombats[0].attackerCountry).toBe('soviet');
-    expect(nextCombats[0].defenderCountry).toBe('white');
-    expect(nextCombats[0].isComplete).toBe(false);
-    // Defenders are removed from region when combat starts
-    expect(nextRegions['B'].divisions).toHaveLength(0);
-  });
-
-  it('allows movement into region with military_access relationship', () => {
-    const regions: RegionState = {
-      B: makeRegion('B', { owner: 'white', divisions: [] }),
-    };
-
-    const militaryAccess: Relationship[] = [
-      { fromCountry: 'white', toCountry: 'soviet', type: 'military_access' },
-    ];
-
-    const mv = makeMovement({
-      toRegion: 'B',
-      owner: 'soviet',
-      divisions: [makeDiv({ id: 'transit' })],
-    });
-
-    const { nextRegions, nextCombats } = applyCompletedMovements(
-      [mv],
-      [mv],
-      {
-        regions,
-        combats: [],
-        events: [],
-        notifications: [],
-        relationships: militaryAccess,
-      },
-      now
-    );
-
-    // Should enter without combat and without capturing
-    expect(nextCombats).toHaveLength(0);
-    expect(nextRegions['B'].owner).toBe('white'); // not captured
-    expect(nextRegions['B'].divisions).toHaveLength(1); // just added
-  });
-
-  it('reinforces the attacker side in an ongoing combat', () => {
-    const regions: RegionState = {
-      B: makeRegion('B', { owner: 'white', divisions: [] }),
-    };
-
-    const ongoingCombat = makeCombat({
-      regionId: 'B',
-      attackerCountry: 'soviet',
-      defenderCountry: 'white',
-      attackerDivisions: [makeDiv({ id: 'original-attacker' })],
-      defenderDivisions: [makeDiv({ id: 'defender', owner: 'white' })],
-      initialAttackerCount: 1,
-    });
-
-    const mv = makeMovement({
-      id: 'mv-reinforce',
-      toRegion: 'B',
-      owner: 'soviet',
-      divisions: [makeDiv({ id: 'reinforcement' })],
-    });
-
-    const { nextCombats } = applyCompletedMovements(
-      [mv],
-      [mv],
-      {
-        regions,
-        combats: [ongoingCombat],
-        events: [],
-        notifications: [],
-        relationships: noRelationships,
-      },
-      now
-    );
-
-    // Should not create a new combat, just update the existing one
-    expect(nextCombats).toHaveLength(1);
-    expect(nextCombats[0].attackerDivisions).toHaveLength(2);
-    expect(nextCombats[0].initialAttackerCount).toBe(2);
-  });
-
-  it('skips movement that has a pendingCombatId pointing to a known combat', () => {
-    const regions: RegionState = {
-      B: makeRegion('B', { owner: 'white', divisions: [] }),
-    };
-
-    const linkedCombat = makeCombat({ id: 'combat-linked', regionId: 'B', isComplete: true });
-
-    const mv = makeMovement({
-      toRegion: 'B',
-      owner: 'soviet',
-      pendingCombatId: 'combat-linked',
-    });
-
-    const { nextCombats } = applyCompletedMovements(
-      [mv],
-      [mv],
-      {
-        regions,
-        combats: [],
-        finishedCombats: [linkedCombat],
-        events: [],
-        notifications: [],
-        relationships: noRelationships,
-      },
-      now
-    );
-
-    // pendingCombatId movements are handled by applyFinishedCombats, not here
-    expect(nextCombats).toHaveLength(0);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// 5. applyFinishedCombats
-// ---------------------------------------------------------------------------
-
-describe('applyFinishedCombats', () => {
-  it('transfers region ownership to attacker on attacker victory', () => {
-    const regions: RegionState = {
-      B: makeRegion('B', { owner: 'white', divisions: [] }),
-    };
-
-    const combat = makeCombat({
-      regionId: 'B',
-      attackerCountry: 'soviet',
-      defenderCountry: 'white',
-      attackerDivisions: [makeDiv({ id: 'winner' })],
-      defenderDivisions: [],
-      isComplete: true,
-      victor: 'soviet',
-    });
-
-    const nextRegions = applyFinishedCombats([combat], regions);
-
-    expect(nextRegions['B'].owner).toBe('soviet');
-    expect(nextRegions['B'].divisions).toHaveLength(1);
-    expect(nextRegions['B'].divisions[0].id).toBe('winner');
-  });
-
-  it('keeps region under defender ownership when defender wins', () => {
-    const regions: RegionState = {
-      B: makeRegion('B', { owner: 'white', divisions: [] }),
-    };
-
-    const combat = makeCombat({
-      regionId: 'B',
-      attackerCountry: 'soviet',
-      defenderCountry: 'white',
-      attackerDivisions: [],
-      defenderDivisions: [makeDiv({ id: 'surviving-defender', owner: 'white' })],
-      isComplete: true,
-      victor: 'white',
-    });
-
-    const nextRegions = applyFinishedCombats([combat], regions);
-
-    expect(nextRegions['B'].owner).toBe('white');
-    expect(nextRegions['B'].divisions[0].id).toBe('surviving-defender');
-  });
-
-  it('does not mutate original regions object', () => {
-    const regions: RegionState = {
-      B: makeRegion('B', { owner: 'white' }),
-    };
-
-    const combat = makeCombat({
-      regionId: 'B',
-      attackerCountry: 'soviet',
-      defenderCountry: 'white',
-      isComplete: true,
-      victor: 'soviet',
-    });
-
-    applyFinishedCombats([combat], regions);
-
-    // Original should be unchanged
-    expect(regions['B'].owner).toBe('white');
-  });
-
-  it('handles an empty combats list without error', () => {
-    const regions: RegionState = {
-      B: makeRegion('B', { owner: 'white' }),
-    };
-
-    const nextRegions = applyFinishedCombats([], regions);
-
-    expect(nextRegions['B'].owner).toBe('white');
   });
 });
