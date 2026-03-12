@@ -66,7 +66,7 @@ export default function MapToolPage() {
     setOriginalOwnership({ ...newOwnership });
     setHistory([{ ...newOwnership }]);
     setHistoryIndex(0);
-  }, []);
+  }, [setGeojson, setOwnership, setOriginalOwnership, setHistory, setHistoryIndex]);
 
   const handleRegionPaint = useCallback((regionId: string) => {
     if (editMode === 'units') return;
@@ -97,7 +97,7 @@ export default function MapToolPage() {
         return updated;
       });
     }
-  }, [selectedCountry, historyIndex, editMode, setCoreRegions]);
+  }, [selectedCountry, historyIndex, editMode, setCoreRegions, setOwnership, setHistory, setHistoryIndex, setPaintedRegionsInDrag]);
 
   const handlePaintEnd = useCallback(() => setPaintedRegionsInDrag(new Set()), []);
 
@@ -106,14 +106,14 @@ export default function MapToolPage() {
       setHistoryIndex((i) => i - 1);
       setOwnership(history[historyIndex - 1]);
     }
-  }, [historyIndex, history]);
+  }, [historyIndex, history, setHistoryIndex, setOwnership]);
 
   const handleRedo = useCallback(() => {
     if (historyIndex < history.length - 1) {
       setHistoryIndex((i) => i + 1);
       setOwnership(history[historyIndex + 1]);
     }
-  }, [historyIndex, history]);
+  }, [historyIndex, history, setHistoryIndex, setOwnership]);
 
   const handleReset = useCallback(() => {
     if (confirm("Reset all changes to original ownership, core regions, and unit placement?")) {
@@ -123,7 +123,7 @@ export default function MapToolPage() {
       setHistory([{ ...originalOwnership }]);
       setHistoryIndex(0);
     }
-  }, [originalOwnership, originalCoreRegions, originalUnitPlacement, originalArmyGroupDefs, setCoreRegions, resetUnitPlacement]);
+  }, [originalOwnership, originalCoreRegions, originalUnitPlacement, originalArmyGroupDefs, setCoreRegions, resetUnitPlacement, setOwnership, setHistory, setHistoryIndex]);
 
   const hasChanges =
     JSON.stringify(ownership) !== JSON.stringify(originalOwnership) ||
