@@ -172,4 +172,20 @@ describe('applyFinishedCombats', () => {
     const regions: RegionState = { B: makeRegion('B', { owner: 'white' }) };
     expect(applyFinishedCombats([], regions)['B'].owner).toBe('white');
   });
+
+  it('defender wins when both sides are eliminated simultaneously (attacker loses draw)', () => {
+    // Both sides reach 0 divisions in the same round — attacker is the loser.
+    // Region ownership must stay with the defender; no attacker divisions remain.
+    const regions: RegionState = { B: makeRegion('B', { owner: 'white', divisions: [] }) };
+    const combat = makeCombat({
+      regionId: 'B',
+      attackerDivisions: [],
+      defenderDivisions: [],
+      isComplete: true,
+      victor: 'white', // defender wins the draw
+    });
+    const nextRegions = applyFinishedCombats([combat], regions);
+    expect(nextRegions['B'].owner).toBe('white');
+    expect(nextRegions['B'].divisions).toHaveLength(0);
+  });
 });

@@ -396,7 +396,10 @@ export function processCombatRound(
   if (combatEnded) {
     if (defenderDivisions.length === 0 && attackerDivisions.length > 0) {
       victor = combat.attackerCountry;
-    } else if (attackerDivisions.length === 0 && defenderDivisions.length > 0) {
+    } else {
+      // Defender wins when:
+      // - All attackers are eliminated and defenders survive, OR
+      // - Both sides reach 0 simultaneously (attacker loses in a draw — no mutual annihilation)
       victor = combat.defenderCountry;
     }
   }
