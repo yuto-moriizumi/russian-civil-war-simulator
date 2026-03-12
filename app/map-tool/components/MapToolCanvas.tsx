@@ -211,19 +211,21 @@ export default function MapToolCanvas({
 
       const features = e.features;
       if (!features || features.length === 0) return;
-      const shapeId = features[0].properties?.shapeID;
-      if (!shapeId) return;
+      // Use the same ID priority as createInitialOwnership: shapeISO > regionId > shapeID
+      const props = features[0].properties;
+      const regionId = props?.shapeISO || props?.regionId || props?.shapeID;
+      if (!regionId) return;
 
       if (editMode === 'units') {
         // Left click = add division
-        onRegionUnitAdd(shapeId);
+        onRegionUnitAdd(regionId);
         return;
       }
 
       // Don't process clicks in paint mode - handled by mouseDown instead
       if (isPaintEnabled) return;
 
-      onRegionPaint(shapeId);
+      onRegionPaint(regionId);
     },
     [onRegionPaint, onRegionUnitAdd, isDragging, isPaintEnabled, editMode]
   );
@@ -235,20 +237,21 @@ export default function MapToolCanvas({
 
       const features = e.features;
       if (!features || features.length === 0) return;
-      const shapeId = features[0].properties?.shapeID;
-      if (!shapeId) return;
+      const props = features[0].properties;
+      const regionId = props?.shapeISO || props?.regionId || props?.shapeID;
+      if (!regionId) return;
 
       if (editMode === 'units') {
         // Right click = remove division
-        onRegionUnitRemove(shapeId);
+        onRegionUnitRemove(regionId);
         return;
       }
 
       // In paint mode, right-click is used for panning, not eyedropper
       if (isPaintEnabled) return;
 
-      if (ownership[shapeId]) {
-        onCountryPick(ownership[shapeId]);
+      if (ownership[regionId]) {
+        onCountryPick(ownership[regionId]);
       }
     },
     [ownership, onCountryPick, isPaintEnabled, editMode, onRegionUnitRemove]
@@ -278,17 +281,18 @@ export default function MapToolCanvas({
 
       const features = e.features;
       if (features && features.length > 0) {
-        const shapeId = features[0].properties?.shapeID;
+        const props = features[0].properties;
+        const regionId = props?.shapeISO || props?.regionId || props?.shapeID;
 
-        if (shapeId !== hoveredRegion) {
-          setHoveredRegion(shapeId);
-          setHoveredRegionName(regionNames[shapeId] || null);
-          onRegionHover(shapeId);
+        if (regionId !== hoveredRegion) {
+          setHoveredRegion(regionId);
+          setHoveredRegionName(regionNames[regionId] || null);
+          onRegionHover(regionId);
         }
 
         // Paint while dragging in paint mode (ownership/core only)
-        if (isPainting && isPaintEnabled && shapeId && editMode !== 'units') {
-          onRegionPaint(shapeId);
+        if (isPainting && isPaintEnabled && regionId && editMode !== 'units') {
+          onRegionPaint(regionId);
         }
       } else {
         setHoveredRegion(null);
@@ -330,9 +334,10 @@ export default function MapToolCanvas({
           setIsPainting(true);
           const features = e.features;
           if (features && features.length > 0) {
-            const shapeId = features[0].properties?.shapeID;
-            if (shapeId) {
-              onRegionPaint(shapeId);
+            const props = features[0].properties;
+            const regionId = props?.shapeISO || props?.regionId || props?.shapeID;
+            if (regionId) {
+              onRegionPaint(regionId);
             }
           }
         } else if (e.originalEvent.button === 2) {
