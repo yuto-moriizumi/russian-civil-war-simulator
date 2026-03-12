@@ -96,9 +96,9 @@ export const COUNTRY_METADATA = {
     divisionPrefix: "Siberian",
     selectable: false,
     coreRegions: [
-      'RU-ALT', 'RU-KEM', 'RU-KGN', 'RU-KK', 'RU-KYA', 'RU-AL', 'RU-NVS', 'RU-OMS',
-      'RU-TOM', 'RU-TYU', 'RU-IRK',
-    ],
+              'RU-AL', 'RU-ALT', 'RU-IRK', 'RU-KEM', 'RU-KGN', 'RU-KK', 'RU-KYA', 'RU-NVS',
+              'RU-OMS', 'RU-TOM', 'RU-TYU',
+            ],
   },
   finland: {
     id: "finland",
@@ -466,7 +466,7 @@ export const COUNTRY_METADATA = {
     divisionPrefix: "Don Soviet Guard",
     selectable: false,
     coreRegions: [
-              'RU-ROS', 'RU-VGG', 'RU-AST',
+              'RU-AST', 'RU-ROS', 'RU-VGG',
             ],
    },
    /**
@@ -531,7 +531,7 @@ export const COUNTRY_METADATA = {
     divisionPrefix: "Kuban Cossack",
     selectable: false,
     coreRegions: [
-              'RU-KDA', 'RU-STA', 'RU-AD',
+              'RU-AD', 'RU-KDA', 'RU-STA',
             ],
   },
   kuban_soviet: {
@@ -545,7 +545,7 @@ export const COUNTRY_METADATA = {
     divisionPrefix: "Kuban Red Guard",
     selectable: false,
     coreRegions: [
-              'RU-KDA', 'RU-AD',
+              'RU-AD', 'RU-KDA',
             ],
   },
   /**
@@ -640,14 +640,10 @@ export const COUNTRY_METADATA = {
      divisionPrefix: "Transcaucasian Guard",
      selectable: false,
      coreRegions: [
-               // Georgia core regions
+               'AM-01', 'AM-02', 'AM-03', 'AM-04', 'AZ-BA', 'AZ-GA', 'AZ-LA', 'AZ-SH',
                'GE-01', 'GE-02', 'GE-03', 'GE-04', 'GE-05', 'GE-06', 'GE-07', 'GE-08',
                'GE-09', 'GE-10', 'GE-11', 'GE-12', 'GE-13', 'GE-14', 'GE-15', 'GE-16',
                'GE-17', 'GE-18', 'GE-19', 'GE-20',
-               // Armenia core regions
-               'AM-01', 'AM-02', 'AM-03', 'AM-04',
-               // Azerbaijan core regions (Caucasia proper, not including historical Persian Azerbaijan)
-               'AZ-BA', 'AZ-GA', 'AZ-LA', 'AZ-SH',
              ],
    },
    /**
@@ -854,7 +850,7 @@ export const COUNTRY_METADATA = {
       divisionPrefix: "Mountain Guard",
       selectable: false,
       coreRegions: [
-                'RU-CE', 'RU-IN', 'RU-KB', 'RU-SE',  // Core North Caucasus regions (Chechen, Ingushetia, Kabardino-Balkaria, North Ossetia)
+                'RU-CE', 'RU-IN', 'RU-KB', 'RU-SE',
               ],
     },
     /**
@@ -925,7 +921,7 @@ export const COUNTRY_METADATA = {
       divisionPrefix: "Azerbaijani Guard",
       selectable: false,
       coreRegions: [
-                'AZ-BA', 'AZ-GA', 'AZ-SH', 'AZ-LA',
+                'AZ-BA', 'AZ-GA', 'AZ-LA', 'AZ-SH',
               ],
     },
     /**
@@ -983,7 +979,7 @@ export const COUNTRY_METADATA = {
       divisionPrefix: "Crimean Guard",
       selectable: false,
       coreRegions: [
-                'UA-43', 'UA-40',
+                'UA-40', 'UA-43',
               ],
     },
     /**
@@ -1057,8 +1053,8 @@ export const COUNTRY_METADATA = {
       divisionPrefix: "Caucasian Red Guard",
       selectable: false,
       coreRegions: [
-        'RU-KDA', 'RU-AD', 'RU-STA', 'RU-CE', 'RU-IN', 'RU-KB', 'RU-SE',
-      ],
+                'RU-AD', 'RU-CE', 'RU-IN', 'RU-KB', 'RU-KDA', 'RU-SE', 'RU-STA',
+              ],
     },
     /**
      * Transcaspian Provisional Government (1918-1920)
@@ -1103,8 +1099,8 @@ export const COUNTRY_METADATA = {
       divisionPrefix: "Transcaspian",
       selectable: false,
       coreRegions: [
-        'TM-A', 'TM-B', 'TM-M',
-      ],
+                'TM-A', 'TM-B', 'TM-M',
+              ],
     },
     /**
      * State of Slovenes, Croats and Serbs (October - December 1918)
@@ -1148,12 +1144,12 @@ export const COUNTRY_METADATA = {
       divisionPrefix: "National Guard",
       selectable: false,
       coreRegions: [
-        'SI03', 'SI04',
-        'HR-01', 'HR-02', 'HR-03', 'HR-04', 'HR-05', 'HR-06', 'HR-07', 'HR-08', 'HR-09', 'HR-10',
-        'HR-11', 'HR-12', 'HR-13', 'HR-14', 'HR-15', 'HR-16', 'HR-17', 'HR-18', 'HR-19', 'HR-20', 'HR-21',
-        'BA-BRC*', 'BA-SRP*', 'BA-BIH*',
-        'RS-01', 'RS-02', 'RS-03', 'RS-04', 'RS-05', 'RS-06', 'RS-07'
-      ],
+                'BA-BIH*', 'BA-BRC*', 'BA-SRP*', 'HR-01', 'HR-02', 'HR-03', 'HR-04', 'HR-05',
+                'HR-06', 'HR-07', 'HR-08', 'HR-09', 'HR-10', 'HR-11', 'HR-12', 'HR-13',
+                'HR-14', 'HR-15', 'HR-16', 'HR-17', 'HR-18', 'HR-19', 'HR-20', 'HR-21',
+                'RS-01', 'RS-02', 'RS-03', 'RS-04', 'RS-05', 'RS-06', 'RS-07', 'SI03',
+                'SI04',
+              ],
     },
 } satisfies Record<string, CountryMetadata>;
 
