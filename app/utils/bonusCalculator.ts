@@ -4,8 +4,8 @@ import { Mission, CountryBonuses, CountryId } from '../types/game';
  * Base stats for divisions
  */
 export const BASE_DIVISION_STATS = {
-  attack: 20,
-  defence: 10,
+  attack: 10,
+  defence: 15,
   hp: 100,
   maxHp: 100,
 } as const;

@@ -20,7 +20,7 @@ const NO_REL: Relationship[] = [];
 
 function makeDiv(overrides: Partial<Division> = {}): Division {
   return { id: 'div-1', name: '1st', owner: 'soviet', armyGroupId: 'ag-1',
-    hp: 100, maxHp: 100, attack: 20, defence: 10, ...overrides };
+    hp: 100, maxHp: 100, attack: 10, defence: 15, ...overrides };
 }
 
 function makeRegion(id: string, overrides: Partial<Region> = {}): Region {

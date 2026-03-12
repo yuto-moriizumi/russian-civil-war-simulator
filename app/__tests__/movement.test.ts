@@ -32,8 +32,8 @@ function makeDiv(overrides: Partial<Division> = {}): Division {
     armyGroupId: 'ag-1',
     hp: 100,
     maxHp: 100,
-    attack: 20,
-    defence: 10,
+    attack: 10,
+    defence: 15,
     ...overrides,
   };
 }
