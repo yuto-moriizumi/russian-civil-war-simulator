@@ -19,7 +19,15 @@ export function useGameAPI() {
           return;
         }
         const region = state.regions[regionId];
-        if (region && region.owner === state.selectedCountry?.id && region.divisions.length > 0) {
+        if (!region || !state.selectedCountry) {
+          console.warn(`[gameAPI] Cannot select units in region "${regionId}" - not found`);
+          return;
+        }
+        // Allow selection from owned regions OR ally regions where the player
+        // has their own divisions (military access / autonomy scenario)
+        const hasOwnDivisions = region.divisions.some(d => d.owner === state.selectedCountry!.id);
+        const isOwnRegion = region.owner === state.selectedCountry.id;
+        if ((isOwnRegion || hasOwnDivisions) && region.divisions.length > 0) {
           state.setSelectedUnitRegion(regionId);
           state.setSelectedRegion(regionId);
         } else {
@@ -92,6 +100,8 @@ export function useGameAPI() {
       // Map mode
       setMapMode: (mode) => state.setMapMode(mode),
       getMapMode: () => state.mapMode,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      __setRegions: (regions: any) => state.setRegions(regions),
     };
 
     return () => {

@@ -303,6 +303,8 @@ export interface GameAPI {
   // Map mode
   setMapMode: (mode: MapMode) => void;
   getMapMode: () => MapMode;
+  // Development / testing helper – directly replaces the regions state
+  __setRegions: (regions: RegionState) => void;
 }
 
 // Declare global window.gameAPI

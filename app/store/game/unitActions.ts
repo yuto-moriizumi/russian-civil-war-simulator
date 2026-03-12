@@ -147,7 +147,30 @@ export const createUnitActions = (
     
     const from = regions[fromRegion];
     const to = regions[toRegion];
-    if (!from || from.divisions.length < count || !selectedCountry || from.owner !== selectedCountry.id) return;
+    if (!from || from.divisions.length < count || !selectedCountry) return;
+
+    // Allow movement from owned regions OR ally regions where the player has
+    // units with military access (autonomy / military_access relationship).
+    const fromOwner = from.owner;
+    const isOwnRegion = fromOwner === selectedCountry.id;
+    if (!isOwnRegion) {
+      // Check if the region owner grants us access
+      const theirRel = relationships.find(
+        r => r.fromCountry === fromOwner && r.toCountry === selectedCountry.id
+      );
+      const ourRel = relationships.find(
+        r => r.fromCountry === selectedCountry.id && r.toCountry === fromOwner
+      );
+      const theyGrantUs = theirRel ? theirRel.type : 'neutral';
+      const weDeclared = ourRel ? ourRel.type : 'neutral';
+      const hasAccess =
+        theyGrantUs === 'military_access' ||
+        theyGrantUs === 'autonomy' ||
+        weDeclared === 'autonomy';
+      // Also ensure we actually have our own divisions in this region
+      const hasOurDivisions = from.divisions.some(d => d.owner === selectedCountry.id);
+      if (!hasAccess || !hasOurDivisions) return;
+    }
     
     // Check relationship with target region owner
     const targetOwner = to.owner;
@@ -180,7 +203,9 @@ export const createUnitActions = (
       }
     }
     
-    const divisionsToMove = from.divisions.slice(0, count);
+    // Only move divisions that belong to the player (important when in an ally region)
+    const ownDivisions = from.divisions.filter(d => d.owner === selectedCountry.id);
+    const divisionsToMove = ownDivisions.slice(0, count);
     
     // Calculate distance-based travel time
     const { regionCentroids } = get();
@@ -200,11 +225,13 @@ export const createUnitActions = (
     const isHostile = isEnemy && !hasAutonomy && theyGrantUs !== 'military_access';
 
     let newCombat: ActiveCombat | null = null;
+    // Remove only the moving divisions from the region (preserve ally divisions)
+    const movingDivisionIds = new Set(divisionsToMove.map(d => d.id));
     let nextRegions = {
       ...regions,
       [fromRegion]: {
         ...from,
-        divisions: from.divisions.slice(count),
+        divisions: from.divisions.filter(d => !movingDivisionIds.has(d.id)),
       },
     };
     let nextActiveCombats = activeCombats;
