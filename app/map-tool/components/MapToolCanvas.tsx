@@ -4,16 +4,18 @@
 import { useRef, useState, useCallback, useMemo, useEffect } from "react";
 import Map, {
   MapRef,
+  Marker,
   Source,
   Layer,
   NavigationControl,
 } from "react-map-gl/maplibre";
 import type { MapLayerMouseEvent } from "react-map-gl/maplibre";
-import type { FeatureCollection } from "geojson";
+import type { FeatureCollection, Feature, Geometry } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { CountryId } from "../../types/game";
-import { getCountryColor } from "../../data/countries";
+import { getCountryColor, COUNTRY_FLAGS } from "../../data/countries";
 import { UnitPlacementData } from "../../data/map/initialUnitPlacement";
+import * as turf from "@turf/turf";
 
 interface ArmyGroupDef {
   name: string;
@@ -103,6 +105,38 @@ export default function MapToolCanvas({
     return totals;
   }, [unitPlacement]);
 
+  /** Dominant owner per region (country with most divisions placed there) */
+  const regionDominantOwner = useMemo(() => {
+    const result: Record<string, CountryId> = {};
+    for (const [regionId, entries] of Object.entries(unitPlacement)) {
+      const countsByOwner: Partial<Record<CountryId, number>> = {};
+      for (const e of entries) {
+        countsByOwner[e.owner] = (countsByOwner[e.owner] ?? 0) + e.count;
+      }
+      const dominant = (Object.entries(countsByOwner) as [CountryId, number][])
+        .sort(([, a], [, b]) => b - a)[0]?.[0];
+      if (dominant) result[regionId] = dominant;
+    }
+    return result;
+  }, [unitPlacement]);
+
+  /** Region centroids derived from GeoJSON */
+  const regionCentroids = useMemo(() => {
+    const centroids: Record<string, [number, number]> = {};
+    for (const feature of geojson.features) {
+      const shapeId = feature.properties?.shapeID;
+      if (!shapeId) continue;
+      try {
+        const center = turf.centroid(feature as Feature<Geometry>);
+        const [lng, lat] = center.geometry.coordinates;
+        centroids[shapeId] = [lng, lat];
+      } catch {
+        // skip features where centroid can't be computed
+      }
+    }
+    return centroids;
+  }, [geojson]);
+
   /** Army group color lookup by (country, name) */
   const armyGroupColor = useCallback(
     (country: CountryId, name: string): string => {
@@ -131,20 +165,15 @@ export default function MapToolCanvas({
         }
       }
     } else {
-      // units mode – dim non-owned regions, highlight regions with units
+      // units mode – color by owner, same as ownership mode
       for (const [regionId, owner] of Object.entries(ownership)) {
-        const hasUnits = !!regionUnitTotals[regionId];
-        if (owner === unitCountry) {
-          expression.push(regionId, hasUnits ? getCountryColor(owner) : "#2a2a2a");
-        } else {
-          expression.push(regionId, hasUnits ? "#556655" : "#222222");
-        }
+        expression.push(regionId, getCountryColor(owner));
       }
     }
 
     expression.push("#808080");
     return expression;
-  }, [ownership, editMode, coreRegions, selectedCountry, unitPlacement, unitCountry, regionUnitTotals]);
+  }, [ownership, editMode, coreRegions, selectedCountry]);
 
   // Line color expression for highlighting
   const lineColorExpression = useMemo(() => {
@@ -459,6 +488,48 @@ export default function MapToolCanvas({
         </Source>
 
         <NavigationControl position="bottom-right" />
+
+        {/* Unit markers (units mode only) */}
+        {editMode === 'units' && Object.entries(regionUnitTotals).map(([regionId, total]) => {
+          const coords = regionCentroids[regionId];
+          if (!coords) return null;
+          const owner = regionDominantOwner[regionId] ?? ownership[regionId];
+          const bgColor = owner ? getCountryColor(owner) : '#888888';
+          const textColor = owner === 'white' ? '#000000' : '#ffffff';
+          const textShadow = owner === 'white' ? 'none' : '1px 1px 1px rgba(0,0,0,0.5)';
+          const flagUrl = owner ? COUNTRY_FLAGS[owner] : undefined;
+          return (
+            <Marker key={regionId} longitude={coords[0]} latitude={coords[1]} anchor="center">
+              <div
+                style={{
+                  backgroundColor: bgColor,
+                  border: '1px solid rgba(0,0,0,0.5)',
+                  borderRadius: '4px',
+                  padding: '2px 6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                  cursor: 'default',
+                  pointerEvents: 'none',
+                }}
+              >
+                {flagUrl ? (
+                  <img
+                    src={flagUrl}
+                    alt={owner}
+                    style={{ width: '16px', height: '11px', objectFit: 'cover', border: '1px solid rgba(0,0,0,0.3)', flexShrink: 0 }}
+                  />
+                ) : (
+                  <span style={{ fontSize: '10px', lineHeight: '11px' }}>■</span>
+                )}
+                <span style={{ fontSize: '12px', fontWeight: 'bold', color: textColor, textShadow }}>
+                  {total}
+                </span>
+              </div>
+            </Marker>
+          );
+        })}
       </Map>
 
       {/* Tooltip */}
@@ -544,32 +615,6 @@ export default function MapToolCanvas({
         )}
       </div>
 
-      {/* Unit count badges overlay (units mode only) */}
-      {editMode === 'units' && Object.keys(regionUnitTotals).length > 0 && (
-        <div className="pointer-events-none absolute right-4 top-4 max-h-64 w-52 overflow-y-auto rounded border border-gray-600 bg-gray-800/95 px-3 py-2 text-xs shadow-lg">
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
-            Regions with units
-          </div>
-          {Object.entries(regionUnitTotals)
-            .sort(([, a], [, b]) => b - a)
-            .slice(0, 20)
-            .map(([regionId, total]) => (
-              <div key={regionId} className="flex items-center justify-between py-0.5">
-                <span className="truncate text-gray-300">
-                  {regionNames[regionId] ?? regionId}
-                </span>
-                <span className="ml-2 flex-shrink-0 font-semibold text-white">
-                  {total}
-                </span>
-              </div>
-            ))}
-          {Object.keys(regionUnitTotals).length > 20 && (
-            <div className="mt-1 text-[10px] text-gray-500">
-              +{Object.keys(regionUnitTotals).length - 20} more…
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
