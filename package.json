@@ -13,7 +13,9 @@
     "map:build:adjacency": "tsx scripts/build-adjacency.ts",
     "map:build": "npm run map:build:geojson && npm run map:build:adjacency",
     "map:gen": "npm run map:dl && npm run map:build",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@dagrejs/dagre": "^1.1.8",
@@ -35,6 +37,7 @@
     "@types/react-dom": "^19",
     "@types/topojson-client": "^3.1.5",
     "@types/topojson-server": "^3.0.4",
+    "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "husky": "^9.1.7",
@@ -44,6 +47,7 @@
     "topojson-server": "^3.0.1",
     "ts-morph": "^27.0.2",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.0.18"
   }
 }

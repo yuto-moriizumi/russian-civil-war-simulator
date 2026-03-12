@@ -24,5 +24,17 @@ fi
 
 echo "✓ ESLint check passed"
 
+# Run unit tests
+echo "Running unit tests..."
+npm test
+TEST_EXIT_CODE=$?
+
+if [ $TEST_EXIT_CODE -ne 0 ]; then
+  echo "❌ Unit tests failed. Push aborted."
+  exit 1
+fi
+
+echo "✓ Unit tests passed"
+
 echo "✓ All pre-push checks passed!"
 exit 0

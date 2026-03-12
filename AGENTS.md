@@ -2,6 +2,39 @@
 
 This document provides instructions for AI agents interacting with the Russian Civil War Simulator.
 
+## Verifying Code Changes
+
+### Prefer unit tests over Playwright MCP
+
+For logic bugs (movement, combat, production, missions, diplomacy), **always run the unit test suite first**. It runs in under a second and requires no browser:
+
+```bash
+npm test
+```
+
+Tests live in `app/__tests__/`. Add new tests to the relevant file when fixing a bug or adding a feature — this prevents regressions and is far faster than browser automation.
+
+**Use Playwright MCP only** when you need to verify UI rendering, visual layout, or browser-specific behavior that cannot be exercised through pure logic tests.
+
+### Test file locations
+
+| Area | Test file |
+|---|---|
+| Unit movement (adjacency, transit, combat landing) | `app/__tests__/movement.test.ts` |
+
+### Writing new tests
+
+Test pure/helper functions directly — no store or browser needed. Import from:
+
+- `app/utils/mapUtils` — adjacency helpers
+- `app/utils/distance` — travel time calculations
+- `app/store/game/tickHelpers/movementProcessing` — tick-level movement
+- `app/store/game/tickHelpers/movementApplication` — movement landing logic
+- `app/utils/combat` — combat creation and resolution
+- `app/types/game` — type imports
+
+
+
 ## Game API
 
 The game exposes a `window.gameAPI` object for programmatic control. This is useful for AI agents using browser automation tools like Playwright MCP.
