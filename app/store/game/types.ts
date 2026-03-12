@@ -28,6 +28,8 @@ export interface GameStore extends GameState {
   isProductionModalOpen: boolean; // Production queue modal state
   selectedCountryId: CountryId | null; // Country for the country sidebar
   isCountrySidebarOpen: boolean; // Country sidebar state
+  /** Army groups derived from the map tool's unit placement editor; merged into armyGroups at game start */
+  placementArmyGroups: import('../../types/game').ArmyGroup[];
 
   // Actions
   setRegions: (regions: RegionState) => void;

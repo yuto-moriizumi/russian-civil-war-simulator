@@ -33,6 +33,7 @@ export const useGameStore = create<GameStore>()(
       isProductionModalOpen: false,
       selectedCountryId: null,
       isCountrySidebarOpen: false,
+      placementArmyGroups: [],
 
       // Compose all actions from separate modules
       ...createBasicActions(set, get),

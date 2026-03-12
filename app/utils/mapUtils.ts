@@ -1,6 +1,108 @@
-import { Adjacency, CountryId, RegionState, Movement } from '../types/game';
+import { Adjacency, CountryId, RegionState, Movement, ArmyGroup, Division } from '../types/game';
 import { initialRegionOwnership, regionValues } from '../data/map';
 import { COUNTRY_COLORS } from '../data/countries';
+import { UnitPlacementData } from '../data/map/initialUnitPlacement';
+import { generateDivisionId } from './combat';
+import { getInitialCountryBonuses } from './bonusCalculator';
+import { getDivisionStats } from './bonusCalculator';
+import { COUNTRY_METADATA } from '../data/countryMetadata';
+
+interface ArmyGroupDef {
+  name: string;
+  color: string;
+}
+
+/**
+ * Given the placement data + army group definitions, create ArmyGroup records
+ * and populate regions with the corresponding Division objects.
+ *
+ * Called by useMapData after createInitialOwnership to pre-populate units.
+ */
+export function applyInitialUnitPlacement(
+  regions: RegionState,
+  placement: UnitPlacementData,
+  armyGroupDefs: Record<string, ArmyGroupDef[]>
+): { regions: RegionState; armyGroups: ArmyGroup[] } {
+  // Build army group registry: (country, name) -> ArmyGroup
+  const armyGroupMap = new Map<string, ArmyGroup>();
+
+  // Create ArmyGroup objects from defs
+  for (const [countryId, groups] of Object.entries(armyGroupDefs)) {
+    for (const def of groups) {
+      const key = `${countryId}::${def.name}`;
+      armyGroupMap.set(key, {
+        id: `initial-${countryId}-${def.name.replace(/\s+/g, '-').toLowerCase()}`,
+        name: def.name,
+        regionIds: [],
+        color: def.color,
+        owner: countryId as CountryId,
+        theaterId: null,
+        mode: 'none',
+      });
+    }
+  }
+
+  // Clone regions so we don't mutate the original
+  const updatedRegions: RegionState = {};
+  for (const [id, region] of Object.entries(regions)) {
+    updatedRegions[id] = { ...region, divisions: [] };
+  }
+
+  // Apply placements
+  for (const [regionId, entries] of Object.entries(placement)) {
+    const region = updatedRegions[regionId];
+    if (!region) continue;
+
+    for (const entry of entries) {
+      const owner = entry.owner as CountryId;
+      const key = `${owner}::${entry.armyGroupName}`;
+
+      // Ensure army group exists (create on-the-fly if not in defs)
+      if (!armyGroupMap.has(key)) {
+        armyGroupMap.set(key, {
+          id: `initial-${owner}-${entry.armyGroupName.replace(/\s+/g, '-').toLowerCase()}`,
+          name: entry.armyGroupName,
+          regionIds: [],
+          color: '#3B82F6',
+          owner,
+          theaterId: null,
+          mode: 'none',
+        });
+      }
+
+      const armyGroup = armyGroupMap.get(key)!;
+
+      // Track the region in the army group
+      if (!armyGroup.regionIds.includes(regionId)) {
+        armyGroup.regionIds.push(regionId);
+      }
+
+      // Build default stats for this country
+      const initialBonuses = getInitialCountryBonuses();
+      const stats = getDivisionStats(owner, initialBonuses);
+      const meta = COUNTRY_METADATA[owner];
+      const prefix = meta?.divisionPrefix ?? owner;
+
+      for (let i = 0; i < entry.count; i++) {
+        const divIndex = region.divisions.length + 1;
+        const division: Division = {
+          id: generateDivisionId(),
+          name: `${prefix} ${divIndex}`,
+          owner,
+          armyGroupId: armyGroup.id,
+          hp: stats.maxHp,
+          maxHp: stats.maxHp,
+          attack: stats.attack,
+          defence: stats.defence,
+        };
+        region.divisions.push(division);
+      }
+    }
+  }
+
+  const armyGroups = Array.from(armyGroupMap.values());
+  return { regions: updatedRegions, armyGroups };
+}
 
 // Re-export for backward compatibility
 export { COUNTRY_COLORS };

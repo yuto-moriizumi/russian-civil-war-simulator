@@ -13,6 +13,12 @@ import type { FeatureCollection } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { CountryId } from "../../types/game";
 import { getCountryColor } from "../../data/countries";
+import { UnitPlacementData } from "../../data/map/initialUnitPlacement";
+
+interface ArmyGroupDef {
+  name: string;
+  color: string;
+}
 
 interface MapToolCanvasProps {
   geojson: FeatureCollection;
@@ -21,12 +27,19 @@ interface MapToolCanvasProps {
   adjacency: Record<string, string[]> | null;
   showAdjacency: boolean;
   isPaintEnabled: boolean;
-  editMode: 'ownership' | 'core';
+  editMode: 'ownership' | 'core' | 'units';
   coreRegions: Record<CountryId, string[]>;
+  // Unit placement props
+  unitPlacement: UnitPlacementData;
+  selectedArmyGroup: string | null;
+  unitCountry: CountryId;
+  armyGroupDefs: Record<CountryId, ArmyGroupDef[]>;
   onRegionPaint: (regionId: string) => void;
   onRegionHover: (regionId: string | null) => void;
   onCountryPick: (country: CountryId) => void;
   onPaintEnd: () => void;
+  onRegionUnitAdd: (regionId: string) => void;
+  onRegionUnitRemove: (regionId: string) => void;
 }
 
 export default function MapToolCanvas({
@@ -38,10 +51,16 @@ export default function MapToolCanvas({
   isPaintEnabled,
   editMode,
   coreRegions,
+  unitPlacement,
+  selectedArmyGroup,
+  unitCountry,
+  armyGroupDefs,
   onRegionPaint,
   onRegionHover,
   onCountryPick,
   onPaintEnd,
+  onRegionUnitAdd,
+  onRegionUnitRemove,
 }: MapToolCanvasProps) {
   const mapRef = useRef<MapRef>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -73,37 +92,59 @@ export default function MapToolCanvas({
     return names;
   }, [geojson]);
 
+  // ── Unit placement helpers ─────────────────────────────────────────────────
 
+  /** Total divisions in a region (across all countries) */
+  const regionUnitTotals = useMemo(() => {
+    const totals: Record<string, number> = {};
+    for (const [regionId, entries] of Object.entries(unitPlacement)) {
+      totals[regionId] = entries.reduce((s, e) => s + e.count, 0);
+    }
+    return totals;
+  }, [unitPlacement]);
 
-  // Create fill color expression based on ownership or core regions
+  /** Army group color lookup by (country, name) */
+  const armyGroupColor = useCallback(
+    (country: CountryId, name: string): string => {
+      const group = (armyGroupDefs[country] ?? []).find((g) => g.name === name);
+      return group?.color ?? "#888888";
+    },
+    [armyGroupDefs]
+  );
+
+  // ── Fill color expression ──────────────────────────────────────────────────
   const fillColorExpression = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const expression: any[] = ["match", ["get", "shapeID"]];
 
     if (editMode === 'ownership') {
-      // Add all region colors
       for (const [regionId, owner] of Object.entries(ownership)) {
         expression.push(regionId, getCountryColor(owner));
       }
-    } else {
-      // In core regions mode, show the selected country's color for its core regions
+    } else if (editMode === 'core') {
       const selectedCountryCoreRegions = coreRegions[selectedCountry] || [];
       for (const regionId of Object.keys(ownership)) {
         if (selectedCountryCoreRegions.includes(regionId)) {
-          // Core region - show bright color
           expression.push(regionId, getCountryColor(selectedCountry));
         } else {
-          // Non-core region - show dimmed color
           expression.push(regionId, "#404040");
+        }
+      }
+    } else {
+      // units mode – dim non-owned regions, highlight regions with units
+      for (const [regionId, owner] of Object.entries(ownership)) {
+        const hasUnits = !!regionUnitTotals[regionId];
+        if (owner === unitCountry) {
+          expression.push(regionId, hasUnits ? getCountryColor(owner) : "#2a2a2a");
+        } else {
+          expression.push(regionId, hasUnits ? "#556655" : "#222222");
         }
       }
     }
 
-    // Default color for unmatched regions
     expression.push("#808080");
-
     return expression;
-  }, [ownership, editMode, coreRegions, selectedCountry]);
+  }, [ownership, editMode, coreRegions, selectedCountry, unitPlacement, unitCountry, regionUnitTotals]);
 
   // Line color expression for highlighting
   const lineColorExpression = useMemo(() => {
@@ -137,40 +178,51 @@ export default function MapToolCanvas({
   // Handle click
   const handleMapClick = useCallback(
     (e: MapLayerMouseEvent) => {
-      // Don't process clicks that were part of a drag
       if (isDragging) return;
+
+      const features = e.features;
+      if (!features || features.length === 0) return;
+      const shapeId = features[0].properties?.shapeID;
+      if (!shapeId) return;
+
+      if (editMode === 'units') {
+        // Left click = add division
+        onRegionUnitAdd(shapeId);
+        return;
+      }
 
       // Don't process clicks in paint mode - handled by mouseDown instead
       if (isPaintEnabled) return;
 
-      const features = e.features;
-      if (features && features.length > 0) {
-        const shapeId = features[0].properties?.shapeID;
-        if (shapeId) {
-          onRegionPaint(shapeId);
-        }
-      }
+      onRegionPaint(shapeId);
     },
-    [onRegionPaint, isDragging, isPaintEnabled]
+    [onRegionPaint, onRegionUnitAdd, isDragging, isPaintEnabled, editMode]
   );
 
-  // Handle right-click (eyedropper)
+  // Handle right-click
   const handleContextMenu = useCallback(
     (e: MapLayerMouseEvent) => {
       e.preventDefault();
 
+      const features = e.features;
+      if (!features || features.length === 0) return;
+      const shapeId = features[0].properties?.shapeID;
+      if (!shapeId) return;
+
+      if (editMode === 'units') {
+        // Right click = remove division
+        onRegionUnitRemove(shapeId);
+        return;
+      }
+
       // In paint mode, right-click is used for panning, not eyedropper
       if (isPaintEnabled) return;
 
-      const features = e.features;
-      if (features && features.length > 0) {
-        const shapeId = features[0].properties?.shapeID;
-        if (shapeId && ownership[shapeId]) {
-          onCountryPick(ownership[shapeId]);
-        }
+      if (ownership[shapeId]) {
+        onCountryPick(ownership[shapeId]);
       }
     },
-    [ownership, onCountryPick, isPaintEnabled]
+    [ownership, onCountryPick, isPaintEnabled, editMode, onRegionUnitRemove]
   );
 
   // Handle mouse move
@@ -185,7 +237,6 @@ export default function MapToolCanvas({
         const center = map.getCenter();
         const zoom = map.getZoom();
 
-        // Calculate movement in map coordinates
         const scale = 360 / (512 * Math.pow(2, zoom));
         const newLng = center.lng - dx * scale;
         const newLat =
@@ -206,8 +257,8 @@ export default function MapToolCanvas({
           onRegionHover(shapeId);
         }
 
-        // Paint while dragging in paint mode
-        if (isPainting && isPaintEnabled && shapeId) {
+        // Paint while dragging in paint mode (ownership/core only)
+        if (isPainting && isPaintEnabled && shapeId && editMode !== 'units') {
           onRegionPaint(shapeId);
         }
       } else {
@@ -225,31 +276,37 @@ export default function MapToolCanvas({
       isPanning,
       panStart,
       regionNames,
+      editMode,
     ]
   );
 
   // Handle mouse down
   const handleMouseDown = useCallback(
     (e: MapLayerMouseEvent) => {
-      console.log('[MapToolCanvas] handleMouseDown', { isPaintEnabled, button: e.originalEvent.button, features: e.features });
+      if (editMode === 'units') {
+        // Units mode: no drag-paint, just track for panning
+        if (e.originalEvent.button === 2) {
+          setIsPanning(true);
+          setPanStart({
+            x: e.originalEvent.clientX,
+            y: e.originalEvent.clientY,
+          });
+        }
+        setIsDragging(false);
+        return;
+      }
+
       if (isPaintEnabled) {
         if (e.originalEvent.button === 0) {
-          // Left mouse button in paint mode - start painting
           setIsPainting(true);
           const features = e.features;
-          console.log('[MapToolCanvas] features:', features);
           if (features && features.length > 0) {
             const shapeId = features[0].properties?.shapeID;
-            console.log('[MapToolCanvas] shapeId:', shapeId);
             if (shapeId) {
-              console.log('[MapToolCanvas] calling onRegionPaint with:', shapeId);
               onRegionPaint(shapeId);
             }
-          } else {
-            console.log('[MapToolCanvas] NO FEATURES FOUND IN EVENT');
           }
         } else if (e.originalEvent.button === 2) {
-          // Right mouse button in paint mode - start panning
           setIsPainting(true);
           setPanStart({
             x: e.originalEvent.clientX,
@@ -259,7 +316,7 @@ export default function MapToolCanvas({
       }
       setIsDragging(false);
     },
-    [isPaintEnabled, onRegionPaint]
+    [isPaintEnabled, onRegionPaint, editMode]
   );
 
   // Handle mouse up
@@ -267,7 +324,7 @@ export default function MapToolCanvas({
     setIsPainting(false);
     setIsPanning(false);
     setPanStart(null);
-    onPaintEnd(); // Reset painted regions set when drag ends
+    onPaintEnd();
   }, [onPaintEnd]);
 
   // Handle drag start
@@ -282,19 +339,16 @@ export default function MapToolCanvas({
 
     const map = mapRef.current.getMap();
 
-    // Clear all feature states
     if (map.getSource("regions")) {
       map.removeFeatureState({ source: "regions" });
     }
 
-    // Set hover state
     if (hoveredRegion) {
       map.setFeatureState(
         { source: "regions", id: hoveredRegion },
         { hover: true }
       );
 
-      // Set adjacent states if enabled
       if (showAdjacency && adjacency && adjacency[hoveredRegion]) {
         for (const adjRegion of adjacency[hoveredRegion]) {
           map.setFeatureState(
@@ -306,17 +360,11 @@ export default function MapToolCanvas({
     }
   }, [mapLoaded, hoveredRegion, showAdjacency, adjacency]);
 
-  // Force update paint property when core regions change
-  // This directly calls MapLibre's setPaintProperty to ensure visual updates
+  // Force update paint property when expressions change
   useEffect(() => {
     if (!mapLoaded || !mapRef.current) return;
-
     const map = mapRef.current.getMap();
-    
-    // Check if the layer exists
     if (!map.getLayer("regions-fill")) return;
-
-    // Update the fill-color paint property directly
     map.setPaintProperty("regions-fill", "fill-color", fillColorExpression);
   }, [mapLoaded, fillColorExpression]);
 
@@ -338,9 +386,6 @@ export default function MapToolCanvas({
     []
   );
 
-  // Memoize paint objects to ensure proper updates
-  // fillColorExpression already includes all the necessary state, so we only depend on it
-  // Changes to ownership, editMode, coreRegions, and selectedCountry will trigger fillColorExpression updates
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fillPaint: any = useMemo(() => ({
     "fill-color": fillColorExpression,
@@ -352,6 +397,20 @@ export default function MapToolCanvas({
     "line-color": lineColorExpression,
     "line-width": lineWidthExpression,
   }), [lineColorExpression, lineWidthExpression]);
+
+  // Unit summary for the hovered region
+  const hoveredUnitSummary = useMemo(() => {
+    if (!hoveredRegion || editMode !== 'units') return null;
+    const entries = unitPlacement[hoveredRegion];
+    if (!entries || entries.length === 0) return null;
+    return entries;
+  }, [hoveredRegion, unitPlacement, editMode]);
+
+  // Active army group color for brush indicator
+  const activeBrushColor = useMemo(() => {
+    if (editMode !== 'units' || !selectedArmyGroup) return getCountryColor(selectedCountry);
+    return armyGroupColor(unitCountry, selectedArmyGroup);
+  }, [editMode, selectedArmyGroup, selectedCountry, unitCountry, armyGroupColor]);
 
   return (
     <div className="relative h-full w-full">
@@ -374,8 +433,14 @@ export default function MapToolCanvas({
         onMouseUp={handleMouseUp}
         onDragStart={handleDragStart}
         onLoad={handleMapLoad}
-        cursor={isPaintEnabled ? "crosshair" : "pointer"}
-        dragPan={isPaintEnabled ? false : true}
+        cursor={
+          editMode === 'units'
+            ? (selectedArmyGroup ? "crosshair" : "not-allowed")
+            : isPaintEnabled
+            ? "crosshair"
+            : "pointer"
+        }
+        dragPan={editMode !== 'units' && isPaintEnabled ? false : true}
         dragRotate={false}
         touchZoomRotate={false}
         touchPitch={false}
@@ -397,7 +462,7 @@ export default function MapToolCanvas({
       </Map>
 
       {/* Tooltip */}
-      {hoveredRegion && ownership[hoveredRegion] && (
+      {hoveredRegion && (
         <div className="pointer-events-none absolute left-4 top-4 rounded border border-gray-600 bg-gray-800/95 px-3 py-2 text-sm shadow-lg">
           {hoveredRegionName && (
             <div className="font-semibold text-white">{hoveredRegionName}</div>
@@ -409,9 +474,11 @@ export default function MapToolCanvas({
           >
             {hoveredRegion}
           </div>
-          <div className="text-xs text-gray-400">
-            Owner: {ownership[hoveredRegion]}
-          </div>
+          {ownership[hoveredRegion] && (
+            <div className="text-xs text-gray-400">
+              Owner: {ownership[hoveredRegion]}
+            </div>
+          )}
           {editMode === 'core' && (
             <div className="mt-1 text-xs text-gray-400">
               Core of: {
@@ -421,6 +488,28 @@ export default function MapToolCanvas({
                   .join(', ') || 'none'
               }
             </div>
+          )}
+          {editMode === 'units' && hoveredUnitSummary && (
+            <div className="mt-1 space-y-0.5">
+              {hoveredUnitSummary.map((e, i) => (
+                <div key={i} className="flex items-center gap-1.5 text-xs">
+                  <div
+                    className="h-2 w-2 rounded-full border border-gray-500"
+                    style={{ backgroundColor: armyGroupColor(e.owner, e.armyGroupName) }}
+                  />
+                  <span className="text-gray-300">
+                    {e.owner} / {e.armyGroupName}:
+                  </span>
+                  <span className="font-semibold text-white">{e.count}</span>
+                </div>
+              ))}
+              <div className="border-t border-gray-600 pt-0.5 text-[10px] text-gray-500">
+                Total: {hoveredUnitSummary.reduce((s, e) => s + e.count, 0)}
+              </div>
+            </div>
+          )}
+          {editMode === 'units' && !hoveredUnitSummary && (
+            <div className="mt-1 text-xs text-gray-500">No units placed</div>
           )}
           {showAdjacency && adjacency && adjacency[hoveredRegion] && (
             <div className="mt-1 text-xs text-gray-400">
@@ -434,13 +523,53 @@ export default function MapToolCanvas({
       <div className="absolute bottom-4 left-4 flex items-center gap-2 rounded border border-gray-600 bg-gray-800/95 px-3 py-2 text-sm shadow-lg">
         <div
           className="h-4 w-4 rounded border border-gray-500"
-          style={{ backgroundColor: getCountryColor(selectedCountry) }}
+          style={{ backgroundColor: activeBrushColor }}
         />
-        <span className="font-semibold">{selectedCountry}</span>
-        <span className="text-xs text-gray-400">
-          ({editMode === 'ownership' ? 'Ownership' : 'Core Regions'} | {isPaintEnabled ? "Left: Paint | Right: Pan" : "Paint disabled"})
-        </span>
+        {editMode === 'units' ? (
+          <>
+            <span className="font-semibold">{unitCountry}</span>
+            <span className="text-xs text-gray-400">
+              {selectedArmyGroup
+                ? `| ${selectedArmyGroup} | Left: +div | Right: -div`
+                : "| select army group in panel"}
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="font-semibold">{selectedCountry}</span>
+            <span className="text-xs text-gray-400">
+              ({editMode === 'ownership' ? 'Ownership' : 'Core Regions'} | {isPaintEnabled ? "Left: Paint | Right: Pan" : "Paint disabled"})
+            </span>
+          </>
+        )}
       </div>
+
+      {/* Unit count badges overlay (units mode only) */}
+      {editMode === 'units' && Object.keys(regionUnitTotals).length > 0 && (
+        <div className="pointer-events-none absolute right-4 top-4 max-h-64 w-52 overflow-y-auto rounded border border-gray-600 bg-gray-800/95 px-3 py-2 text-xs shadow-lg">
+          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+            Regions with units
+          </div>
+          {Object.entries(regionUnitTotals)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 20)
+            .map(([regionId, total]) => (
+              <div key={regionId} className="flex items-center justify-between py-0.5">
+                <span className="truncate text-gray-300">
+                  {regionNames[regionId] ?? regionId}
+                </span>
+                <span className="ml-2 flex-shrink-0 font-semibold text-white">
+                  {total}
+                </span>
+              </div>
+            ))}
+          {Object.keys(regionUnitTotals).length > 20 && (
+            <div className="mt-1 text-[10px] text-gray-500">
+              +{Object.keys(regionUnitTotals).length - 20} more…
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

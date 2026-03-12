@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import type { FeatureCollection } from 'geojson';
 
 interface GeoJSONLoaderProps {
-  onLoad: (geojson: FeatureCollection, source: string) => void;
+  onLoad: (geojson: FeatureCollection, source?: string) => void;
   isLoading: boolean;
 }
 

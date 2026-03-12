@@ -1,4 +1,4 @@
-import { CountryId, Screen, Region, Adjacency, Country, GameSpeed, GameState, RegionState, AIState, MapMode } from '../../types/game';
+import { CountryId, Screen, Region, Adjacency, Country, GameSpeed, GameState, RegionState, AIState, MapMode, ArmyGroup } from '../../types/game';
 import { initialMissions } from '../../data/gameData';
 import { createInitialAIState, createInitialAIArmyGroup } from '../../ai/cpuPlayer';
 import { createGameEvent, createNotification } from '../../utils/eventUtils';
@@ -7,6 +7,9 @@ import { initialGameState } from './initialState';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
 import * as turf from '@turf/turf';
+import { initialUnitPlacement, initialArmyGroupDefs } from '../../data/map/initialUnitPlacement';
+import { createDivision } from '../../utils/combat';
+import { getDivisionPrefix } from '../../data/countries';
 
 /**
  * Defines basic state management actions:
@@ -86,15 +89,106 @@ export const createBasicActions = (
     
     // Create initial AI states for all AI countries
     const aiStates = aiCountries.map(countryId => createInitialAIState(countryId));
+
+    // ── Build army groups and place divisions from map-tool placement data ──
+    //
+    // For each country that has placement data, create ArmyGroup objects keyed
+    // by the name defined in initialArmyGroupDefs, then populate region divisions
+    // from initialUnitPlacement.  Countries that have no placement data fall back
+    // to the auto-generated army group created by createInitialAIArmyGroup.
+
+    // Map: countryId → (armyGroupName → ArmyGroup)
+    const placementGroupsByCountry: Record<string, Record<string, ArmyGroup>> = {};
+
+    for (const [countryId, defs] of Object.entries(initialArmyGroupDefs)) {
+      if (!defs || defs.length === 0) continue;
+      placementGroupsByCountry[countryId] = {};
+      for (const def of defs) {
+        const groupId = `placement-${countryId}-${def.name}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        placementGroupsByCountry[countryId][def.name] = {
+          id: groupId,
+          name: def.name,
+          regionIds: [], // will be populated below
+          color: def.color,
+          owner: countryId as CountryId,
+          theaterId: null,
+          mode: country.id === countryId ? 'none' : 'advance',
+        };
+      }
+    }
+
+    // Deep-copy current regions so we can mutate divisions
+    const regionsWithUnits: RegionState = {};
+    for (const [regionId, region] of Object.entries(currentRegions)) {
+      regionsWithUnits[regionId] = { ...region, divisions: [...region.divisions] };
+    }
+
+    // Division name counters per country
+    const divCounters: Record<string, number> = {};
+
+    // Place divisions from initialUnitPlacement
+    for (const [regionId, entries] of Object.entries(initialUnitPlacement)) {
+      if (!regionsWithUnits[regionId]) continue;
+      for (const entry of entries) {
+        const { owner, armyGroupName, count } = entry;
+        const countryGroups = placementGroupsByCountry[owner];
+        let armyGroup = countryGroups?.[armyGroupName];
+
+        // Fallback: if no matching group defined, create one on-the-fly
+        if (!armyGroup) {
+          if (!placementGroupsByCountry[owner]) placementGroupsByCountry[owner] = {};
+          const groupId = `placement-${owner}-${armyGroupName}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          armyGroup = {
+            id: groupId,
+            name: armyGroupName,
+            regionIds: [],
+            color: '#6B7280',
+            owner: owner as CountryId,
+            theaterId: null,
+            mode: country.id === owner ? 'none' : 'advance',
+          };
+          placementGroupsByCountry[owner][armyGroupName] = armyGroup;
+        }
+
+        // Track which regions this group covers
+        if (!armyGroup.regionIds.includes(regionId)) {
+          armyGroup.regionIds.push(regionId);
+        }
+
+        // Create divisions and push to region
+        const initialBonuses = get().countryBonuses?.[owner as CountryId] ?? 
+          { attackBonus: 0, defenceBonus: 0, hpBonus: 0, commandPowerBonus: 0, productionSpeedMultiplier: 1 };
+        const prefix = getDivisionPrefix(owner as CountryId);
+        for (let i = 0; i < count; i++) {
+          divCounters[owner] = (divCounters[owner] ?? 0) + 1;
+          const n = divCounters[owner];
+          const suffix = n === 1 ? '1st' : n === 2 ? '2nd' : n === 3 ? '3rd' : `${n}th`;
+          const name = `${suffix} ${prefix}`;
+          const division = createDivision(owner as CountryId, name, armyGroup.id, initialBonuses);
+          regionsWithUnits[regionId].divisions.push(division);
+        }
+      }
+    }
+
+    // Collect all placement-derived army groups
+    const placementArmyGroups: ArmyGroup[] = Object.values(placementGroupsByCountry)
+      .flatMap(groupMap => Object.values(groupMap));
+
+    // Set of countries that already have placement groups
+    const countriesWithPlacement = new Set(Object.keys(placementGroupsByCountry));
+
+    // For AI countries WITHOUT placement data, generate auto groups
+    const aiArmyGroups = aiCountries
+      .filter(countryId => !countriesWithPlacement.has(countryId))
+      .map(countryId => createInitialAIArmyGroup(countryId, regionsWithUnits));
     
-    // Create initial army groups for all AI countries
-    const aiArmyGroups = aiCountries.map(countryId => 
-      createInitialAIArmyGroup(countryId, currentRegions)
-    );
-    
-    // Create initial player army group
-    const playerArmyGroup = createInitialAIArmyGroup(country.id, currentRegions);
-    playerArmyGroup.id = `player-army-group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Player army group (only if the player country has no placement data)
+    const playerArmyGroups: ArmyGroup[] = [];
+    if (!countriesWithPlacement.has(country.id)) {
+      const playerArmyGroup = createInitialAIArmyGroup(country.id, regionsWithUnits);
+      playerArmyGroup.id = `player-army-group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      playerArmyGroups.push(playerArmyGroup);
+    }
     
     // Reset all game state for a fresh start
     set({
@@ -102,10 +196,12 @@ export const createBasicActions = (
       selectedCountry: country,
       currentScreen: 'main',
       missions: countryMissions,
-      aiStates: aiStates, // Multiple AI states
-      armyGroups: [playerArmyGroup, ...aiArmyGroups], // Player + all AI army groups
-      // Keep the regions and adjacency from map data (these are static)
-      regions: get().regions,
+      aiStates: aiStates,
+      armyGroups: [...playerArmyGroups, ...aiArmyGroups, ...placementArmyGroups],
+      placementArmyGroups,
+      // Keep the regions and adjacency from map data (these are static), but
+      // overlay any divisions from unit placement
+      regions: Object.keys(regionsWithUnits).length > 0 ? regionsWithUnits : get().regions,
       adjacency: get().adjacency,
       mapDataLoaded: get().mapDataLoaded,
       regionCentroids: get().regionCentroids, // Preserve loaded centroids

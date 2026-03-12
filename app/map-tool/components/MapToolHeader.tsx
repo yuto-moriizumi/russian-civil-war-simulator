@@ -17,9 +17,9 @@ interface MapToolHeaderProps {
   onGenerateAdjacency: () => void;
   onShowAdjacencyChange: (show: boolean) => void;
   // Edit mode props
-  editMode: 'ownership' | 'core';
+  editMode: 'ownership' | 'core' | 'units';
   isPaintEnabled: boolean;
-  onEditModeChange: (mode: 'ownership' | 'core') => void;
+  onEditModeChange: (mode: 'ownership' | 'core' | 'units') => void;
   onPaintToggle: () => void;
   // Export props
   ownership: Record<string, CountryId>;
@@ -130,21 +130,33 @@ export default function MapToolHeader({
               >
                 Core
               </button>
-            </div>
-
-            {/* Paint Mode */}
-            <div className="flex items-center gap-2 border-r border-gray-700 pr-3">
               <button
-                onClick={onPaintToggle}
-                className={`rounded px-2 py-0.5 text-[11px] whitespace-nowrap ${
-                  isPaintEnabled
-                    ? "bg-green-600 hover:bg-green-500"
-                    : "bg-gray-700 hover:bg-gray-600"
+                onClick={() => onEditModeChange('units')}
+                className={`rounded px-2 py-0.5 text-[11px] transition-colors whitespace-nowrap ${
+                  editMode === 'units'
+                    ? "bg-orange-600 text-white"
+                    : "bg-gray-700 hover:bg-gray-600 text-gray-300"
                 }`}
               >
-                {isPaintEnabled ? "✓ Paint" : "Paint"}
+                Units
               </button>
             </div>
+
+            {/* Paint Mode – hidden in Units mode (click-to-place is always active) */}
+            {editMode !== 'units' && (
+              <div className="flex items-center gap-2 border-r border-gray-700 pr-3">
+                <button
+                  onClick={onPaintToggle}
+                  className={`rounded px-2 py-0.5 text-[11px] whitespace-nowrap ${
+                    isPaintEnabled
+                      ? "bg-green-600 hover:bg-green-500"
+                      : "bg-gray-700 hover:bg-gray-600"
+                  }`}
+                >
+                  {isPaintEnabled ? "✓ Paint" : "Paint"}
+                </button>
+              </div>
+            )}
 
             {/* Save & Reset */}
             <div className="flex items-center gap-1.5 ml-auto">
