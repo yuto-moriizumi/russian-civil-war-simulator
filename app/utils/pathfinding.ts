@@ -1,6 +1,32 @@
 import { RegionState, Adjacency, CountryId, Movement, Relationship } from '../types/game';
 
 /**
+ * Build a predicate that returns true only for regions we are actively at war
+ * with.  Unlike `canEnter`, this excludes military_access and autonomy so that
+ * army groups in advance mode do not march into allied or puppet territory.
+ */
+export function buildIsHostilePredicate(
+  countryId: CountryId,
+  regions: RegionState,
+  relationships: Relationship[]
+): (regionId: string) => boolean {
+  return (regionId: string): boolean => {
+    const region = regions[regionId];
+    if (!region) return false;
+    if (region.owner === countryId) return false;
+
+    const theirRel = relationships.find(
+      r => r.fromCountry === region.owner && r.toCountry === countryId
+    );
+    const ourRel = relationships.find(
+      r => r.fromCountry === countryId && r.toCountry === region.owner
+    );
+
+    return theirRel?.type === 'war' || ourRel?.type === 'war';
+  };
+}
+
+/**
  * Build a predicate that returns true if a given regionId is accessible
  * (can be entered or traversed) by countryId given the current relationships.
  *
@@ -284,6 +310,14 @@ export function findBestDefensiveMove(
 
   return null;
 }
+
+// ---------------------------------------------------------------------------
+// HOI4-style frontline assignment helpers (in separate file for size limits)
+// ---------------------------------------------------------------------------
+export type { FrontlineAssignment } from './frontlineAssignment';
+export { computeFrontline, assignDivisionsToFrontline } from './frontlineAssignment';
+
+// ---------------------------------------------------------------------------
 
 /**
  * Calculate the total number of divisions assigned to a specific army group.

@@ -266,3 +266,4 @@ describe('processMovements', () => {
     expect(remainingMovements[0].id).toBe('mv-pending');
   });
 });
+
