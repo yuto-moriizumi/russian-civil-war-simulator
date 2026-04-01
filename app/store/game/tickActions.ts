@@ -3,6 +3,7 @@ import { GameStore } from './types';
 import { StoreApi } from 'zustand';
 import { ProductionQueueItem, CountryId } from '../../types/game';
 import { getBaseProductionTime } from '../../utils/bonusCalculator';
+import { clampProductionQueueToCommandPower } from '../../utils/commandPower';
 import { countries } from '../../data/gameData';
 import { 
   validateDivisions, 
@@ -158,15 +159,29 @@ export const createTickActions = (
       // Process each AI country
       nextAIStates = aiStates.map(aiState => {
         const country = countries.find(c => c.id === aiState.countryId);
+        const countryBonuses = state.countryBonuses[aiState.countryId];
+        const trimmedQueue = clampProductionQueueToCommandPower(
+          aiState.countryId,
+          nextProductionQueues[aiState.countryId] || [],
+          nextRegions,
+          nextMovingUnits,
+          countryBonuses,
+          country?.coreRegions
+        );
+
+        if (trimmedQueue !== nextProductionQueues[aiState.countryId]) {
+          nextProductionQueues[aiState.countryId] = trimmedQueue;
+        }
+
         const aiActions = runAITick(
           aiState, 
           nextRegions, 
           nextArmyGroups, 
           nextCombats, 
-          remainingMovements, 
+          nextMovingUnits, 
           nextProductionQueues[aiState.countryId] || [], 
           nextProductionQueues,
-          state.countryBonuses[aiState.countryId],
+          countryBonuses,
           country?.coreRegions
         );
         

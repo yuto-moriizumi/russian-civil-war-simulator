@@ -99,9 +99,9 @@ describe('runAITick — CP limit enforcement', () => {
    * 2 being queued despite the cap allowing only 1.
    *
    * Setup:
-   *   3 regions → cap = BASE(2) + 3 = 5 CP
+   *   4 regions → cap = BASE(2) + 4 = 6 CP
    *   1 item already in queue → inProduction = 1 * COMMAND_POWER_PER_UNIT(3) = 3 CP
-   *   remaining = 5 - 3 = 2 CP  (not enough for a second division at 3 CP each)
+   *   remaining = 6 - 3 = 3 CP  (enough for exactly 1 more division)
    *   so exactly 1 more division can be produced
    */
   it('does not queue more than 1 division when only 1 CP slot remains', () => {
@@ -109,9 +109,10 @@ describe('runAITick — CP limit enforcement', () => {
       'RU-A': makeRegion('RU-A'),
       'RU-B': makeRegion('RU-B'),
       'RU-C': makeRegion('RU-C'),
+      'RU-D': makeRegion('RU-D'),
     };
 
-    // 1 item already in queue: uses 3 CP; cap is 5, so room for exactly 1 more
+    // 1 item already in queue: uses 3 CP; cap is 6, so room for exactly 1 more
     const existingQueue: ProductionQueueItem[] = [makeQueueItem('existing-0')];
     const productionQueues = { [COUNTRY]: existingQueue } as Record<CountryId, ProductionQueueItem[]>;
 

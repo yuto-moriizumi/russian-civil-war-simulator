@@ -136,8 +136,31 @@ export function canProduceDivision(
   const current = countCurrentDivisions(countryId, regions, movements);
   const inProduction = countDivisionsInProduction(countryId, productionQueues);
   
-  // Can produce if: (current + inProduction) < cap
-  return (current + inProduction) < cap;
+  // The next division must fully fit within the remaining CP budget.
+  return (current + inProduction + COMMAND_POWER_PER_UNIT) <= cap;
+}
+
+/**
+ * Trim a country's production queue so queued divisions still fit within the
+ * current command power cap after accounting for already-fielded/in-transit units.
+ */
+export function clampProductionQueueToCommandPower(
+  countryId: CountryId,
+  queue: ProductionQueueItem[],
+  regions: RegionState,
+  movements: Movement[],
+  countryBonuses: CountryBonuses,
+  coreRegions?: string[]
+): ProductionQueueItem[] {
+  const cap = calculateCommandPower(countryId, regions, countryBonuses, coreRegions);
+  const current = countCurrentDivisions(countryId, regions, movements);
+  const maxQueuedDivisions = Math.max(0, Math.floor((cap - current) / COMMAND_POWER_PER_UNIT));
+
+  if (queue.length <= maxQueuedDivisions) {
+    return queue;
+  }
+
+  return queue.slice(0, maxQueuedDivisions);
 }
 
 /**
