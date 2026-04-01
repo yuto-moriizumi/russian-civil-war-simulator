@@ -171,9 +171,16 @@ export function runAITick(
   }
   
   // AI production logic: produce up to 2 divisions per tick if under cap
+  //
+  // Use a local copy of productionQueues that is updated after each request is
+  // committed so that the second canProduceDivision call reflects the first
+  // division already queued this tick.  Without this, both checks read the
+  // same stale snapshot and the AI can exceed the CP cap by 1 division per tick.
+  let localQueues: Record<CountryId, ProductionQueueItem[]> = { ...productionQueues };
+
   while (divisionsCreated < 2) {
-    // Check command power before producing
-    if (!canProduceDivision(countryId, regions, movingUnits, productionQueues, countryBonuses, coreRegions)) {
+    // Check command power before producing (use the locally-updated queues)
+    if (!canProduceDivision(countryId, regions, movingUnits, localQueues, countryBonuses, coreRegions)) {
       break;
     }
     
@@ -188,6 +195,22 @@ export function runAITick(
     });
     
     divisionsCreated += 1;
+
+    // Reflect this newly committed item in localQueues so the next iteration
+    // of canProduceDivision sees the correct CP usage.
+    const placeholder: ProductionQueueItem = {
+      id: `ai-pending-${divisionsCreated}`,
+      divisionName: '',
+      owner: countryId,
+      startTime: new Date(),
+      completionTime: new Date(),
+      targetRegionId: null,
+      armyGroupId: aiArmyGroup.id,
+    };
+    localQueues = {
+      ...localQueues,
+      [countryId]: [...(localQueues[countryId] ?? []), placeholder],
+    };
   }
   
   return {
