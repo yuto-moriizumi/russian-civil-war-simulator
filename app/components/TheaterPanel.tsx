@@ -7,7 +7,7 @@ import { canProduceDivision } from '../utils/commandPower';
 
 export default function TheaterPanel() {
   // Store selectors
-  const theaters = useGameStore(state => state.theaters);
+  const allTheaters = useGameStore(state => state.theaters);
   const armyGroups = useGameStore(state => state.armyGroups);
   const regions = useGameStore(state => state.regions);
   const playerCountry = useGameStore(state => state.selectedCountry?.id);
@@ -35,6 +35,12 @@ export default function TheaterPanel() {
   const playerGroups = useMemo(() => 
     playerCountry ? armyGroups.filter(g => g.owner === playerCountry) : [],
     [armyGroups, playerCountry]
+  );
+
+  // Only show theaters owned by the current player (guards against stale persisted state)
+  const theaters = useMemo(() =>
+    playerCountry ? allTheaters.filter(t => t.owner === playerCountry) : [],
+    [allTheaters, playerCountry]
   );
 
   const handleStartRename = (groupId: string, currentName: string) => {
