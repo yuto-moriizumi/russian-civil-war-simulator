@@ -205,9 +205,6 @@ export function createLineColorExpression() {
   ];
 }
 
-/**
- * Build line width expression using feature-state
- */
 export function createLineWidthExpression() {
   return [
     'case',
@@ -221,9 +218,6 @@ export function createLineWidthExpression() {
   ];
 }
 
-/**
- * Build opacity expression for fill using feature-state for performance
- */
 export function createFillOpacityExpression() {
   return [
     'case',
