@@ -1,6 +1,7 @@
 import { Movement, ActiveCombat } from '../../types/game';
 import {
   buildCanEnterPredicate,
+  buildIsHostilePredicate,
   computeFrontline,
   assignDivisionsToFrontline,
 } from '../../utils/pathfinding';
@@ -41,11 +42,14 @@ export function advanceArmyGroup(
 
   // Build access predicate once — reused for all pathfinding calls this tick
   const canEnter = buildCanEnterPredicate(countryId, regions, relationships);
+  // Hostile predicate: only regions we are actively at war with are valid attack targets.
+  // This prevents advance mode from marching into military_access or autonomy territory.
+  const isHostile = buildIsHostilePredicate(countryId, regions, relationships);
 
   // -------------------------------------------------------------------------
   // Step 1: Compute frontline and targets
   // -------------------------------------------------------------------------
-  const frontline = computeFrontline(groupId, regions, adjacency, countryId, canEnter);
+  const frontline = computeFrontline(groupId, regions, adjacency, countryId, canEnter, isHostile);
   if (frontline.frontlineRegions.size === 0 && frontline.targetRegions.size === 0) {
     // No accessible enemy nearby — nothing to do this tick
     return;

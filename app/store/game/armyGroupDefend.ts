@@ -1,5 +1,5 @@
 import { Movement } from '../../types/game';
-import { getNextStepToward, buildCanEnterPredicate } from '../../utils/pathfinding';
+import { getNextStepToward, buildCanEnterPredicate, buildIsHostilePredicate } from '../../utils/pathfinding';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { GameStore } from './types';
 
@@ -21,6 +21,9 @@ export function defendArmyGroup(
 
   // Build access predicate — defend routing respects diplomacy too
   const canEnter = buildCanEnterPredicate(countryId, regions, relationships);
+  // Only treat regions we are actively at war with as borders worth defending.
+  // military_access and autonomy neighbors must not trigger defensive repositioning.
+  const isHostile = buildIsHostilePredicate(countryId, regions, relationships);
 
   const newMovements: Movement[] = [];
   const newRegions = { ...regions };
@@ -41,7 +44,7 @@ export function defendArmyGroup(
     const neighbors = adjacency[regionId] || [];
     const hasEnemyNeighbor = neighbors.some(neighborId => {
       const neighbor = newRegions[neighborId];
-      return neighbor && neighbor.owner !== countryId && neighbor.owner !== 'neutral';
+      return neighbor && neighbor.owner !== countryId && isHostile(neighborId);
     });
     
     if (hasEnemyNeighbor) {

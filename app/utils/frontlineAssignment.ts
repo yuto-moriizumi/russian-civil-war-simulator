@@ -28,21 +28,30 @@ export interface FrontlineAssignment {
  * Compute the current frontline for an army group.
  *
  * Returns:
- *  - `frontlineRegions`: own regions adjacent to at least one accessible enemy province.
- *  - `targetRegions`: enemy provinces adjacent to at least one frontline region.
+ *  - `frontlineRegions`: own regions adjacent to at least one hostile (war) province.
+ *  - `targetRegions`: hostile provinces adjacent to at least one frontline region.
  *
  * Only considers regions that contain at least one division belonging to
  * `groupId` (or all own regions when `groupId` is null — useful for tests).
+ *
+ * @param isHostile - Returns true only for regions we are actively at war with.
+ *   This is separate from `canEnter` (which also allows military_access / autonomy)
+ *   to prevent army groups advancing into allied or puppet territory with no war declared.
  */
 export function computeFrontline(
   groupId: string | null,
   regions: RegionState,
   adjacency: Adjacency,
   countryId: CountryId,
-  canEnter: (regionId: string) => boolean
+  canEnter: (regionId: string) => boolean,
+  isHostile?: (regionId: string) => boolean
 ): { frontlineRegions: Set<string>; targetRegions: Set<string> } {
   const frontlineRegions = new Set<string>();
   const targetRegions = new Set<string>();
+
+  // When no isHostile predicate is supplied (e.g. in tests that pre-date this
+  // parameter) fall back to canEnter so existing tests remain valid.
+  const hostile = isHostile ?? canEnter;
 
   for (const [regionId, region] of Object.entries(regions)) {
     if (!region || region.owner !== countryId) continue;
@@ -53,7 +62,8 @@ export function computeFrontline(
       const neighbor = regions[neighborId];
       if (!neighbor) continue;
       if (neighbor.owner === countryId) continue;
-      if (!canEnter(neighborId)) continue;
+      // A neighbor is a valid attack target only if we are at war with them.
+      if (!hostile(neighborId)) continue;
 
       frontlineRegions.add(regionId);
       targetRegions.add(neighborId);
