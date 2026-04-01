@@ -252,4 +252,89 @@ describe('assignDivisionsToFrontline', () => {
 
     expect(assignments).toHaveLength(0);
   });
+
+  it('regression: does not re-dispatch a division that is already en route to the frontline (loop prevention)', () => {
+    /**
+     * Scenario that caused the A↔B loop:
+     *   - div-rear is at A (rear region)
+     *   - Tick 1: div-rear is dispatched A→B (one step toward frontline C)
+     *   - Tick 2: div-rear has arrived at B. B is still a rear region.
+     *             Without the fix, Phase 1 would immediately dispatch B→C,
+     *             and once at C the surplus logic sends it C→E, then
+     *             next tick it bounces back. With the fix, B is recognised
+     *             as the destination of an in-transit movement and skipped.
+     *
+     * We simulate Tick 2: div-rear is physically at B, and there is still
+     * an in-transit movement toRegion=B (it just arrived this tick but the
+     * movingUnits list hasn't been cleared yet in the same tick).
+     */
+    const div = makeDiv('div-rear');
+    const regions: RegionState = {
+      A: makeRegion('A', 'soviet'),          // source — now empty
+      B: makeRegion('B', 'soviet', [div]),   // division just arrived here
+      C: makeRegion('C', 'soviet'),          // frontline slot, still empty
+      E: makeRegion('E', 'white'),
+    };
+
+    const frontline = {
+      frontlineRegions: new Set(['C']),
+      targetRegions: new Set(['E']),
+    };
+
+    // Simulate the in-transit record that hasn't been cleared yet
+    const inTransit: Movement[] = [{
+      id: 'mv-a-to-b',
+      fromRegion: 'A',
+      toRegion: 'B',
+      divisions: [div],
+      departureTime: new Date(),
+      arrivalTime: new Date(),
+      owner: 'soviet',
+    }];
+
+    const assignments = assignDivisionsToFrontline(
+      'ag-1', regions, adjacency, 'soviet', frontline, inTransit, canEnter
+    );
+
+    // B is the destination of an in-transit movement — must not be dispatched again
+    expect(assignments).toHaveLength(0);
+  });
+
+  it('regression: in-transit division counts toward frontline coverage — no second division dispatched', () => {
+    /**
+     * If div-1 is already in transit directly to frontline C, the slot is
+     * "filled" and a second rear division (div-2 at A) must not be sent.
+     */
+    const div1 = makeDiv('div-1');
+    const div2 = makeDiv('div-2');
+    const regions: RegionState = {
+      A: makeRegion('A', 'soviet', [div2]), // second rear division
+      B: makeRegion('B', 'soviet'),
+      C: makeRegion('C', 'soviet'),          // frontline slot, empty in regions state
+      E: makeRegion('E', 'white'),
+    };
+
+    const frontline = {
+      frontlineRegions: new Set(['C']),
+      targetRegions: new Set(['E']),
+    };
+
+    // div-1 is already heading directly to C
+    const inTransit: Movement[] = [{
+      id: 'mv-b-to-c',
+      fromRegion: 'B',
+      toRegion: 'C',
+      divisions: [div1],
+      departureTime: new Date(),
+      arrivalTime: new Date(),
+      owner: 'soviet',
+    }];
+
+    const assignments = assignDivisionsToFrontline(
+      'ag-1', regions, adjacency, 'soviet', frontline, inTransit, canEnter
+    );
+
+    // C already has an inbound division → slot is covered → div-2 stays put
+    expect(assignments).toHaveLength(0);
+  });
 });
