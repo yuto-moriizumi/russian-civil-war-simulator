@@ -2,7 +2,10 @@ import { RegionState, Adjacency, CountryId, Movement, Relationship } from '../ty
 
 /**
  * Build a predicate that returns true only for regions we are actively at war
- * with.  Unlike `canEnter`, this excludes military_access and autonomy so that
+ * with, OR for regions owned by the special 'neutral' country (unowned territory
+ * that the player can freely advance into).
+ *
+ * Unlike `canEnter`, this excludes military_access and autonomy so that
  * army groups in advance mode do not march into allied or puppet territory.
  */
 export function buildIsHostilePredicate(
@@ -14,6 +17,10 @@ export function buildIsHostilePredicate(
     const region = regions[regionId];
     if (!region) return false;
     if (region.owner === countryId) return false;
+
+    // Unowned (neutral-country) territory is always hostile — the player can
+    // advance into it, so it should trigger frontline / theater detection.
+    if (region.owner === 'neutral') return true;
 
     const theirRel = relationships.find(
       r => r.fromCountry === region.owner && r.toCountry === countryId

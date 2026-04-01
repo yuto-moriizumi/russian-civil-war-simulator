@@ -51,6 +51,28 @@ const regions: RegionState = {
   'iskolat-D': makeRegion('iskolat-D', 'iskolat'),
 };
 
+/**
+ * Map layout for neutral-country tests:
+ *
+ *   [soviet-X]--[soviet-Y]--[neutral-Z]--[neutral-W]
+ *
+ * soviet owns X and Y; the special 'neutral' country owns Z and W.
+ * soviet-Y is the only soviet region bordering neutral territory.
+ */
+const adjacencyNeutral: Adjacency = {
+  'soviet-X':  ['soviet-Y'],
+  'soviet-Y':  ['soviet-X', 'neutral-Z'],
+  'neutral-Z': ['soviet-Y', 'neutral-W'],
+  'neutral-W': ['neutral-Z'],
+};
+
+const regionsNeutral: RegionState = {
+  'soviet-X':  makeRegion('soviet-X',  'soviet'),
+  'soviet-Y':  makeRegion('soviet-Y',  'soviet'),
+  'neutral-Z': makeRegion('neutral-Z', 'neutral'),
+  'neutral-W': makeRegion('neutral-W', 'neutral'),
+};
+
 // ---------------------------------------------------------------------------
 // detectTheaters — friendly/vassal country regression
 // ---------------------------------------------------------------------------
@@ -99,5 +121,26 @@ describe('detectTheaters', () => {
     const theaters = detectTheaters(regions, adjacency, 'soviet', [], relationships);
     expect(theaters).toHaveLength(1);
     expect(theaters[0].frontlineRegions).toContain('soviet-B');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// detectTheaters — neutral country (unowned territory) regression
+// ---------------------------------------------------------------------------
+
+describe('detectTheaters — neutral territory', () => {
+  it('creates a theater when player borders neutral-owned (unowned) territory', () => {
+    // 'neutral' country owns adjacent regions — theater should form even with no
+    // explicit war relationship, because neutral territory can always be advanced into.
+    const theaters = detectTheaters(regionsNeutral, adjacencyNeutral, 'soviet', [], []);
+    expect(theaters).toHaveLength(1);
+    expect(theaters[0].frontlineRegions).toContain('soviet-Y');
+    expect(theaters[0].enemyCountry).toBe('neutral');
+  });
+
+  it('still creates no theater when a real foreign country has no war relationship', () => {
+    // Foreign country 'iskolat' with no relationship should NOT trigger a theater.
+    const theaters = detectTheaters(regions, adjacency, 'soviet', [], []);
+    expect(theaters).toHaveLength(0);
   });
 });
