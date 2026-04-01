@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Git worktrees directory (generated files)
     ".worktrees/**",
+    // OpenCode configuration directory
+    ".opencode/**",
   ]),
   // Enforce file length guidelines from AGENTS.md
   {
