@@ -119,14 +119,20 @@ export const createBasicActions = (
       }
     }
 
-    // Deep-copy current regions, clearing all divisions so we start fresh.
-    // This prevents stale divisions from a previous game session (or a prior
-    // country switch) from accumulating on top of the initial placements,
-    // which would cause the Command Power usage to be inflated on repeat
-    // country switches (A → B → A scenario).
+    // Deep-copy current regions, clearing divisions ONLY in regions that appear
+    // in initialUnitPlacement.  Those regions will be re-populated from static
+    // data below, so we must wipe them first to prevent double-stacking on
+    // repeat country switches (A → B → A scenario).
+    //
+    // Regions that are NOT in initialUnitPlacement keep their current divisions
+    // so that units created dynamically during the game (production, manual
+    // creation, combat survivors) are preserved when the player switches country.
+    const initialPlacementRegions = new Set(Object.keys(initialUnitPlacement));
     const regionsWithUnits: RegionState = {};
     for (const [regionId, region] of Object.entries(currentRegions)) {
-      regionsWithUnits[regionId] = { ...region, divisions: [] };
+      regionsWithUnits[regionId] = initialPlacementRegions.has(regionId)
+        ? { ...region, divisions: [] }
+        : { ...region };
     }
 
     // Division name counters per country
