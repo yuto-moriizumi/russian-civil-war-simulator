@@ -20,10 +20,10 @@ export const createArmyGroupActions = (
 ) => ({
   // Theater Actions
   detectAndUpdateTheaters: () => {
-    const { regions, adjacency, selectedCountry, theaters, armyGroups } = get();
+    const { regions, adjacency, selectedCountry, theaters, armyGroups, relationships } = get();
     if (!selectedCountry) return;
     
-    const newTheaters = detectTheaters(regions, adjacency, selectedCountry.id, theaters);
+    const newTheaters = detectTheaters(regions, adjacency, selectedCountry.id, theaters, relationships);
     
     // Handle army group reassignment when theaters merge or disappear
     const oldTheaterIds = new Set(theaters.map(t => t.id));
