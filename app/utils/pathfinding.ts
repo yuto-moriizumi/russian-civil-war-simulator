@@ -1,12 +1,20 @@
 import { RegionState, Adjacency, CountryId, Movement, Relationship } from '../types/game';
 
 /**
- * Build a predicate that returns true only for regions we are actively at war
- * with, OR for regions owned by the special 'neutral' country (unowned territory
- * that the player can freely advance into).
+ * Build a predicate that returns true for regions that are hostile to the
+ * player — i.e. regions the player would want a theater against.
  *
- * Unlike `canEnter`, this excludes military_access and autonomy so that
- * army groups in advance mode do not march into allied or puppet territory.
+ * Hostile means any of:
+ * - Owned by the special 'neutral' country (unowned territory the player can
+ *   freely advance into).
+ * - At war with the player (either direction).
+ * - A real foreign country with NO explicit relationship (neutral relationship
+ *   type) — treated as a potential adversary worth tracking on the frontline.
+ *
+ * Explicitly NOT hostile (excluded from theaters):
+ * - Own territory.
+ * - Autonomy servants.
+ * - Military-access partners.
  */
 export function buildIsHostilePredicate(
   countryId: CountryId,
@@ -29,7 +37,17 @@ export function buildIsHostilePredicate(
       r => r.fromCountry === countryId && r.toCountry === region.owner
     );
 
-    return theirRel?.type === 'war' || ourRel?.type === 'war';
+    const theirType = theirRel?.type ?? 'neutral';
+    const ourType   = ourRel?.type   ?? 'neutral';
+
+    // Explicitly friendly — autonomy or military access: not hostile
+    const isFriendly =
+      theirType === 'autonomy' || ourType === 'autonomy' ||
+      theirType === 'military_access' || ourType === 'military_access';
+    if (isFriendly) return false;
+
+    // War, or no relationship at all (neutral) — treat as hostile
+    return true;
   };
 }
 

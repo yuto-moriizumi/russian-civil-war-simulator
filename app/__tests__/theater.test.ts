@@ -96,10 +96,13 @@ describe('detectTheaters', () => {
     expect(theaters).toHaveLength(0);
   });
 
-  it('creates no theater when relationships are empty (Iskolat is a neutral neighbor)', () => {
-    // No relationship at all means neutral — should not trigger a theater
+  it('creates a theater when relationships are empty (Iskolat is a neutral neighbor)', () => {
+    // No relationship at all means the foreign country is a neutral — theaters
+    // now form against neutral countries too, not just war adversaries.
     const theaters = detectTheaters(regions, adjacency, 'soviet', [], []);
-    expect(theaters).toHaveLength(0);
+    expect(theaters).toHaveLength(1);
+    expect(theaters[0].frontlineRegions).toContain('soviet-B');
+    expect(theaters[0].enemyCountry).toBe('iskolat');
   });
 
   it('creates a theater when soviet declared war on Iskolat', () => {
@@ -138,9 +141,12 @@ describe('detectTheaters — neutral territory', () => {
     expect(theaters[0].enemyCountry).toBe('neutral');
   });
 
-  it('still creates no theater when a real foreign country has no war relationship', () => {
-    // Foreign country 'iskolat' with no relationship should NOT trigger a theater.
+  it('creates a theater when a real foreign country has no war relationship (neutral)', () => {
+    // Foreign country 'iskolat' with no explicit relationship is treated as a
+    // neutral — theaters now form against neutral countries, not just war enemies.
     const theaters = detectTheaters(regions, adjacency, 'soviet', [], []);
-    expect(theaters).toHaveLength(0);
+    expect(theaters).toHaveLength(1);
+    expect(theaters[0].frontlineRegions).toContain('soviet-B');
+    expect(theaters[0].enemyCountry).toBe('iskolat');
   });
 });

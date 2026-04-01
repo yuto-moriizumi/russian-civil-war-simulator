@@ -4,9 +4,10 @@ import { buildIsHostilePredicate } from './pathfinding';
 
 /**
  * Detect theaters of operation by finding connected groups of frontline regions.
- * A frontline region is a player-owned region adjacent to at least one enemy region.
- * Only countries that are actively at war with the player count as enemies —
- * autonomy servants, military-access partners, and neutrals are excluded.
+ * A frontline region is a player-owned region adjacent to at least one hostile region.
+ * Hostile means: actively at war, OR a real foreign country with no explicit
+ * relationship (neutral), OR the special 'neutral' country (unowned territory).
+ * Excluded: autonomy servants and military-access partners.
  * 
  * @param existingTheaters - Optional array of existing theaters to preserve IDs
  * @param relationships - Diplomatic/military relationships used to determine hostility
