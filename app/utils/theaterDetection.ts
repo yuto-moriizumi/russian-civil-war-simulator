@@ -1,18 +1,26 @@
-import { RegionState, Adjacency, CountryId, Theater, Region } from '../types/game';
+import { RegionState, Adjacency, CountryId, Theater, Region, Relationship } from '../types/game';
 import { getCountryAdjective } from '../data/countries';
+import { buildIsHostilePredicate } from './pathfinding';
 
 /**
  * Detect theaters of operation by finding connected groups of frontline regions.
  * A frontline region is a player-owned region adjacent to at least one enemy region.
+ * Only countries that are actively at war with the player count as enemies —
+ * autonomy servants, military-access partners, and neutrals are excluded.
  * 
  * @param existingTheaters - Optional array of existing theaters to preserve IDs
+ * @param relationships - Diplomatic/military relationships used to determine hostility
  */
 export function detectTheaters(
   regions: RegionState,
   adjacency: Adjacency,
   playerCountry: CountryId,
-  existingTheaters: Theater[] = []
+  existingTheaters: Theater[] = [],
+  relationships: Relationship[] = []
 ): Theater[] {
+  // Build a predicate that is true only for genuinely hostile (at-war) regions
+  const isHostile = buildIsHostilePredicate(playerCountry, regions, relationships);
+
   // Step 1: Find all frontline regions (player regions adjacent to enemies)
   const frontlineRegions = new Map<string, Set<CountryId>>(); // regionId -> enemy countries it faces
   
@@ -24,7 +32,7 @@ export function detectTheaters(
     
     neighbors.forEach(neighborId => {
       const neighbor = regions[neighborId];
-      if (neighbor && neighbor.owner !== playerCountry && neighbor.owner !== 'neutral') {
+      if (neighbor && isHostile(neighborId)) {
         adjacentEnemies.add(neighbor.owner);
       }
     });
