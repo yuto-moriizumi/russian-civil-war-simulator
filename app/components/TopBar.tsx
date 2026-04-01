@@ -32,6 +32,8 @@ export default function TopBar({ showSavedIndicator }: TopBarProps) {
   const setIsProductionModalOpen = useGameStore(state => state.setIsProductionModalOpen);
   const setIsCountrySidebarOpen = useGameStore(state => state.setIsCountrySidebarOpen);
   const setMapMode = useGameStore(state => state.setMapMode);
+  const isSwitchModeActive = useGameStore(state => state.isSwitchModeActive);
+  const setSwitchModeActive = useGameStore(state => state.setSwitchModeActive);
   
   // Calculate derived values
   const unitCount = useMemo(() => 
@@ -135,6 +137,19 @@ export default function TopBar({ showSavedIndicator }: TopBarProps) {
               {gameEvents.length > 99 ? '99+' : gameEvents.length}
             </span>
           )}
+        </button>
+
+        {/* Switch Country Button */}
+        <button
+          onClick={() => setSwitchModeActive(!isSwitchModeActive)}
+          className={`rounded px-3 py-1 transition-colors ${
+            isSwitchModeActive
+              ? 'bg-blue-600 text-white font-semibold hover:bg-blue-500'
+              : 'bg-stone-700 text-stone-300 hover:bg-stone-600'
+          }`}
+          title={isSwitchModeActive ? 'Switch Mode: ON — click a region to take control of its country' : 'Switch Mode: OFF — click to enable country switching'}
+        >
+          Switch
         </button>
 
         {/* Map Mode Selector */}
