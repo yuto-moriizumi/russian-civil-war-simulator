@@ -221,6 +221,69 @@ describe('calculateCommandPower', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Country-switch accumulation regression (A → B → A)
+// ---------------------------------------------------------------------------
+//
+// Bug: selectCountry() used to deep-copy the current regions (preserving
+// existing divisions) before adding fresh initial placements on top.  After
+// switching A→B→A the player-country regions contained both the residual
+// divisions from the previous session *and* a full second set of initial
+// placements, doubling the Command Power usage displayed in the TopBar.
+//
+// Fix: selectCountry() now clears all divisions from the copied regions
+// before placing the initial units, so the count is always exactly the
+// initial set regardless of how many times the player switches.
+//
+// The regression test below exercises the pure computation layer:
+// countCurrentDivisions must return the same value when called against
+// a freshly-built region set as it does against a set that was previously
+// used and then rebuilt (simulating the cleared-divisions approach).
+
+describe('country-switch CP accumulation regression', () => {
+  it('CP usage is identical after a simulated A→B→A switch sequence', () => {
+    const country = 'soviet' as const;
+
+    // Helper: build regions with N soviet divisions (simulates selectCountry output)
+    function buildRegions(numDivisions: number): RegionState {
+      const divisions = Array.from({ length: numDivisions }, (_, i) =>
+        makeDiv(`div-${i}`, country),
+      );
+      return {
+        'RU-A': makeRegion('RU-A', country, divisions),
+      };
+    }
+
+    const initialDivisionCount = 3;
+
+    // Step 1: Initial state for country A — 3 divisions
+    const regionsAfterFirstSelect = buildRegions(initialDivisionCount);
+    const usageAfterFirstSelect = countCurrentDivisions(country, regionsAfterFirstSelect, []);
+
+    // Step 2 (fixed behaviour): selectCountry clears divisions before re-placing.
+    // Simulate by building a fresh region set with exactly the initial count again.
+    const regionsAfterSecondSelect = buildRegions(initialDivisionCount);
+    const usageAfterSecondSelect = countCurrentDivisions(country, regionsAfterSecondSelect, []);
+
+    expect(usageAfterSecondSelect).toBe(usageAfterFirstSelect);
+    expect(usageAfterSecondSelect).toBe(initialDivisionCount * COMMAND_POWER_PER_UNIT);
+
+    // Step 3 (broken behaviour for contrast): what would happen if we had
+    // carried over the old divisions and pushed new ones on top.
+    const regionsWithAccumulation: RegionState = {
+      'RU-A': makeRegion('RU-A', country, [
+        // old divisions still present
+        ...regionsAfterFirstSelect['RU-A'].divisions,
+        // new placements added on top (the bug)
+        ...buildRegions(initialDivisionCount)['RU-A'].divisions,
+      ]),
+    };
+    const brokenUsage = countCurrentDivisions(country, regionsWithAccumulation, []);
+    expect(brokenUsage).toBe(2 * initialDivisionCount * COMMAND_POWER_PER_UNIT);
+    expect(brokenUsage).toBeGreaterThan(usageAfterSecondSelect);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // getCommandPowerInfo — integration
 // ---------------------------------------------------------------------------
 
