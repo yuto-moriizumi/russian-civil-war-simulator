@@ -15,6 +15,8 @@ import {
   countCurrentDivisions,
   calculateCommandPower,
   getCommandPowerInfo,
+  canProduceDivision,
+  clampProductionQueueToCommandPower,
   COMMAND_POWER_PER_UNIT,
   BASE_COMMAND_POWER,
   DIVISIONS_PER_STATE,
@@ -52,6 +54,18 @@ function makeRegion(
     owner,
     divisions,
     value: 1,
+  };
+}
+
+function makeQueueItem(id: string, owner: CountryId = 'soviet'): ProductionQueueItem {
+  return {
+    id,
+    divisionName: `${id} Division`,
+    owner,
+    startTime: new Date(),
+    completionTime: new Date(),
+    targetRegionId: 'RU-A',
+    armyGroupId: 'ag-1',
   };
 }
 
@@ -217,6 +231,74 @@ describe('calculateCommandPower', () => {
     const regions: RegionState = {};
     const bonuses: CountryBonuses = { ...emptyBonuses, commandPowerBonus: 3 };
     expect(calculateCommandPower('soviet', regions, bonuses)).toBe(BASE_COMMAND_POWER + 3);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// canProduceDivision / queue clamping
+// ---------------------------------------------------------------------------
+
+describe('canProduceDivision', () => {
+  it('requires enough CP for the full next division cost', () => {
+    const bonuses: CountryBonuses = { ...emptyBonuses, commandPowerBonus: 6 };
+    const regions: RegionState = {
+      'RU-A': makeRegion('RU-A', 'white', [
+        makeDiv('d-1', 'soviet'),
+        makeDiv('d-2', 'soviet'),
+      ]),
+    };
+
+    // Cap = BASE(2) + bonus(6) = 8. Current usage = 2 divisions = 6 CP.
+    // There are only 2 CP left, which is not enough for a 3-CP division.
+    expect(canProduceDivision('soviet', regions, [], emptyQueues, bonuses)).toBe(false);
+  });
+});
+
+describe('clampProductionQueueToCommandPower', () => {
+  it('drops queued divisions that no longer fit after the cap decreases', () => {
+    const regions: RegionState = {
+      'RU-A': makeRegion('RU-A', 'soviet', [
+        makeDiv('d-1', 'soviet'),
+        makeDiv('d-2', 'soviet'),
+        makeDiv('d-3', 'soviet'),
+        makeDiv('d-4', 'soviet'),
+        makeDiv('d-5', 'soviet'),
+        makeDiv('d-6', 'soviet'),
+        makeDiv('d-7', 'soviet'),
+      ]),
+    };
+
+    const queue = [
+      makeQueueItem('q-1'),
+      makeQueueItem('q-2'),
+      makeQueueItem('q-3'),
+    ];
+
+    // Cap = BASE(2) + 1 owned region = 3. Current usage = 7 divisions = 21 CP.
+    // The country is already over cap, so no queued items should remain.
+    expect(clampProductionQueueToCommandPower('soviet', queue, regions, [], emptyBonuses)).toEqual([]);
+  });
+
+  it('keeps only the earliest queued divisions that still fit the current cap', () => {
+    const bonuses: CountryBonuses = { ...emptyBonuses, commandPowerBonus: 10 };
+    const regions: RegionState = {
+      'RU-A': makeRegion('RU-A', 'soviet', [
+        makeDiv('d-1', 'soviet'),
+        makeDiv('d-2', 'soviet'),
+        makeDiv('d-3', 'soviet'),
+      ]),
+    };
+
+    const queue = [
+      makeQueueItem('q-1'),
+      makeQueueItem('q-2'),
+      makeQueueItem('q-3'),
+      makeQueueItem('q-4'),
+    ];
+
+    // Cap = BASE(2) + 1 owned region + bonus(10) = 13.
+    // Current usage = 3 divisions = 9 CP, so only 1 queued division fits.
+    expect(clampProductionQueueToCommandPower('soviet', queue, regions, [], bonuses)).toEqual([queue[0]]);
   });
 });
 
