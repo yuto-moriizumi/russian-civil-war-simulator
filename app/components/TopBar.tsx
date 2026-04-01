@@ -3,7 +3,6 @@
 
 import { useMemo } from 'react';
 import { useGameStore } from '../store/useGameStore';
-import { countCountryUnits } from '../utils/mapUtils';
 import { getCommandPowerInfo } from '../utils/commandPower';
 import SpeedControl from './SpeedControl';
 
@@ -34,11 +33,6 @@ export default function TopBar({ showSavedIndicator }: TopBarProps) {
   const setMapMode = useGameStore(state => state.setMapMode);
   
   // Calculate derived values
-  const unitCount = useMemo(() => 
-    country ? countCountryUnits(regions, country.id, movingUnits) : 0,
-    [regions, country, movingUnits]
-  );
-  
   const commandPowerInfo = useMemo(() => 
     country ? getCommandPowerInfo(
       country.id,
@@ -47,7 +41,7 @@ export default function TopBar({ showSavedIndicator }: TopBarProps) {
       productionQueue,
       countryBonuses[country.id],
       country.coreRegions
-    ) : { cap: 0, inProduction: 0 },
+    ) : { cap: 0, current: 0, inProduction: 0, total: 0, available: 0, controlledStates: 0 },
     [country, regions, movingUnits, productionQueue, countryBonuses]
   );
   
@@ -102,7 +96,7 @@ export default function TopBar({ showSavedIndicator }: TopBarProps) {
           <div className="rounded-lg border border-blue-600/50 bg-stone-800/80 px-4 py-2">
             <div className="flex items-center gap-2">
               <span className="text-xs text-stone-400">Command Power:</span>
-              <span className="text-lg font-bold text-blue-400">{unitCount} / {divisionCap}</span>
+              <span className="text-lg font-bold text-blue-400">{commandPowerInfo.current} / {divisionCap}</span>
               {inProduction !== undefined && inProduction > 0 && (
                 <span className="text-xs text-emerald-400">+{inProduction}</span>
               )}

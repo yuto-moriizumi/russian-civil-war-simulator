@@ -126,10 +126,9 @@ export function getRegionsByCountry(regions: RegionState, country: CountryId): s
 
 // Count total units owned by a country (in regions and in transit)
 export function countCountryUnits(regions: RegionState, country: CountryId, movingUnits: Movement[] = []): number {
-  // Count units in regions
+  // Count units owned by the country across all regions (not just owned regions)
   const unitsInRegions = Object.values(regions)
-    .filter(region => region.owner === country)
-    .reduce((total, region) => total + region.divisions.length, 0);
+    .reduce((total, region) => total + region.divisions.filter(d => d.owner === country).length, 0);
   
   // Count units in transit
   const unitsInTransit = movingUnits
