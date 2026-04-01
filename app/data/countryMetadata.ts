@@ -215,7 +215,7 @@ export const COUNTRY_METADATA = {
     name: "German Empire",
     combatName: "Imperial German Army",
     flag: "/images/flags/germany.svg",
-    color: "#1a1a1a",
+    color: "#555555",
     adjective: "German",
     firstArmyGroupName: "Imperial German Army",
     divisionPrefix: "German Guard",
