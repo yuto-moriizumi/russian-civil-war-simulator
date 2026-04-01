@@ -213,8 +213,8 @@ export const createBasicActions = (
       regionCentroids: get().regionCentroids, // Preserve loaded centroids
     });
     
-    // Detect theaters when game starts
-    setTimeout(() => get().detectAndUpdateTheaters(), 100);
+    // Detect theaters when game starts (synchronous so the select is populated immediately)
+    get().detectAndUpdateTheaters();
   },
 
   togglePlay: () => set((state: GameStore) => ({ isPlaying: !state.isPlaying })),
