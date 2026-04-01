@@ -32,6 +32,40 @@ export function useMapState({
   const hoveredFeatureIdRef = useRef<string | null>(null); // Store shapeID for feature state
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null); // Store shapeID for game logic
 
+  // Lookup from canonical region ID (shapeISO or shapeID) → MapLibre promoted feature ID (shapeID)
+  // MapLibre uses promoteId="shapeID", so setFeatureState requires the shapeID value.
+  const regionToFeatureIdRef = useRef<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    const buildLookup = async () => {
+      try {
+        const response = await fetch('/map/regions.geojson');
+        const data = await response.json();
+        const lookup = new Map<string, string>();
+        for (const feature of data.features) {
+          const shapeID: string = feature.properties?.shapeID;
+          if (!shapeID) continue;
+          // Map shapeISO → shapeID (primary key used in game state)
+          const shapeISO: string = feature.properties?.shapeISO;
+          if (shapeISO) lookup.set(shapeISO, shapeID);
+          // Map regionId → shapeID (fallback key)
+          const regionId: string = feature.properties?.regionId;
+          if (regionId) lookup.set(regionId, shapeID);
+          // Map shapeID → shapeID (for regions that have no shapeISO)
+          lookup.set(shapeID, shapeID);
+        }
+        regionToFeatureIdRef.current = lookup;
+      } catch (e) {
+        console.error('Failed to build region feature ID lookup:', e);
+      }
+    };
+    buildLookup();
+  }, []);
+
+  /** Translate a canonical region ID to the MapLibre promoted feature ID */
+  const toFeatureId = (regionId: string): string =>
+    regionToFeatureIdRef.current.get(regionId) ?? regionId;
+
   // Set up native MapLibre hover handlers for better performance
   useEffect(() => {
     const map = mapRef.current?.getMap();
@@ -108,7 +142,7 @@ export function useMapState({
       if (theater) {
         for (const shapeId of theater.frontlineRegions) {
           map.setFeatureState(
-            { source: 'regions', id: shapeId },
+            { source: 'regions', id: toFeatureId(shapeId) },
             { theaterFrontline: true }
           );
         }
@@ -118,7 +152,7 @@ export function useMapState({
     // Set selected region state
     if (selectedRegion) {
       map.setFeatureState(
-        { source: 'regions', id: selectedRegion },
+        { source: 'regions', id: toFeatureId(selectedRegion) },
         { selected: true }
       );
 
@@ -126,7 +160,7 @@ export function useMapState({
       const adjacent = getAdjacentRegions(adjacency, selectedRegion);
       for (const adjId of adjacent) {
         map.setFeatureState(
-          { source: 'regions', id: adjId },
+          { source: 'regions', id: toFeatureId(adjId) },
           { adjacent: true }
         );
       }
@@ -137,7 +171,7 @@ export function useMapState({
       const adjacent = getAdjacentRegions(adjacency, selectedUnitRegion);
       for (const adjId of adjacent) {
         map.setFeatureState(
-          { source: 'regions', id: adjId },
+          { source: 'regions', id: toFeatureId(adjId) },
           { adjacent: true }
         );
       }
