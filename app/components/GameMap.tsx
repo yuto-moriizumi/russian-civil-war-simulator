@@ -6,6 +6,7 @@ import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useGameStore } from '../store/useGameStore';
 import { getAdjacentRegions } from '../utils/mapUtils';
+import { COUNTRY_METADATA } from '../data/countryMetadata';
 
 import { UnitMarker, MovingUnitMarker, CombatMarker } from './GameMap/MapMarkers';
 import { RegionTooltip, RegionInfoPanel } from './GameMap/RegionPanels';
@@ -50,6 +51,9 @@ export default function GameMap() {
   const setSelectedCombatId = useGameStore(state => state.setSelectedCombatId);
   const setSelectedCountryId = useGameStore(state => state.setSelectedCountryId);
   const setIsCountrySidebarOpen = useGameStore(state => state.setIsCountrySidebarOpen);
+  const isSwitchModeActive = useGameStore(state => state.isSwitchModeActive);
+  const setSwitchModeActive = useGameStore(state => state.setSwitchModeActive);
+  const selectCountry = useGameStore(state => state.selectCountry);
   
   // Local refs and state
   // Local refs and state
@@ -61,6 +65,9 @@ export default function GameMap() {
   const setSelectedUnitRegionRef = useRef(setSelectedUnitRegion);
   const setSelectedCountryIdRef = useRef(setSelectedCountryId);
   const setIsCountrySidebarOpenRef = useRef(setIsCountrySidebarOpen);
+  const isSwitchModeActiveRef = useRef(isSwitchModeActive);
+  const setSwitchModeActiveRef = useRef(setSwitchModeActive);
+  const selectCountryRef = useRef(selectCountry);
   const [mapLoaded, setMapLoaded] = useState(false);
 
   const { hoveredRegion } = useMapState({
@@ -105,6 +112,18 @@ export default function GameMap() {
     setIsCountrySidebarOpenRef.current = setIsCountrySidebarOpen;
   }, [setIsCountrySidebarOpen]);
 
+  useEffect(() => {
+    isSwitchModeActiveRef.current = isSwitchModeActive;
+  }, [isSwitchModeActive]);
+
+  useEffect(() => {
+    setSwitchModeActiveRef.current = setSwitchModeActive;
+  }, [setSwitchModeActive]);
+
+  useEffect(() => {
+    selectCountryRef.current = selectCountry;
+  }, [selectCountry]);
+
   const handleMapLoad = useCallback(() => {
     setMapLoaded(true);
   }, []);
@@ -126,6 +145,25 @@ export default function GameMap() {
         // Use shapeISO (like 'RU-TA') which matches the region keys in our state
         const regionId = features[0].properties?.shapeISO || features[0].properties?.regionId || features[0].properties?.shapeID;
         if (regionId) {
+          // Switch mode: left-click changes the player's country to the region's owner
+          if (isSwitchModeActiveRef.current) {
+            const region = regionsRef.current[regionId];
+            if (region) {
+              const meta = COUNTRY_METADATA[region.owner as keyof typeof COUNTRY_METADATA];
+              if (meta) {
+                selectCountryRef.current({
+                  id: meta.id as import('../types/game').CountryId,
+                  name: meta.name,
+                  flag: meta.flag,
+                  color: meta.color,
+                  coreRegions: (meta.coreRegions as string[] | undefined) ?? [],
+                });
+              }
+            }
+            setSwitchModeActiveRef.current(false);
+            return;
+          }
+
           // If clicking on same region, deselect
           if (regionId === selectedRegion) {
             setSelectedRegion(null);

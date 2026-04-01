@@ -66,6 +66,8 @@ export const createBasicActions = (
 
   setIsCountrySidebarOpen: (isOpen: boolean) => set({ isCountrySidebarOpen: isOpen }),
 
+  setSwitchModeActive: (active: boolean) => set({ isSwitchModeActive: active }),
+
   dismissNotification: (notificationId: string) => {
     const { notifications } = get();
     set({ 

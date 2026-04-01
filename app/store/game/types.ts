@@ -30,6 +30,8 @@ export interface GameStore extends GameState {
   isCountrySidebarOpen: boolean; // Country sidebar state
   /** Army groups derived from the map tool's unit placement editor; merged into armyGroups at game start */
   placementArmyGroups: import('../../types/game').ArmyGroup[];
+  /** When true, left-clicking a region switches the player to that region's controlling country */
+  isSwitchModeActive: boolean;
 
   // Actions
   setRegions: (regions: RegionState) => void;
@@ -42,6 +44,7 @@ export interface GameStore extends GameState {
   setIsProductionModalOpen: (isOpen: boolean) => void;
   setSelectedCountryId: (countryId: CountryId | null) => void;
   setIsCountrySidebarOpen: (isOpen: boolean) => void;
+  setSwitchModeActive: (active: boolean) => void;
   
   // Notification Actions
   dismissNotification: (notificationId: string) => void;
