@@ -119,10 +119,14 @@ export const createBasicActions = (
       }
     }
 
-    // Deep-copy current regions so we can mutate divisions
+    // Deep-copy current regions, clearing all divisions so we start fresh.
+    // This prevents stale divisions from a previous game session (or a prior
+    // country switch) from accumulating on top of the initial placements,
+    // which would cause the Command Power usage to be inflated on repeat
+    // country switches (A → B → A scenario).
     const regionsWithUnits: RegionState = {};
     for (const [regionId, region] of Object.entries(currentRegions)) {
-      regionsWithUnits[regionId] = { ...region, divisions: [...region.divisions] };
+      regionsWithUnits[regionId] = { ...region, divisions: [] };
     }
 
     // Division name counters per country
