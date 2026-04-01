@@ -213,16 +213,22 @@ export default function MapToolCanvas({
 
       const features = e.features;
       if (!features || features.length === 0) return;
-      // Use the same ID priority as createInitialOwnership: shapeISO > regionId > shapeID
       const props = features[0].properties;
-      const regionId = props?.shapeISO || props?.regionId || props?.shapeID;
-      if (!regionId) return;
 
       if (editMode === 'units') {
+        // Units mode uses shapeISO as the canonical key (matches initialUnitPlacement data)
+        const regionId = props?.shapeISO || props?.regionId || props?.shapeID;
+        if (!regionId) return;
         // Left click = add division
         onRegionUnitAdd(regionId);
         return;
       }
+
+      // Ownership/core mode uses shapeID as the canonical key — this matches how the
+      // ownership map is keyed (handleGeoJSONLoad uses shapeID) and the fill expression
+      // uses ["get", "shapeID"] for color matching.
+      const regionId = props?.shapeID || props?.regionId || props?.shapeISO;
+      if (!regionId) return;
 
       // Don't process clicks in paint mode - handled by mouseDown instead
       if (isPaintEnabled) return;
@@ -240,17 +246,21 @@ export default function MapToolCanvas({
       const features = e.features;
       if (!features || features.length === 0) return;
       const props = features[0].properties;
-      const regionId = props?.shapeISO || props?.regionId || props?.shapeID;
-      if (!regionId) return;
 
       if (editMode === 'units') {
-        // Right click = remove division
+        // Right click = remove division (units mode uses shapeISO key)
+        const regionId = props?.shapeISO || props?.regionId || props?.shapeID;
+        if (!regionId) return;
         onRegionUnitRemove(regionId);
         return;
       }
 
       // In paint mode, right-click is used for panning, not eyedropper
       if (isPaintEnabled) return;
+
+      // Ownership/core mode uses shapeID key
+      const regionId = props?.shapeID || props?.regionId || props?.shapeISO;
+      if (!regionId) return;
 
       if (ownership[regionId]) {
         onCountryPick(ownership[regionId]);
@@ -284,7 +294,7 @@ export default function MapToolCanvas({
       const features = e.features;
       if (features && features.length > 0) {
         const props = features[0].properties;
-        const regionId = props?.shapeISO || props?.regionId || props?.shapeID;
+        const regionId = props?.shapeID || props?.regionId || props?.shapeISO;
 
         if (regionId !== hoveredRegion) {
           setHoveredRegion(regionId);
@@ -337,13 +347,13 @@ export default function MapToolCanvas({
           const features = e.features;
           if (features && features.length > 0) {
             const props = features[0].properties;
-            const regionId = props?.shapeISO || props?.regionId || props?.shapeID;
+            const regionId = props?.shapeID || props?.regionId || props?.shapeISO;
             if (regionId) {
               onRegionPaint(regionId);
             }
           }
         } else if (e.originalEvent.button === 2) {
-          setIsPainting(true);
+          setIsPanning(true);
           setPanStart({
             x: e.originalEvent.clientX,
             y: e.originalEvent.clientY,
