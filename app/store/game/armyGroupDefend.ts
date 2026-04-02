@@ -4,7 +4,18 @@ import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { GameStore } from './types';
 
 /**
- * Defends an army group by redistributing its divisions to border regions
+ * Defends an army group by redistributing its divisions to border regions.
+ *
+ * Movement is only triggered when a division is:
+ *   1. Not already at a border region, AND
+ *   2. There is a border region whose committed count (present + in-transit)
+ *      is below its allocation target.
+ *
+ * This prevents the two main causes of endless movement:
+ *   a) Divisions already at a border being repeatedly pulled away and sent
+ *      back due to integer rounding.
+ *   b) New movements being dispatched to a border that already has
+ *      reinforcements en route (in-transit divisions are counted as committed).
  */
 export function defendArmyGroup(
   groupId: string,
@@ -25,187 +36,241 @@ export function defendArmyGroup(
   // military_access and autonomy neighbors must not trigger defensive repositioning.
   const isHostile = buildIsHostilePredicate(countryId, regions, relationships);
 
-  const newMovements: Movement[] = [];
-  const newRegions = { ...regions };
-  const movedRegions = new Set<string>();
-  const targetRegions = new Set<string>();
-
   // Find the theater this group belongs to
   const theater = group.theaterId ? theaters.find(t => t.id === group.theaterId) : null;
   
-  // Find border regions in this theater (or all friendly border regions if no theater)
+  // ── Step 1: Find border regions ─────────────────────────────────────────────
   const allBorderRegions: string[] = [];
-  for (const [regionId, region] of Object.entries(newRegions)) {
+  for (const [regionId, region] of Object.entries(regions)) {
     if (!region || region.owner !== countryId) continue;
-    
-    // If there's a theater, only consider regions in that theater
     if (theater && !theater.frontlineRegions.includes(regionId)) continue;
     
-    const neighbors = adjacency[regionId] || [];
-    const hasEnemyNeighbor = neighbors.some(neighborId => {
-      const neighbor = newRegions[neighborId];
+    const hasEnemyNeighbor = (adjacency[regionId] || []).some(neighborId => {
+      const neighbor = regions[neighborId];
       return neighbor && neighbor.owner !== countryId && isHostile(neighborId);
     });
     
-    if (hasEnemyNeighbor) {
-      allBorderRegions.push(regionId);
-    }
+    if (hasEnemyNeighbor) allBorderRegions.push(regionId);
   }
 
-  if (allBorderRegions.length === 0) return; // No borders to defend
+  if (allBorderRegions.length === 0) return;
 
-  // Count current divisions at each border region (including this group's divisions)
-  const borderDivisionCounts = new Map<string, number>();
-  allBorderRegions.forEach(regionId => {
-    const region = newRegions[regionId];
-    const groupDivisions = region.divisions.filter(d => d.armyGroupId === groupId).length;
-    borderDivisionCounts.set(regionId, groupDivisions);
+  const borderSet = new Set(allBorderRegions);
+
+  // ── Step 2: Compute committed counts (present + in-transit) per border ──────
+  // Using "committed" rather than just "present" is the key fix: divisions
+  // already travelling toward a border count against its allocation so we
+  // don't dispatch duplicates.
+  const committedAtBorder = new Map<string, number>();
+  allBorderRegions.forEach(id => {
+    const present = regions[id]?.divisions.filter(d => d.armyGroupId === groupId).length ?? 0;
+    committedAtBorder.set(id, present);
   });
 
-  // Find all divisions belonging to this army group.
-  // Include ally-owned regions where the group has divisions (e.g. divisions
-  // that moved into friendly territory via military access / autonomy).
-  const allGroupDivisions: { regionId: string; divisions: typeof regions[string]['divisions'] }[] = [];
-  Object.keys(newRegions).forEach(regionId => {
-    const region = newRegions[regionId];
+  // Add in-transit divisions that are heading directly to a border region.
+  movingUnits.forEach(m => {
+    if (m.owner !== countryId) return;
+    const count = m.divisions.filter(d => d.armyGroupId === groupId).length;
+    if (count > 0 && borderSet.has(m.toRegion)) {
+      committedAtBorder.set(m.toRegion, (committedAtBorder.get(m.toRegion) ?? 0) + count);
+    }
+  });
+
+  // ── Step 3: Compute allocation targets ──────────────────────────────────────
+  // Count ALL group divisions: stationed + in-transit (regardless of destination).
+  // This gives a stable total that doesn't shrink just because units are moving.
+  let totalGroupDivisions = 0;
+  Object.values(regions).forEach(region => {
     if (!region) return;
-    // Allow sourcing from owned regions OR ally regions where our divisions are present
-    const divisionsInGroup = region.divisions.filter(d => d.armyGroupId === groupId && d.owner === countryId);
-    if (divisionsInGroup.length > 0) {
-      allGroupDivisions.push({ regionId, divisions: divisionsInGroup });
-    }
+    totalGroupDivisions += region.divisions.filter(d => d.armyGroupId === groupId && d.owner === countryId).length;
+  });
+  movingUnits.forEach(m => {
+    if (m.owner !== countryId) return;
+    totalGroupDivisions += m.divisions.filter(d => d.armyGroupId === groupId).length;
   });
 
-  // Calculate total divisions and target count per border region
-  const totalDivisions = allGroupDivisions.reduce((sum, item) => sum + item.divisions.length, 0);
-  const targetPerBorder = Math.floor(totalDivisions / allBorderRegions.length);
-  const remainder = totalDivisions % allBorderRegions.length;
+  const targetPerBorder = Math.floor(totalGroupDivisions / allBorderRegions.length);
+  const remainder = totalGroupDivisions % allBorderRegions.length;
 
-  // Distribute divisions evenly across border regions
-  // First, collect divisions from regions that need to send them
-  const divisionsToRedistribute: typeof regions[string]['divisions'] = [];
-  const sourceRegionMap = new Map<string, string>(); // divisionId -> regionId
-  
-  allGroupDivisions.forEach(({ regionId, divisions }) => {
-    const isBorder = allBorderRegions.includes(regionId);
-    const currentCount = borderDivisionCounts.get(regionId) || 0;
-    
-    if (isBorder) {
-      // If this border has more than target, take the excess
-      const excess = currentCount - targetPerBorder;
-      if (excess > 0) {
-        const divisionsToTake = divisions.slice(0, excess);
-        divisionsToRedistribute.push(...divisionsToTake);
-        divisionsToTake.forEach(d => sourceRegionMap.set(d.id, regionId));
-        // NOTE: We don't remove from newRegions yet, only when movement is confirmed
-        borderDivisionCounts.set(regionId, currentCount - excess);
-      }
+  // Each border gets targetPerBorder, with the first `remainder` borders getting +1.
+  const allocationTarget = new Map<string, number>();
+  allBorderRegions.forEach((id, i) => {
+    allocationTarget.set(id, targetPerBorder + (i < remainder ? 1 : 0));
+  });
+
+  // ── Step 4: Find borders that are under their allocation target ──────────────
+  // A border is "needy" only when committed < target. Borders at or above their
+  // target are left alone — this is the core stopping condition.
+  const needyBorders = allBorderRegions.filter(id =>
+    (committedAtBorder.get(id) ?? 0) < (allocationTarget.get(id) ?? 0)
+  );
+
+  if (needyBorders.length === 0) return; // Everyone is adequately staffed — do nothing
+
+  // ── Step 5: Find available divisions to send ────────────────────────────────
+  // - Non-border regions: all stationary group divisions are available.
+  // - Border regions: only the *excess* above their allocation target is
+  //   available. Divisions covering the target are never pulled away — this
+  //   prevents the "strip a border to staff another" oscillation.
+  // - In-transit divisions are never double-dispatched.
+  const inTransitDivisionIds = new Set<string>();
+  movingUnits.forEach(m => {
+    if (m.owner !== countryId) return;
+    m.divisions.forEach(d => { if (d.armyGroupId === groupId) inTransitDivisionIds.add(d.id); });
+  });
+
+  const availableDivisions: { divisionId: string; regionId: string }[] = [];
+  Object.entries(regions).forEach(([regionId, region]) => {
+    if (!region) return;
+    const groupDivs = region.divisions.filter(
+      d => d.armyGroupId === groupId && d.owner === countryId && !inTransitDivisionIds.has(d.id)
+    );
+    if (groupDivs.length === 0) return;
+
+    if (borderSet.has(regionId)) {
+      // Only the excess above this border's committed target is available.
+      const target = allocationTarget.get(regionId) ?? 0;
+      const committed = committedAtBorder.get(regionId) ?? 0;
+      const excess = Math.max(0, committed - target);
+      // Take up to `excess` divisions from the end of the list (keep the first
+      // `target` worth of divisions as the permanent garrison).
+      groupDivs.slice(groupDivs.length - excess).forEach(d =>
+        availableDivisions.push({ divisionId: d.id, regionId })
+      );
     } else {
-      // Not at border, send all divisions
-      divisionsToRedistribute.push(...divisions);
-      divisions.forEach(d => sourceRegionMap.set(d.id, regionId));
-      // NOTE: We don't remove from newRegions yet
+      // Non-border: all stationary divisions are available.
+      groupDivs.forEach(d => availableDivisions.push({ divisionId: d.id, regionId }));
     }
   });
 
-  // Now distribute divisions to border regions that need them
-  let divisionIndex = 0;
-  allBorderRegions.forEach((borderRegionId, index) => {
-    const currentCount = borderDivisionCounts.get(borderRegionId) || 0;
-    const targetCount = targetPerBorder + (index < remainder ? 1 : 0);
-    const needed = targetCount - currentCount;
-    
-    if (needed > 0 && divisionIndex < divisionsToRedistribute.length) {
-      const divisionsPlanned = divisionsToRedistribute.slice(divisionIndex, divisionIndex + needed);
-      divisionIndex += needed;
-      
-      if (divisionsPlanned.length > 0) {
-        // Group by source region to create movements
-        const bySource = new Map<string, typeof regions[string]['divisions']>();
-        divisionsPlanned.forEach(d => {
-          const sourceId = sourceRegionMap.get(d.id);
-          if (sourceId) {
-            if (!bySource.has(sourceId)) bySource.set(sourceId, []);
-            bySource.get(sourceId)!.push(d);
-          }
-        });
-        
-        // Create movements from each source region
-        bySource.forEach((divsFromSource, sourceRegionId) => {
-          // Skip if source and destination are the same
-          if (sourceRegionId === borderRegionId) return;
-          
-          // Find the next adjacent step toward the border region using pathfinding
-          const nextStep = getNextStepToward(sourceRegionId, borderRegionId, adjacency, canEnter);
-          
-          // If no valid path exists or already at destination, skip
-          if (!nextStep) {
-            console.warn(`[DEFEND] No valid path from ${sourceRegionId} to ${borderRegionId}`);
-            return;
-          }
-          
-          // Check if already moving from this region
-          const groupAlreadyMoving = movingUnits.some(m => 
-            m.fromRegion === sourceRegionId && 
-            m.divisions.some(d => d.armyGroupId === groupId)
-          );
-          if (groupAlreadyMoving) return;
-          
-          // SUCCESS: We can move these units. Remove them from region and create movement.
-          const { regionCentroids } = state;
-          const distanceKm = calculateDistance(sourceRegionId, nextStep, regionCentroids);
-          const travelTimeHours = calculateTravelTime(distanceKm, false);
-          
-          const arrivalTime = new Date(dateTime);
-          arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
+  if (availableDivisions.length === 0) return;
 
-          const newMovement: Movement = {
-            id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${sourceRegionId}`,
-            fromRegion: sourceRegionId,
-            toRegion: nextStep,
-            divisions: divsFromSource,
-            departureTime: new Date(dateTime),
-            arrivalTime,
-            owner: countryId,
-          };
+  // ── Step 6: Assign available divisions to needy borders and create movements ─
+  const newMovements: Movement[] = [];
+  const newRegions = { ...regions };
+  const movedRegions = new Set<string>();
+  const targetRegionSet = new Set<string>();
 
-          newMovements.push(newMovement);
-          
-          // ONLY NOW update the region state
-          const currentDivsInRegion = newRegions[sourceRegionId].divisions;
-          const remainingDivs = currentDivsInRegion.filter(
-            d => !divsFromSource.some(dfs => dfs.id === d.id)
-          );
-          newRegions[sourceRegionId] = {
-            ...newRegions[sourceRegionId],
-            divisions: remainingDivs
-          };
-          
-          movedRegions.add(sourceRegionId);
-          targetRegions.add(nextStep);
-        });
-      }
-    }
+  // Track which sources have already dispatched a movement this tick to
+  // avoid creating two movements from the same source region.
+  const dispatchedFromSource = new Set<string>();
+  // Track which nextStep hops already have a movement dispatched this tick
+  // (in addition to what's already in movingUnits).
+  const dispatchedToStep = new Set<string>();
+
+  // Build a lookup: sourceRegionId → remaining available division ids
+  // (respects the per-border excess cap already encoded in availableDivisions).
+  const availBySource = new Map<string, string[]>();
+  availableDivisions.forEach(({ divisionId, regionId }) => {
+    if (!availBySource.has(regionId)) availBySource.set(regionId, []);
+    availBySource.get(regionId)!.push(divisionId);
   });
 
-  if (newMovements.length > 0 || movedRegions.size > 0) {
-    // Clear selectedUnitRegion if it was in a region that had units moved
-    const shouldClearSelection = selectedUnitRegion && movedRegions.has(selectedUnitRegion);
-    
-    // Update army groups to include target regions immediately
-    const updatedArmyGroups = armyGroups.map(g => {
-      if (g.id === groupId) {
-        const newRegionIds = new Set([...g.regionIds, ...Array.from(targetRegions)]);
-        return { ...g, regionIds: Array.from(newRegionIds) };
-      }
-      return g;
-    });
+  for (const borderRegionId of needyBorders) {
+    const target = allocationTarget.get(borderRegionId) ?? 0;
+    let committed = committedAtBorder.get(borderRegionId) ?? 0;
 
-    setState({
-      regions: newRegions,
-      movingUnits: [...movingUnits, ...newMovements],
-      armyGroups: updatedArmyGroups,
-      ...(shouldClearSelection && { selectedUnitRegion: null }),
-    });
+    for (const [sourceRegionId, divIds] of availBySource) {
+      if (committed >= target) break;
+      if (divIds.length === 0) continue;
+
+      // Skip if we already dispatched from this source this tick
+      if (dispatchedFromSource.has(sourceRegionId)) continue;
+
+      // Skip if a movement from this source is already in-flight
+      const alreadyMovingFromSource = movingUnits.some(m =>
+        m.fromRegion === sourceRegionId &&
+        m.owner === countryId &&
+        m.divisions.some(d => d.armyGroupId === groupId)
+      );
+      if (alreadyMovingFromSource) continue;
+
+      // Don't send from a border toward itself
+      if (sourceRegionId === borderRegionId) continue;
+
+      // Find the next BFS step toward the border
+      const nextStep = getNextStepToward(sourceRegionId, borderRegionId, adjacency, canEnter);
+      if (!nextStep) {
+        console.warn(`[DEFEND] No valid path from ${sourceRegionId} to ${borderRegionId}`);
+        continue;
+      }
+
+      // Skip if another movement (existing or newly created this tick) already
+      // targets this next step — prevents flooding the same hop.
+      const stepAlreadyCovered =
+        dispatchedToStep.has(nextStep) ||
+        movingUnits.some(m =>
+          m.owner === countryId &&
+          m.toRegion === nextStep &&
+          m.divisions.some(d => d.armyGroupId === groupId)
+        );
+      if (stepAlreadyCovered) continue;
+
+      // How many divisions to send: enough to fill the deficit, but no more
+      // than what this source has available.
+      const deficit = target - committed;
+      const sendCount = Math.min(deficit, divIds.length);
+      const divIdsToSend = divIds.splice(0, sendCount); // mutates availBySource entry
+
+      const divsToSend = divIdsToSend
+        .map(id => newRegions[sourceRegionId]?.divisions.find(d => d.id === id))
+        .filter((d): d is NonNullable<typeof d> => d !== undefined);
+
+      if (divsToSend.length === 0) continue;
+
+      // Create movement
+      const { regionCentroids } = state;
+      const distanceKm = calculateDistance(sourceRegionId, nextStep, regionCentroids);
+      const travelTimeHours = calculateTravelTime(distanceKm, false);
+      const arrivalTime = new Date(dateTime);
+      arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
+
+      newMovements.push({
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${sourceRegionId}`,
+        fromRegion: sourceRegionId,
+        toRegion: nextStep,
+        divisions: divsToSend,
+        departureTime: new Date(dateTime),
+        arrivalTime,
+        owner: countryId,
+      });
+
+      // Remove dispatched divisions from source region state
+      newRegions[sourceRegionId] = {
+        ...newRegions[sourceRegionId],
+        divisions: newRegions[sourceRegionId].divisions.filter(
+          d => !divsToSend.some(dfs => dfs.id === d.id)
+        ),
+      };
+
+      movedRegions.add(sourceRegionId);
+      targetRegionSet.add(nextStep);
+      dispatchedFromSource.add(sourceRegionId);
+      dispatchedToStep.add(nextStep);
+      divsToSend.forEach(d => inTransitDivisionIds.add(d.id));
+
+      committed += divsToSend.length;
+    }
   }
+
+  if (newMovements.length === 0) return;
+
+  // Clear selectedUnitRegion if it was in a region that had units moved
+  const shouldClearSelection = selectedUnitRegion && movedRegions.has(selectedUnitRegion);
+
+  // Update army groups to include target regions immediately
+  const updatedArmyGroups = armyGroups.map(g => {
+    if (g.id === groupId) {
+      const newRegionIds = new Set([...g.regionIds, ...Array.from(targetRegionSet)]);
+      return { ...g, regionIds: Array.from(newRegionIds) };
+    }
+    return g;
+  });
+
+  setState({
+    regions: newRegions,
+    movingUnits: [...movingUnits, ...newMovements],
+    armyGroups: updatedArmyGroups,
+    ...(shouldClearSelection && { selectedUnitRegion: null }),
+  });
 }

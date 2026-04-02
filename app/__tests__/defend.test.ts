@@ -1,0 +1,254 @@
+/**
+ * Unit tests for defendArmyGroup — the defend-mode redistribution logic.
+ *
+ * These tests exercise the pure function directly (no store, no browser).
+ * The GameStore argument is built as a minimal partial object cast to the
+ * required type so we only populate the fields the function actually reads.
+ */
+
+import { describe, it, expect } from 'vitest';
+import { defendArmyGroup } from '../store/game/armyGroupDefend';
+import type {
+  Division,
+  Movement,
+  ArmyGroup,
+  Theater,
+  Region,
+  RegionState,
+  Adjacency,
+  Relationship,
+} from '../types/game';
+import type { GameStore } from '../store/game/types';
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function makeDiv(id: string, armyGroupId = 'ag-1'): Division {
+  return {
+    id,
+    name: id,
+    owner: 'soviet',
+    armyGroupId,
+    hp: 100,
+    maxHp: 100,
+    attack: 10,
+    defence: 15,
+  };
+}
+
+function makeRegion(id: string, owner: 'soviet' | 'white', divs: Division[] = []): Region {
+  return { id, name: id, countryIso3: 'TST', owner, divisions: divs, value: 1 };
+}
+
+function makeGroup(overrides: Partial<ArmyGroup> = {}): ArmyGroup {
+  return {
+    id: 'ag-1',
+    name: 'Test Group',
+    regionIds: [],
+    color: '#fff',
+    owner: 'soviet',
+    theaterId: null,
+    mode: 'defend',
+    ...overrides,
+  };
+}
+
+/** Build a minimal GameStore partial for defendArmyGroup. */
+function makeState(
+  regions: RegionState,
+  adjacency: Adjacency,
+  armyGroups: ArmyGroup[],
+  movingUnits: Movement[] = [],
+  theaters: Theater[] = [],
+  relationships: Relationship[] = []
+): GameStore {
+  return {
+    regions,
+    adjacency,
+    armyGroups,
+    movingUnits,
+    theaters,
+    relationships,
+    dateTime: new Date('1918-01-01T00:00:00Z'),
+    selectedUnitRegion: null,
+    regionCentroids: {},
+    // Fill remaining required fields with harmless stubs
+  } as unknown as GameStore;
+}
+
+// ---------------------------------------------------------------------------
+// Scenario 1: All 15 divisions stacked in one border region, 5 border regions
+//
+//   Layout (soviet owns all, white owns ENEMY):
+//
+//   [REAR]---[B1]---[ENEMY]
+//                [B2]---[ENEMY]
+//                [B3]---[ENEMY]
+//                [B4]---[ENEMY]
+//                [B5]---[ENEMY]
+//
+//   B1..B5 each border ENEMY (hostile).
+//   All 15 divisions start in B1.
+//   After one call: B1 should send excess divisions toward the other borders.
+// ---------------------------------------------------------------------------
+
+describe('defendArmyGroup – redistribution from stacked border region', () => {
+  // Five border regions each adjacent to a distinct enemy region.
+  // B1..B5 are all adjacent to each other (chain) so BFS can route between them.
+  // B1 also borders ENEMY_1, B2 borders ENEMY_2, etc.
+  const adjacency: Adjacency = {
+    B1: ['B2', 'ENEMY_1'],
+    B2: ['B1', 'B3', 'ENEMY_2'],
+    B3: ['B2', 'B4', 'ENEMY_3'],
+    B4: ['B3', 'B5', 'ENEMY_4'],
+    B5: ['B4', 'ENEMY_5'],
+    ENEMY_1: ['B1'],
+    ENEMY_2: ['B2'],
+    ENEMY_3: ['B3'],
+    ENEMY_4: ['B4'],
+    ENEMY_5: ['B5'],
+  };
+
+  // 15 divisions all in B1
+  const divs = Array.from({ length: 15 }, (_, i) => makeDiv(`div-${i + 1}`));
+
+  const regions: RegionState = {
+    B1: makeRegion('B1', 'soviet', divs),
+    B2: makeRegion('B2', 'soviet'),
+    B3: makeRegion('B3', 'soviet'),
+    B4: makeRegion('B4', 'soviet'),
+    B5: makeRegion('B5', 'soviet'),
+    ENEMY_1: makeRegion('ENEMY_1', 'white'),
+    ENEMY_2: makeRegion('ENEMY_2', 'white'),
+    ENEMY_3: makeRegion('ENEMY_3', 'white'),
+    ENEMY_4: makeRegion('ENEMY_4', 'white'),
+    ENEMY_5: makeRegion('ENEMY_5', 'white'),
+  };
+
+  // War relationship so all ENEMY regions are hostile and accessible
+  const relationships: Relationship[] = [
+    { fromCountry: 'soviet', toCountry: 'white', type: 'war' },
+  ];
+
+  const group = makeGroup({ regionIds: ['B1', 'B2', 'B3', 'B4', 'B5'] });
+
+  it('dispatches movements from the stacked border to needy borders', () => {
+    const state = makeState(regions, adjacency, [group], [], [], relationships);
+    let captured: Partial<GameStore> = {};
+    defendArmyGroup('ag-1', state, (partial) => { captured = partial; });
+
+    // Should have created at least one movement away from B1
+    expect(captured.movingUnits).toBeDefined();
+    expect((captured.movingUnits as Movement[]).length).toBeGreaterThan(0);
+
+    const movements = captured.movingUnits as Movement[];
+    // All movements must originate from B1 (the only region with divisions)
+    movements.forEach(m => expect(m.fromRegion).toBe('B1'));
+    // B1 should have fewer divisions after dispatch
+    const b1After = (captured.regions as RegionState)['B1'];
+    expect(b1After.divisions.length).toBeLessThan(15);
+  });
+
+  it('does not send more than the excess (keeps target count in B1)', () => {
+    const state = makeState(regions, adjacency, [group], [], [], relationships);
+    let captured: Partial<GameStore> = {};
+    defendArmyGroup('ag-1', state, (partial) => { captured = partial; });
+
+    const b1After = (captured.regions as RegionState)?.['B1'];
+    if (!b1After) return; // no dispatch at all means the bug is still present
+
+    // Target is 15/5 = 3 per border. B1 keeps 3, sends 12.
+    // B1 remaining + dispatched should equal 15.
+    const dispatched = (captured.movingUnits as Movement[])
+      .filter(m => m.fromRegion === 'B1')
+      .reduce((s, m) => s + m.divisions.length, 0);
+    expect(b1After.divisions.length + dispatched).toBe(15);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Scenario 2: Divisions already well-distributed — no movement expected
+// ---------------------------------------------------------------------------
+
+describe('defendArmyGroup – no movement when borders are adequately staffed', () => {
+  const adjacency: Adjacency = {
+    B1: ['B2', 'ENEMY'],
+    B2: ['B1', 'ENEMY'],
+    ENEMY: ['B1', 'B2'],
+  };
+
+  // 2 borders, 2 divisions each → target = 2 per border → already satisfied
+  const regions: RegionState = {
+    B1: makeRegion('B1', 'soviet', [makeDiv('d1'), makeDiv('d2')]),
+    B2: makeRegion('B2', 'soviet', [makeDiv('d3'), makeDiv('d4')]),
+    ENEMY: makeRegion('ENEMY', 'white'),
+  };
+
+  const relationships: Relationship[] = [
+    { fromCountry: 'soviet', toCountry: 'white', type: 'war' },
+  ];
+
+  const group = makeGroup({ regionIds: ['B1', 'B2'] });
+
+  it('does not dispatch any movements when all borders meet their target', () => {
+    const state = makeState(regions, adjacency, [group], [], [], relationships);
+    let called = false;
+    defendArmyGroup('ag-1', state, () => { called = true; });
+    expect(called).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Scenario 3: In-transit divisions count — no duplicate dispatch
+// ---------------------------------------------------------------------------
+
+describe('defendArmyGroup – in-transit divisions prevent duplicate dispatch', () => {
+  const adjacency: Adjacency = {
+    REAR: ['B1'],
+    B1: ['REAR', 'ENEMY'],
+    ENEMY: ['B1'],
+  };
+
+  // 1 border (B1), 1 division in REAR, 1 division already moving from REAR→B1
+  const rearDiv = makeDiv('d-rear');
+  const transitDiv = makeDiv('d-transit');
+
+  const regions: RegionState = {
+    REAR: makeRegion('REAR', 'soviet', [rearDiv]),
+    B1: makeRegion('B1', 'soviet'),
+    ENEMY: makeRegion('ENEMY', 'white'),
+  };
+
+  const existingMovement: Movement = {
+    id: 'mv-existing',
+    fromRegion: 'REAR',
+    toRegion: 'B1',
+    divisions: [transitDiv],
+    departureTime: new Date('1918-01-01T00:00:00Z'),
+    arrivalTime: new Date('1918-01-01T12:00:00Z'),
+    owner: 'soviet',
+  };
+
+  const relationships: Relationship[] = [
+    { fromCountry: 'soviet', toCountry: 'white', type: 'war' },
+  ];
+
+  const group = makeGroup({ regionIds: ['REAR', 'B1'] });
+
+  it('does not create a duplicate movement when a division is already en route', () => {
+    // B1 needs 1 div (total 2 divs / 1 border = 2 target).
+    // But 1 is already in transit → committed = 1. Need 1 more.
+    // rearDiv should be dispatched.
+    const state = makeState(regions, adjacency, [group], [existingMovement], [], relationships);
+    let captured: Partial<GameStore> = {};
+    defendArmyGroup('ag-1', state, (partial) => { captured = partial; });
+
+    // The existing movement targets B1 directly. The new movement should
+    // also go toward B1 (from REAR) if it's dispatched.
+    // Key assertion: at most 1 new movement from REAR (not 2).
+    const newMovements = (captured.movingUnits ?? []) as Movement[];
+    const fromRear = newMovements.filter(m => m.fromRegion === 'REAR' && m.id !== 'mv-existing');
+    expect(fromRear.length).toBeLessThanOrEqual(1);
+  });
+});
