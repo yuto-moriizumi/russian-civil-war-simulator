@@ -58,16 +58,33 @@ export function defendArmyGroup(
   const borderSet = new Set(allBorderRegions);
 
   // ── Step 2: Compute committed counts (present + in-transit) per border ──────
-  // Using "committed" rather than just "present" is the key fix: divisions
-  // already travelling toward a border count against its allocation so we
-  // don't dispatch duplicates.
+  // "Committed" = divisions already at the border + divisions in transit that
+  // will eventually reach it. We track this at two levels:
+  //
+  //   a) Divisions whose toRegion IS the border (one hop away) — assigned
+  //      directly to that border's count.
+  //   b) Divisions whose toRegion is an intermediate step en route to a border
+  //      — these are counted in a global "alreadyInTransit" pool so they
+  //      reduce the total available-to-dispatch count and prevent wave dispatch.
+  //
+  // This stops the "wave" pattern where tick N dispatches 5 divs, tick N+1
+  // dispatches another 5 while the first wave is still crossing an intermediate
+  // region, etc.
   const committedAtBorder = new Map<string, number>();
   allBorderRegions.forEach(id => {
     const present = regions[id]?.divisions.filter(d => d.armyGroupId === groupId).length ?? 0;
     committedAtBorder.set(id, present);
   });
 
-  // Add in-transit divisions that are heading directly to a border region.
+  // All in-transit group divisions — regardless of their current toRegion.
+  // Used in Step 5 to exclude them from the available pool entirely.
+  const inTransitDivisionIds = new Set<string>();
+  movingUnits.forEach(m => {
+    if (m.owner !== countryId) return;
+    m.divisions.forEach(d => { if (d.armyGroupId === groupId) inTransitDivisionIds.add(d.id); });
+  });
+
+  // For divisions heading directly to a border, credit that border's committed count.
   movingUnits.forEach(m => {
     if (m.owner !== countryId) return;
     const count = m.divisions.filter(d => d.armyGroupId === groupId).length;
@@ -99,25 +116,28 @@ export function defendArmyGroup(
   });
 
   // ── Step 4: Find borders that are under their allocation target ──────────────
-  // A border is "needy" only when committed < target. Borders at or above their
-  // target are left alone — this is the core stopping condition.
+  // A border is "needy" only when its committed count is below target.
   const needyBorders = allBorderRegions.filter(id =>
     (committedAtBorder.get(id) ?? 0) < (allocationTarget.get(id) ?? 0)
   );
 
   if (needyBorders.length === 0) return; // Everyone is adequately staffed — do nothing
 
+  // If the total number of already-moving group divisions (any destination)
+  // is enough to cover the entire remaining deficit, don't dispatch more.
+  // This prevents wave-dispatch: when 15 divs are already moving toward a
+  // 1-border theater, we don't queue another wave the next tick.
+  const totalDeficit = needyBorders.reduce(
+    (s, id) => s + ((allocationTarget.get(id) ?? 0) - (committedAtBorder.get(id) ?? 0)), 0
+  );
+  if (inTransitDivisionIds.size >= totalDeficit) return;
+
   // ── Step 5: Find available divisions to send ────────────────────────────────
   // - Non-border regions: all stationary group divisions are available.
   // - Border regions: only the *excess* above their allocation target is
   //   available. Divisions covering the target are never pulled away — this
   //   prevents the "strip a border to staff another" oscillation.
-  // - In-transit divisions are never double-dispatched.
-  const inTransitDivisionIds = new Set<string>();
-  movingUnits.forEach(m => {
-    if (m.owner !== countryId) return;
-    m.divisions.forEach(d => { if (d.armyGroupId === groupId) inTransitDivisionIds.add(d.id); });
-  });
+  // - In-transit divisions (inTransitDivisionIds, built in Step 2) are excluded.
 
   const availableDivisions: { divisionId: string; regionId: string }[] = [];
   Object.entries(regions).forEach(([regionId, region]) => {
@@ -151,13 +171,6 @@ export function defendArmyGroup(
   const movedRegions = new Set<string>();
   const targetRegionSet = new Set<string>();
 
-  // Track which sources have already dispatched a movement this tick to
-  // avoid creating two movements from the same source region.
-  const dispatchedFromSource = new Set<string>();
-  // Track which nextStep hops already have a movement dispatched this tick
-  // (in addition to what's already in movingUnits).
-  const dispatchedToStep = new Set<string>();
-
   // Build a lookup: sourceRegionId → remaining available division ids
   // (respects the per-border excess cap already encoded in availableDivisions).
   const availBySource = new Map<string, string[]>();
@@ -173,9 +186,6 @@ export function defendArmyGroup(
     for (const [sourceRegionId, divIds] of availBySource) {
       if (committed >= target) break;
       if (divIds.length === 0) continue;
-
-      // Skip if we already dispatched from this source this tick
-      if (dispatchedFromSource.has(sourceRegionId)) continue;
 
       // Skip if a movement from this source is already in-flight
       const alreadyMovingFromSource = movingUnits.some(m =>
@@ -194,17 +204,6 @@ export function defendArmyGroup(
         console.warn(`[DEFEND] No valid path from ${sourceRegionId} to ${borderRegionId}`);
         continue;
       }
-
-      // Skip if another movement (existing or newly created this tick) already
-      // targets this next step — prevents flooding the same hop.
-      const stepAlreadyCovered =
-        dispatchedToStep.has(nextStep) ||
-        movingUnits.some(m =>
-          m.owner === countryId &&
-          m.toRegion === nextStep &&
-          m.divisions.some(d => d.armyGroupId === groupId)
-        );
-      if (stepAlreadyCovered) continue;
 
       // How many divisions to send: enough to fill the deficit, but no more
       // than what this source has available.
@@ -245,8 +244,6 @@ export function defendArmyGroup(
 
       movedRegions.add(sourceRegionId);
       targetRegionSet.add(nextStep);
-      dispatchedFromSource.add(sourceRegionId);
-      dispatchedToStep.add(nextStep);
       divsToSend.forEach(d => inTransitDivisionIds.add(d.id));
 
       committed += divsToSend.length;
