@@ -140,3 +140,113 @@ or any UI component.
 - Attack delay / planning bonus
 - Fallback / retreat lines
 - Supply / overextension limits
+
+---
+
+# Fix: Defend Mode Division Oscillation
+
+## Background
+
+`armyGroupDefend.ts` runs every tick and redistributes the army group's
+divisions evenly across all friendly border regions (regions adjacent to at
+least one hostile neighbor). The goal is correct but the implementation causes
+divisions to keep moving indefinitely even when they are already well-positioned.
+
+## Root Causes
+
+### 1. In-transit divisions are invisible to the allocation logic
+
+When computing `totalDivisions` and `borderDivisionCounts`, the code only counts
+divisions **physically present** in regions. Divisions already in a `Movement`
+en route to a border are ignored, so the border appears under-staffed and a new
+movement is dispatched every tick — units keep stacking up at the destination.
+
+### 2. No satisfaction threshold — rounding triggers needless churn
+
+The target is `Math.floor(total / borders)`. A border that already holds exactly
+the right number of divisions can still be classified as "excess" in the next
+tick due to integer rounding or tiny total-count changes, causing perpetual
+redistribution of units that are already correctly placed.
+
+### 3. Per-source "already moving" guard does not prevent double-dispatch to the same destination
+
+The guard at line 148–152 only prevents a second movement *from the same source
+region*. Multiple source regions can independently each decide to dispatch units
+to the same under-staffed border in the same tick, flooding it.
+
+## Solution
+
+### Constant: `DEFEND_SATISFACTION_THRESHOLD = 0.8`
+
+A border region is considered **satisfied** if it holds
+`≥ Math.ceil(targetPerBorder * DEFEND_SATISFACTION_THRESHOLD)` divisions
+(present + in-transit combined). Satisfied borders neither shed excess divisions
+nor attract new ones.
+
+### Change 1 — Count in-transit divisions in `borderDivisionCounts`
+
+After building `borderDivisionCounts` from physically present divisions, iterate
+`movingUnits` and add any group divisions already heading toward each border:
+
+```typescript
+movingUnits.forEach(m => {
+  if (m.owner !== countryId) return;
+  const groupDivCount = m.divisions.filter(d => d.armyGroupId === groupId).length;
+  if (groupDivCount === 0) return;
+  if (allBorderRegions.includes(m.toRegion)) {
+    borderDivisionCounts.set(
+      m.toRegion,
+      (borderDivisionCounts.get(m.toRegion) ?? 0) + groupDivCount
+    );
+  }
+});
+```
+
+### Change 2 — Apply satisfaction threshold when collecting excess
+
+When a border holds more than `targetPerBorder` divisions **but** is still above
+`satisfiedThreshold`, do not pull the excess. Only pull when it is clearly
+over-staffed:
+
+```typescript
+const satisfiedThreshold = Math.ceil(targetPerBorder * DEFEND_SATISFACTION_THRESHOLD);
+
+if (isBorder) {
+  const excess = currentCount - targetPerBorder;
+  if (excess > 0 && currentCount > satisfiedThreshold) {
+    // pull excess units
+  }
+  // else: border is at or near target — leave it alone
+}
+```
+
+### Change 3 — Skip dispatch if `nextStep` already has in-transit reinforcements
+
+Before creating a new movement, verify no existing movement already targets
+the same intermediate step for this army group:
+
+```typescript
+const alreadyEnRoute = movingUnits.some(m =>
+  m.owner === countryId &&
+  m.toRegion === nextStep &&
+  m.divisions.some(d => d.armyGroupId === groupId)
+);
+if (alreadyEnRoute) return;
+```
+
+## Files Changed
+
+| File | Change |
+|------|--------|
+| `app/store/game/armyGroupDefend.ts` | Add `DEFEND_SATISFACTION_THRESHOLD`; count in-transit divisions; apply satisfaction check; skip double-dispatch |
+
+No type changes. No new files. No other files affected.
+
+## Behavioural Differences
+
+| Scenario | Before | After |
+|---|---|---|
+| Border with correct troop count | Re-dispatched every tick | Recognised as satisfied — no movement |
+| Units already en route to a border | Ignored → duplicates dispatched | Counted → no extra dispatch |
+| Two source regions both target the same border | Both dispatch independently | Second source sees border as already en route — skips |
+| Border genuinely under-staffed | Reinforced | Still reinforced (logic unchanged for deficit case) |
