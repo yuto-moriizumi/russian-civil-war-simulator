@@ -39,6 +39,29 @@ export interface Adjacency {
   [regionId: string]: string[];
 }
 
+// GeoJSON types for the region map data
+// Mirrors the shape of each feature in public/map/regions.geojson
+export interface RegionFeatureProperties {
+  shapeName: string;   // Human-readable region name (e.g. "Altai Krai")
+  countryIso3: string; // ISO 3-letter country code (e.g. "RUS", "UKR")
+  id: string;          // Duplicate of feature.id — required for MapLibre promoteId
+}
+
+export interface RegionFeature {
+  type: 'Feature';
+  id: string;                      // Canonical region ID (e.g. "RU-ALT")
+  properties: RegionFeatureProperties;
+  geometry: {
+    type: 'Polygon' | 'MultiPolygon';
+    coordinates: number[][][] | number[][][][];
+  };
+}
+
+export interface RegionFeatureCollection {
+  type: 'FeatureCollection';
+  features: RegionFeature[];
+}
+
 export interface RegionState {
   [regionId: string]: Region;
 }

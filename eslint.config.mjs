@@ -31,6 +31,29 @@ const eslintConfig = defineConfig([
       ],
       // Change @typescript-eslint/no-unused-vars to error level
       "@typescript-eslint/no-unused-vars": "error",
+      // Prohibit importing FeatureCollection from the geojson package directly.
+      // Use RegionFeatureCollection (and related types) from app/types/game.ts instead.
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "geojson",
+              importNames: ["FeatureCollection"],
+              message:
+                "Use RegionFeatureCollection from app/types/game.ts instead of the generic FeatureCollection.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // app/types/** is the canonical home for our GeoJSON type wrappers,
+  // so it is allowed to import FeatureCollection directly.
+  {
+    files: ["app/types/**/*.ts"],
+    rules: {
+      "no-restricted-imports": "off",
     },
   },
 ]);
