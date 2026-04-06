@@ -9,7 +9,7 @@ import { getAdjacentRegions } from '../utils/mapUtils';
 import { COUNTRY_METADATA } from '../data/countryMetadata';
 
 import { UnitMarker, MovingUnitMarker, CombatMarker } from './GameMap/MapMarkers';
-import { RegionTooltip, RegionInfoPanel } from './GameMap/RegionPanels';
+import { RegionTooltip, RegionInfoPanel, MovingUnitInfoPanel } from './GameMap/RegionPanels';
 import { useMapState } from './GameMap/useMapState';
 import {
   createMapModeFillColorExpression,
@@ -51,6 +51,8 @@ export default function GameMap() {
   const setSelectedCombatId = useGameStore(state => state.setSelectedCombatId);
   const setSelectedCountryId = useGameStore(state => state.setSelectedCountryId);
   const setIsCountrySidebarOpen = useGameStore(state => state.setIsCountrySidebarOpen);
+  const selectedMovementId = useGameStore(state => state.selectedMovementId);
+  const setSelectedMovementId = useGameStore(state => state.setSelectedMovementId);
   const isSwitchModeActive = useGameStore(state => state.isSwitchModeActive);
   const setSwitchModeActive = useGameStore(state => state.setSwitchModeActive);
   const selectCountry = useGameStore(state => state.selectCountry);
@@ -168,8 +170,10 @@ export default function GameMap() {
           if (regionId === selectedRegion) {
             setSelectedRegion(null);
             setSelectedUnitRegion(null);
+            setSelectedMovementId(null);
           } else {
             setSelectedRegion(regionId);
+            setSelectedMovementId(null);
             // If this region has units owned by player, also select as unit
             const region = regions[regionId];
             if (region && region.owner === playerCountry && region.divisions.length > 0) {
@@ -181,7 +185,7 @@ export default function GameMap() {
         }
       }
     },
-    [selectedRegion, regions, playerCountry, setSelectedRegion, setSelectedUnitRegion]
+    [selectedRegion, regions, playerCountry, setSelectedRegion, setSelectedUnitRegion, setSelectedMovementId]
   );
 
   const handleContextMenu = useCallback(
@@ -299,6 +303,7 @@ export default function GameMap() {
         {movingUnitMarkers.map((marker) => {
           if (!marker) return null;
           const { id, movement, longitude, latitude } = marker;
+          const isPlayerUnit = movement.owner === playerCountry;
           
           return (
             <MovingUnitMarker
@@ -307,6 +312,9 @@ export default function GameMap() {
               movement={movement}
               longitude={longitude}
               latitude={latitude}
+              isSelected={selectedMovementId === movement.id}
+              isPlayerUnit={isPlayerUnit}
+              onSelect={setSelectedMovementId}
             />
           );
         })}
@@ -334,6 +342,10 @@ export default function GameMap() {
 
       {selectedRegion && regions[selectedRegion] && playerCountry && (
         <RegionInfoPanel />
+      )}
+
+      {selectedMovementId && !selectedRegion && (
+        <MovingUnitInfoPanel />
       )}
     </div>
   );
