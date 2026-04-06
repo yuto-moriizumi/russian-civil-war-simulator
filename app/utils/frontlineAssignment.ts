@@ -82,9 +82,10 @@ export function computeFrontline(
  *   frontline slot. In-transit divisions count toward slot coverage so we
  *   never double-fill a slot.
  *
- * Phase 2 — Push surplus into targets:
+ * Phase 2 — Push into targets:
  *   Frontline regions with >1 group division send surplus directly into
- *   adjacent enemy target regions.
+ *   adjacent enemy target regions. A lone frontline division also advances
+ *   when it has exactly one hostile adjacent target.
  *
  * Back-and-forth loop prevention:
  *   The `toRegion` of every in-transit movement is added to `inTransitToRegion`.
@@ -208,17 +209,20 @@ export function assignDivisionsToFrontline(
       d => d.armyGroupId === groupId && d.owner === countryId
     );
 
-    const surplus = flDivisions.slice(1);
-    if (surplus.length === 0) continue;
-
     const adjacentTargets = (adjacency[flRegionId] || []).filter(nId =>
       targetRegions.has(nId) && canEnter(nId)
     );
     if (adjacentTargets.length === 0) continue;
 
-    for (let i = 0; i < surplus.length; i++) {
+    const attackDivisions =
+      flDivisions.length === 1 && adjacentTargets.length === 1
+        ? flDivisions
+        : flDivisions.slice(1);
+    if (attackDivisions.length === 0) continue;
+
+    for (let i = 0; i < attackDivisions.length; i++) {
       assignments.push({
-        divisionId: surplus[i].id,
+        divisionId: attackDivisions[i].id,
         fromRegion: flRegionId,
         toRegion: adjacentTargets[i % adjacentTargets.length],
         isFrontlineMove: false,
@@ -226,7 +230,7 @@ export function assignDivisionsToFrontline(
     }
 
     alreadyMovingFromRegion.add(flRegionId);
-    frontlineCoverage.set(flRegionId, flDivisions.length - surplus.length);
+    frontlineCoverage.set(flRegionId, flDivisions.length - attackDivisions.length);
   }
 
   // Deduplicate by division ID (defensive — phase 2 shouldn't produce dups).

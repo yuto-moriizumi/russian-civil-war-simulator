@@ -291,12 +291,12 @@ describe('assignDivisionsToFrontline', () => {
     expect(assignments).toHaveLength(0);
   });
 
-  it('emits no assignments when the frontline slot is already covered with no surplus', () => {
+  it('advances a lone frontline division when there is exactly one hostile adjacent target', () => {
     const div1 = makeDiv('div-1');
     const regions: RegionState = {
       A: makeRegion('A', 'soviet'),
       B: makeRegion('B', 'soviet'),
-      C: makeRegion('C', 'soviet', [div1]), // exactly 1 — covered, no surplus
+      C: makeRegion('C', 'soviet', [div1]),
       E: makeRegion('E', 'white'),
     };
 
@@ -307,6 +307,39 @@ describe('assignDivisionsToFrontline', () => {
 
     const assignments = assignDivisionsToFrontline(
       'ag-1', regions, adjacency, 'soviet', frontline, [], canEnter
+    );
+
+    expect(assignments).toHaveLength(1);
+    expect(assignments[0].divisionId).toBe('div-1');
+    expect(assignments[0].fromRegion).toBe('C');
+    expect(assignments[0].toRegion).toBe('E');
+    expect(assignments[0].isFrontlineMove).toBe(false);
+  });
+
+  it('does not advance a lone frontline division when multiple hostile adjacent targets exist', () => {
+    const div1 = makeDiv('div-1');
+    const multiTargetAdjacency: Adjacency = {
+      A: ['B'],
+      B: ['A', 'C'],
+      C: ['B', 'E', 'F'],
+      E: ['C'],
+      F: ['C'],
+    };
+    const regions: RegionState = {
+      A: makeRegion('A', 'soviet'),
+      B: makeRegion('B', 'soviet'),
+      C: makeRegion('C', 'soviet', [div1]),
+      E: makeRegion('E', 'white'),
+      F: makeRegion('F', 'white'),
+    };
+
+    const frontline = {
+      frontlineRegions: new Set(['C']),
+      targetRegions: new Set(['E', 'F']),
+    };
+
+    const assignments = assignDivisionsToFrontline(
+      'ag-1', regions, multiTargetAdjacency, 'soviet', frontline, [], canEnter
     );
 
     expect(assignments).toHaveLength(0);
