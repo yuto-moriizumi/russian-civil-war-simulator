@@ -23,24 +23,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Load GeoJSON to get shapeISO and countryIso3 for categorization
+    // Load GeoJSON to get countryIso3 for categorization
     const geojsonPath = path.join(process.cwd(), 'public', 'map', 'regions.geojson');
     const geojsonData = JSON.parse(await readFile(geojsonPath, 'utf-8'));
     
-    // Create mapping from shapeID to country info for categorization
-    const shapeIdToCountry: Record<string, { shapeISO: string; countryIso3: string }> = {};
+    // Create mapping from feature.id to country info for categorization
+    const featureIdToCountry: Record<string, { countryIso3: string }> = {};
     geojsonData.features.forEach((feature: { 
+      id?: string | number;
       properties?: { 
-        shapeID?: string; 
-        shapeISO?: string; 
         countryIso3?: string;
       } 
     }) => {
-      const shapeID = feature.properties?.shapeID;
-      const shapeISO = feature.properties?.shapeISO || '';
+      const featureId = feature.id != null ? String(feature.id) : undefined;
       const countryIso3 = feature.properties?.countryIso3 || '';
-      if (shapeID) {
-        shapeIdToCountry[shapeID] = { shapeISO, countryIso3 };
+      if (featureId) {
+        featureIdToCountry[featureId] = { countryIso3 };
       }
     });
 
@@ -55,52 +53,50 @@ export async function POST(request: NextRequest) {
       other: {},
     };
 
-    for (const [shapeId, countryId] of Object.entries(ownership)) {
+    for (const [regionId, countryId] of Object.entries(ownership)) {
       if (typeof countryId !== 'string') continue;
       
       // Get country info for categorization
-      const countryInfo = shapeIdToCountry[shapeId];
+      const countryInfo = featureIdToCountry[regionId];
       if (!countryInfo) {
         // If region doesn't exist in GeoJSON, put in 'other'
-        regionsByFile.other[shapeId] = countryId;
+        regionsByFile.other[regionId] = countryId;
         continue;
       }
       
-      // Use shapeISO if available, otherwise use countryIso3 for categorization
-      // Treat 'None' as empty string (some regions have literal 'None' string)
-      const shapeISO = countryInfo.shapeISO === 'None' ? '' : countryInfo.shapeISO;
-      const isoCode = shapeISO || countryInfo.countryIso3;
-      if (!isoCode) {
-        // If we can't determine country, put in 'other'
-        regionsByFile.other[shapeId] = countryId;
+      // Use the feature id prefix for region categorization (e.g. RU-ALT → prefix RU)
+      // and countryIso3 for country-level matching
+      const isoCode = regionId;
+      const iso3 = countryInfo.countryIso3;
+      if (!iso3 && !isoCode) {
+        regionsByFile.other[regionId] = countryId;
         continue;
       }
       
       // Extract prefix (first 2 characters for regional codes like RU-ALT)
-      // For 3-letter ISO3 codes (ARM, CHN), use full code
+      // For 3-letter ISO3 codes (ARM, CHN), prefix will be empty
       const prefix = isoCode.length > 3 ? isoCode.substring(0, 2) : '';
-      const iso3 = countryInfo.countryIso3;
       
       // Categorize by region prefix or country ISO3
       if (prefix === 'RU' || iso3 === 'RUS') {
-        regionsByFile.russia[shapeId] = countryId;
+        regionsByFile.russia[regionId] = countryId;
       } else if (['UA', 'BY', 'MD', 'EE', 'LV', 'LT', 'FI'].includes(prefix) ||
                  ['UKR', 'BLR', 'MDA', 'EST', 'LVA', 'LTU', 'FIN'].includes(iso3)) {
-        regionsByFile.easternEurope[shapeId] = countryId;
+        regionsByFile.easternEurope[regionId] = countryId;
       } else if (['PL', 'DE', 'CZ', 'SK', 'HU', 'AT', 'RO'].includes(prefix) ||
                  ['POL', 'DEU', 'CZE', 'SVK', 'HUN', 'AUT', 'ROU'].includes(iso3)) {
-        regionsByFile.centralEurope[shapeId] = countryId;
+        regionsByFile.centralEurope[regionId] = countryId;
       } else if (['HR', 'RS', 'SI', 'BA', 'MK', 'AL', 'BG', 'GR', 'ME', 'XK'].includes(prefix) ||
                  ['HRV', 'SRB', 'SVN', 'BIH', 'MKD', 'ALB', 'BGR', 'GRC', 'MNE', 'XKX'].includes(iso3)) {
-        regionsByFile.balkans[shapeId] = countryId;
+        regionsByFile.balkans[regionId] = countryId;
       } else if (['KZ', 'UZ', 'TM', 'KG', 'TJ', 'MN', 'CN', 'JP', 'KR', 'KP'].includes(prefix) ||
                  ['KAZ', 'UZB', 'TKM', 'KGZ', 'TJK', 'MNG', 'CHN', 'JPN', 'KOR', 'PRK'].includes(iso3)) {
-        regionsByFile.asia[shapeId] = countryId;
+        regionsByFile.asia[regionId] = countryId;
       } else if (['TR', 'IR', 'IQ', 'SY', 'SA', 'AZ', 'AM', 'GE', 'YE', 'OM', 'AE', 'KW', 'QA', 'BH', 'JO', 'LB', 'IL', 'PS'].includes(prefix) ||
                  ['TUR', 'IRN', 'IRQ', 'SYR', 'SAU', 'AZE', 'ARM', 'GEO', 'YEM', 'OMN', 'ARE', 'KWT', 'QAT', 'BHR', 'JOR', 'LBN', 'ISR', 'PSE'].includes(iso3)) {
-        regionsByFile.middleEast[shapeId] = countryId;
+        regionsByFile.middleEast[regionId] = countryId;
       } else {
-        regionsByFile.other[shapeId] = countryId;
+        regionsByFile.other[regionId] = countryId;
       }
     }
 

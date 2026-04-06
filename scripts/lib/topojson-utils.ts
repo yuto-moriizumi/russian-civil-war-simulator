@@ -3,7 +3,7 @@
  */
 
 import type { Topology, GeometryCollection, GeometryObject } from 'topojson-specification';
-import type { FeatureCollection, GeoJsonProperties } from 'geojson';
+import type { FeatureCollection } from 'geojson';
 import type { Adjacency } from './types.js';
 import { computeBBox, bboxIntersects } from './geometry-utils.js';
 
@@ -47,7 +47,7 @@ export function extractAdjacency(topology: Topology, mergedGeoJSON: FeatureColle
   // リージョンIDからバウンディングボックスへのマップを構築
   const regionBBoxes: Map<string, [number, number, number, number]> = new Map();
   for (const feature of mergedGeoJSON.features) {
-    const regionId = feature.properties?.regionId as string;
+    const regionId = feature.id as string;
     if (regionId) {
       regionBBoxes.set(regionId, computeBBox(feature));
     }
@@ -58,7 +58,7 @@ export function extractAdjacency(topology: Topology, mergedGeoJSON: FeatureColle
   
   // 各ジオメトリのarcsを収集
   for (const geometry of geometries) {
-    const regionId = (geometry.properties as GeoJsonProperties)?.regionId as string;
+    const regionId = (geometry as { id?: string }).id as string;
     if (!regionId) continue;
     
     // 初期化

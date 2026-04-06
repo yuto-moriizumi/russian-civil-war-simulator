@@ -15,12 +15,7 @@ const DIPLOMACY_COLORS = {
  * Logic matches createInitialOwnership in mapUtils.ts
  */
 function getRegionIdExpression() {
-  return [
-    'case',
-    ['all', ['has', 'shapeISO'], ['!=', ['get', 'shapeISO'], '']], ['get', 'shapeISO'],
-    ['all', ['has', 'regionId'], ['!=', ['get', 'regionId'], '']], ['get', 'regionId'],
-    ['get', 'shapeID']
-  ];
+  return ['id'];
 }
 
 /**

@@ -19,7 +19,7 @@ export function createMapClickHandler({
   return (e: MapLayerMouseEvent) => {
     const features = e.features;
     if (features && features.length > 0) {
-      const regionId = features[0].properties?.shapeID;
+      const regionId = features[0].id as string;
       if (regionId) {
         // If clicking on same region, deselect
         if (regionId === selectedRegion) {
@@ -63,7 +63,7 @@ export function createContextMenuHandler({
     e.preventDefault();
     const features = e.features;
     if (features && features.length > 0) {
-      const targetRegionId = features[0].properties?.shapeID;
+      const targetRegionId = features[0].id as string;
       const currentSelectedUnit = selectedUnitRegionRef.current;
       
       let moved = false;

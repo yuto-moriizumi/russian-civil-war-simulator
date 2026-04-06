@@ -1,16 +1,15 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useRef, useState, useCallback, useMemo } from 'react';
 import Map, { MapRef, Source, Layer, NavigationControl } from 'react-map-gl/maplibre';
-import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import type { GeoJSON } from 'geojson';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useGameStore } from '../store/useGameStore';
-import { COUNTRY_METADATA } from '../data/countryMetadata';
 
 import { UnitMarker, MovingUnitMarker, CombatMarker } from './GameMap/MapMarkers';
 import { RegionTooltip, RegionInfoPanel, MovingUnitInfoPanel } from './GameMap/RegionPanels';
 import { useMapState } from './GameMap/useMapState';
+import { useMapEventHandlers } from './GameMap/useMapEventHandlers';
 import {
   createMapModeFillColorExpression,
   createLineColorExpression,
@@ -43,37 +42,16 @@ export default function GameMap() {
   const mapMode = useGameStore(state => state.mapMode);
   const regionCentroids = useGameStore(state => state.regionCentroids);
   const getRelationship = useGameStore(state => state.getRelationship);
-  
+  const selectedMovementId = useGameStore(state => state.selectedMovementId);
+
   // Actions
   const setSelectedRegion = useGameStore(state => state.setSelectedRegion);
   const setSelectedUnitRegion = useGameStore(state => state.setSelectedUnitRegion);
-  const moveUnits = useGameStore(state => state.moveUnits);
-  const redirectMovement = useGameStore(state => state.redirectMovement);
   const setSelectedCombatId = useGameStore(state => state.setSelectedCombatId);
-  const setSelectedCountryId = useGameStore(state => state.setSelectedCountryId);
-  const setIsCountrySidebarOpen = useGameStore(state => state.setIsCountrySidebarOpen);
-  const selectedMovementId = useGameStore(state => state.selectedMovementId);
   const setSelectedMovementId = useGameStore(state => state.setSelectedMovementId);
-  const isSwitchModeActive = useGameStore(state => state.isSwitchModeActive);
-  const setSwitchModeActive = useGameStore(state => state.setSwitchModeActive);
-  const selectCountry = useGameStore(state => state.selectCountry);
-  
-  // Local refs and state
+
   // Local refs and state
   const mapRef = useRef<MapRef>(null);
-  const selectedUnitRegionRef = useRef<string | null>(null);
-  const selectedMovementIdRef = useRef<string | null>(null);
-  const regionsRef = useRef(regions);
-  const adjacencyRef = useRef(adjacency);
-  const moveUnitsRef = useRef(moveUnits);
-  const redirectMovementRef = useRef(redirectMovement);
-  const setSelectedMovementIdRef = useRef(setSelectedMovementId);
-  const setSelectedUnitRegionRef = useRef(setSelectedUnitRegion);
-  const setSelectedCountryIdRef = useRef(setSelectedCountryId);
-  const setIsCountrySidebarOpenRef = useRef(setIsCountrySidebarOpen);
-  const isSwitchModeActiveRef = useRef(isSwitchModeActive);
-  const setSwitchModeActiveRef = useRef(setSwitchModeActive);
-  const selectCountryRef = useRef(selectCountry);
   const [mapLoaded, setMapLoaded] = useState(false);
 
   const { hoveredRegion } = useMapState({
@@ -89,165 +67,27 @@ export default function GameMap() {
     onRegionHover: undefined,
   });
 
-  // Keep refs in sync with props for use in event handlers
-  useEffect(() => {
-    selectedUnitRegionRef.current = selectedUnitRegion;
-  }, [selectedUnitRegion]);
-
-  useEffect(() => {
-    selectedMovementIdRef.current = selectedMovementId;
-  }, [selectedMovementId]);
-
-  useEffect(() => {
-    regionsRef.current = regions;
-  }, [regions]);
-
-  useEffect(() => {
-    adjacencyRef.current = adjacency;
-  }, [adjacency]);
-
-  useEffect(() => {
-    moveUnitsRef.current = moveUnits;
-  }, [moveUnits]);
-
-  useEffect(() => {
-    redirectMovementRef.current = redirectMovement;
-  }, [redirectMovement]);
-
-  useEffect(() => {
-    setSelectedMovementIdRef.current = setSelectedMovementId;
-  }, [setSelectedMovementId]);
-
-  useEffect(() => {
-    setSelectedUnitRegionRef.current = setSelectedUnitRegion;
-  }, [setSelectedUnitRegion]);
-
-  useEffect(() => {
-    setSelectedCountryIdRef.current = setSelectedCountryId;
-  }, [setSelectedCountryId]);
-
-  useEffect(() => {
-    setIsCountrySidebarOpenRef.current = setIsCountrySidebarOpen;
-  }, [setIsCountrySidebarOpen]);
-
-  useEffect(() => {
-    isSwitchModeActiveRef.current = isSwitchModeActive;
-  }, [isSwitchModeActive]);
-
-  useEffect(() => {
-    setSwitchModeActiveRef.current = setSwitchModeActive;
-  }, [setSwitchModeActive]);
-
-  useEffect(() => {
-    selectCountryRef.current = selectCountry;
-  }, [selectCountry]);
+  const { handleMapClick, handleContextMenu } = useMapEventHandlers(
+    selectedRegion,
+    regions,
+    playerCountry,
+    setSelectedRegion,
+    setSelectedUnitRegion,
+    setSelectedMovementId,
+  );
 
   const handleMapLoad = useCallback(() => {
     setMapLoaded(true);
   }, []);
 
   // Map style expressions
-  const fillColorExpression = useMemo(() => 
-    playerCountry ? createMapModeFillColorExpression(mapMode, regions, playerCountry, getRelationship) : ['case', ['has', 'shapeISO'], '#555', '#000'], 
+  const fillColorExpression = useMemo(() =>
+    playerCountry ? createMapModeFillColorExpression(mapMode, regions, playerCountry, getRelationship) : ['case', ['boolean', ['has', 'countryIso3'], false], '#555', '#000'],
     [mapMode, regions, playerCountry, getRelationship]
   );
   const lineColorExpression = useMemo(() => createLineColorExpression(), []);
   const lineWidthExpression = useMemo(() => createLineWidthExpression(), []);
   const fillOpacityExpression = useMemo(() => createFillOpacityExpression(), []);
-
-  // Event handlers
-  const handleMapClick = useCallback(
-    (e: MapLayerMouseEvent) => {
-      const features = e.features;
-      if (features && features.length > 0) {
-        // Use shapeISO (like 'RU-TA') which matches the region keys in our state
-        const regionId = features[0].properties?.shapeISO || features[0].properties?.regionId || features[0].properties?.shapeID;
-        if (regionId) {
-          // Switch mode: left-click changes the player's country to the region's owner
-          if (isSwitchModeActiveRef.current) {
-            const region = regionsRef.current[regionId];
-            if (region) {
-              const meta = COUNTRY_METADATA[region.owner as keyof typeof COUNTRY_METADATA];
-              if (meta) {
-                selectCountryRef.current({
-                  id: meta.id as import('../types/game').CountryId,
-                  name: meta.name,
-                  flag: meta.flag,
-                  color: meta.color,
-                  coreRegions: (meta.coreRegions as string[] | undefined) ?? [],
-                });
-              }
-            }
-            setSwitchModeActiveRef.current(false);
-            return;
-          }
-
-          // If clicking on same region, deselect
-          if (regionId === selectedRegion) {
-            setSelectedRegion(null);
-            setSelectedUnitRegion(null);
-            setSelectedMovementId(null);
-          } else {
-            setSelectedRegion(regionId);
-            setSelectedMovementId(null);
-            // If this region has units owned by player, also select as unit
-            const region = regions[regionId];
-            if (region && region.owner === playerCountry && region.divisions.length > 0) {
-              setSelectedUnitRegion(regionId);
-            } else {
-              setSelectedUnitRegion(null);
-            }
-          }
-        }
-      }
-    },
-    [selectedRegion, regions, playerCountry, setSelectedRegion, setSelectedUnitRegion, setSelectedMovementId]
-  );
-
-  const handleContextMenu = useCallback(
-    (e: MapLayerMouseEvent) => {
-      e.preventDefault();
-      const features = e.features;
-      if (features && features.length > 0) {
-        // Use shapeISO (like 'RU-TA') which matches the region keys in our state
-        const targetRegionId = features[0].properties?.shapeISO || features[0].properties?.regionId || features[0].properties?.shapeID;
-        const currentSelectedMovement = selectedMovementIdRef.current;
-        const currentSelectedUnit = selectedUnitRegionRef.current;
-        
-        let moved = false;
-
-        // Priority 1: If an in-transit movement is selected, redirect it to the
-        // right-clicked region and deselect the movement.
-        if (currentSelectedMovement && targetRegionId) {
-          redirectMovementRef.current(currentSelectedMovement, targetRegionId);
-          setSelectedMovementIdRef.current(null);
-          moved = true;
-        }
-
-        // Priority 2: If a stationary unit region is selected, move those units.
-        // The underlying moveUnits handles both adjacent and multi-step targets.
-        if (!moved && currentSelectedUnit && targetRegionId && targetRegionId !== currentSelectedUnit) {
-          const sourceRegion = regionsRef.current[currentSelectedUnit];
-          if (sourceRegion && sourceRegion.divisions.length > 0) {
-            // Move all units — moveUnits will compute the path if not adjacent
-            moveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.divisions.length);
-            setSelectedUnitRegionRef.current(null);
-            moved = true;
-          }
-        }
-
-        // Open country sidebar for the target region's owner if not moved
-        if (!moved && targetRegionId) {
-          const targetRegion = regionsRef.current[targetRegionId];
-          if (targetRegion) {
-            setSelectedCountryIdRef.current(targetRegion.owner);
-            setIsCountrySidebarOpenRef.current(true);
-          }
-        }
-      }
-    },
-    []
-  );
 
   // Calculate markers
   const unitMarkers = useMemo(
@@ -267,35 +107,25 @@ export default function GameMap() {
 
   /**
    * Build a GeoJSON LineString for the selected movement's planned path.
-   * The path is: fromRegion → toRegion → ...remainingPath
-   * This is shown as an animated arrow line on the map when a moving unit is selected.
    */
   const movementPathGeoJSON = useMemo((): GeoJSON => {
     const features: GeoJSON.Feature[] = [];
 
-    // Determine which movement(s) to draw paths for:
-    // 1. A specific movement is selected via selectedMovementId
-    // 2. All movements whose origin region matches selectedUnitRegion (divisions just ordered to move)
     const movementsToShow: typeof movingUnits = [];
-
     if (selectedMovementId) {
       const m = movingUnits.find(mu => mu.id === selectedMovementId);
       if (m) movementsToShow.push(m);
     } else if (selectedUnitRegion) {
-      // Show path for any in-transit movement that originated (directly or via hops) from the selected unit region
-      const related = movingUnits.filter(mu => mu.fromRegion === selectedUnitRegion);
-      movementsToShow.push(...related);
+      movementsToShow.push(...movingUnits.filter(mu => mu.fromRegion === selectedUnitRegion));
     }
 
     for (const movement of movementsToShow) {
       const fullPath = [movement.fromRegion, movement.toRegion, ...(movement.remainingPath ?? [])];
       const coordinates: [number, number][] = [];
-
       for (const regionId of fullPath) {
         const centroid = regionCentroids[regionId];
         if (centroid) coordinates.push([centroid[0], centroid[1]]);
       }
-
       if (coordinates.length >= 2) {
         features.push({
           type: 'Feature',
@@ -325,11 +155,7 @@ export default function GameMap() {
     <div className="relative h-full w-full">
       <Map
         ref={mapRef}
-        initialViewState={{
-          longitude: 50,
-          latitude: 55,
-          zoom: 3,
-        }}
+        initialViewState={{ longitude: 50, latitude: 55, zoom: 3 }}
         style={mapContainerStyle}
         mapStyle={mapStyle}
         minZoom={2}
@@ -339,40 +165,23 @@ export default function GameMap() {
         onContextMenu={handleContextMenu}
         onLoad={handleMapLoad}
       >
-        <Source
-          id="regions"
-          type="geojson"
-          data="/map/regions.geojson"
-          promoteId="shapeID"
-        >
+        <Source id="regions" type="geojson" data="/map/regions.geojson" promoteId="id">
           <Layer id="regions-fill" type="fill" paint={fillPaint} />
           <Layer id="regions-border" type="line" paint={linePaint} />
         </Source>
 
-        {/* Movement path overlay – shown when a moving unit or unit region is selected */}
+        {/* Movement path overlay */}
         <Source id="movement-path" type="geojson" data={movementPathGeoJSON}>
-          {/* Glow / shadow layer behind the main line */}
           <Layer
             id="movement-path-glow"
             type="line"
-            paint={{
-              'line-color': '#22d3ee',
-              'line-width': 8,
-              'line-opacity': 0.25,
-              'line-blur': 4,
-            }}
+            paint={{ 'line-color': '#22d3ee', 'line-width': 8, 'line-opacity': 0.25, 'line-blur': 4 }}
             layout={{ 'line-cap': 'round', 'line-join': 'round' }}
           />
-          {/* Main dashed path line */}
           <Layer
             id="movement-path-line"
             type="line"
-            paint={{
-              'line-color': '#22d3ee',
-              'line-width': 2.5,
-              'line-opacity': 0.9,
-              'line-dasharray': [4, 3],
-            }}
+            paint={{ 'line-color': '#22d3ee', 'line-width': 2.5, 'line-opacity': 0.9, 'line-dasharray': [4, 3] }}
             layout={{ 'line-cap': 'round', 'line-join': 'round' }}
           />
         </Source>
@@ -380,7 +189,6 @@ export default function GameMap() {
         {unitMarkers.map((marker) => {
           if (!marker) return null;
           const { regionId, region, centroid, isSelected, isPlayerUnit } = marker;
-          
           return (
             <UnitMarker
               key={regionId}
@@ -398,8 +206,6 @@ export default function GameMap() {
         {movingUnitMarkers.map((marker) => {
           if (!marker) return null;
           const { id, movement, longitude, latitude } = marker;
-          const isPlayerUnit = movement.owner === playerCountry;
-          
           return (
             <MovingUnitMarker
               key={id}
@@ -408,7 +214,7 @@ export default function GameMap() {
               longitude={longitude}
               latitude={latitude}
               isSelected={selectedMovementId === movement.id}
-              isPlayerUnit={isPlayerUnit}
+              isPlayerUnit={movement.owner === playerCountry}
               onSelect={setSelectedMovementId}
             />
           );
@@ -417,7 +223,6 @@ export default function GameMap() {
         {combatMarkers.map((marker) => {
           if (!marker) return null;
           const { combat, centroid } = marker;
-          
           return (
             <CombatMarker
               key={combat.id}
@@ -430,7 +235,7 @@ export default function GameMap() {
 
         <NavigationControl position="bottom-right" />
       </Map>
-      
+
       {!selectedRegion && hoveredRegion && regions[hoveredRegion] && (
         <RegionTooltip hoveredRegion={hoveredRegion} />
       )}

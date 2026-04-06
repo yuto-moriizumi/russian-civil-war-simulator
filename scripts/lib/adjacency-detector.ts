@@ -65,7 +65,7 @@ export function detectCrossBorderAdjacency(
   
   // 3. 各フィーチャーに対して、異なる国の近隣候補のみをクエリ
   for (const feature of features) {
-    const idA = feature.properties?.regionId as string;
+    const idA = feature.id as string;
     const countryA = feature.properties?.countryIso3 as string;
     
     if (!idA || !countryA) continue;
@@ -150,7 +150,7 @@ export function detectSameCountryAdjacency(
   
   // 各フィーチャーに対して、同じ国の近隣候補のみをクエリ
   for (const feature of mergedGeoJSON.features) {
-    const idA = feature.properties?.regionId as string;
+    const idA = feature.id as string;
     const countryA = feature.properties?.countryIso3 as string;
     
     if (!idA || !countryA) continue;
@@ -228,7 +228,7 @@ export function detectIsolatedRegionAdjacency(
   // 孤立したリージョンを検出
   const isolatedRegions: Feature[] = [];
   for (const feature of mergedGeoJSON.features) {
-    const regionId = feature.properties?.regionId as string;
+    const regionId = feature.id as string;
     if (regionId && (!adjacency[regionId] || adjacency[regionId].length === 0)) {
       isolatedRegions.push(feature);
     }
@@ -247,7 +247,7 @@ export function detectIsolatedRegionAdjacency(
   
   // 各孤立リージョンについて、包含している/隣接しているリージョンを探す
   for (const isolatedFeature of isolatedRegions) {
-    const isolatedId = isolatedFeature.properties?.regionId as string;
+    const isolatedId = isolatedFeature.id as string;
     const isolatedCountry = isolatedFeature.properties?.countryIso3 as string;
     const isolatedBbox = computeBBox(isolatedFeature);
     

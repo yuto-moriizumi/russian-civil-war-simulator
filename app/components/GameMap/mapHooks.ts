@@ -32,7 +32,7 @@ export function useRegionCentroids() {
         const centroids: Record<string, [number, number]> = {};
         
         for (const feature of data.features) {
-          const id = feature.properties?.shapeID;
+          const id = feature.id as string;
           if (!id) continue;
           
           const geometry = feature.geometry;
