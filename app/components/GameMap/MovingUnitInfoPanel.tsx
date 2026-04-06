@@ -44,6 +44,12 @@ export function MovingUnitInfoPanel() {
           <span className="text-stone-400">To:</span>
           <span className="text-white">{toRegion?.name ?? movement.toRegion}</span>
         </div>
+        {movement.finalDestination && movement.finalDestination !== movement.toRegion && (
+          <div className="flex items-center gap-2">
+            <span className="text-stone-400">Final:</span>
+            <span className="text-white">{regions[movement.finalDestination]?.name ?? movement.finalDestination}</span>
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <span className="text-stone-400">Owner:</span>
           <div
@@ -115,6 +121,12 @@ export function MovingUnitInfoPanel() {
       >
         Deselect
       </button>
+
+      {!isPaused && (
+        <div className="mt-2 text-xs text-stone-500 text-center">
+          Right-click a region to redirect
+        </div>
+      )}
     </div>
   );
 }

@@ -47,6 +47,7 @@ export default function GameMap() {
   const setSelectedRegion = useGameStore(state => state.setSelectedRegion);
   const setSelectedUnitRegion = useGameStore(state => state.setSelectedUnitRegion);
   const moveUnits = useGameStore(state => state.moveUnits);
+  const redirectMovement = useGameStore(state => state.redirectMovement);
   const setSelectedCombatId = useGameStore(state => state.setSelectedCombatId);
   const setSelectedCountryId = useGameStore(state => state.setSelectedCountryId);
   const setIsCountrySidebarOpen = useGameStore(state => state.setIsCountrySidebarOpen);
@@ -60,9 +61,12 @@ export default function GameMap() {
   // Local refs and state
   const mapRef = useRef<MapRef>(null);
   const selectedUnitRegionRef = useRef<string | null>(null);
+  const selectedMovementIdRef = useRef<string | null>(null);
   const regionsRef = useRef(regions);
   const adjacencyRef = useRef(adjacency);
   const moveUnitsRef = useRef(moveUnits);
+  const redirectMovementRef = useRef(redirectMovement);
+  const setSelectedMovementIdRef = useRef(setSelectedMovementId);
   const setSelectedUnitRegionRef = useRef(setSelectedUnitRegion);
   const setSelectedCountryIdRef = useRef(setSelectedCountryId);
   const setIsCountrySidebarOpenRef = useRef(setIsCountrySidebarOpen);
@@ -90,6 +94,10 @@ export default function GameMap() {
   }, [selectedUnitRegion]);
 
   useEffect(() => {
+    selectedMovementIdRef.current = selectedMovementId;
+  }, [selectedMovementId]);
+
+  useEffect(() => {
     regionsRef.current = regions;
   }, [regions]);
 
@@ -100,6 +108,14 @@ export default function GameMap() {
   useEffect(() => {
     moveUnitsRef.current = moveUnits;
   }, [moveUnits]);
+
+  useEffect(() => {
+    redirectMovementRef.current = redirectMovement;
+  }, [redirectMovement]);
+
+  useEffect(() => {
+    setSelectedMovementIdRef.current = setSelectedMovementId;
+  }, [setSelectedMovementId]);
 
   useEffect(() => {
     setSelectedUnitRegionRef.current = setSelectedUnitRegion;
@@ -194,13 +210,22 @@ export default function GameMap() {
       if (features && features.length > 0) {
         // Use shapeISO (like 'RU-TA') which matches the region keys in our state
         const targetRegionId = features[0].properties?.shapeISO || features[0].properties?.regionId || features[0].properties?.shapeID;
+        const currentSelectedMovement = selectedMovementIdRef.current;
         const currentSelectedUnit = selectedUnitRegionRef.current;
         
         let moved = false;
-        // Check if we have a unit selected and this is a different region.
-        // The underlying moveUnits will handle both adjacent (single-hop) and
-        // non-adjacent (multi-step via pathfinding) targets.
-        if (currentSelectedUnit && targetRegionId && targetRegionId !== currentSelectedUnit) {
+
+        // Priority 1: If an in-transit movement is selected, redirect it to the
+        // right-clicked region and deselect the movement.
+        if (currentSelectedMovement && targetRegionId) {
+          redirectMovementRef.current(currentSelectedMovement, targetRegionId);
+          setSelectedMovementIdRef.current(null);
+          moved = true;
+        }
+
+        // Priority 2: If a stationary unit region is selected, move those units.
+        // The underlying moveUnits handles both adjacent and multi-step targets.
+        if (!moved && currentSelectedUnit && targetRegionId && targetRegionId !== currentSelectedUnit) {
           const sourceRegion = regionsRef.current[currentSelectedUnit];
           if (sourceRegion && sourceRegion.divisions.length > 0) {
             // Move all units — moveUnits will compute the path if not adjacent

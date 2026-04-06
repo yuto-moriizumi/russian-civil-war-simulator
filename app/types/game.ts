@@ -291,6 +291,7 @@ export interface GameAPI {
   // In-transit (moving) unit selection
   selectMovement: (movementId: string | null) => void;
   getSelectedMovementId: () => string | null;
+  redirectMovement: (movementId: string, newDestinationRegionId: string) => void;
   // Helper methods
   getAdjacentRegions: (regionId: string) => string[];
   getMovingUnits: () => Movement[];
