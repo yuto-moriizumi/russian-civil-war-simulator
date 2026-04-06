@@ -148,7 +148,7 @@ export default function GameMap() {
 
   // Map style expressions
   const fillColorExpression = useMemo(() => 
-    playerCountry ? createMapModeFillColorExpression(mapMode, regions, playerCountry, getRelationship) : ['case', ['has', 'shapeISO'], '#555', '#000'], 
+    playerCountry ? createMapModeFillColorExpression(mapMode, regions, playerCountry, getRelationship) : ['case', ['boolean', ['has', 'countryIso3'], false], '#555', '#000'], 
     [mapMode, regions, playerCountry, getRelationship]
   );
   const lineColorExpression = useMemo(() => createLineColorExpression(), []);
@@ -160,8 +160,8 @@ export default function GameMap() {
     (e: MapLayerMouseEvent) => {
       const features = e.features;
       if (features && features.length > 0) {
-        // Use shapeISO (like 'RU-TA') which matches the region keys in our state
-        const regionId = features[0].properties?.shapeISO || features[0].properties?.regionId || features[0].properties?.shapeID;
+        // Use feature.id which matches the region keys in our state
+        const regionId = (features[0].id as string) || features[0].properties?.shapeID;
         if (regionId) {
           // Switch mode: left-click changes the player's country to the region's owner
           if (isSwitchModeActiveRef.current) {
@@ -209,8 +209,8 @@ export default function GameMap() {
       e.preventDefault();
       const features = e.features;
       if (features && features.length > 0) {
-        // Use shapeISO (like 'RU-TA') which matches the region keys in our state
-        const targetRegionId = features[0].properties?.shapeISO || features[0].properties?.regionId || features[0].properties?.shapeID;
+        // Use feature.id which matches the region keys in our state
+        const targetRegionId = (features[0].id as string) || features[0].properties?.regionId || features[0].properties?.shapeID;
         const currentSelectedMovement = selectedMovementIdRef.current;
         const currentSelectedUnit = selectedUnitRegionRef.current;
         
@@ -343,7 +343,7 @@ export default function GameMap() {
           id="regions"
           type="geojson"
           data="/map/regions.geojson"
-          promoteId="shapeID"
+          promoteId="id"
         >
           <Layer id="regions-fill" type="fill" paint={fillPaint} />
           <Layer id="regions-border" type="line" paint={linePaint} />

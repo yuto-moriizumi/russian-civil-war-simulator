@@ -36,7 +36,7 @@ export function buildSpatialIndex(features: Feature[]): RBush<IndexedFeature> {
   const items: IndexedFeature[] = [];
   
   for (const feature of features) {
-    const regionId = feature.properties?.regionId as string;
+    const regionId = feature.id as string;
     const countryIso3 = feature.properties?.countryIso3 as string;
     
     if (!regionId || !countryIso3) {

@@ -57,7 +57,7 @@ export default function MapToolPage() {
     const win = window as unknown as { __initialRegionOwnership?: Record<string, CountryId> };
     const initialOwnershipData = win.__initialRegionOwnership || {};
     data.features.forEach((feature) => {
-      const shapeId = feature.properties?.shapeID;
+      const shapeId = feature.id as string;
       if (shapeId) {
         newOwnership[shapeId] = (initialOwnershipData[shapeId] as CountryId) || "neutral";
       }

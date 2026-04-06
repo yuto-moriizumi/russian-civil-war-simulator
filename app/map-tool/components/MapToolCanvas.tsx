@@ -77,11 +77,11 @@ export default function MapToolCanvas({
     null
   );
 
-  // Create a map of shapeID to region name for quick lookup
+  // Create a map of feature id to region name for quick lookup
   const regionNames = useMemo(() => {
     const names: Record<string, string> = {};
     geojson.features.forEach((feature) => {
-      const shapeId = feature.properties?.shapeID;
+      const shapeId = (feature.id as string) || feature.properties?.regionId;
       const name =
         feature.properties?.shapeName ||
         feature.properties?.SHAPENAME ||
@@ -120,13 +120,13 @@ export default function MapToolCanvas({
     return result;
   }, [unitPlacement]);
 
-  /** Region centroids derived from GeoJSON, keyed by canonical region ID (shapeISO||regionId||shapeID) */
+  /** Region centroids derived from GeoJSON, keyed by canonical region ID (feature.id) */
   const regionCentroids = useMemo(() => {
     const centroids: Record<string, [number, number]> = {};
     for (const feature of geojson.features) {
       const props = feature.properties;
       if (!props) continue;
-      const regionId = props.shapeISO || props.regionId || props.shapeID;
+      const regionId = (feature.id as string) || props.regionId;
       if (!regionId) continue;
       try {
         const center = turf.centroid(feature as Feature<Geometry>);
@@ -151,7 +151,7 @@ export default function MapToolCanvas({
   // ── Fill color expression ──────────────────────────────────────────────────
   const fillColorExpression = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const expression: any[] = ["match", ["get", "shapeID"]];
+    const expression: any[] = ["match", ["id"]];
 
     if (editMode === 'ownership') {
       for (const [regionId, owner] of Object.entries(ownership)) {
@@ -216,18 +216,16 @@ export default function MapToolCanvas({
       const props = features[0].properties;
 
       if (editMode === 'units') {
-        // Units mode uses shapeISO as the canonical key (matches initialUnitPlacement data)
-        const regionId = props?.shapeISO || props?.regionId || props?.shapeID;
+        // Units mode uses feature.id as the canonical key
+        const regionId = (props?.id as string) || (features[0].id as string) || props?.regionId;
         if (!regionId) return;
         // Left click = add division
         onRegionUnitAdd(regionId);
         return;
       }
 
-      // Ownership/core mode uses shapeID as the canonical key — this matches how the
-      // ownership map is keyed (handleGeoJSONLoad uses shapeID) and the fill expression
-      // uses ["get", "shapeID"] for color matching.
-      const regionId = props?.shapeID || props?.regionId || props?.shapeISO;
+      // Ownership/core mode uses feature.id as the canonical key
+      const regionId = (features[0].id as string) || props?.regionId;
       if (!regionId) return;
 
       // Don't process clicks in paint mode - handled by mouseDown instead
@@ -248,8 +246,8 @@ export default function MapToolCanvas({
       const props = features[0].properties;
 
       if (editMode === 'units') {
-        // Right click = remove division (units mode uses shapeISO key)
-        const regionId = props?.shapeISO || props?.regionId || props?.shapeID;
+        // Right click = remove division
+        const regionId = (features[0].id as string) || props?.regionId;
         if (!regionId) return;
         onRegionUnitRemove(regionId);
         return;
@@ -258,8 +256,8 @@ export default function MapToolCanvas({
       // In paint mode, right-click is used for panning, not eyedropper
       if (isPaintEnabled) return;
 
-      // Ownership/core mode uses shapeID key
-      const regionId = props?.shapeID || props?.regionId || props?.shapeISO;
+      // Ownership/core mode uses feature.id as the canonical key
+      const regionId = (features[0].id as string) || props?.regionId;
       if (!regionId) return;
 
       if (ownership[regionId]) {
@@ -294,7 +292,7 @@ export default function MapToolCanvas({
       const features = e.features;
       if (features && features.length > 0) {
         const props = features[0].properties;
-        const regionId = props?.shapeID || props?.regionId || props?.shapeISO;
+            const regionId = (features[0].id as string) || props?.regionId;
 
         if (regionId !== hoveredRegion) {
           setHoveredRegion(regionId);
@@ -347,7 +345,7 @@ export default function MapToolCanvas({
           const features = e.features;
           if (features && features.length > 0) {
             const props = features[0].properties;
-            const regionId = props?.shapeID || props?.regionId || props?.shapeISO;
+        const regionId = (features[0].id as string) || props?.regionId || features[0].properties?.regionId;
             if (regionId) {
               onRegionPaint(regionId);
             }
@@ -491,7 +489,7 @@ export default function MapToolCanvas({
         touchZoomRotate={false}
         touchPitch={false}
       >
-        <Source id="regions" type="geojson" data={geojson} promoteId="shapeID">
+        <Source id="regions" type="geojson" data={geojson} promoteId="id">
           <Layer 
             id="regions-fill" 
             type="fill" 

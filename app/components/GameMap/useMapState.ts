@@ -29,37 +29,17 @@ export function useMapState({
   armyGroups,
   onRegionHover,
 }: UseMapStateProps) {
-  const hoveredFeatureIdRef = useRef<string | null>(null); // Store shapeID for feature state
-  const [hoveredRegion, setHoveredRegion] = useState<string | null>(null); // Store shapeID for game logic
+  const hoveredFeatureIdRef = useRef<string | null>(null); // Store feature id for feature state
+  const [hoveredRegion, setHoveredRegion] = useState<string | null>(null); // Store feature id for game logic
 
-  // Lookup from canonical region ID (shapeISO or shapeID) → MapLibre promoted feature ID (shapeID)
-  // MapLibre uses promoteId="shapeID", so setFeatureState requires the shapeID value.
+  // With promoteId removed, MapLibre uses feature.id directly.
+  // toFeatureId is kept for API compatibility but is now an identity function.
   const regionToFeatureIdRef = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
-    const buildLookup = async () => {
-      try {
-        const response = await fetch('/map/regions.geojson');
-        const data = await response.json();
-        const lookup = new Map<string, string>();
-        for (const feature of data.features) {
-          const shapeID: string = feature.properties?.shapeID;
-          if (!shapeID) continue;
-          // Map shapeISO → shapeID (primary key used in game state)
-          const shapeISO: string = feature.properties?.shapeISO;
-          if (shapeISO) lookup.set(shapeISO, shapeID);
-          // Map regionId → shapeID (fallback key)
-          const regionId: string = feature.properties?.regionId;
-          if (regionId) lookup.set(regionId, shapeID);
-          // Map shapeID → shapeID (for regions that have no shapeISO)
-          lookup.set(shapeID, shapeID);
-        }
-        regionToFeatureIdRef.current = lookup;
-      } catch (e) {
-        console.error('Failed to build region feature ID lookup:', e);
-      }
-    };
-    buildLookup();
+    // No longer needed – feature.id is used directly by MapLibre.
+    // Keep the map empty; toFeatureId falls back to the identity path.
+    regionToFeatureIdRef.current = new Map();
   }, []);
 
   /** Translate a canonical region ID to the MapLibre promoted feature ID */
@@ -74,7 +54,7 @@ export function useMapState({
     const onMouseMove = (e: MapMouseEvent & { features?: GeoJSON.Feature[] }) => {
       if (e.features && e.features.length > 0) {
         const feature = e.features[0];
-        const shapeId = feature.properties?.shapeID; // Use shapeID for both feature state and game logic
+        const shapeId = feature.id as string; // Use feature.id for both feature state and game logic
         
         if (shapeId && shapeId !== hoveredFeatureIdRef.current) {
           // Clear previous hover

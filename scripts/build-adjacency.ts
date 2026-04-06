@@ -34,7 +34,7 @@ async function main() {
   console.log('Step 1: Loading GeoJSON files...');
   
   const geojsonFiles = config.countries.map(country => ({
-    filePath: path.join(tempDir, `${country.iso3}.geojson`),
+    filePath: path.join(tempDir, `${country.iso3}_${country.admLevel}.geojson`),
     countryIso3: country.iso3,
   }));
   

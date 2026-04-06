@@ -199,7 +199,7 @@ export function initializeRegionState(
     const props = feature.properties;
     if (!props) continue;
     
-    const id = props.shapeID;
+    const id = feature.id as string;
     if (!id) continue;
     
     state[id] = {
@@ -225,17 +225,14 @@ export function createInitialOwnership(
     const props = feature.properties;
     if (!props) continue;
     
-    // Use shapeISO (e.g., 'RU-TA') as the region ID for consistency with adjacency data
-    const id = props.shapeISO || props.regionId || props.shapeID;
+    // Use feature.id as the region ID (set by build scripts from shapeISO or shapeID)
+    const id = feature.id as string;
     if (!id) continue;
-    
-    // Use shapeID for looking up ownership data
-    const shapeID = props.shapeID;
     
     const countryIso3 = props.countryIso3 || props.shapeGroup || 'UNK';
     
     // Get ownership from master data, default to neutral if not defined
-    const owner = initialRegionOwnership[shapeID] ?? 'neutral';
+    const owner = initialRegionOwnership[id] ?? 'neutral';
     
     state[id] = {
       id,
@@ -243,7 +240,7 @@ export function createInitialOwnership(
       countryIso3,
       owner,
       divisions: [],
-      value: regionValues[shapeID] ?? 1,  // Default value of 1 if not specified
+      value: regionValues[id] ?? 1,  // Default value of 1 if not specified
     };
   }
   
@@ -254,12 +251,7 @@ export function createInitialOwnership(
 export function generateOwnershipColorExpression(
   regions: RegionState
 ): unknown[] {
-  const regionIdExpression = [
-    'case',
-    ['all', ['has', 'shapeISO'], ['!=', ['get', 'shapeISO'], '']], ['get', 'shapeISO'],
-    ['all', ['has', 'regionId'], ['!=', ['get', 'regionId'], '']], ['get', 'regionId'],
-    ['get', 'shapeID']
-  ];
+  const regionIdExpression = ['id'];
   
   const expression: unknown[] = ['match', regionIdExpression];
   
