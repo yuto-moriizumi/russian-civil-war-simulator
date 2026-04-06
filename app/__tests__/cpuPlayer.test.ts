@@ -99,9 +99,9 @@ describe('runAITick — CP limit enforcement', () => {
    * 2 being queued despite the cap allowing only 1.
    *
    * Setup:
-   *   4 regions → cap = BASE(2) + 4 = 6 CP
-   *   1 item already in queue → inProduction = 1 * COMMAND_POWER_PER_UNIT(3) = 3 CP
-   *   remaining = 6 - 3 = 3 CP  (enough for exactly 1 more division)
+   *   6 regions → cap = BASE(2) + 6 = 8 CP
+   *   1 item already in queue → inProduction = 1 * COMMAND_POWER_PER_UNIT(4) = 4 CP
+   *   remaining = 8 - 4 = 4 CP  (enough for exactly 1 more division)
    *   so exactly 1 more division can be produced
    */
   it('does not queue more than 1 division when only 1 CP slot remains', () => {
@@ -110,9 +110,11 @@ describe('runAITick — CP limit enforcement', () => {
       'RU-B': makeRegion('RU-B'),
       'RU-C': makeRegion('RU-C'),
       'RU-D': makeRegion('RU-D'),
+      'RU-E': makeRegion('RU-E'),
+      'RU-F': makeRegion('RU-F'),
     };
 
-    // 1 item already in queue: uses 3 CP; cap is 6, so room for exactly 1 more
+    // 1 item already in queue: uses 4 CP; cap is 8, so room for exactly 1 more
     const existingQueue: ProductionQueueItem[] = [makeQueueItem('existing-0')];
     const productionQueues = { [COUNTRY]: existingQueue } as Record<CountryId, ProductionQueueItem[]>;
 
@@ -137,13 +139,14 @@ describe('runAITick — CP limit enforcement', () => {
   });
 
   it('queues 0 divisions when already at the CP cap', () => {
-    // 1 region → cap = 3 CP; 1 item in queue = 3 CP used → exactly at cap
+    // 2 regions → cap = 4 CP; 1 item in queue = 4 CP used → exactly at cap
     const regions: RegionState = {
       'RU-A': makeRegion('RU-A', []),
+      'RU-B': makeRegion('RU-B', []),
     };
 
-    // One item in the queue uses exactly COMMAND_POWER_PER_UNIT(3) CP, which equals
-    // the cap for 1 owned region (BASE(2) + 1 = 3). No room to add more.
+    // One item in the queue uses exactly COMMAND_POWER_PER_UNIT(4) CP, which equals
+    // the cap for 2 owned regions (BASE(2) + 2 = 4). No room to add more.
     const existingQueue: ProductionQueueItem[] = [makeQueueItem('full-0')];
 
     const productionQueues = { [COUNTRY]: existingQueue } as Record<CountryId, ProductionQueueItem[]>;
@@ -166,13 +169,16 @@ describe('runAITick — CP limit enforcement', () => {
   });
 
   it('queues 2 divisions when there is room for 2 or more', () => {
-    // 5 regions → cap = 2 + 5 = 7; empty queue → room for 7 divisions
+    // 8 regions → cap = 2 + 8 = 10; empty queue → room for 2 divisions
     const regions: RegionState = {
       'RU-A': makeRegion('RU-A'),
       'RU-B': makeRegion('RU-B'),
       'RU-C': makeRegion('RU-C'),
       'RU-D': makeRegion('RU-D'),
       'RU-E': makeRegion('RU-E'),
+      'RU-F': makeRegion('RU-F'),
+      'RU-G': makeRegion('RU-G'),
+      'RU-H': makeRegion('RU-H'),
     };
 
     const productionQueues = {} as Record<CountryId, ProductionQueueItem[]>;
@@ -196,10 +202,11 @@ describe('runAITick — CP limit enforcement', () => {
   });
 
   it('counts existing on-map divisions against the CP cap', () => {
-    // 1 region → cap = 3 CP; 1 division on map = 3 CP used → exactly at cap, no room
+    // 2 regions → cap = 4 CP; 1 division on map = 4 CP used → exactly at cap, no room
     const divisions = [makeDiv('d-1')];
     const regions: RegionState = {
       'RU-A': makeRegion('RU-A', divisions),
+      'RU-B': makeRegion('RU-B', []),
     };
 
     const productionQueues = {} as Record<CountryId, ProductionQueueItem[]>;

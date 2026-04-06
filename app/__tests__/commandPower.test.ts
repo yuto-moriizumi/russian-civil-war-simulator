@@ -268,8 +268,8 @@ describe('canProduceDivision', () => {
       ]),
     };
 
-    // Cap = BASE(2) + bonus(6) = 8. Current usage = 2 divisions = 6 CP.
-    // There are only 2 CP left, which is not enough for a 3-CP division.
+    // Cap = BASE(2) + bonus(6) = 8. Current usage = 2 divisions = 8 CP.
+    // There is no CP left, so another 4-CP division cannot be produced.
     expect(canProduceDivision('soviet', regions, [], emptyQueues, bonuses)).toBe(false);
   });
 });
@@ -294,7 +294,7 @@ describe('clampProductionQueueToCommandPower', () => {
       makeQueueItem('q-3'),
     ];
 
-    // Cap = BASE(2) + 1 owned region = 3. Current usage = 7 divisions = 21 CP.
+    // Cap = BASE(2) + 1 owned region = 3. Current usage = 7 divisions = 28 CP.
     // The country is already over cap, so no queued items should remain.
     expect(clampProductionQueueToCommandPower('soviet', queue, regions, [], emptyBonuses)).toEqual([]);
   });
@@ -317,7 +317,28 @@ describe('clampProductionQueueToCommandPower', () => {
     ];
 
     // Cap = BASE(2) + 1 owned region + bonus(10) = 13.
-    // Current usage = 3 divisions = 9 CP, so only 1 queued division fits.
+    // Current usage = 3 divisions = 12 CP, so no queued divisions fit.
+    expect(clampProductionQueueToCommandPower('soviet', queue, regions, [], bonuses)).toEqual([]);
+  });
+
+  it('keeps only the earliest queued division when exactly one queued item still fits', () => {
+    const regions: RegionState = {
+      'RU-A': makeRegion('RU-A', 'soviet', [
+        makeDiv('d-1', 'soviet'),
+        makeDiv('d-2', 'soviet'),
+      ]),
+    };
+
+    const queue = [
+      makeQueueItem('q-1'),
+      makeQueueItem('q-2'),
+      makeQueueItem('q-3'),
+    ];
+
+    const bonuses: CountryBonuses = { ...emptyBonuses, commandPowerBonus: 9 };
+
+    // Cap = BASE(2) + 1 owned region + bonus(9) = 12.
+    // Current usage = 2 divisions = 8 CP, so only 1 queued division fits.
     expect(clampProductionQueueToCommandPower('soviet', queue, regions, [], bonuses)).toEqual([queue[0]]);
   });
 });

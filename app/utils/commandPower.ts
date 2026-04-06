@@ -9,7 +9,7 @@ export const DIVISIONS_PER_STATE = 1;
  * Command power consumed per unit (configurable)
  * Each unit will consume this many command power slots
  */
-export const COMMAND_POWER_PER_UNIT = 3;
+export const COMMAND_POWER_PER_UNIT = 4;
 
 /**
  * Base command power provided to all countries
