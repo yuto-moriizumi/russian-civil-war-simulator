@@ -84,13 +84,14 @@ export function createDiplomacyFillColorExpression(
  * Build color expression for region fill based on command power (value map mode)
  * Uses a gradient from dark to bright based on the region's command power contribution
  */
-export function createValueFillColorExpression(regions: RegionState) {
+export function createValueFillColorExpression(regions: RegionState, coreRegions?: string[]) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const expression: any[] = ['match', getRegionIdExpression()];
   
-  // Calculate command power contribution for each region (base + major city bonus)
+  // Value mode should reflect the same per-region contribution shown in the region panel.
   const getCapContribution = (regionId: string): number => {
-    return DIVISIONS_PER_STATE + (MAJOR_CITY_CAP_BONUS[regionId] ?? 0);
+    const baseContribution = DIVISIONS_PER_STATE + (MAJOR_CITY_CAP_BONUS[regionId] ?? 0);
+    return coreRegions?.includes(regionId) ? baseContribution * 2 : baseContribution;
   };
   
   // Find min and max command power contributions for normalization
@@ -170,6 +171,7 @@ export function createMapModeFillColorExpression(
   mapMode: MapMode,
   regions: RegionState,
   playerCountry: CountryId | undefined,
+  playerCoreRegions: string[] | undefined,
   getRelationship: (from: CountryId, to: CountryId) => string
 ) {
   if (mapMode === 'diplomacy' && playerCountry) {
@@ -177,7 +179,7 @@ export function createMapModeFillColorExpression(
   }
   
   if (mapMode === 'value') {
-    return createValueFillColorExpression(regions);
+    return createValueFillColorExpression(regions, playerCoreRegions);
   }
   
   // Default to country map mode
