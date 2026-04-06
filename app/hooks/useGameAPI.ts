@@ -74,6 +74,8 @@ export function useGameAPI() {
         state.setSelectedMovementId(movementId);
       },
       getSelectedMovementId: () => state.selectedMovementId,
+      redirectMovement: (movementId, newDestinationRegionId) =>
+        state.redirectMovement(movementId, newDestinationRegionId),
 
       // Army Group API methods
       createArmyGroup: (name, regionIds, theaterId) => state.createArmyGroup(name, regionIds, theaterId),

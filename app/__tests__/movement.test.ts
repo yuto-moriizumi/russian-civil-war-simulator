@@ -13,12 +13,15 @@ import { describe, it, expect } from 'vitest';
 import { canMoveTo, getAdjacentRegions } from '../utils/mapUtils';
 import { calculateTravelTime, MOVEMENT_SPEED_KM_PER_HOUR } from '../utils/distance';
 import { processMovements } from '../store/game/tickHelpers/movementProcessing';
-import { findPath, getNextStepToward } from '../utils/pathfinding';
+import { findPath, getNextStepToward, buildCanEnterPredicate } from '../utils/pathfinding';
 import type {
   Division,
   Movement,
   ActiveCombat,
   Adjacency,
+  Region,
+  RegionState,
+  Relationship,
 } from '../types/game';
 
 // ---------------------------------------------------------------------------
@@ -340,6 +343,126 @@ describe('getNextStepToward', () => {
   it('returns null when destination is unreachable', () => {
     const isolated: Adjacency = { A: ['B'], B: ['A'], D: [] };
     expect(getNextStepToward('A', 'D', isolated)).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 5. redirectMovement – logic helpers
+//
+// redirectMovement is a store action, but its core logic is: given a movement
+// currently on hop (fromRegion → toRegion) with an optional remainingPath, use
+// findPath to compute a new remaining path from toRegion (the next stop that
+// the in-flight divisions will reach) to the new destination.  We test that
+// contract through findPath + buildCanEnterPredicate directly, which is exactly
+// what the implementation does.
+// ---------------------------------------------------------------------------
+
+function makeRegion(id: string, owner: 'soviet' | 'white' | 'neutral' = 'soviet'): Region {
+  return { id, name: id, countryIso3: 'RUS', owner, divisions: [], value: 1 };
+}
+
+describe('redirectMovement – path computation logic', () => {
+  // Map:  A - B - C - D
+  const adjacency: Adjacency = {
+    A: ['B'],
+    B: ['A', 'C'],
+    C: ['B', 'D'],
+    D: ['C'],
+  };
+
+  const allSoviet: RegionState = {
+    A: makeRegion('A'),
+    B: makeRegion('B'),
+    C: makeRegion('C'),
+    D: makeRegion('D'),
+  };
+
+  const noRelationships: Relationship[] = [];
+
+  it('computes a new remainingPath from currentHop to a new destination', () => {
+    // Divisions are en route: A → B (currentHop = B)
+    // Player wants to redirect to D instead of the original destination.
+    // Expected new path from B to D:  ['C', 'D']
+    const canEnter = buildCanEnterPredicate('soviet', allSoviet, noRelationships);
+    const newPath = findPath('B', 'D', adjacency, canEnter);
+    expect(newPath).toEqual(['C', 'D']);
+  });
+
+  it('returns empty array (no remaining hops) when new destination is the currentHop itself', () => {
+    // Divisions are en route to B; player right-clicks B — no additional hops needed
+    const canEnter = buildCanEnterPredicate('soviet', allSoviet, noRelationships);
+    const newPath = findPath('B', 'B', adjacency, canEnter);
+    expect(newPath).toEqual([]);
+  });
+
+  it('returns null when new destination is unreachable from currentHop', () => {
+    // Region X is completely isolated
+    const isolated: RegionState = {
+      ...allSoviet,
+      X: makeRegion('X'),
+    };
+    const adjWithX: Adjacency = { ...adjacency, X: [] };
+    const canEnter = buildCanEnterPredicate('soviet', isolated, noRelationships);
+    const newPath = findPath('B', 'X', adjWithX, canEnter);
+    expect(newPath).toBeNull();
+  });
+
+  it('respects canEnter predicate: redirecting through enemy territory requires war', () => {
+    // C is enemy territory and there is no war, so path B → D must go through C but is blocked
+    const mixedRegions: RegionState = {
+      ...allSoviet,
+      C: makeRegion('C', 'white'), // enemy
+    };
+    const canEnter = buildCanEnterPredicate('soviet', mixedRegions, noRelationships);
+    // B → D is only possible via C; C is blocked (no war declared)
+    const newPath = findPath('B', 'D', adjacency, canEnter);
+    expect(newPath).toBeNull();
+  });
+
+  it('allows redirect through enemy territory when at war', () => {
+    const mixedRegions: RegionState = {
+      ...allSoviet,
+      C: makeRegion('C', 'white'), // enemy
+      D: makeRegion('D', 'white'), // enemy
+    };
+    const atWar: Relationship[] = [
+      { fromCountry: 'soviet', toCountry: 'white', type: 'war' },
+    ];
+    const canEnter = buildCanEnterPredicate('soviet', mixedRegions, atWar);
+    const newPath = findPath('B', 'D', adjacency, canEnter);
+    expect(newPath).toEqual(['C', 'D']);
+  });
+
+  it('a redirected movement carries the correct finalDestination and remainingPath', () => {
+    // Simulate what redirectMovement does to the Movement object
+    const canEnter = buildCanEnterPredicate('soviet', allSoviet, noRelationships);
+    const movement: Movement = {
+      id: 'mv-test',
+      fromRegion: 'A',
+      toRegion: 'B',          // current in-flight hop
+      divisions: [],
+      departureTime: new Date('1918-01-01T00:00:00Z'),
+      arrivalTime: new Date('1918-01-01T12:00:00Z'),
+      owner: 'soviet',
+      remainingPath: ['C'],   // old remaining path (was heading to C)
+      finalDestination: 'C',
+    };
+
+    const newDest = 'D';
+    const newRemainingPath = findPath(movement.toRegion, newDest, adjacency, canEnter);
+
+    expect(newRemainingPath).not.toBeNull();
+    const redirected: Movement = {
+      ...movement,
+      remainingPath: newRemainingPath!,
+      finalDestination: newDest,
+    };
+
+    // The current hop is unchanged
+    expect(redirected.toRegion).toBe('B');
+    // New path from B leads through C to D
+    expect(redirected.remainingPath).toEqual(['C', 'D']);
+    expect(redirected.finalDestination).toBe('D');
   });
 });
 

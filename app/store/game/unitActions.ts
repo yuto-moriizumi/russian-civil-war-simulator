@@ -357,6 +357,89 @@ export const createUnitActions = (
     });
   },
 
+  /**
+   * Redirect an in-transit movement to a new destination.
+   *
+   * The movement's current hop (fromRegion → toRegion) is preserved — the
+   * divisions will still travel to their next immediate hop first. Once they
+   * arrive there, the new `remainingPath` takes over and routes them toward
+   * the new destination instead of the original one.
+   *
+   * If the movement has a pendingCombatId (paused for combat) we refuse to
+   * redirect — the player must wait for the combat to resolve first.
+   */
+  redirectMovement: (movementId: string, newDestinationRegionId: string) => {
+    const { adjacency, regions, selectedCountry, movingUnits, relationships } = get();
+
+    const movement = movingUnits.find(m => m.id === movementId);
+    if (!movement) {
+      console.warn(`[redirectMovement] Movement "${movementId}" not found`);
+      return;
+    }
+    if (!selectedCountry || movement.owner !== selectedCountry.id) {
+      console.warn(`[redirectMovement] Movement "${movementId}" not owned by player`);
+      return;
+    }
+    if (movement.pendingCombatId) {
+      console.warn(`[redirectMovement] Cannot redirect movement "${movementId}" - paused for combat`);
+      return;
+    }
+    if (movement.toRegion === newDestinationRegionId) {
+      // Already heading there — nothing to do
+      return;
+    }
+
+    // Build a new path from the current hop destination (toRegion) to the new
+    // destination. The divisions will arrive at toRegion first (the current hop
+    // is already in-flight), and then follow this new path.
+    const canEnter = buildCanEnterPredicate(
+      selectedCountry.id,
+      regions,
+      relationships
+    );
+
+    let newRemainingPath: string[] | undefined;
+    let newFinalDestination: string | undefined;
+
+    // Check if the new destination is the same as the current hop destination
+    if (movement.toRegion === newDestinationRegionId) {
+      // Just clear the remaining path
+      newRemainingPath = undefined;
+      newFinalDestination = undefined;
+    } else {
+      // Find path from the current hop destination to the new destination
+      const pathFromCurrentHop = findPath(
+        movement.toRegion,
+        newDestinationRegionId,
+        adjacency,
+        canEnter
+      );
+      if (!pathFromCurrentHop || pathFromCurrentHop.length === 0) {
+        console.warn(
+          `[redirectMovement] No accessible path from "${movement.toRegion}" to "${newDestinationRegionId}"`
+        );
+        return;
+      }
+      // pathFromCurrentHop includes newDestinationRegionId as the last element
+      // and excludes movement.toRegion. These are the hops AFTER the current hop.
+      newRemainingPath = pathFromCurrentHop;
+      newFinalDestination = newDestinationRegionId;
+    }
+
+    const updatedMovement = {
+      ...movement,
+      remainingPath: newRemainingPath,
+      finalDestination: newFinalDestination,
+    };
+
+    set({
+      movingUnits: movingUnits.map(m => (m.id === movementId ? updatedMovement : m)),
+    });
+
+    const destName = regions[newDestinationRegionId]?.name ?? newDestinationRegionId;
+    console.log(`[redirectMovement] Movement "${movementId}" redirected to ${destName}`);
+  },
+
   deployToArmyGroup: (groupId: string, count?: number) => {
     // Call the production queue action instead of instant deployment
     get().addToProductionQueue(groupId, count);
