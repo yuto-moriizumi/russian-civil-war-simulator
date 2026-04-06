@@ -10,7 +10,7 @@ export interface Country {
   flag: string;
   color: string;
   selectable?: boolean;
-  coreRegions?: string[]; // List of core region IDs - controlling these gives +1 command power each
+  coreRegions?: string[]; // List of core region IDs - controlling these doubles their command power contribution (x2)
 }
 
 // Division represents a military unit with combat stats

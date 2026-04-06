@@ -33,7 +33,7 @@ export const MAJOR_CITY_CAP_BONUS: Record<string, number> = {
  * @param countryId - The country to calculate command power for
  * @param regions - Current region state
  * @param countryBonuses - Country bonuses from completed missions
- * @param coreRegions - Optional list of core region IDs for this country
+ * @param coreRegions - Optional list of core region IDs for this country (controlling these doubles their CP contribution)
  * @returns Maximum command power allowed
  */
 export function calculateCommandPower(
@@ -48,16 +48,13 @@ export function calculateCommandPower(
   Object.entries(regions).forEach(([regionId, region]) => {
     if (region.owner === countryId) {
       // Base cap for controlling any state
-      totalCap += DIVISIONS_PER_STATE;
-      
-      // Add bonus for major cities
-      if (MAJOR_CITY_CAP_BONUS[regionId]) {
-        totalCap += MAJOR_CITY_CAP_BONUS[regionId];
-      }
-      
-      // Add bonus for controlling core regions (+1 command power per core region)
+      const regionContribution = DIVISIONS_PER_STATE + (MAJOR_CITY_CAP_BONUS[regionId] || 0);
+
+      // Core regions provide x2 command power (double their total contribution)
       if (coreRegions?.includes(regionId)) {
-        totalCap += 1;
+        totalCap += regionContribution * 2;
+      } else {
+        totalCap += regionContribution;
       }
     }
   });

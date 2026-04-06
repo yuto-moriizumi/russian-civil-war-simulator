@@ -232,6 +232,26 @@ describe('calculateCommandPower', () => {
     const bonuses: CountryBonuses = { ...emptyBonuses, commandPowerBonus: 3 };
     expect(calculateCommandPower('soviet', regions, bonuses)).toBe(BASE_COMMAND_POWER + 3);
   });
+
+  it('doubles the per-region contribution for core regions (x2)', () => {
+    const regions: RegionState = {
+      'RU-A': makeRegion('RU-A', 'soviet'), // non-core
+      'RU-B': makeRegion('RU-B', 'soviet'), // core
+    };
+    // Without core bonus: BASE + 2 * DIVISIONS_PER_STATE
+    // With x2 core on RU-B: BASE + DIVISIONS_PER_STATE (non-core) + DIVISIONS_PER_STATE * 2 (core)
+    const expected = BASE_COMMAND_POWER + DIVISIONS_PER_STATE + DIVISIONS_PER_STATE * 2;
+    expect(calculateCommandPower('soviet', regions, emptyBonuses, ['RU-B'])).toBe(expected);
+  });
+
+  it('non-core regions are unaffected when coreRegions list is provided', () => {
+    const regions: RegionState = {
+      'RU-A': makeRegion('RU-A', 'soviet'),
+    };
+    // RU-A is not in coreRegions, so contribution should be unchanged
+    const expected = BASE_COMMAND_POWER + DIVISIONS_PER_STATE;
+    expect(calculateCommandPower('soviet', regions, emptyBonuses, ['RU-B'])).toBe(expected);
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -137,13 +137,13 @@ export function RegionInfoPanel() {
             {coreRegions?.includes(selectedRegion) && (
               <div className="flex items-center justify-between text-xs">
                 <span className="text-stone-400">Core Region Bonus:</span>
-                <span className="text-purple-400 font-semibold">+1</span>
+                <span className="text-purple-400 font-semibold">x2</span>
               </div>
             )}
             <div className="flex items-center justify-between text-xs border-t border-stone-700 pt-1 font-semibold">
               <span className="text-stone-300">Total Contribution:</span>
               <span className={MAJOR_CITY_CAP_BONUS[selectedRegion] || coreRegions?.includes(selectedRegion) ? "text-amber-400" : "text-green-400"}>
-                +{DIVISIONS_PER_STATE + (MAJOR_CITY_CAP_BONUS[selectedRegion] || 0) + (coreRegions?.includes(selectedRegion) ? 1 : 0)}
+                +{(DIVISIONS_PER_STATE + (MAJOR_CITY_CAP_BONUS[selectedRegion] || 0)) * (coreRegions?.includes(selectedRegion) ? 2 : 1)}
               </span>
             </div>
           </div>
