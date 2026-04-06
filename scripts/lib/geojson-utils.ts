@@ -72,9 +72,17 @@ export function mergeGeoJSON(
       // 座標を量子化して異なるソース間のズレを解消
       const quantizedGeometry = quantizeGeometry(feature.geometry);
       
-      // shapeISO と shapeID を properties から除去
-      const { shapeISO, SHAPEISO, shapeID, SHAPEID, ...restProps } = (feature.properties || {}) as Record<string, unknown>;
+      // 不要なプロパティを除去
+      const {
+        shapeISO, SHAPEISO, shapeID, SHAPEID,
+        shapeGroup, SHAPEGROUP,
+        shapeType, SHAPETYPE,
+        regionId: _regionId,
+        ...restProps
+      } = (feature.properties || {}) as Record<string, unknown>;
       void shapeISO; void SHAPEISO; void shapeID; void SHAPEID;
+      void shapeGroup; void SHAPEGROUP; void shapeType; void SHAPETYPE;
+      void _regionId;
       
       const enhancedFeature: Feature = {
         ...feature,
