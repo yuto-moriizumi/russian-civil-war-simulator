@@ -78,7 +78,28 @@ export const createBasicActions = (
   },
 
   navigateToScreen: (screen: Screen) => set({ currentScreen: screen }),
-  
+
+  startNewGame: () => {
+    // Clear the Zustand-persisted save from localStorage so that the
+    // upcoming selectCountry call reads a blank slate, not the old session.
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('russian-civil-war-save');
+    }
+    // Reset in-memory store to initial state while preserving non-persisted
+    // map data that was loaded asynchronously (regions, adjacency, centroids).
+    const currentState = get();
+    set({
+      ...initialGameState,
+      // Keep the loaded map geometry so the game doesn't need to re-fetch it.
+      regions: currentState.regions,
+      adjacency: currentState.adjacency,
+      mapDataLoaded: currentState.mapDataLoaded,
+      regionCentroids: currentState.regionCentroids,
+      // Navigate to country selection for a fresh start.
+      currentScreen: 'countrySelect',
+    });
+  },
+
   selectCountry: (country: Country) => {
     // Determine which countries become AI-controlled (all non-player countries)
     const allCountries: CountryId[] = [

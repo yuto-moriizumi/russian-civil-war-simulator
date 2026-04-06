@@ -44,6 +44,7 @@ export default function Home() {
 // Sub-components to keep the main file clean and use specific store slices
 function TitleScreenView() {
   const navigateToScreen = useGameStore(state => state.navigateToScreen);
+  const startNewGame = useGameStore(state => state.startNewGame);
   const selectedCountry = useGameStore(state => state.selectedCountry);
   const dateTime = useGameStore(state => state.dateTime);
   
@@ -56,7 +57,7 @@ function TitleScreenView() {
   
   return (
     <TitleScreen 
-      onStartGame={() => navigateToScreen('countrySelect')}
+      onStartGame={startNewGame}
       onContinue={() => {
         // Continue goes directly to the main screen since state is already loaded
         if (hasSave) {
