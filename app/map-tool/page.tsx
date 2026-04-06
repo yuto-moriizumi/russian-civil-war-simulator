@@ -99,6 +99,16 @@ export default function MapToolPage() {
     }
   }, [selectedCountry, historyIndex, editMode, setCoreRegions, setOwnership, setHistory, setHistoryIndex, setPaintedRegionsInDrag]);
 
+  const handleRegionCoreRemove = useCallback((regionId: string) => {
+    if (editMode !== 'core' || !selectedCountry) return;
+    setCoreRegions((prev) => {
+      const updated = { ...prev };
+      const countryRegions = updated[selectedCountry] || [];
+      updated[selectedCountry] = countryRegions.filter((id) => id !== regionId);
+      return updated;
+    });
+  }, [editMode, selectedCountry, setCoreRegions]);
+
   const handlePaintEnd = useCallback(() => setPaintedRegionsInDrag(new Set()), []);
 
   const handleUndo = useCallback(() => {
@@ -192,6 +202,7 @@ export default function MapToolPage() {
               onCountryPick={editMode === 'units' ? setUnitCountry : setSelectedCountry}
               onPaintEnd={handlePaintEnd}
               onRegionUnitAdd={handleRegionUnitAdd} onRegionUnitRemove={handleRegionUnitRemove}
+              onRegionCoreRemove={handleRegionCoreRemove}
             />
           ) : (
             <div className="flex h-full items-center justify-center text-gray-500">
