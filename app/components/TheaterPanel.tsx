@@ -1,7 +1,9 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useMemo } from 'react';
 import { useGameStore } from '../store/useGameStore';
+import { getCountryFlag } from '../data/countries';
 import { getArmyGroupUnitCount } from '../utils/mapUtils';
 import { canProduceDivision } from '../utils/commandPower';
 
@@ -75,6 +77,8 @@ export default function TheaterPanel() {
         const queueCount = (productionQueue[playerCountry] || []).filter(p => p.armyGroupId === group.id).length;
         const isGroupSelected = selectedGroupId === group.id;
         const canProduce = canProduceDivision(playerCountry, regions, movingUnits, productionQueue, countryBonuses[playerCountry], coreRegions);
+        const assignedTheater = group.theaterId ? theaters.find(theater => theater.id === group.theaterId) : null;
+        const theaterFlag = assignedTheater ? getCountryFlag(assignedTheater.enemyCountry) : '';
 
         return (
           <div
@@ -129,23 +133,34 @@ export default function TheaterPanel() {
 
             {/* Theater selection */}
             <div className="border-b border-stone-800 px-1 py-0.5 shrink-0">
-              <select
-                value={group.theaterId || ''}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  const theaterId = e.target.value || null;
-                  assignTheaterToGroup(group.id, theaterId);
-                }}
-                onClick={(e) => e.stopPropagation()}
-                className="w-full bg-transparent text-[10px] text-center font-bold text-stone-500 uppercase tracking-tighter outline-none cursor-pointer appearance-none hover:text-stone-300"
-              >
-                <option value="" className="bg-stone-900 text-stone-300">No Theater</option>
-                {theaters.map((theater) => (
-                  <option key={theater.id} value={theater.id} className="bg-stone-900 text-stone-300">
-                    {theater.name}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center gap-1">
+                {theaterFlag && (
+                  <Image
+                    src={theaterFlag}
+                    alt={`${assignedTheater?.enemyCountry} flag`}
+                    width={16}
+                    height={12}
+                    className="h-3 w-4 shrink-0 rounded-[2px] border border-stone-700 object-cover"
+                  />
+                )}
+                <select
+                  value={group.theaterId || ''}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    const theaterId = e.target.value || null;
+                    assignTheaterToGroup(group.id, theaterId);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-full bg-transparent text-[10px] font-bold text-stone-500 uppercase tracking-tighter outline-none cursor-pointer appearance-none hover:text-stone-300"
+                >
+                  <option value="" className="bg-stone-900 text-stone-300">No Theater</option>
+                  {theaters.map((theater) => (
+                    <option key={theater.id} value={theater.id} className="bg-stone-900 text-stone-300">
+                      {theater.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Main Action Area: Attack & Defend (Large) */}
