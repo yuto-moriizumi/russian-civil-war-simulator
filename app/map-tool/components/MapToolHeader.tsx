@@ -1,6 +1,6 @@
 "use client";
 
-import type { RegionFeatureCollection } from "../../types/game";
+import type { RegionFeatureCollection } from "../../../types";
 import { CountryId } from "../../types/game";
 
 interface MapToolHeaderProps {

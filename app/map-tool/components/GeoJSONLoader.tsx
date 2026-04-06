@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import type { RegionFeatureCollection } from '../../types/game';
+import type { RegionFeatureCollection } from '../../../types';
 
 interface GeoJSONLoaderProps {
   onLoad: (geojson: RegionFeatureCollection, source?: string) => void;

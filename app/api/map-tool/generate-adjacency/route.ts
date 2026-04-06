@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { Polygon, MultiPolygon } from 'geojson';
 import * as turf from '@turf/turf';
-import type { RegionFeatureCollection } from '../../../types/game';
+import type { RegionFeatureCollection } from '../../../../types';
 
 interface GenerateAdjacencyRequest {
   geojson: RegionFeatureCollection;

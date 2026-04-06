@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { CountryId, RegionFeatureCollection } from "../types/game";
+import { CountryId } from "../types/game";
+import type { RegionFeatureCollection } from "../../types";
 import MapToolCanvas from "./components/MapToolCanvas";
 import GeoJSONLoader from "./components/GeoJSONLoader";
 import CountryPalette from "./components/CountryPalette";

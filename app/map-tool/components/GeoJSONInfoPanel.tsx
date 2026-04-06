@@ -1,6 +1,6 @@
 "use client";
 
-import type { RegionFeatureCollection } from "../../types/game";
+import type { RegionFeatureCollection } from "../../../types";
 
 interface GeoJSONInfoPanelProps {
   geojson: RegionFeatureCollection;

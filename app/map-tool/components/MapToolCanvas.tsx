@@ -12,7 +12,8 @@ import Map, {
 import type { MapLayerMouseEvent } from "react-map-gl/maplibre";
 import type { Feature, Geometry } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { CountryId, RegionFeatureCollection } from "../../types/game";
+import { CountryId } from "../../types/game";
+import type { RegionFeatureCollection } from "../../../types";
 import { getCountryColor, COUNTRY_FLAGS } from "../../data/countries";
 import { UnitPlacementData } from "../../data/map/initialUnitPlacement";
 import * as turf from "@turf/turf";

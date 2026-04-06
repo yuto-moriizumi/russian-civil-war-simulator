@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import type { RegionFeatureCollection } from '../../types/game';
+import type { RegionFeatureCollection } from '../../../types';
 import { CountryId } from '../../types/game';
 import { UnitPlacementData } from '../../data/map/initialUnitPlacement';
 

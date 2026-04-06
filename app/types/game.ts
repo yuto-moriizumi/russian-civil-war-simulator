@@ -39,10 +39,6 @@ export interface Adjacency {
   [regionId: string]: string[];
 }
 
-// GeoJSON types — defined in /types.ts (repo root) and re-exported here
-// so app code can import them from the familiar app/types/game path.
-export type { RegionFeatureProperties, RegionFeature, RegionFeatureCollection } from '../../types';
-
 export interface RegionState {
   [regionId: string]: Region;
 }
