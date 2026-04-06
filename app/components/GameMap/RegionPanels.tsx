@@ -5,6 +5,8 @@ import { COUNTRY_COLORS, getAdjacentRegions } from '../../utils/mapUtils';
 import { MAJOR_CITY_CAP_BONUS, DIVISIONS_PER_STATE } from '../../utils/commandPower';
 import { getCountriesWithCoreRegion, getCountryName, getCountryColor } from '../../data/countries';
 
+export { MovingUnitInfoPanel } from './MovingUnitInfoPanel';
+
 interface RegionTooltipProps {
   hoveredRegion: string;
 }
@@ -266,3 +268,5 @@ export function RegionInfoPanel() {
     </div>
   );
 }
+
+

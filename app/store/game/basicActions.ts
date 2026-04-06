@@ -60,6 +60,8 @@ export const createBasicActions = (
   
   setSelectedCombatId: (combatId: string | null) => set({ selectedCombatId: combatId }),
   
+  setSelectedMovementId: (movementId: string | null) => set({ selectedMovementId: movementId }),
+  
   setIsProductionModalOpen: (isOpen: boolean) => set({ isProductionModalOpen: isOpen }),
 
   setSelectedCountryId: (countryId: CountryId | null) => set({ selectedCountryId: countryId }),

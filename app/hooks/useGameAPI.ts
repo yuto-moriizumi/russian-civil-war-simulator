@@ -56,6 +56,25 @@ export function useGameAPI() {
       getMovingUnits: () => state.movingUnits,
       getActiveCombats: () => state.activeCombats,
 
+      // In-transit unit selection
+      selectMovement: (movementId) => {
+        if (movementId === null) {
+          state.setSelectedMovementId(null);
+          return;
+        }
+        const movement = state.movingUnits.find(m => m.id === movementId);
+        if (!movement) {
+          console.warn(`[gameAPI] Cannot select movement "${movementId}" - not found`);
+          return;
+        }
+        if (!state.selectedCountry || movement.owner !== state.selectedCountry.id) {
+          console.warn(`[gameAPI] Cannot select movement "${movementId}" - not owned by player`);
+          return;
+        }
+        state.setSelectedMovementId(movementId);
+      },
+      getSelectedMovementId: () => state.selectedMovementId,
+
       // Army Group API methods
       createArmyGroup: (name, regionIds, theaterId) => state.createArmyGroup(name, regionIds, theaterId),
       getArmyGroups: () => state.armyGroups,

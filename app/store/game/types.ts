@@ -22,6 +22,7 @@ export interface GameStore extends GameState {
   aiStates: AIState[]; // Multiple AI states for different countries
   isEventsModalOpen: boolean;
   selectedCombatId: string | null;
+  selectedMovementId: string | null;
   lastSaveTime: Date | null;
   selectedGroupId: string | null; // Currently selected army group
   selectedTheaterId: string | null; // Currently selected theater
@@ -41,6 +42,7 @@ export interface GameStore extends GameState {
   setSelectedUnitRegion: (regionId: string | null) => void;
   setIsEventsModalOpen: (isOpen: boolean) => void;
   setSelectedCombatId: (combatId: string | null) => void;
+  setSelectedMovementId: (movementId: string | null) => void;
   setIsProductionModalOpen: (isOpen: boolean) => void;
   setSelectedCountryId: (countryId: CountryId | null) => void;
   setIsCountrySidebarOpen: (isOpen: boolean) => void;
