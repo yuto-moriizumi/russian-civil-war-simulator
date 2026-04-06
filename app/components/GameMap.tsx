@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import Map, { MapRef, Source, Layer, NavigationControl } from 'react-map-gl/maplibre';
 import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
+import type { GeoJSON } from 'geojson';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useGameStore } from '../store/useGameStore';
 import { COUNTRY_METADATA } from '../data/countryMetadata';
@@ -264,6 +265,49 @@ export default function GameMap() {
     [activeCombats, regionCentroids]
   );
 
+  /**
+   * Build a GeoJSON LineString for the selected movement's planned path.
+   * The path is: fromRegion → toRegion → ...remainingPath
+   * This is shown as an animated arrow line on the map when a moving unit is selected.
+   */
+  const movementPathGeoJSON = useMemo((): GeoJSON => {
+    const features: GeoJSON.Feature[] = [];
+
+    // Determine which movement(s) to draw paths for:
+    // 1. A specific movement is selected via selectedMovementId
+    // 2. All movements whose origin region matches selectedUnitRegion (divisions just ordered to move)
+    const movementsToShow: typeof movingUnits = [];
+
+    if (selectedMovementId) {
+      const m = movingUnits.find(mu => mu.id === selectedMovementId);
+      if (m) movementsToShow.push(m);
+    } else if (selectedUnitRegion) {
+      // Show path for any in-transit movement that originated (directly or via hops) from the selected unit region
+      const related = movingUnits.filter(mu => mu.fromRegion === selectedUnitRegion);
+      movementsToShow.push(...related);
+    }
+
+    for (const movement of movementsToShow) {
+      const fullPath = [movement.fromRegion, movement.toRegion, ...(movement.remainingPath ?? [])];
+      const coordinates: [number, number][] = [];
+
+      for (const regionId of fullPath) {
+        const centroid = regionCentroids[regionId];
+        if (centroid) coordinates.push([centroid[0], centroid[1]]);
+      }
+
+      if (coordinates.length >= 2) {
+        features.push({
+          type: 'Feature',
+          geometry: { type: 'LineString', coordinates },
+          properties: { movementId: movement.id },
+        });
+      }
+    }
+
+    return { type: 'FeatureCollection', features };
+  }, [selectedMovementId, selectedUnitRegion, movingUnits, regionCentroids]);
+
   // Memoized style objects
   const mapStyle = useMemo(() => createMapStyle(), []);
   const mapContainerStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
@@ -303,6 +347,34 @@ export default function GameMap() {
         >
           <Layer id="regions-fill" type="fill" paint={fillPaint} />
           <Layer id="regions-border" type="line" paint={linePaint} />
+        </Source>
+
+        {/* Movement path overlay – shown when a moving unit or unit region is selected */}
+        <Source id="movement-path" type="geojson" data={movementPathGeoJSON}>
+          {/* Glow / shadow layer behind the main line */}
+          <Layer
+            id="movement-path-glow"
+            type="line"
+            paint={{
+              'line-color': '#22d3ee',
+              'line-width': 8,
+              'line-opacity': 0.25,
+              'line-blur': 4,
+            }}
+            layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+          />
+          {/* Main dashed path line */}
+          <Layer
+            id="movement-path-line"
+            type="line"
+            paint={{
+              'line-color': '#22d3ee',
+              'line-width': 2.5,
+              'line-opacity': 0.9,
+              'line-dasharray': [4, 3],
+            }}
+            layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+          />
         </Source>
 
         {unitMarkers.map((marker) => {
