@@ -41,9 +41,15 @@ export const COUNTRY_METADATA = {
     firstArmyGroupName: "Red Army Group",
     divisionPrefix: "Red Guard",
     coreRegions: [
-              'RU-BEL', 'RU-CHE', 'RU-IVA', 'RU-KOS', 'RU-LEN', 'RU-MOS', 'RU-MOW', 'RU-NIZ',
-              'RU-PER', 'RU-SAM', 'RU-SAR', 'RU-SPE', 'RU-SVE', 'RU-TA', 'RU-TVE', 'RU-ULY',
-              'RU-VLA', 'RU-VOR', 'RU-YAR',
+              'KZ-AKT', 'KZ-ATY', 'KZ-ZAP', 'RU-AD', 'RU-ARK', 'RU-AST', 'RU-BA', 'RU-BEL',
+              'RU-BRY', 'RU-CE', 'RU-CHE', 'RU-CHU', 'RU-CU', 'RU-DA', 'RU-IN', 'RU-IRK',
+              'RU-IVA', 'RU-KAM', 'RU-KB', 'RU-KC', 'RU-KDA', 'RU-KGN', 'RU-KHA', 'RU-KHM',
+              'RU-KIR', 'RU-KL', 'RU-KLU', 'RU-KO', 'RU-KOS', 'RU-KR', 'RU-KRS', 'RU-KYA',
+              'RU-LEN', 'RU-LIP', 'RU-MAG', 'RU-ME', 'RU-MO', 'RU-MOS', 'RU-MOW', 'RU-MUR',
+              'RU-NEN', 'RU-NGR', 'RU-NIZ', 'RU-ORE', 'RU-ORL', 'RU-PER', 'RU-PNZ', 'RU-PSK',
+              'RU-ROS', 'RU-RYA', 'RU-SA', 'RU-SAM', 'RU-SAR', 'RU-SE', 'RU-SMO', 'RU-SPE',
+              'RU-STA', 'RU-SVE', 'RU-TA', 'RU-TAM', 'RU-TOM', 'RU-TUL', 'RU-TVE', 'RU-TYU',
+              'RU-UD', 'RU-ULY', 'RU-VGG', 'RU-VLA', 'RU-VLG', 'RU-VOR', 'RU-YAN', 'RU-YAR',
             ],
   },
   white: {
@@ -56,8 +62,8 @@ export const COUNTRY_METADATA = {
     firstArmyGroupName: "Volunteer Army",
     divisionPrefix: "White Guard",
     coreRegions: [
-              'RU-ARK', 'RU-IRK', 'RU-KDA', 'RU-KHA', 'RU-NVS', 'RU-OMS', 'RU-PRI', 'RU-ROS',
-              'RU-STA', 'RU-TOM', 'RU-TYU', 'RU-VGG', 'RU-VLG',
+              'RU-ARK', 'RU-IRK', 'RU-KDA', 'RU-KHA', 'RU-KO', 'RU-NVS', 'RU-OMS', 'RU-PRI',
+              'RU-ROS', 'RU-STA', 'RU-TOM', 'RU-TYU', 'RU-VGG', 'RU-VLG',
             ],
   },
   /**
