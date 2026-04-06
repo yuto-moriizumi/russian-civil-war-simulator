@@ -54,7 +54,7 @@ export type MissionCondition =
   | { type: 'dateAfter'; date: string }                            // Date is after specified (YYYY-MM-DD)
   | { type: 'combatVictories'; count: number }                     // Win at least N combats
   | { type: 'enemyRegionCount'; country: CountryId; maxCount: number } // Enemy controls at most N regions
-  | { type: 'allRegionsControlled'; countryIso3: string }          // Control all regions in a country
+  | { type: 'allRegionsControlled'; regionIds: string[] }          // Control all listed regions (replaces countryIso3)
   | { type: 'theaterExists'; enemyCountry: CountryId }             // Have at least one theater facing enemy
   | { type: 'armyGroupCount'; count: number };                     // Have at least N army groups
 

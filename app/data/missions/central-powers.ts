@@ -266,7 +266,7 @@ export const polandMissions: Mission[] = [
     rewards: { attackBonus: 3, defenceBonus: 3, gameVictory: true },
     prerequisites: ['poland_borders'],
     available: [
-      { type: 'allRegionsControlled', countryIso3: 'POL' },
+      { type: 'allRegionsControlled', regionIds: ['PL-DS','PL-KP','PL-LB','PL-LD','PL-LU','PL-MA','PL-MZ','PL-OP','PL-PD','PL-PK','PL-PM','PL-SK','PL-SL','PL-WN','PL-WP','PL-ZP'] },
       { type: 'hasUnits', count: 18 },
     ],
   },

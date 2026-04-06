@@ -76,9 +76,7 @@ export function evaluateMissionCondition(
     }
     
     case 'allRegionsControlled': {
-      const countryRegions = Object.values(regions).filter(
-        region => region.countryIso3 === condition.countryIso3
-      );
+      const countryRegions = condition.regionIds.map(id => regions[id]).filter(Boolean);
       return countryRegions.length > 0 && countryRegions.every(
         region => region.owner === playerCountry
       );

@@ -54,7 +54,7 @@ function loadRawGeoJSON(filePath: string): RawFeatureCollection {
  * 2. shapeID (例: "28173009B80457268982215") - 一意だが読みにくい
  * 3. 国コード + 名前 - フォールバック
  */
-export function getRegionId(feature: RawFeature, countryIso3: string): string {
+export function getRegionId(feature: RawFeature, countryPrefix: string): string {
   const props = feature.properties || {};
   
   // shapeISO が最優先（読みやすいISO形式）
@@ -71,7 +71,7 @@ export function getRegionId(feature: RawFeature, countryIso3: string): string {
   
   // フォールバック: 国コード + 名前
   const name = props.shapeName || props.SHAPENAME || props.name || props.NAME || 'unknown';
-  return `${countryIso3}-${String(name).replace(/\s+/g, '_')}`;
+  return `${countryPrefix}-${String(name).replace(/\s+/g, '_')}`;
 }
 
 /**
