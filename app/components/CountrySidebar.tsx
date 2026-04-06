@@ -173,44 +173,55 @@ export default function CountrySidebar() {
         )}
 
         {/* Relationships Section (Read Only) */}
-        <div className="space-y-3">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-stone-500 px-1">
-            Global Relationships
-          </h3>
-          
-          <div className="bg-stone-900 rounded-lg border border-stone-700 divide-y divide-stone-800">
-            {otherCountries.map((otherId: CountryId) => {
-              if (otherId === 'neutral' || otherId === 'foreign') return null;
+        {(() => {
+          const nonNeutralCountries = otherCountries.filter((otherId: CountryId) => {
+            if (otherId === 'neutral' || otherId === 'foreign') return false;
+            const outwardRelation = getRelationshipStatus(countryId, otherId);
+            const inwardRelation = getRelationshipStatus(otherId, countryId);
+            return outwardRelation !== 'neutral' || inwardRelation !== 'neutral';
+          });
+
+          if (nonNeutralCountries.length === 0) return null;
+
+          return (
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-stone-500 px-1">
+                Global Relationships
+              </h3>
               
-              const outwardRelation = getRelationshipStatus(countryId, otherId);
-              const inwardRelation = getRelationshipStatus(otherId, countryId);
-              
-              return (
-                <div key={otherId} className="p-3">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="font-semibold text-stone-200">
-                      {COUNTRY_NAMES[otherId]}
-                    </span>
-                  </div>
-                  <div className="flex flex-col text-xs space-y-1">
-                    <div className="flex justify-between">
-                      <span className="text-stone-500 font-medium">Outward:</span>
-                      <span className={`font-bold ${RELATIONSHIP_COLORS[outwardRelation]}`}>
-                        {outwardRelation === 'autonomy' ? 'Autonomy Master' : RELATIONSHIP_LABELS[outwardRelation]}
-                      </span>
+              <div className="bg-stone-900 rounded-lg border border-stone-700 divide-y divide-stone-800">
+                {nonNeutralCountries.map((otherId: CountryId) => {
+                  const outwardRelation = getRelationshipStatus(countryId, otherId);
+                  const inwardRelation = getRelationshipStatus(otherId, countryId);
+                  
+                  return (
+                    <div key={otherId} className="p-3">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="font-semibold text-stone-200">
+                          {COUNTRY_NAMES[otherId]}
+                        </span>
+                      </div>
+                      <div className="flex flex-col text-xs space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-stone-500 font-medium">Outward:</span>
+                          <span className={`font-bold ${RELATIONSHIP_COLORS[outwardRelation]}`}>
+                            {outwardRelation === 'autonomy' ? 'Autonomy Master' : RELATIONSHIP_LABELS[outwardRelation]}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-stone-500 font-medium">Inward:</span>
+                          <span className={`font-bold ${RELATIONSHIP_COLORS[inwardRelation]}`}>
+                            {inwardRelation === 'autonomy' ? 'Autonomy Servant' : RELATIONSHIP_LABELS[inwardRelation]}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-stone-500 font-medium">Inward:</span>
-                      <span className={`font-bold ${RELATIONSHIP_COLORS[inwardRelation]}`}>
-                        {inwardRelation === 'autonomy' ? 'Autonomy Servant' : RELATIONSHIP_LABELS[inwardRelation]}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </SidebarPanel>
   );
