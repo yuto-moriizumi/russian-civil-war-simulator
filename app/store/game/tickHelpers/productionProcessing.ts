@@ -1,4 +1,4 @@
-import { ProductionQueueItem, RegionState, Division, CountryId, CountryBonuses } from '../../../types/game';
+import { ProductionQueueItem, RegionState, Division, CountryId, CountryBonuses, ArmyGroup } from '../../../types/game';
 import { getDivisionStats } from '../../../utils/bonusCalculator';
 
 /**
@@ -8,13 +8,15 @@ import { getDivisionStats } from '../../../utils/bonusCalculator';
  * @param currentTime - Current game time
  * @param regions - Current region state
  * @param countryBonuses - Per-country bonuses from missions
+ * @param armyGroups - All army groups (used to validate armyGroupId on completed divisions)
  * @returns Updated per-country queues, regions, and completed production events
  */
 export function processProductionQueue(
   productionQueues: Record<CountryId, ProductionQueueItem[]>,
   currentTime: Date,
   regions: RegionState,
-  countryBonuses: Record<CountryId, CountryBonuses>
+  countryBonuses: Record<CountryId, CountryBonuses>,
+  armyGroups: ArmyGroup[] = []
 ): {
   remainingProductions: Record<CountryId, ProductionQueueItem[]>;
   updatedRegions: RegionState;
@@ -39,12 +41,29 @@ export function processProductionQueue(
       const bonuses = countryBonuses[production.owner];
       const divisionStats = getDivisionStats(production.owner, bonuses);
 
+      // Validate the armyGroupId still refers to an existing group owned by
+      // this country.  It can become stale when the player switches countries
+      // (selectCountry regenerates all army group IDs but preserves production
+      // queues) or if an army group is deleted while units are in production.
+      // Fall back to the first available group for this country so the division
+      // is always associated with a valid army group.
+      const referencedGroup = armyGroups.find(g => g.id === production.armyGroupId);
+      let resolvedArmyGroupId = production.armyGroupId;
+      if (!referencedGroup || referencedGroup.owner !== production.owner) {
+        const fallbackGroup = armyGroups.find(g => g.owner === production.owner);
+        if (fallbackGroup) {
+          resolvedArmyGroupId = fallbackGroup.id;
+        }
+        // If no army group exists at all for this country, keep the original ID
+        // as a best-effort (divisionValidation will repair it in dev mode).
+      }
+
       // Create the division with bonuses
       const newDivision: Division = {
         id: `div-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         name: production.divisionName,
         owner: production.owner,
-        armyGroupId: production.armyGroupId,
+        armyGroupId: resolvedArmyGroupId,
         hp: divisionStats.hp,
         maxHp: divisionStats.maxHp,
         attack: divisionStats.attack,
