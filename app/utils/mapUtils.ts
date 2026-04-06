@@ -225,7 +225,7 @@ export function createInitialOwnership(
     const props = feature.properties;
     if (!props) continue;
     
-    // Use feature.id as the region ID (set by build scripts from shapeISO or shapeID)
+    // Use feature.id as the region ID (set by build scripts)
     const id = feature.id as string;
     if (!id) continue;
     

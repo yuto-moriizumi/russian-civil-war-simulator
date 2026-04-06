@@ -61,7 +61,7 @@ export function useMapEventHandlers(
     (e: MapLayerMouseEvent) => {
       const features = e.features;
       if (features && features.length > 0) {
-        const regionId = (features[0].id as string) || features[0].properties?.shapeID;
+        const regionId = features[0].id as string;
         if (regionId) {
           if (isSwitchModeActiveRef.current) {
             const region = regionsRef.current[regionId];
@@ -106,7 +106,7 @@ export function useMapEventHandlers(
       e.preventDefault();
       const features = e.features;
       if (features && features.length > 0) {
-        const targetRegionId = (features[0].id as string) || features[0].properties?.shapeID;
+        const targetRegionId = features[0].id as string;
         const currentSelectedMovement = selectedMovementIdRef.current;
         const currentSelectedUnit = selectedUnitRegionRef.current;
 

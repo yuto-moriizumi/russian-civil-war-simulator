@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     // Initialize adjacency lists
     for (const feature of features) {
-      const regionId = (feature.id as string) || feature.properties?.regionId;
+      const regionId = feature.id as string;
       if (regionId) {
         adjacency[regionId] = [];
       }

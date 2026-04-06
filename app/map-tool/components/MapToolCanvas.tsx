@@ -81,7 +81,7 @@ export default function MapToolCanvas({
   const regionNames = useMemo(() => {
     const names: Record<string, string> = {};
     geojson.features.forEach((feature) => {
-      const shapeId = (feature.id as string) || feature.properties?.regionId;
+      const shapeId = feature.id as string;
       const name =
         feature.properties?.shapeName ||
         feature.properties?.SHAPENAME ||
@@ -344,8 +344,7 @@ export default function MapToolCanvas({
           setIsPainting(true);
           const features = e.features;
           if (features && features.length > 0) {
-            const props = features[0].properties;
-        const regionId = (features[0].id as string) || props?.regionId || features[0].properties?.regionId;
+            const regionId = features[0].id as string;
             if (regionId) {
               onRegionPaint(regionId);
             }

@@ -414,7 +414,7 @@ export const createBasicActions = (
       const centroids: Record<string, [number, number]> = {};
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       geojson.features.forEach((feature: any) => {
-        // Use feature.id set by build scripts (shapeISO preferred, then shapeID)
+        // Use feature.id set by build scripts
         const id = feature.id as string;
         const centroid = turf.centroid(feature);
         const coords = centroid.geometry.coordinates;
