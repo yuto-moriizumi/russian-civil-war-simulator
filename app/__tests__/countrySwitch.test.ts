@@ -18,6 +18,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { initialUnitPlacement } from '../data/map/initialUnitPlacement';
 import { initialGameState } from '../store/game/initialState';
 import { runAITick } from '../ai/cpuPlayer';
+import { processProductionQueue } from '../store/game/tickHelpers/productionProcessing';
 import type {
   AIState,
   Division,
@@ -337,5 +338,200 @@ describe('selectCountry — production queue preservation on country switch', ()
 
     // Contrast: the fixed path retains it.
     expect(liveProductionQueues['iskolat' as CountryId]).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Regression — Bug 3: AI-produced divisions must always be associated with a
+// valid, existing army group.
+//
+// The bug: When a country switch happens, selectCountry regenerates army group
+// IDs for all countries (via createInitialAIArmyGroup) but preserves the live
+// productionQueues (Bug 2 fix).  Any queue items created before the switch still
+// carry the OLD army group IDs.  When processProductionQueue completes one of
+// those items it blindly copied production.armyGroupId to the new Division —
+// producing a division whose armyGroupId points to a non-existent army group.
+//
+// The fix adds a validation step in processProductionQueue: if the referenced
+// army group no longer exists (or is owned by a different country), fall back to
+// the first available group owned by the producing country.
+// ---------------------------------------------------------------------------
+
+describe('processProductionQueue — stale armyGroupId after country switch', () => {
+  const COUNTRY = 'white' as CountryId;
+
+  const emptyBonuses: CountryBonuses = {
+    attackBonus: 0,
+    defenceBonus: 0,
+    hpBonus: 0,
+    maxHpBonus: 0,
+    commandPowerBonus: 0,
+    productionSpeedMultiplier: 1,
+  };
+
+  function makeRegion(id: string): Region {
+    return {
+      id,
+      name: id,
+      countryIso3: 'RUS',
+      owner: COUNTRY,
+      divisions: [],
+      value: 1,
+    };
+  }
+
+  it('uses a valid army group when the queued armyGroupId no longer exists', () => {
+    // Simulate a production item that was enqueued with an OLD army group ID
+    // (before the country switch regenerated army group IDs).
+    const staleArmyGroupId = 'old-army-group-from-before-switch';
+    const newArmyGroupId = 'new-army-group-after-switch';
+
+    // Use explicit UTC timestamps to avoid timezone ambiguity in tests.
+    const pastTime = new Date('2020-01-01T00:00:00.000Z');
+    const currentTime = new Date('2020-01-02T00:00:00.000Z'); // clearly after completionTime
+
+    const queueItem: ProductionQueueItem = {
+      id: 'prod-1',
+      divisionName: '1st White Division',
+      owner: COUNTRY,
+      startTime: pastTime,
+      completionTime: pastTime, // already complete (completionTime is in the past)
+      targetRegionId: 'RU-A',
+      armyGroupId: staleArmyGroupId, // stale — this group no longer exists
+    };
+
+    const productionQueues = { [COUNTRY]: [queueItem] } as Record<CountryId, ProductionQueueItem[]>;
+
+    const regions: RegionState = { 'RU-A': makeRegion('RU-A') };
+
+    // The current army groups have a NEW id — the old one is gone.
+    const currentArmyGroups: ArmyGroup[] = [
+      {
+        id: newArmyGroupId,
+        name: 'White Army Group',
+        regionIds: ['RU-A'],
+        color: '#fff',
+        owner: COUNTRY,
+        theaterId: null,
+        mode: 'advance',
+      },
+    ];
+
+    const { updatedRegions } = processProductionQueue(
+      productionQueues,
+      currentTime,
+      regions,
+      { [COUNTRY]: emptyBonuses } as Record<CountryId, CountryBonuses>,
+      currentArmyGroups
+    );
+
+    // The produced division must be in the region
+    const divisions = updatedRegions['RU-A'].divisions;
+    expect(divisions).toHaveLength(1);
+
+    // And it must reference the new (valid) army group, NOT the stale one
+    expect(divisions[0].armyGroupId).toBe(newArmyGroupId);
+    expect(divisions[0].armyGroupId).not.toBe(staleArmyGroupId);
+  });
+
+  it('keeps a valid armyGroupId unchanged when the reference is still good', () => {
+    const validArmyGroupId = 'valid-army-group';
+
+    const pastTime = new Date('2020-01-01T00:00:00.000Z');
+    const currentTime = new Date('2020-01-02T00:00:00.000Z');
+
+    const queueItem: ProductionQueueItem = {
+      id: 'prod-2',
+      divisionName: '2nd White Division',
+      owner: COUNTRY,
+      startTime: pastTime,
+      completionTime: pastTime,
+      targetRegionId: 'RU-A',
+      armyGroupId: validArmyGroupId,
+    };
+
+    const productionQueues = { [COUNTRY]: [queueItem] } as Record<CountryId, ProductionQueueItem[]>;
+    const regions: RegionState = { 'RU-A': makeRegion('RU-A') };
+
+    const currentArmyGroups: ArmyGroup[] = [
+      {
+        id: validArmyGroupId,
+        name: 'White Army Group',
+        regionIds: ['RU-A'],
+        color: '#fff',
+        owner: COUNTRY,
+        theaterId: null,
+        mode: 'advance',
+      },
+    ];
+
+    const { updatedRegions } = processProductionQueue(
+      productionQueues,
+      currentTime,
+      regions,
+      { [COUNTRY]: emptyBonuses } as Record<CountryId, CountryBonuses>,
+      currentArmyGroups
+    );
+
+    const divisions = updatedRegions['RU-A'].divisions;
+    expect(divisions).toHaveLength(1);
+    expect(divisions[0].armyGroupId).toBe(validArmyGroupId);
+  });
+
+  it('does not reassign to an army group owned by a different country', () => {
+    // Simulate a queue item whose armyGroupId happens to match a group
+    // owned by a DIFFERENT country (edge case: ID collision / wrong owner).
+    const wrongOwnerGroupId = 'soviet-group';
+    const correctGroupId = 'white-group';
+
+    const pastTime = new Date('2020-01-01T00:00:00.000Z');
+    const currentTime = new Date('2020-01-02T00:00:00.000Z');
+
+    const queueItem: ProductionQueueItem = {
+      id: 'prod-3',
+      divisionName: '3rd White Division',
+      owner: COUNTRY,
+      startTime: pastTime,
+      completionTime: pastTime,
+      targetRegionId: 'RU-A',
+      armyGroupId: wrongOwnerGroupId,
+    };
+
+    const productionQueues = { [COUNTRY]: [queueItem] } as Record<CountryId, ProductionQueueItem[]>;
+    const regions: RegionState = { 'RU-A': makeRegion('RU-A') };
+
+    const currentArmyGroups: ArmyGroup[] = [
+      {
+        id: wrongOwnerGroupId,
+        name: 'Soviet Army Group',
+        regionIds: [],
+        color: '#f00',
+        owner: 'soviet' as CountryId, // wrong owner
+        theaterId: null,
+        mode: 'advance',
+      },
+      {
+        id: correctGroupId,
+        name: 'White Army Group',
+        regionIds: ['RU-A'],
+        color: '#fff',
+        owner: COUNTRY,
+        theaterId: null,
+        mode: 'advance',
+      },
+    ];
+
+    const { updatedRegions } = processProductionQueue(
+      productionQueues,
+      currentTime,
+      regions,
+      { [COUNTRY]: emptyBonuses } as Record<CountryId, CountryBonuses>,
+      currentArmyGroups
+    );
+
+    const divisions = updatedRegions['RU-A'].divisions;
+    expect(divisions).toHaveLength(1);
+    // Must not assign to the wrong-owner group; must use the correct White group
+    expect(divisions[0].armyGroupId).toBe(correctGroupId);
   });
 });

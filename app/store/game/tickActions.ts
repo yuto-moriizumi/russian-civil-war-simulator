@@ -51,7 +51,8 @@ export const createTickActions = (
       productionQueues,
       dateTime,
       updatedRegions,
-      state.countryBonuses
+      state.countryBonuses,
+      armyGroups
     );
     console.timeEnd('[tick] 2-production');
     
