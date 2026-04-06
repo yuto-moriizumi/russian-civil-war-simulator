@@ -192,14 +192,15 @@ export const createTickActions = (
         
         // Handle AI production requests
         if (aiActions.productionRequests.length > 0) {
-          // Get or initialize the country's queue
-          const countryQueue = nextProductionQueues[aiState.countryId] || [];
+          // Get or initialize the country's queue — always create a new array so
+          // we never mutate a reference that may point back to initialGameState.
+          const countryQueue = [...(nextProductionQueues[aiState.countryId] || [])];
           const bonuses = state.countryBonuses[aiState.countryId];
           const productionTimeHours = getBaseProductionTime(bonuses);
           
           aiActions.productionRequests.forEach(req => {
             const completionTime = new Date(newDate.getTime() + productionTimeHours * 60 * 60 * 1000);
-            countryQueue.push({
+            const newItem = {
               id: `prod-ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               divisionName: req.divisionName,
               owner: aiState.countryId,
@@ -207,7 +208,8 @@ export const createTickActions = (
               completionTime,
               targetRegionId: req.targetRegionId,
               armyGroupId: req.armyGroupId,
-            });
+            };
+            countryQueue.push(newItem);
           });
           
           // Update the country's queue

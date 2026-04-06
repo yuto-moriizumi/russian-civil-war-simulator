@@ -202,7 +202,11 @@ export const createBasicActions = (
       playerArmyGroups.push(playerArmyGroup);
     }
     
-    // Reset all game state for a fresh start
+    // Reset all game state for a fresh start, but preserve live game state that
+    // should survive a country switch: production queues, date/time, game events,
+    // notifications, active combats, moving units, country bonuses, relationships,
+    // scheduled events, and theaters.
+    const currentState = get();
     set({
       ...initialGameState,
       selectedCountry: country,
@@ -213,10 +217,23 @@ export const createBasicActions = (
       placementArmyGroups,
       // Keep the regions and adjacency from map data (these are static), but
       // overlay any divisions from unit placement
-      regions: Object.keys(regionsWithUnits).length > 0 ? regionsWithUnits : get().regions,
-      adjacency: get().adjacency,
-      mapDataLoaded: get().mapDataLoaded,
-      regionCentroids: get().regionCentroids, // Preserve loaded centroids
+      regions: Object.keys(regionsWithUnits).length > 0 ? regionsWithUnits : currentState.regions,
+      adjacency: currentState.adjacency,
+      mapDataLoaded: currentState.mapDataLoaded,
+      regionCentroids: currentState.regionCentroids,
+      // Preserve live game state across country switch
+      productionQueues: currentState.productionQueues,
+      dateTime: currentState.dateTime,
+      isPlaying: currentState.isPlaying,
+      gameSpeed: currentState.gameSpeed,
+      gameEvents: currentState.gameEvents,
+      notifications: currentState.notifications,
+      activeCombats: currentState.activeCombats,
+      movingUnits: currentState.movingUnits,
+      countryBonuses: currentState.countryBonuses,
+      relationships: currentState.relationships,
+      scheduledEvents: currentState.scheduledEvents,
+      theaters: currentState.theaters,
     });
     
     // Detect theaters when game starts (synchronous so the select is populated immediately)
