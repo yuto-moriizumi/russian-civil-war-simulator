@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { Polygon, MultiPolygon } from 'geojson';
 import * as turf from '@turf/turf';
 import type { RegionFeatureCollection } from '../../../../types';
 
@@ -51,8 +50,8 @@ export async function POST(request: NextRequest) {
 
         try {
           // Check if boundaries touch or intersect
-          const geometryA = featureA.geometry as Polygon | MultiPolygon;
-          const geometryB = featureB.geometry as Polygon | MultiPolygon;
+          const geometryA = featureA.geometry;
+          const geometryB = featureB.geometry;
 
           if (turf.booleanIntersects(geometryA, geometryB)) {
             adjacency[idA].push(idB);
@@ -76,7 +75,7 @@ export async function POST(request: NextRequest) {
       if (!idA) continue;
 
       try {
-        const geometryA = featureA.geometry as Polygon | MultiPolygon;
+        const geometryA = featureA.geometry;
         const bufferedA = turf.buffer(geometryA, bufferKm, { units: 'kilometers' });
         if (!bufferedA) continue;
 
@@ -89,7 +88,7 @@ export async function POST(request: NextRequest) {
           if (adjacency[idA].includes(idB)) continue;
 
           try {
-            const geometryB = featureB.geometry as Polygon | MultiPolygon;
+            const geometryB = featureB.geometry;
             
             if (turf.booleanIntersects(bufferedA, geometryB)) {
               adjacency[idA].push(idB);
@@ -116,7 +115,7 @@ export async function POST(request: NextRequest) {
 
         try {
           // This region has no adjacencies yet - check if it's inside another region
-          const geometry = feature.geometry as Polygon | MultiPolygon;
+          const geometry = feature.geometry;
           const centroid = turf.centroid(geometry);
 
           for (const otherFeature of features) {
@@ -124,7 +123,7 @@ export async function POST(request: NextRequest) {
             if (!otherId || otherId === regionId) continue;
 
             try {
-              const otherGeometry = otherFeature.geometry as Polygon | MultiPolygon;
+              const otherGeometry = otherFeature.geometry;
               
               if (turf.booleanPointInPolygon(centroid, otherGeometry)) {
                 adjacency[regionId].push(otherId);

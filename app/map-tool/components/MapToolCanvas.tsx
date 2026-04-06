@@ -10,10 +10,9 @@ import Map, {
   NavigationControl,
 } from "react-map-gl/maplibre";
 import type { MapLayerMouseEvent } from "react-map-gl/maplibre";
-import type { Feature, Geometry } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { CountryId } from "../../types/game";
-import type { RegionFeatureCollection } from "../../../types";
+import type { RegionFeature, RegionFeatureCollection } from "../../../types";
 import { getCountryColor, COUNTRY_FLAGS } from "../../data/countries";
 import { UnitPlacementData } from "../../data/map/initialUnitPlacement";
 import * as turf from "@turf/turf";
@@ -126,7 +125,7 @@ export default function MapToolCanvas({
       const regionId = feature.id as string;
       if (!regionId) continue;
       try {
-        const center = turf.centroid(feature as Feature<Geometry>);
+        const center = turf.centroid(feature as RegionFeature);
         const [lng, lat] = center.geometry.coordinates;
         centroids[regionId] = [lng, lat];
       } catch {

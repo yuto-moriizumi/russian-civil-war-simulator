@@ -5,9 +5,8 @@
  */
 
 import * as turf from '@turf/turf';
-import type { Feature, Polygon, MultiPolygon } from 'geojson';
 import type RBush from 'rbush';
-import type { Adjacency, RegionFeatureCollection } from './types.js';
+import type { Adjacency, RegionFeature, RegionFeatureCollection } from './types.js';
 import { computeBBox } from './geometry-utils.js';
 import { buildSpatialIndex, queryCrossBorder, querySameCountry, type IndexedFeature } from './spatial-index.js';
 
@@ -42,15 +41,16 @@ export function detectCrossBorderAdjacency(
   }
   
   // 2. バッファ付きジオメトリを遅延キャッシュ（必要なときのみ計算）
-  const bufferCache = new Map<string, Feature>();
-  const getBuffered = (regionId: string, feature: Feature): Feature | null => {
+  // turf.buffer returns Feature<Polygon|MultiPolygon>, which is a subtype of RegionFeature's geometry shape.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const bufferCache = new Map<string, any>();
+  const getBuffered = (regionId: string, feature: RegionFeature) => {
     if (bufferCache.has(regionId)) {
-      return bufferCache.get(regionId)!;
+      return bufferCache.get(regionId);
     }
     
     try {
-      const geom = feature.geometry as Polygon | MultiPolygon;
-      const buffered = turf.buffer(turf.feature(geom), 2, { units: 'kilometers' });
+      const buffered = turf.buffer(feature, 2, { units: 'kilometers' });
       if (buffered) {
         bufferCache.set(regionId, buffered);
         return buffered;
@@ -173,8 +173,8 @@ export function detectSameCountryAdjacency(
       
       // 直接交差判定
       try {
-        const geomA = feature.geometry as Polygon | MultiPolygon;
-        const geomB = candidate.feature.geometry as Polygon | MultiPolygon;
+        const geomA = feature.geometry;
+        const geomB = candidate.feature.geometry;
         
         if (turf.booleanIntersects(turf.feature(geomA), turf.feature(geomB))) {
           if (!adjacency[idA]) adjacency[idA] = [];
@@ -226,7 +226,7 @@ export function detectIsolatedRegionAdjacency(
   let addedCount = 0;
   
   // 孤立したリージョンを検出
-  const isolatedRegions: Feature[] = [];
+  const isolatedRegions: RegionFeature[] = [];
   for (const feature of mergedGeoJSON.features) {
     const regionId = feature.id as string;
     if (regionId && (!adjacency[regionId] || adjacency[regionId].length === 0)) {
@@ -260,8 +260,8 @@ export function detectIsolatedRegionAdjacency(
       if (candidateId === isolatedId) continue;
       
       try {
-        const isolatedGeom = isolatedFeature.geometry as Polygon | MultiPolygon;
-        const candidateGeom = candidate.feature.geometry as Polygon | MultiPolygon;
+        const isolatedGeom = isolatedFeature.geometry;
+        const candidateGeom = candidate.feature.geometry;
         
         // 包含または交差をチェック
         const isolatedCentroid = turf.centroid(turf.feature(isolatedGeom));

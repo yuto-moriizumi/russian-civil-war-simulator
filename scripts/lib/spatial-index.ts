@@ -6,7 +6,7 @@
  */
 
 import RBush from 'rbush';
-import type { Feature } from 'geojson';
+import type { RegionFeature } from './types.js';
 import { computeBBox } from './geometry-utils.js';
 
 /**
@@ -17,7 +17,7 @@ export interface IndexedFeature {
   minY: number;
   maxX: number;
   maxY: number;
-  feature: Feature;
+  feature: RegionFeature;
   regionId: string;
   countryIso3: string;
 }
@@ -30,7 +30,7 @@ export interface IndexedFeature {
  * @param features - Array of GeoJSON features to index
  * @returns RBush spatial index
  */
-export function buildSpatialIndex(features: Feature[]): RBush<IndexedFeature> {
+export function buildSpatialIndex(features: RegionFeature[]): RBush<IndexedFeature> {
   const tree = new RBush<IndexedFeature>();
   
   const items: IndexedFeature[] = [];

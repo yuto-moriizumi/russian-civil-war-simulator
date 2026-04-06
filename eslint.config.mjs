@@ -31,27 +31,48 @@ const eslintConfig = defineConfig([
       ],
       // Change @typescript-eslint/no-unused-vars to error level
       "@typescript-eslint/no-unused-vars": "error",
-      // Prohibit importing FeatureCollection from the geojson package directly.
-      // Use RegionFeatureCollection (and related types) from app/types/game.ts instead.
+      // Prohibit importing Feature, FeatureCollection, or GeoJSON from the geojson
+      // package directly. Use RegionFeature / RegionFeatureCollection from /types.ts
+      // (repo root) instead.
       "no-restricted-imports": [
         "error",
         {
           paths: [
             {
               name: "geojson",
+              importNames: ["Feature"],
+              message:
+                "Use RegionFeature from /types.ts instead of the generic Feature. " +
+                "If you need a buffer-result type, derive it from turf return types.",
+            },
+            {
+              name: "geojson",
               importNames: ["FeatureCollection"],
               message:
-                "Use RegionFeatureCollection from app/types/game.ts instead of the generic FeatureCollection.",
+                "Use RegionFeatureCollection from /types.ts instead of the generic FeatureCollection.",
+            },
+            {
+              name: "geojson",
+              importNames: ["GeoJSON"],
+              message:
+                "Use RegionFeature / RegionFeatureCollection from /types.ts instead of the generic GeoJSON type.",
             },
           ],
         },
       ],
     },
   },
-  // types.ts (repo root) and app/types/** are the canonical homes for our
-  // GeoJSON type wrappers, so they are allowed to import FeatureCollection directly.
+  // types.ts (repo root), app/types/**, scripts/lib/geometry-utils.ts, and
+  // scripts/lib/spatial-index.ts are the canonical homes for our GeoJSON type
+  // wrappers, or define public APIs that require low-level geojson types.
+  // They are allowed to import Feature/FeatureCollection/GeoJSON directly.
   {
-    files: ["types.ts", "app/types/**/*.ts"],
+    files: [
+      "types.ts",
+      "app/types/**/*.ts",
+      "scripts/lib/geometry-utils.ts",
+      "scripts/lib/spatial-index.ts",
+    ],
     rules: {
       "no-restricted-imports": "off",
     },

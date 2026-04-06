@@ -2,7 +2,6 @@
 
 import { useRef, useState, useCallback, useMemo } from 'react';
 import Map, { MapRef, Source, Layer, NavigationControl } from 'react-map-gl/maplibre';
-import type { GeoJSON } from 'geojson';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useGameStore } from '../store/useGameStore';
 
@@ -108,8 +107,8 @@ export default function GameMap() {
   /**
    * Build a GeoJSON LineString for the selected movement's planned path.
    */
-  const movementPathGeoJSON = useMemo((): GeoJSON => {
-    const features: GeoJSON.Feature[] = [];
+  const movementPathGeoJSON = useMemo(() => {
+    const features: { type: 'Feature'; geometry: { type: 'LineString'; coordinates: [number, number][] }; properties: { movementId: string } }[] = [];
 
     const movementsToShow: typeof movingUnits = [];
     if (selectedMovementId) {
@@ -135,7 +134,7 @@ export default function GameMap() {
       }
     }
 
-    return { type: 'FeatureCollection', features };
+    return { type: 'FeatureCollection' as const, features };
   }, [selectedMovementId, selectedUnitRegion, movingUnits, regionCentroids]);
 
   // Memoized style objects
