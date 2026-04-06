@@ -113,7 +113,7 @@ export const createTickActions = (
     // Step 6: Apply completed movements to regions
     console.time('[tick] 6-apply-movements');
     let nextRegions: typeof regionsAfterEvents;
-    const { nextCombats, nextEvents, nextNotifications, interceptedMovementIds } = (() => {
+    const { nextCombats, nextEvents, nextNotifications, interceptedMovementIds, newHopMovements } = (() => {
       const result = applyCompletedMovements(
         completedMovements,
         updatedMovingUnits,
@@ -124,6 +124,7 @@ export const createTickActions = (
           events: [...gameEvents, ...newCombatEvents, ...productionEvents, ...scheduledEventEvents],
           notifications: [...notifications, ...newCombatNotifications, ...productionNotifications, ...scheduledEventNotifications],
           relationships: relationshipsAfterEvents,
+          regionCentroids,
         },
         newDate
       );
@@ -139,8 +140,9 @@ export const createTickActions = (
     //   - intercepted movements
     //   - movements whose linked combat just finished (their result is already
     //     applied by applyFinishedCombats; keeping them would double the divisions)
+    // Also include newHopMovements from multi-step routes.
     const finishedCombatIds = new Set(finishedCombats.map(c => c.id));
-    const nextMovingUnits = [...remainingMovements, ...retreatMovements].filter(m =>
+    const nextMovingUnits = [...remainingMovements, ...retreatMovements, ...newHopMovements].filter(m =>
       !interceptedMovementIds.includes(m.id) &&
       !(m.pendingCombatId && finishedCombatIds.has(m.pendingCombatId))
     );

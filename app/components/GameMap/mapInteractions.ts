@@ -1,6 +1,5 @@
 import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import type { RegionState, Adjacency, CountryId } from '../../types/game';
-import { getAdjacentRegions } from '../../utils/mapUtils';
 
 interface MapClickHandlerProps {
   selectedRegion: string | null;
@@ -44,6 +43,7 @@ export function createMapClickHandler({
 interface MapContextMenuHandlerRefs {
   selectedUnitRegionRef: React.MutableRefObject<string | null>;
   regionsRef: React.MutableRefObject<RegionState>;
+  // adjacencyRef kept for API compatibility but no longer used for the adjacency gate
   adjacencyRef: React.MutableRefObject<Adjacency>;
   onMoveUnitsRef: React.MutableRefObject<(fromRegion: string, toRegion: string, count: number) => void>;
   onUnitSelectRef: React.MutableRefObject<(regionId: string | null) => void>;
@@ -54,7 +54,6 @@ interface MapContextMenuHandlerRefs {
 export function createContextMenuHandler({
   selectedUnitRegionRef,
   regionsRef,
-  adjacencyRef,
   onMoveUnitsRef,
   onUnitSelectRef,
   onCountrySelectRef,
@@ -68,22 +67,19 @@ export function createContextMenuHandler({
       const currentSelectedUnit = selectedUnitRegionRef.current;
       
       let moved = false;
-      // Check if we have a unit selected and this is an adjacent region
+      // Check if we have a unit selected and this is a different region.
+      // moveUnits handles both adjacent (single-hop) and non-adjacent (multi-step
+      // via pathfinding) targets — no adjacency gate needed here.
       if (currentSelectedUnit && targetRegionId && targetRegionId !== currentSelectedUnit) {
-        const adjacentRegions = getAdjacentRegions(adjacencyRef.current, currentSelectedUnit);
-        if (adjacentRegions.includes(targetRegionId)) {
-          const sourceRegion = regionsRef.current[currentSelectedUnit];
-          if (sourceRegion && sourceRegion.divisions.length > 0) {
-            // Move all units (or could use unitsToMove for partial)
-            onMoveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.divisions.length);
-            onUnitSelectRef.current(null);
-            moved = true;
-          }
+        const sourceRegion = regionsRef.current[currentSelectedUnit];
+        if (sourceRegion && sourceRegion.divisions.length > 0) {
+          onMoveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.divisions.length);
+          onUnitSelectRef.current(null);
+          moved = true;
         }
       }
 
       // Open country sidebar for the target region's owner if not moved
-      // Or maybe always open it? The requirement says "can be opened by right clicking region"
       if (!moved && targetRegionId) {
         const targetRegion = regionsRef.current[targetRegionId];
         if (targetRegion) {

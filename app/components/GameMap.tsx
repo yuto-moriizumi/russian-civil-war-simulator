@@ -5,7 +5,6 @@ import Map, { MapRef, Source, Layer, NavigationControl } from 'react-map-gl/mapl
 import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useGameStore } from '../store/useGameStore';
-import { getAdjacentRegions } from '../utils/mapUtils';
 import { COUNTRY_METADATA } from '../data/countryMetadata';
 
 import { UnitMarker, MovingUnitMarker, CombatMarker } from './GameMap/MapMarkers';
@@ -198,17 +197,16 @@ export default function GameMap() {
         const currentSelectedUnit = selectedUnitRegionRef.current;
         
         let moved = false;
-        // Check if we have a unit selected and this is an adjacent region
+        // Check if we have a unit selected and this is a different region.
+        // The underlying moveUnits will handle both adjacent (single-hop) and
+        // non-adjacent (multi-step via pathfinding) targets.
         if (currentSelectedUnit && targetRegionId && targetRegionId !== currentSelectedUnit) {
-          const adjacentRegions = getAdjacentRegions(adjacencyRef.current, currentSelectedUnit);
-          if (adjacentRegions.includes(targetRegionId)) {
-            const sourceRegion = regionsRef.current[currentSelectedUnit];
-            if (sourceRegion && sourceRegion.divisions.length > 0) {
-              // Move all units (or could use unitsToMove for partial)
-              moveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.divisions.length);
-              setSelectedUnitRegionRef.current(null);
-              moved = true;
-            }
+          const sourceRegion = regionsRef.current[currentSelectedUnit];
+          if (sourceRegion && sourceRegion.divisions.length > 0) {
+            // Move all units — moveUnits will compute the path if not adjacent
+            moveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.divisions.length);
+            setSelectedUnitRegionRef.current(null);
+            moved = true;
           }
         }
 
