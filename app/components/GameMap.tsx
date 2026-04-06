@@ -34,6 +34,7 @@ export default function GameMap() {
   const activeCombats = useGameStore(state => state.activeCombats);
   const currentDateTime = useGameStore(state => state.dateTime);
   const playerCountry = useGameStore(state => state.selectedCountry?.id);
+  const playerCoreRegions = useGameStore(state => state.selectedCountry?.coreRegions);
   const theaters = useGameStore(state => state.theaters);
   const selectedTheaterId = useGameStore(state => state.selectedTheaterId);
   const selectedGroupId = useGameStore(state => state.selectedGroupId);
@@ -81,8 +82,8 @@ export default function GameMap() {
 
   // Map style expressions
   const fillColorExpression = useMemo(() =>
-    playerCountry ? createMapModeFillColorExpression(mapMode, regions, playerCountry, getRelationship) : ['case', ['boolean', ['has', 'countryIso3'], false], '#555', '#000'],
-    [mapMode, regions, playerCountry, getRelationship]
+    playerCountry ? createMapModeFillColorExpression(mapMode, regions, playerCountry, playerCoreRegions, getRelationship) : ['case', ['boolean', ['has', 'countryIso3'], false], '#555', '#000'],
+    [mapMode, regions, playerCountry, playerCoreRegions, getRelationship]
   );
   const lineColorExpression = useMemo(() => createLineColorExpression(), []);
   const lineWidthExpression = useMemo(() => createLineWidthExpression(), []);
