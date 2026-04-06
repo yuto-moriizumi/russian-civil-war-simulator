@@ -13,6 +13,7 @@ import { describe, it, expect } from 'vitest';
 import { canMoveTo, getAdjacentRegions } from '../utils/mapUtils';
 import { calculateTravelTime, MOVEMENT_SPEED_KM_PER_HOUR } from '../utils/distance';
 import { processMovements } from '../store/game/tickHelpers/movementProcessing';
+import { findPath, getNextStepToward } from '../utils/pathfinding';
 import type {
   Division,
   Movement,
@@ -264,6 +265,81 @@ describe('processMovements', () => {
     expect(completedMovements[0].id).toBe('mv-done');
     expect(remainingMovements).toHaveLength(1);
     expect(remainingMovements[0].id).toBe('mv-pending');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 4. findPath / getNextStepToward (multi-step pathfinding)
+// ---------------------------------------------------------------------------
+
+describe('findPath', () => {
+  //  A - B - C
+  const adjacency: Adjacency = {
+    A: ['B'],
+    B: ['A', 'C'],
+    C: ['B'],
+  };
+
+  it('returns empty array when source equals destination', () => {
+    expect(findPath('A', 'A', adjacency)).toEqual([]);
+  });
+
+  it('returns direct hop for adjacent regions', () => {
+    expect(findPath('A', 'B', adjacency)).toEqual(['B']);
+  });
+
+  it('returns two-hop path when connected via intermediate', () => {
+    // A is not directly adjacent to C; must go via B
+    expect(findPath('A', 'C', adjacency)).toEqual(['B', 'C']);
+  });
+
+  it('returns null when destination is unreachable', () => {
+    const isolated: Adjacency = { A: ['B'], B: ['A'], D: [] };
+    expect(findPath('A', 'D', isolated)).toBeNull();
+  });
+
+  it('respects canEnter predicate to block specific regions', () => {
+    //  A - B - C   (B is blocked)
+    const canEnter = (id: string) => id !== 'B';
+    // Cannot route through B, so C is unreachable
+    expect(findPath('A', 'C', adjacency, canEnter)).toBeNull();
+  });
+
+  it('finds longer path around a blocked region', () => {
+    //  A - B - C
+    //  |       |
+    //  D ------+  (D is an alternative route from A to C avoiding B)
+    const adj2: Adjacency = {
+      A: ['B', 'D'],
+      B: ['A', 'C'],
+      C: ['B', 'D'],
+      D: ['A', 'C'],
+    };
+    const canEnter = (id: string) => id !== 'B';
+    // Should route A → D → C
+    expect(findPath('A', 'C', adj2, canEnter)).toEqual(['D', 'C']);
+  });
+});
+
+describe('getNextStepToward', () => {
+  const adjacency: Adjacency = {
+    A: ['B'],
+    B: ['A', 'C'],
+    C: ['B'],
+  };
+
+  it('returns the first hop toward a distant destination', () => {
+    // A → C should return B as first step
+    expect(getNextStepToward('A', 'C', adjacency)).toBe('B');
+  });
+
+  it('returns destination directly if adjacent', () => {
+    expect(getNextStepToward('A', 'B', adjacency)).toBe('B');
+  });
+
+  it('returns null when destination is unreachable', () => {
+    const isolated: Adjacency = { A: ['B'], B: ['A'], D: [] };
+    expect(getNextStepToward('A', 'D', isolated)).toBeNull();
   });
 });
 

@@ -6,6 +6,7 @@ import { ARMY_GROUP_COLORS } from './initialState';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
+import { findPath, buildCanEnterPredicate } from '../../utils/pathfinding';
 
 /**
  * Defines actions related to unit creation, deployment, and movement:
@@ -143,10 +144,31 @@ export const createUnitActions = (
 
   moveUnits: (fromRegion: string, toRegion: string, count: number) => {
     const { adjacency, regions, selectedCountry, dateTime, movingUnits, relationships, activeCombats, gameEvents, notifications } = get();
-    if (!adjacency[fromRegion]?.includes(toRegion)) return;
+
+    // --- Multi-step movement: if toRegion is not directly adjacent, find a path ---
+    const isDirectlyAdjacent = adjacency[fromRegion]?.includes(toRegion);
+    let firstHop = toRegion;
+    let remainingPath: string[] | undefined;
+    if (!isDirectlyAdjacent) {
+      const canEnter = buildCanEnterPredicate(selectedCountry?.id ?? ('' as import('../../types/game').CountryId), regions, relationships);
+      const path = findPath(fromRegion, toRegion, adjacency, canEnter);
+      if (!path || path.length === 0) {
+        console.warn(`Cannot move from ${fromRegion} to ${toRegion}: no accessible path found`);
+        return;
+      }
+      firstHop = path[0];
+      // remainingPath is everything after the first hop (may be empty for a 2-hop path)
+      remainingPath = path.slice(1);
+    }
+
+    // From here on, we move to `firstHop` (which is always adjacent to fromRegion)
+    const actualToRegion = firstHop;
+    const finalDestination = remainingPath && remainingPath.length > 0 ? toRegion : undefined;
+
+    if (!adjacency[fromRegion]?.includes(actualToRegion)) return;
     
     const from = regions[fromRegion];
-    const to = regions[toRegion];
+    const to = regions[actualToRegion];
     if (!from || from.divisions.length < count || !selectedCountry) return;
 
     // Allow movement from owned regions OR ally regions where the player has
@@ -172,7 +194,7 @@ export const createUnitActions = (
       if (!hasAccess || !hasOurDivisions) return;
     }
     
-    // Check relationship with target region owner
+    // Check relationship with the first-hop target region owner
     const targetOwner = to.owner;
     if (targetOwner !== selectedCountry.id) {
       // Moving to another country's territory
@@ -207,21 +229,26 @@ export const createUnitActions = (
     const ownDivisions = from.divisions.filter(d => d.owner === selectedCountry.id);
     const divisionsToMove = ownDivisions.slice(0, count);
     
-    // Calculate distance-based travel time
+    // Calculate distance-based travel time (only for the first hop)
     const { regionCentroids } = get();
-    const distanceKm = calculateDistance(fromRegion, toRegion, regionCentroids);
+    const distanceKm = calculateDistance(fromRegion, actualToRegion, regionCentroids);
     const travelTimeHours = calculateTravelTime(distanceKm, false);
     
-    console.log(`Moving from ${from.name} to ${to.name}: ${Math.round(distanceKm)} km, ${travelTimeHours.toFixed(1)} hours (${Math.floor(travelTimeHours / 24)}d ${Math.round(travelTimeHours % 24)}h)`);
+    const destLabel = finalDestination
+      ? `${to.name} → … → ${regions[finalDestination]?.name ?? finalDestination}`
+      : to.name;
+    console.log(`Moving from ${from.name} to ${destLabel} (first hop: ${to.name}): ${Math.round(distanceKm)} km, ${travelTimeHours.toFixed(1)} hours (${Math.floor(travelTimeHours / 24)}d ${Math.round(travelTimeHours % 24)}h)`);
     
     const arrivalTime = new Date(dateTime);
     arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
 
-    // Determine if this movement is heading into enemy territory
+    // Determine if this movement is heading into enemy territory (first hop only)
     const isEnemy = targetOwner !== selectedCountry.id;
     const theyGrantUs = relationships.find(r => r.fromCountry === targetOwner && r.toCountry === selectedCountry.id)?.type ?? 'neutral';
     const weDeclared = relationships.find(r => r.fromCountry === selectedCountry.id && r.toCountry === targetOwner)?.type ?? 'neutral';
     const hasAutonomy = theyGrantUs === 'autonomy' || weDeclared === 'autonomy';
+    // For multi-step movement through friendly territory, first hop is not hostile even if
+    // the final destination would be — hostility is evaluated hop by hop at arrival.
     const isHostile = isEnemy && !hasAutonomy && theyGrantUs !== 'military_access';
 
     let newCombat: ActiveCombat | null = null;
@@ -239,7 +266,7 @@ export const createUnitActions = (
     let nextNotifications = notifications;
 
     if (isHostile) {
-      const existingCombat = activeCombats.find(c => c.regionId === toRegion && !c.isComplete);
+      const existingCombat = activeCombats.find(c => c.regionId === actualToRegion && !c.isComplete);
       if (existingCombat) {
         // Reinforce attacker side of the existing combat
         nextActiveCombats = activeCombats.map(c => {
@@ -258,12 +285,13 @@ export const createUnitActions = (
         const newMovement: Movement = {
           id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           fromRegion,
-          toRegion,
+          toRegion: actualToRegion,
           divisions: divisionsToMove,
           departureTime: new Date(dateTime),
           arrivalTime,
           owner: selectedCountry.id,
           pendingCombatId: existingCombat.id,
+          ...(remainingPath && remainingPath.length > 0 ? { remainingPath, finalDestination } : {}),
         };
         set({
           regions: nextRegions,
@@ -278,7 +306,7 @@ export const createUnitActions = (
       if (defenderDivisions.length > 0) {
         // Create combat immediately — divisions in transit are the attackers
         newCombat = createActiveCombat(
-          toRegion,
+          actualToRegion,
           to.name,
           selectedCountry.id,
           to.owner,
@@ -289,7 +317,7 @@ export const createUnitActions = (
         // Clear defender divisions from region (absorbed into combat)
         nextRegions = {
           ...nextRegions,
-          [toRegion]: { ...to, divisions: [] },
+          [actualToRegion]: { ...to, divisions: [] },
         };
         nextActiveCombats = [...activeCombats, newCombat];
 
@@ -299,7 +327,7 @@ export const createUnitActions = (
           `${selectedCountry.id === 'soviet' ? 'Soviet' : 'White'} forces (${divisionsToMove.length} divisions) are advancing on ${to.owner === 'soviet' ? 'Soviet' : 'White'} defenders (${defenderDivisions.length} divisions) at ${to.name}.`,
           dateTime,
           selectedCountry.id,
-          toRegion
+          actualToRegion
         );
         nextGameEvents = [...gameEvents, battleEvent];
         nextNotifications = [...notifications, createNotification(battleEvent, dateTime)];
@@ -311,12 +339,13 @@ export const createUnitActions = (
     const newMovement: Movement = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       fromRegion,
-      toRegion,
+      toRegion: actualToRegion,
       divisions: divisionsToMove,
       departureTime: new Date(dateTime),
       arrivalTime,
       owner: selectedCountry.id,
       ...(newCombat ? { pendingCombatId: newCombat.id } : {}),
+      ...(remainingPath && remainingPath.length > 0 ? { remainingPath, finalDestination } : {}),
     };
     
     set({

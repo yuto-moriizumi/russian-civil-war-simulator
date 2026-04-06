@@ -1,6 +1,7 @@
 import { Movement, ActiveCombat, Region, GameEvent, NotificationItem, Relationship } from '../../../types/game';
 import { createActiveCombat } from '../../../utils/combat';
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
+import { calculateDistance, calculateTravelTime } from '../../../utils/distance';
 
 interface MovementApplicationContext {
   regions: Record<string, Region>;
@@ -10,6 +11,8 @@ interface MovementApplicationContext {
   events: GameEvent[];
   notifications: NotificationItem[];
   relationships: Relationship[];
+  /** Centroids for calculating per-hop travel time on multi-step routes */
+  regionCentroids?: Record<string, [number, number]>;
 }
 
 interface MovementApplicationResult {
@@ -18,12 +21,18 @@ interface MovementApplicationResult {
   nextEvents: GameEvent[];
   nextNotifications: NotificationItem[];
   interceptedMovementIds: string[];
+  /** New movements that were dispatched for the next hop of a multi-step route */
+  newHopMovements: Movement[];
 }
 
 /**
  * Applies completed movements to regions, handling friendly reinforcements,
  * combat reinforcements, undefended captures, and initiating new combats.
  * Also detects meeting engagements where opposing forces are moving into each other's territory.
+ *
+ * For multi-step movements (those with a `remainingPath`): when a movement arrives
+ * at an intermediate region without triggering combat, the next hop is automatically
+ * dispatched as a new Movement record instead of landing the divisions in place.
  */
 export function applyCompletedMovements(
   completedMovements: Movement[],
@@ -36,6 +45,7 @@ export function applyCompletedMovements(
   const nextEvents = [...context.events];
   const nextNotifications = [...context.notifications];
   const interceptedMovementIds: string[] = [];
+  const newHopMovements: Movement[] = [];
 
   completedMovements.forEach(movement => {
     // Skip if this movement was already intercepted as a counter-movement
@@ -59,11 +69,17 @@ export function applyCompletedMovements(
     }
 
     if (to.owner === owner) {
-      // Friendly region - just add divisions
-      nextRegions[toRegion] = {
-        ...to,
-        divisions: [...to.divisions, ...divisions],
-      };
+      // Friendly region
+      if (movement.remainingPath && movement.remainingPath.length > 0) {
+        // Multi-step: don't land here — dispatch next hop
+        _dispatchNextHop(movement, nextRegions, currentDate, newHopMovements, context);
+      } else {
+        // Final destination — land units
+        nextRegions[toRegion] = {
+          ...to,
+          divisions: [...to.divisions, ...divisions],
+        };
+      }
     } else {
       // Enemy region - check relationship type
       // Check if they grant us access/war
@@ -91,10 +107,15 @@ export function applyCompletedMovements(
       
       if (effectiveRelationship === 'military_access' || effectiveRelationship === 'autonomy') {
         // Military access - units can move but no occupation or combat
-        nextRegions[toRegion] = {
-          ...to,
-          divisions: [...to.divisions, ...divisions],
-        };
+        if (movement.remainingPath && movement.remainingPath.length > 0) {
+          // Multi-step: pass through with military access — dispatch next hop
+          _dispatchNextHop(movement, nextRegions, currentDate, newHopMovements, context);
+        } else {
+          nextRegions[toRegion] = {
+            ...to,
+            divisions: [...to.divisions, ...divisions],
+          };
+        }
         console.log(`[MILITARY ACCESS] ${divisions.length} ${owner} divisions moved to ${to.name} with military access`);
         
       } else if (effectiveRelationship === 'war' || effectiveRelationship === 'neutral') {
@@ -237,6 +258,14 @@ export function applyCompletedMovements(
             );
             nextEvents.push(lostEvent);
             nextNotifications.push(createNotification(lostEvent, currentDate));
+
+            // After capturing, continue the multi-step route if there are more hops
+            if (movement.remainingPath && movement.remainingPath.length > 0) {
+              // The region is now ours — dispatch next hop from the freshly captured region
+              const updatedMovement = { ...movement };
+              // Update regions snapshot so next hop sees the captured region as ours
+              _dispatchNextHop(updatedMovement, nextRegions, currentDate, newHopMovements, context);
+            }
           } else {
             // Initiate new combat
             const newCombat = createActiveCombat(
@@ -259,13 +288,56 @@ export function applyCompletedMovements(
               toRegion
             );
             nextEvents.push(battleEvent);
+            // Note: multi-step is halted when combat occurs; the player must re-issue orders
+            // after the battle resolves.
           }
         }
       }
     }
   });
 
-  return { nextRegions, nextCombats, nextEvents, nextNotifications, interceptedMovementIds };
+  return { nextRegions, nextCombats, nextEvents, nextNotifications, interceptedMovementIds, newHopMovements };
+}
+
+/**
+ * Helper: dispatch the next hop movement for a multi-step route.
+ * Pops the first element from `movement.remainingPath` as the new `toRegion`
+ * and creates a new Movement record with the rest as the new `remainingPath`.
+ */
+function _dispatchNextHop(
+  movement: Movement,
+  regions: Record<string, Region>,
+  currentDate: Date,
+  newHopMovements: Movement[],
+  context: Pick<MovementApplicationContext, 'regionCentroids'>
+): void {
+  if (!movement.remainingPath || movement.remainingPath.length === 0) return;
+
+  const [nextRegionId, ...restPath] = movement.remainingPath;
+  const fromRegionId = movement.toRegion; // Current arrival region becomes the new departure
+
+  const regionCentroids = context.regionCentroids ?? {};
+  const distanceKm = calculateDistance(fromRegionId, nextRegionId, regionCentroids);
+  const travelTimeHours = calculateTravelTime(distanceKm, false);
+
+  const arrivalTime = new Date(currentDate);
+  arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
+
+  const nextHop: Movement = {
+    id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    fromRegion: fromRegionId,
+    toRegion: nextRegionId,
+    divisions: movement.divisions,
+    departureTime: new Date(currentDate),
+    arrivalTime,
+    owner: movement.owner,
+    ...(restPath.length > 0
+      ? { remainingPath: restPath, finalDestination: movement.finalDestination }
+      : {}),
+  };
+
+  newHopMovements.push(nextHop);
+  console.log(`[MULTI-STEP] ${movement.owner} divisions continuing from ${fromRegionId} → ${nextRegionId}${restPath.length > 0 ? ` (${restPath.length} more hops)` : ' (final hop)'}`);
 }
 
 /**

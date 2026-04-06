@@ -95,6 +95,19 @@ export interface Movement {
    * Once the combat completes the movement is unpaused and arrives normally.
    */
   pendingCombatId?: string;
+  /**
+   * For multi-step movement: the remaining hops after the current one completes.
+   * Each entry is a region ID. When the movement arrives at `toRegion` and this
+   * array is non-empty, a new movement is automatically dispatched for the next
+   * hop rather than landing the divisions in the intermediate region.
+   * The array should NOT include `toRegion` itself — it starts from the hop after.
+   */
+  remainingPath?: string[];
+  /**
+   * The ultimate destination region for a multi-step movement (the last hop).
+   * Used for display purposes so the player can see where divisions are ultimately headed.
+   */
+  finalDestination?: string;
 }
 
 // Production queue item - represents a division being produced
