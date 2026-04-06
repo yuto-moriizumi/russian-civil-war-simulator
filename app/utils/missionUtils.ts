@@ -19,7 +19,7 @@ export function formatCondition(condition: MissionCondition): string {
     case 'enemyRegionCount':
       return `${getCountryName(condition.country)} controls at most ${condition.maxCount} regions`;
     case 'allRegionsControlled':
-      return `Control all regions in ${condition.countryIso3}`;
+      return `Control all ${condition.regionIds.length} assigned regions`;
     case 'theaterExists':
       return `Have at least one theater facing ${getCountryName(condition.enemyCountry)}`;
     case 'armyGroupCount':
