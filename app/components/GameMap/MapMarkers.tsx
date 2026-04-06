@@ -47,7 +47,8 @@ export function UnitMarker({
     <Marker
       longitude={centroid[0]}
       latitude={centroid[1]}
-      anchor="center"
+      anchor="bottom"
+      offset={[0, -4]}
       onClick={(e) => {
         e.originalEvent.stopPropagation();
         onRegionSelect(regionId);
@@ -209,7 +210,8 @@ export function CombatMarker({
     <Marker
       longitude={centroid[0]}
       latitude={centroid[1]}
-      anchor="center"
+      anchor="top"
+      offset={[0, 4]}
       onClick={(e) => {
         e.originalEvent.stopPropagation();
         onSelectCombat(combat.id);
