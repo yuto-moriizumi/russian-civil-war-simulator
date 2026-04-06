@@ -42,6 +42,7 @@ interface MapToolCanvasProps {
   onPaintEnd: () => void;
   onRegionUnitAdd: (regionId: string) => void;
   onRegionUnitRemove: (regionId: string) => void;
+  onRegionCoreRemove: (regionId: string) => void;
 }
 
 export default function MapToolCanvas({
@@ -63,6 +64,7 @@ export default function MapToolCanvas({
   onPaintEnd,
   onRegionUnitAdd,
   onRegionUnitRemove,
+  onRegionCoreRemove,
 }: MapToolCanvasProps) {
   const mapRef = useRef<MapRef>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -249,18 +251,24 @@ export default function MapToolCanvas({
         return;
       }
 
-      // In paint mode, right-click is used for panning, not eyedropper
+      // In paint mode, right-click is used for panning, not eyedropper/remove
       if (isPaintEnabled) return;
 
       // Ownership/core mode uses feature.id as the canonical key
       const regionId = (features[0].id as string) || props?.regionId;
       if (!regionId) return;
 
+      if (editMode === 'core') {
+        // Right-click in core mode removes the region from the selected country's core
+        onRegionCoreRemove(regionId);
+        return;
+      }
+
       if (ownership[regionId]) {
         onCountryPick(ownership[regionId]);
       }
     },
-    [ownership, onCountryPick, isPaintEnabled, editMode, onRegionUnitRemove]
+    [ownership, onCountryPick, onRegionCoreRemove, isPaintEnabled, editMode, onRegionUnitRemove]
   );
 
   // Handle mouse move
@@ -619,7 +627,13 @@ export default function MapToolCanvas({
           <>
             <span className="font-semibold">{selectedCountry}</span>
             <span className="text-xs text-gray-400">
-              ({editMode === 'ownership' ? 'Ownership' : 'Core Regions'} | {isPaintEnabled ? "Left: Paint | Right: Pan" : "Paint disabled"})
+              ({editMode === 'ownership' ? 'Ownership' : 'Core Regions'} | {
+                isPaintEnabled
+                  ? "Left: Paint | Right: Pan"
+                  : editMode === 'core'
+                  ? "Left: Add core | Right: Remove core"
+                  : "Paint disabled"
+              })
             </span>
           </>
         )}
