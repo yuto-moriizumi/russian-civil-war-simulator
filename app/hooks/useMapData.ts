@@ -8,6 +8,7 @@ export function useMapData() {
   const setMapDataLoaded = useGameStore(state => state.setMapDataLoaded);
   const mapDataLoaded = useGameStore(state => state.mapDataLoaded);
   const initializeCentroids = useGameStore(state => state.initializeCentroids);
+  const persistedRegions = useGameStore(state => state.regions);
 
   useEffect(() => {
     if (mapDataLoaded) return;
@@ -22,9 +23,26 @@ export function useMapData() {
         const geoData = await geoResponse.json();
         const adjData = await adjResponse.json();
 
-        const initialRegions = createInitialOwnership(geoData.features);
-        
-        setRegions(initialRegions);
+        const freshRegions = createInitialOwnership(geoData.features);
+
+        // If the store already has persisted region data (from a saved game),
+        // merge only the GeoJSON-derived metadata (name, countryIso3, value) into
+        // the persisted regions so that gameplay ownership and divisions are preserved.
+        const hasSavedRegions = Object.keys(persistedRegions).length > 0;
+        const regions = hasSavedRegions
+          ? Object.fromEntries(
+              Object.entries(freshRegions).map(([id, fresh]) => {
+                const saved = persistedRegions[id];
+                if (saved) {
+                  return [id, { ...saved, name: fresh.name, countryIso3: fresh.countryIso3, value: fresh.value }];
+                }
+                // Region exists in GeoJSON but not in save — use fresh data
+                return [id, fresh];
+              })
+            )
+          : freshRegions;
+
+        setRegions(regions);
         setAdjacency(adjData);
         setMapDataLoaded(true);
         
@@ -36,5 +54,6 @@ export function useMapData() {
     };
 
     loadMapData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setRegions, setAdjacency, setMapDataLoaded, mapDataLoaded, initializeCentroids]);
 }
