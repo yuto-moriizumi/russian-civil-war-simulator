@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { getCountryFlag } from '../data/countries';
 import { getArmyGroupUnitCount } from '../utils/mapUtils';
@@ -29,9 +29,9 @@ export default function TheaterPanel() {
   const assignTheaterToGroup = useGameStore(state => state.assignTheaterToGroup);
   
   // Local state
-  // Local state
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
+  const [openTheaterMenuGroupId, setOpenTheaterMenuGroupId] = useState<string | null>(null);
 
   // Get all player's army groups
   const playerGroups = useMemo(() => 
@@ -44,6 +44,13 @@ export default function TheaterPanel() {
     playerCountry ? allTheaters.filter(t => t.owner === playerCountry) : [],
     [allTheaters, playerCountry]
   );
+
+  useEffect(() => {
+    const handlePointerDown = () => setOpenTheaterMenuGroupId(null);
+
+    window.addEventListener('pointerdown', handlePointerDown);
+    return () => window.removeEventListener('pointerdown', handlePointerDown);
+  }, []);
 
   const handleStartRename = (groupId: string, currentName: string) => {
     setEditingGroupId(groupId);
@@ -83,7 +90,7 @@ export default function TheaterPanel() {
         return (
           <div
             key={group.id}
-            className={`group relative flex w-36 flex-col border shadow-2xl transition-all duration-200 cursor-pointer overflow-hidden ${
+            className={`group relative flex w-36 flex-col border shadow-2xl transition-all duration-200 cursor-pointer overflow-visible ${
               isGroupSelected
                 ? 'border-amber-500 bg-stone-800 ring-2 ring-amber-500/30'
                 : 'border-stone-700 bg-stone-900/90 hover:border-stone-500 hover:bg-stone-800'
@@ -132,9 +139,18 @@ export default function TheaterPanel() {
             </div>
 
             {/* Theater selection */}
-            <div className="border-b border-stone-800 px-1 py-0.5 shrink-0">
-              <div className="flex items-center gap-1">
-                {theaterFlag && (
+            <div className="relative border-b border-stone-800 px-1 py-0.5 shrink-0">
+              <button
+                type="button"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenTheaterMenuGroupId(current => current === group.id ? null : group.id);
+                }}
+                className="flex w-full items-center gap-1 rounded px-0.5 py-0.5 text-left text-[10px] font-bold uppercase tracking-tighter text-stone-500 transition-colors hover:bg-stone-800/70 hover:text-stone-300"
+                title="Assign theater"
+              >
+                {theaterFlag ? (
                   <Image
                     src={theaterFlag}
                     alt={`${assignedTheater?.enemyCountry} flag`}
@@ -142,25 +158,79 @@ export default function TheaterPanel() {
                     height={12}
                     className="h-3 w-4 shrink-0 rounded-[2px] border border-stone-700 object-cover"
                   />
+                ) : (
+                  <span className="flex h-3 w-4 shrink-0 items-center justify-center rounded-[2px] border border-dashed border-stone-700 text-[7px] text-stone-500">
+                    -
+                  </span>
                 )}
-                <select
-                  value={group.theaterId || ''}
-                  onChange={(e) => {
-                    e.stopPropagation();
-                    const theaterId = e.target.value || null;
-                    assignTheaterToGroup(group.id, theaterId);
-                  }}
+                <span className="min-w-0 flex-1 truncate">
+                  {assignedTheater?.name || 'No Theater'}
+                </span>
+                <span className="text-[9px] text-stone-500">
+                  {openTheaterMenuGroupId === group.id ? '▲' : '▼'}
+                </span>
+              </button>
+
+              {openTheaterMenuGroupId === group.id && (
+                <div
+                  className="absolute inset-x-1 top-full z-20 mt-1 rounded border border-stone-700 bg-stone-950 shadow-2xl"
+                  onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => e.stopPropagation()}
-                  className="w-full bg-transparent text-[10px] font-bold text-stone-500 uppercase tracking-tighter outline-none cursor-pointer appearance-none hover:text-stone-300"
                 >
-                  <option value="" className="bg-stone-900 text-stone-300">No Theater</option>
-                  {theaters.map((theater) => (
-                    <option key={theater.id} value={theater.id} className="bg-stone-900 text-stone-300">
-                      {theater.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      assignTheaterToGroup(group.id, null);
+                      setOpenTheaterMenuGroupId(null);
+                    }}
+                    className={`flex w-full items-center gap-2 px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-tighter transition-colors ${
+                      !group.theaterId
+                        ? 'bg-stone-800 text-white'
+                        : 'text-stone-300 hover:bg-stone-800 hover:text-white'
+                    }`}
+                  >
+                    <span className="flex h-3 w-4 shrink-0 items-center justify-center rounded-[2px] border border-dashed border-stone-700 text-[7px] text-stone-500">
+                      -
+                    </span>
+                    <span className="truncate">No Theater</span>
+                  </button>
+                  {theaters.map((theater) => {
+                    const optionFlag = getCountryFlag(theater.enemyCountry);
+                    const isSelectedTheater = theater.id === group.theaterId;
+
+                    return (
+                      <button
+                        key={theater.id}
+                        type="button"
+                        onClick={() => {
+                          assignTheaterToGroup(group.id, theater.id);
+                          setOpenTheaterMenuGroupId(null);
+                        }}
+                        className={`flex w-full items-center gap-2 px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-tighter transition-colors ${
+                          isSelectedTheater
+                            ? 'bg-stone-800 text-white'
+                            : 'text-stone-300 hover:bg-stone-800 hover:text-white'
+                        }`}
+                      >
+                        {optionFlag ? (
+                          <Image
+                            src={optionFlag}
+                            alt={`${theater.enemyCountry} flag`}
+                            width={16}
+                            height={12}
+                            className="h-3 w-4 shrink-0 rounded-[2px] border border-stone-700 object-cover"
+                          />
+                        ) : (
+                          <span className="flex h-3 w-4 shrink-0 items-center justify-center rounded-[2px] border border-dashed border-stone-700 text-[7px] text-stone-500">
+                            -
+                          </span>
+                        )}
+                        <span className="truncate">{theater.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Main Action Area: Attack & Defend (Large) */}
