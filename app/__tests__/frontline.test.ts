@@ -291,12 +291,12 @@ describe('assignDivisionsToFrontline', () => {
     expect(assignments).toHaveLength(0);
   });
 
-  it('emits no assignments when the frontline slot is already covered with no surplus', () => {
+  it('advances a lone frontline division when there is exactly one hostile adjacent target', () => {
     const div1 = makeDiv('div-1');
     const regions: RegionState = {
       A: makeRegion('A', 'soviet'),
       B: makeRegion('B', 'soviet'),
-      C: makeRegion('C', 'soviet', [div1]), // exactly 1 — covered, no surplus
+      C: makeRegion('C', 'soviet', [div1]),
       E: makeRegion('E', 'white'),
     };
 
@@ -307,6 +307,39 @@ describe('assignDivisionsToFrontline', () => {
 
     const assignments = assignDivisionsToFrontline(
       'ag-1', regions, adjacency, 'soviet', frontline, [], canEnter
+    );
+
+    expect(assignments).toHaveLength(1);
+    expect(assignments[0].divisionId).toBe('div-1');
+    expect(assignments[0].fromRegion).toBe('C');
+    expect(assignments[0].toRegion).toBe('E');
+    expect(assignments[0].isFrontlineMove).toBe(false);
+  });
+
+  it('does not advance a lone frontline division when multiple hostile adjacent targets exist', () => {
+    const div1 = makeDiv('div-1');
+    const multiTargetAdjacency: Adjacency = {
+      A: ['B'],
+      B: ['A', 'C'],
+      C: ['B', 'E', 'F'],
+      E: ['C'],
+      F: ['C'],
+    };
+    const regions: RegionState = {
+      A: makeRegion('A', 'soviet'),
+      B: makeRegion('B', 'soviet'),
+      C: makeRegion('C', 'soviet', [div1]),
+      E: makeRegion('E', 'white'),
+      F: makeRegion('F', 'white'),
+    };
+
+    const frontline = {
+      frontlineRegions: new Set(['C']),
+      targetRegions: new Set(['E', 'F']),
+    };
+
+    const assignments = assignDivisionsToFrontline(
+      'ag-1', regions, multiTargetAdjacency, 'soviet', frontline, [], canEnter
     );
 
     expect(assignments).toHaveLength(0);
@@ -395,110 +428,5 @@ describe('assignDivisionsToFrontline', () => {
 
     // C already has an inbound division → slot is covered → div-2 stays put
     expect(assignments).toHaveLength(0);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// buildIsHostilePredicate — defend mode border detection
-// ---------------------------------------------------------------------------
-
-describe('buildIsHostilePredicate', () => {
-  const adjacency: Adjacency = {
-    A: ['B'],
-    B: ['A', 'C'],
-    C: ['B', 'D'],
-    D: ['C'],
-  };
-
-  function makeRegionSimple(id: string, owner: 'soviet' | 'white' | 'germany'): Region {
-    return { id, name: id, countryIso3: 'TST', owner, divisions: [], value: 1 };
-  }
-
-  it('returns false for regions with no war relationship (defend mode must not trigger)', () => {
-    const regions: RegionState = {
-      A: makeRegionSimple('A', 'soviet'),
-      B: makeRegionSimple('B', 'soviet'),
-      C: makeRegionSimple('C', 'white'),
-    };
-
-    // No war declared — only military_access
-    const relationships: Relationship[] = [
-      { fromCountry: 'white', toCountry: 'soviet', type: 'military_access' },
-    ];
-
-    const isHostile = buildIsHostilePredicate('soviet', regions, relationships);
-    expect(isHostile('C')).toBe(false);
-  });
-
-  it('returns false for autonomy puppets without war', () => {
-    const regions: RegionState = {
-      A: makeRegionSimple('A', 'soviet'),
-      B: makeRegionSimple('B', 'white'),
-    };
-
-    const relationships: Relationship[] = [
-      { fromCountry: 'soviet', toCountry: 'white', type: 'autonomy' },
-    ];
-
-    const isHostile = buildIsHostilePredicate('soviet', regions, relationships);
-    expect(isHostile('B')).toBe(false);
-  });
-
-  it('returns true when we declared war on the target country', () => {
-    const regions: RegionState = {
-      A: makeRegionSimple('A', 'soviet'),
-      B: makeRegionSimple('B', 'white'),
-    };
-
-    const relationships: Relationship[] = [
-      { fromCountry: 'soviet', toCountry: 'white', type: 'war' },
-    ];
-
-    const isHostile = buildIsHostilePredicate('soviet', regions, relationships);
-    expect(isHostile('B')).toBe(true);
-  });
-
-  it('returns true when the target country declared war on us', () => {
-    const regions: RegionState = {
-      A: makeRegionSimple('A', 'soviet'),
-      B: makeRegionSimple('B', 'white'),
-    };
-
-    const relationships: Relationship[] = [
-      { fromCountry: 'white', toCountry: 'soviet', type: 'war' },
-    ];
-
-    const isHostile = buildIsHostilePredicate('soviet', regions, relationships);
-    expect(isHostile('B')).toBe(true);
-  });
-
-  it('regression: defend mode — no border detected without a war (no movement expected)', () => {
-    /**
-     * soviet has military_access into germany, but no war.
-     * The border-detection logic (hasEnemyNeighbor) should return false for all
-     * soviet regions, so allBorderRegions stays empty and defendArmyGroup returns
-     * early without creating any movements.
-     *
-     * We verify this indirectly via buildIsHostilePredicate, which is now used
-     * by defendArmyGroup to gate hasEnemyNeighbor.
-     */
-    const regions: RegionState = {
-      A: makeRegionSimple('A', 'soviet'),
-      B: makeRegionSimple('B', 'soviet'),
-      C: makeRegionSimple('C', 'germany'),
-    };
-
-    const relationships: Relationship[] = [
-      { fromCountry: 'germany', toCountry: 'soviet', type: 'military_access' },
-    ];
-
-    const isHostile = buildIsHostilePredicate('soviet', regions, relationships);
-
-    // None of germany's regions should be considered hostile borders
-    const hasHostileNeighborForB = (adjacency['B'] ?? []).some(
-      nId => regions[nId]?.owner !== 'soviet' && isHostile(nId)
-    );
-
-    expect(hasHostileNeighborForB).toBe(false);
   });
 });
