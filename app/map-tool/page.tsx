@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import type { FeatureCollection } from "geojson";
-import { CountryId } from "../types/game";
+import { CountryId, RegionFeatureCollection } from "../types/game";
 import MapToolCanvas from "./components/MapToolCanvas";
 import GeoJSONLoader from "./components/GeoJSONLoader";
 import CountryPalette from "./components/CountryPalette";
@@ -13,7 +12,7 @@ import { useUnitPlacement } from "./hooks/useUnitPlacement";
 import { useMapToolSave } from "./hooks/useMapToolSave";
 
 export default function MapToolPage() {
-  const [geojson, setGeojson] = useState<FeatureCollection | null>(null);
+  const [geojson, setGeojson] = useState<RegionFeatureCollection | null>(null);
   const [ownership, setOwnership] = useState<Record<string, CountryId>>({});
   const [originalOwnership, setOriginalOwnership] = useState<Record<string, CountryId>>({});
   const [adjacency, setAdjacency] = useState<Record<string, string[]> | null>(null);
@@ -51,7 +50,7 @@ export default function MapToolPage() {
   const [, setPaintedRegionsInDrag] = useState<Set<string>>(new Set());
   const lastPaintAction = useRef<{ regionId: string; timestamp: number } | null>(null);
 
-  const handleGeoJSONLoad = useCallback((data: FeatureCollection) => {
+  const handleGeoJSONLoad = useCallback((data: RegionFeatureCollection) => {
     setGeojson(data);
     const newOwnership: Record<string, CountryId> = {};
     const win = window as unknown as { __initialRegionOwnership?: Record<string, CountryId> };

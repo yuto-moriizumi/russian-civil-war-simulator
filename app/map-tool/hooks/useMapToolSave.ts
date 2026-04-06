@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import type { FeatureCollection } from 'geojson';
+import type { RegionFeatureCollection } from '../../types/game';
 import { CountryId } from '../../types/game';
 import { UnitPlacementData } from '../../data/map/initialUnitPlacement';
 
@@ -15,7 +15,7 @@ interface UseMapToolSaveOptions {
   coreRegions: Record<string, string[]>;
   unitPlacement: UnitPlacementData;
   armyGroupDefs: Record<CountryId, ArmyGroupDef[]>;
-  geojson: FeatureCollection | null;
+  geojson: RegionFeatureCollection | null;
   onSaveSuccess: (opts: {
     ownership: Record<string, CountryId>;
     coreRegions: Record<string, string[]>;

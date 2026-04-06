@@ -1,9 +1,9 @@
 "use client";
 
-import type { FeatureCollection } from "geojson";
+import type { RegionFeatureCollection } from "../../types/game";
 
 interface GeoJSONInfoPanelProps {
-  geojson: FeatureCollection;
+  geojson: RegionFeatureCollection;
   adjacency: Record<string, string[]> | null;
   showAdjacency: boolean;
   isLoading: boolean;

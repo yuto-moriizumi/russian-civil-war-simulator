@@ -5,9 +5,9 @@
  */
 
 import * as turf from '@turf/turf';
-import type { FeatureCollection, Feature, Polygon, MultiPolygon } from 'geojson';
+import type { Feature, Polygon, MultiPolygon } from 'geojson';
 import type RBush from 'rbush';
-import type { Adjacency } from './types.js';
+import type { Adjacency, RegionFeatureCollection } from './types.js';
 import { computeBBox } from './geometry-utils.js';
 import { buildSpatialIndex, queryCrossBorder, querySameCountry, type IndexedFeature } from './spatial-index.js';
 
@@ -20,7 +20,7 @@ import { buildSpatialIndex, queryCrossBorder, querySameCountry, type IndexedFeat
  * 最適化: RBush空間インデックスを使用してO(n log n)の性能を実現
  */
 export function detectCrossBorderAdjacency(
-  mergedGeoJSON: FeatureCollection,
+  mergedGeoJSON: RegionFeatureCollection,
   existingAdjacency: Adjacency,
   spatialIndex?: RBush<IndexedFeature>
 ): { adjacency: Adjacency; addedCount: number } {
@@ -128,7 +128,7 @@ export function detectCrossBorderAdjacency(
  * 最適化: RBush空間インデックスを使用してO(n log n)の性能を実現
  */
 export function detectSameCountryAdjacency(
-  mergedGeoJSON: FeatureCollection,
+  mergedGeoJSON: RegionFeatureCollection,
   existingAdjacency: Adjacency,
   spatialIndex?: RBush<IndexedFeature>
 ): { adjacency: Adjacency; addedCount: number } {
@@ -212,7 +212,7 @@ export function detectSameCountryAdjacency(
  * 最適化: RBush空間インデックスを使用してO(n log n)の性能を実現
  */
 export function detectIsolatedRegionAdjacency(
-  mergedGeoJSON: FeatureCollection,
+  mergedGeoJSON: RegionFeatureCollection,
   existingAdjacency: Adjacency,
   spatialIndex?: RBush<IndexedFeature>
 ): { adjacency: Adjacency; addedCount: number } {

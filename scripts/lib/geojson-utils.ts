@@ -4,8 +4,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type { FeatureCollection, Feature } from 'geojson';
-import type { MapConfig } from './types.js';
+import type { MapConfig, RegionFeature, RegionFeatureCollection } from './types.js';
 import { quantizeGeometry, COORDINATE_PRECISION } from './geometry-utils.js';
 
 /**
@@ -20,9 +19,31 @@ export function loadConfig(scriptsDir: string): MapConfig {
 /**
  * Load a GeoJSON file from disk
  */
-export function loadGeoJSON(filePath: string): FeatureCollection {
+export function loadGeoJSON(filePath: string): RegionFeatureCollection {
   const content = fs.readFileSync(filePath, 'utf-8');
   return JSON.parse(content);
+}
+
+/** Raw GeoJSON feature as it comes from the downloaded source files. */
+interface RawFeature {
+  type: 'Feature';
+  id?: string | number;
+  properties: Record<string, unknown> | null;
+  geometry: RegionFeature['geometry'];
+}
+
+/** Raw GeoJSON FeatureCollection as it comes from the downloaded source files. */
+interface RawFeatureCollection {
+  type: 'FeatureCollection';
+  features: RawFeature[];
+}
+
+/**
+ * Load a raw GeoJSON file from disk (before property normalisation).
+ */
+function loadRawGeoJSON(filePath: string): RawFeatureCollection {
+  const content = fs.readFileSync(filePath, 'utf-8');
+  return JSON.parse(content) as RawFeatureCollection;
 }
 
 /**
@@ -33,24 +54,24 @@ export function loadGeoJSON(filePath: string): FeatureCollection {
  * 2. shapeID (例: "28173009B80457268982215") - 一意だが読みにくい
  * 3. 国コード + 名前 - フォールバック
  */
-export function getRegionId(feature: Feature, countryIso3: string): string {
+export function getRegionId(feature: RawFeature, countryIso3: string): string {
   const props = feature.properties || {};
   
   // shapeISO が最優先（読みやすいISO形式）
   const shapeIso = props.shapeISO || props.SHAPEISO;
   if (shapeIso) {
-    return shapeIso;
+    return String(shapeIso);
   }
   
   // shapeIDがある場合
   const shapeId = props.shapeID || props.SHAPEID || props.id;
   if (shapeId) {
-    return shapeId;
+    return String(shapeId);
   }
   
   // フォールバック: 国コード + 名前
   const name = props.shapeName || props.SHAPENAME || props.name || props.NAME || 'unknown';
-  return `${countryIso3}-${name.replace(/\s+/g, '_')}`;
+  return `${countryIso3}-${String(name).replace(/\s+/g, '_')}`;
 }
 
 /**
@@ -58,19 +79,21 @@ export function getRegionId(feature: Feature, countryIso3: string): string {
  */
 export function mergeGeoJSON(
   geojsonFiles: { filePath: string; countryIso3: string }[]
-): FeatureCollection {
-  const mergedFeatures: Feature[] = [];
+): RegionFeatureCollection {
+  const mergedFeatures: RegionFeature[] = [];
   
   for (const { filePath, countryIso3 } of geojsonFiles) {
     console.log(`  Loading: ${filePath}`);
-    const geojson = loadGeoJSON(filePath);
+    const geojson = loadRawGeoJSON(filePath);
     
     for (const feature of geojson.features) {
       // リージョンIDを追加
       const regionId = getRegionId(feature, countryIso3);
       
       // 座標を量子化して異なるソース間のズレを解消
-      const quantizedGeometry = quantizeGeometry(feature.geometry);
+      const quantizedGeometry = quantizeGeometry(
+        feature.geometry as import('geojson').Geometry
+      ) as RegionFeature['geometry'];
       
       // 不要なプロパティを除去
       const {
@@ -78,19 +101,22 @@ export function mergeGeoJSON(
         shapeGroup, SHAPEGROUP,
         shapeType, SHAPETYPE,
         regionId: _regionId,
+        shapeName,
         ...restProps
-      } = (feature.properties || {}) as Record<string, unknown>;
+      } = (feature.properties || {}) as unknown as Record<string, unknown>;
       void shapeISO; void SHAPEISO; void shapeID; void SHAPEID;
       void shapeGroup; void SHAPEGROUP; void shapeType; void SHAPETYPE;
       void _regionId;
+      void restProps;
       
-      const enhancedFeature: Feature = {
-        ...feature,
+      const enhancedFeature: RegionFeature = {
+        type: 'Feature',
         id: regionId,
         geometry: quantizedGeometry,
         properties: {
-          ...restProps,
+          shapeName: String(shapeName || regionId),
           countryIso3,
+          id: regionId,
         },
       };
       

@@ -48,10 +48,10 @@ const eslintConfig = defineConfig([
       ],
     },
   },
-  // app/types/** is the canonical home for our GeoJSON type wrappers,
-  // so it is allowed to import FeatureCollection directly.
+  // types.ts (repo root) and app/types/** are the canonical homes for our
+  // GeoJSON type wrappers, so they are allowed to import FeatureCollection directly.
   {
-    files: ["app/types/**/*.ts"],
+    files: ["types.ts", "app/types/**/*.ts"],
     rules: {
       "no-restricted-imports": "off",
     },

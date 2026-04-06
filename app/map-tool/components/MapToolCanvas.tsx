@@ -10,9 +10,9 @@ import Map, {
   NavigationControl,
 } from "react-map-gl/maplibre";
 import type { MapLayerMouseEvent } from "react-map-gl/maplibre";
-import type { FeatureCollection, Feature, Geometry } from "geojson";
+import type { Feature, Geometry } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { CountryId } from "../../types/game";
+import { CountryId, RegionFeatureCollection } from "../../types/game";
 import { getCountryColor, COUNTRY_FLAGS } from "../../data/countries";
 import { UnitPlacementData } from "../../data/map/initialUnitPlacement";
 import * as turf from "@turf/turf";
@@ -23,7 +23,7 @@ interface ArmyGroupDef {
 }
 
 interface MapToolCanvasProps {
-  geojson: FeatureCollection;
+  geojson: RegionFeatureCollection;
   ownership: Record<string, CountryId>;
   selectedCountry: CountryId;
   adjacency: Record<string, string[]> | null;
@@ -82,11 +82,7 @@ export default function MapToolCanvas({
     const names: Record<string, string> = {};
     geojson.features.forEach((feature) => {
       const shapeId = feature.id as string;
-      const name =
-        feature.properties?.shapeName ||
-        feature.properties?.SHAPENAME ||
-        feature.properties?.name ||
-        feature.properties?.NAME;
+      const name = feature.properties?.shapeName;
       if (shapeId && name) {
         names[shapeId] = name;
       }
@@ -126,7 +122,7 @@ export default function MapToolCanvas({
     for (const feature of geojson.features) {
       const props = feature.properties;
       if (!props) continue;
-      const regionId = (feature.id as string) || props.regionId;
+      const regionId = feature.id as string;
       if (!regionId) continue;
       try {
         const center = turf.centroid(feature as Feature<Geometry>);

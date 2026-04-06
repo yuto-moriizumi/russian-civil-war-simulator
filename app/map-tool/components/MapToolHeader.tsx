@@ -1,6 +1,6 @@
 "use client";
 
-import type { FeatureCollection } from "geojson";
+import type { RegionFeatureCollection } from "../../types/game";
 import { CountryId } from "../../types/game";
 
 interface MapToolHeaderProps {
@@ -10,7 +10,7 @@ interface MapToolHeaderProps {
   onUndo: () => void;
   onRedo: () => void;
   // GeoJSON info props
-  geojson: FeatureCollection | null;
+  geojson: RegionFeatureCollection | null;
   adjacency: Record<string, string[]> | null;
   showAdjacency: boolean;
   isLoading: boolean;

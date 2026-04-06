@@ -11,10 +11,10 @@ import * as path from 'path';
 import { fileURLToPath } from 'url';
 import * as topojson from 'topojson-server';
 import * as topojsonClient from 'topojson-client';
-import type { FeatureCollection } from 'geojson';
 import type { Topology, GeometryCollection } from 'topojson-specification';
 
 import { loadConfig, mergeGeoJSON } from './lib/geojson-utils.js';
+import type { RegionFeatureCollection } from './lib/types.js';
 import { extractAdjacency } from './lib/topojson-utils.js';
 import { 
   detectCrossBorderAdjacency, 
@@ -119,7 +119,7 @@ async function main() {
   const outputGeoJSON = topojsonClient.feature(
     topology,
     topology.objects.regions as unknown as GeometryCollection
-  ) as unknown as FeatureCollection;
+  ) as unknown as RegionFeatureCollection;
   
   const geojsonOutputPath = path.resolve(__dirname, config.output.geojson);
   const adjacencyOutputPath = path.resolve(__dirname, config.output.adjacency);

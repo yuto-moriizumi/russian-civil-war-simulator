@@ -3,8 +3,7 @@
  */
 
 import type { Topology, GeometryCollection, GeometryObject } from 'topojson-specification';
-import type { FeatureCollection } from 'geojson';
-import type { Adjacency } from './types.js';
+import type { Adjacency, RegionFeatureCollection } from './types.js';
 import { computeBBox, bboxIntersects } from './geometry-utils.js';
 
 /**
@@ -40,7 +39,7 @@ function flattenArcs(arcsArray: unknown, result: number[]): void {
  * 
  * バウンディングボックスのチェックを併用して誤判定を防ぐ
  */
-export function extractAdjacency(topology: Topology, mergedGeoJSON: FeatureCollection): Adjacency {
+export function extractAdjacency(topology: Topology, mergedGeoJSON: RegionFeatureCollection): Adjacency {
   const adjacency: Adjacency = {};
   const geometries = (topology.objects.regions as GeometryCollection).geometries;
   
