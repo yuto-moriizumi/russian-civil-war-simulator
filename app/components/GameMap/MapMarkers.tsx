@@ -190,6 +190,8 @@ export function CombatMarker({
   const defenderColor = COUNTRY_COLORS[combat.defenderCountry];
   const attackerTextColor = combat.attackerCountry === 'white' ? '#000' : '#fff';
   const defenderTextColor = combat.defenderCountry === 'white' ? '#000' : '#fff';
+  const attackerFlagUrl = COUNTRY_FLAGS[combat.attackerCountry as keyof typeof COUNTRY_FLAGS];
+  const defenderFlagUrl = COUNTRY_FLAGS[combat.defenderCountry as keyof typeof COUNTRY_FLAGS];
 
   return (
     <Marker
@@ -217,12 +219,28 @@ export function CombatMarker({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
+            gap: '4px',
             padding: '0 6px',
             minWidth: '35px',
             borderRadius: '3px 0 0 3px',
             backgroundColor: attackerColor,
             boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
           }}>
+            {attackerFlagUrl ? (
+              <img
+                src={attackerFlagUrl}
+                alt={combat.attackerCountry}
+                style={{
+                  width: '16px',
+                  height: '11px',
+                  objectFit: 'cover',
+                  border: '1px solid rgba(0,0,0,0.3)',
+                  flexShrink: 0,
+                }}
+              />
+            ) : (
+              <span style={{ fontSize: '10px', color: attackerTextColor }}>&#9632;</span>
+            )}
             <span style={{
               fontSize: '11px',
               fontWeight: 'bold',
@@ -259,6 +277,7 @@ export function CombatMarker({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
+            gap: '4px',
             padding: '0 6px',
             minWidth: '35px',
             borderRadius: '0 3px 3px 0',
@@ -272,6 +291,21 @@ export function CombatMarker({
             }}>
               {combat.defenderDivisions.length}
             </span>
+            {defenderFlagUrl ? (
+              <img
+                src={defenderFlagUrl}
+                alt={combat.defenderCountry}
+                style={{
+                  width: '16px',
+                  height: '11px',
+                  objectFit: 'cover',
+                  border: '1px solid rgba(0,0,0,0.3)',
+                  flexShrink: 0,
+                }}
+              />
+            ) : (
+              <span style={{ fontSize: '10px', color: defenderTextColor }}>&#9632;</span>
+            )}
           </div>
           <div style={{ height: '3px', width: '100%', background: 'rgba(0,0,0,0.5)', borderRadius: '0 0 2px 0', marginTop: '1px', overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${defenderProgress}%`, background: defenderColor, transition: 'width 0.3s' }}></div>
