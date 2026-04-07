@@ -8,7 +8,7 @@ export const scheduledEvents: ScheduledEvent[] = [
     id: 'finnish-civil-war',
     date: '1918-01-26',
     title: 'Finnish Civil War Begins',
-    description: 'The Finnish Civil War erupts as the Finnish Socialist Workers\' Republic (Red Guards) seizes control of southern Finland with Soviet support.',
+    description: 'The Finnish Civil War erupts as the Finnish Socialist Workers\' Republic (Red Guards) seizes control of southern Finland.',
     actions: [
       {
         type: 'transferRegion',
@@ -53,11 +53,6 @@ export const scheduledEvents: ScheduledEvent[] = [
       {
         type: 'declareWar',
         fromCountry: 'fswr',
-        toCountry: 'finland',
-      },
-      {
-        type: 'declareWar',
-        fromCountry: 'soviet',
         toCountry: 'finland',
       },
     ],
