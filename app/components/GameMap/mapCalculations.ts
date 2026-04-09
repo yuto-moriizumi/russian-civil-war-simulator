@@ -27,14 +27,17 @@ export function calculateUnitMarkers(
   regions: RegionState,
   regionCentroids: Record<string, [number, number]>,
   selectedUnitRegion: string | null,
-  playerCountry: CountryId
+  playerCountry: CountryId,
+  selectedDivisionIds: string[] = []
 ): (UnitMarkerData | null)[] {
   // Early return if centroids haven't loaded yet
   if (Object.keys(regionCentroids).length === 0) {
     console.warn('calculateUnitMarkers: Centroids not loaded yet');
     return [];
   }
-  
+
+  const selectedDivisionSet = new Set(selectedDivisionIds);
+
   return Object.entries(regions)
     .filter(([, region]) => region.divisions.length > 0)
     .map(([regionId, region]) => {
@@ -44,7 +47,12 @@ export function calculateUnitMarkers(
         return null;
       }
       
-      const isSelected = selectedUnitRegion === regionId;
+      // Highlight the marker only when at least one division in this region is
+      // explicitly selected via the division-selection system.  Selecting a
+      // region (selectedUnitRegion) alone must NOT trigger the highlight, so
+      // that clicking a province no longer glows the unit marker.
+      const isSelected = selectedDivisionSet.size > 0 &&
+        region.divisions.some(d => selectedDivisionSet.has(d.id));
       // A marker is a player-controllable unit if the player owns the region
       // OR if the player has their own divisions there (military access / autonomy).
       const isPlayerUnit = region.owner === playerCountry ||
