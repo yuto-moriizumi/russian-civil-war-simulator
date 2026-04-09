@@ -1,5 +1,5 @@
 import { Movement } from '../../types/game';
-import { getNextStepToward, buildCanEnterPredicate, buildIsHostilePredicate } from '../../utils/pathfinding';
+import { getNextStepToward, buildIsHostilePredicate } from '../../utils/pathfinding';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { GameStore } from './types';
 
@@ -30,8 +30,6 @@ export function defendArmyGroup(
   // Use the army group's owner country instead of selectedCountry to support AI
   const countryId = group.owner;
 
-  // Build access predicate — defend routing respects diplomacy too
-  const canEnter = buildCanEnterPredicate(countryId, regions, relationships);
   // Only treat regions we are actively at war with as borders worth defending.
   // military_access and autonomy neighbors must not trigger defensive repositioning.
   const isHostile = buildIsHostilePredicate(countryId, regions, relationships);
@@ -179,15 +177,24 @@ export function defendArmyGroup(
     availBySource.get(regionId)!.push(divisionId);
   });
 
+  // DEFEND mode must never route divisions through enemy territory.
+  // canEnter (built from buildCanEnterPredicate) allows war-enemy regions so
+  // that advance mode can cross frontlines, but defend routing must stay on
+  // friendly soil.  We build a separate predicate that only permits regions
+  // owned by our country so BFS never expands into (or through) enemy nodes.
+  const canEnterFriendlyOnly = (regionId: string): boolean =>
+    regions[regionId]?.owner === countryId;
+
   // BN-2: memoize getNextStepToward results across the (source × border) loop.
-  // canEnter and adjacency are both constant within a single tick, so each
-  // (from, to) pair always yields the same first-step.  Caching eliminates
-  // redundant BFS calls when multiple needy borders share the same source pool.
+  // canEnterFriendlyOnly and adjacency are both constant within a single tick,
+  // so each (from, to) pair always yields the same first-step.  Caching
+  // eliminates redundant BFS calls when multiple needy borders share the same
+  // source pool.
   const nextStepCache = new Map<string, string | null>();
   const cachedNextStep = (from: string, to: string): string | null => {
     const key = `${from}|${to}`;
     if (nextStepCache.has(key)) return nextStepCache.get(key)!;
-    const result = getNextStepToward(from, to, adjacency, canEnter);
+    const result = getNextStepToward(from, to, adjacency, canEnterFriendlyOnly);
     nextStepCache.set(key, result);
     return result;
   };
@@ -215,6 +222,14 @@ export function defendArmyGroup(
       const nextStep = cachedNextStep(sourceRegionId, borderRegionId);
       if (!nextStep) {
         console.warn(`[DEFEND] No valid path from ${sourceRegionId} to ${borderRegionId}`);
+        continue;
+      }
+
+      // DEFEND mode must never move divisions into enemy territory.
+      // canEnter allows war-enemy regions (needed for advance), but defend
+      // routing must stay within friendly land.  Skip this source/border pair
+      // if the first BFS step is not owned by us.
+      if (regions[nextStep]?.owner !== countryId) {
         continue;
       }
 
