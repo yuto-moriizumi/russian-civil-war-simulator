@@ -11,10 +11,14 @@ import { GameStore } from './types';
  * Phase 1 (Defend): Identical to defendArmyGroup — distributes divisions
  *   proportionally to border regions (own regions adjacent to hostile territory).
  *
- * Phase 2 (Attack): After Phase 1 has positioned units, border regions that
- *   still hold MORE divisions than their allocation target advance the surplus
- *   directly into adjacent accessible hostile regions. Borders that already
- *   dispatched units in Phase 1 are skipped to avoid double-moving.
+ * Phase 2 (Attack): After Phase 1 has positioned units, border regions advance
+ *   into adjacent accessible hostile regions. Two cases trigger an advance:
+ *   - Surplus: the border holds more divisions than its allocation target.
+ *   - Single-enemy auto-advance: the border has exactly one stationary division
+ *     AND exactly one adjacent hostile target — the lone division advances even
+ *     though surplus = 0 (mirrors frontlineAssignment Phase 2 behaviour).
+ *   Borders that already dispatched units in Phase 1 are skipped to avoid
+ *   double-moving.
  */
 export function attackArmyGroup(
   groupId: string,
@@ -225,7 +229,7 @@ export function attackArmyGroup(
     }
   }
 
-  // ── Phase 2: Advance surplus divisions from border regions ────────────────────
+  // ── Phase 2: Advance divisions from border regions ────────────────────────────
   const newCombats: ActiveCombat[] = [];
   let newEvents = [...gameEvents];
 
@@ -241,8 +245,6 @@ export function attackArmyGroup(
     const stationaryDivs = (newRegions[borderRegionId]?.divisions ?? []).filter(
       d => d.armyGroupId === groupId && d.owner === countryId && !inTransitDivisionIds.has(d.id)
     );
-    const surplus = Math.max(0, stationaryDivs.length - target);
-    if (surplus === 0) continue;
 
     // Find adjacent hostile regions we can enter
     const attackTargets = (adjacency[borderRegionId] || []).filter(
@@ -250,14 +252,22 @@ export function attackArmyGroup(
     );
     if (attackTargets.length === 0) continue;
 
-    // Surplus divisions to advance (take from the end to preserve the garrison at front)
-    const surplusDivs = stationaryDivs.slice(stationaryDivs.length - surplus);
+    // Determine which divisions advance:
+    //   - Surplus case: border holds more than its allocation target → advance the excess.
+    //   - Single-enemy auto-advance: exactly 1 stationary division AND exactly 1 hostile
+    //     adjacent target → the lone division advances even though surplus = 0.
+    const surplus = Math.max(0, stationaryDivs.length - target);
+    const attackDivisions =
+      stationaryDivs.length === 1 && attackTargets.length === 1
+        ? stationaryDivs
+        : stationaryDivs.slice(stationaryDivs.length - surplus);
+    if (attackDivisions.length === 0) continue;
 
-    // Distribute surplus round-robin across attack targets
-    const divsByTarget = new Map<string, typeof surplusDivs>();
+    // Distribute advancing divisions round-robin across attack targets
+    const divsByTarget = new Map<string, typeof attackDivisions>();
     attackTargets.forEach(t => divsByTarget.set(t, []));
 
-    surplusDivs.forEach((div, i) => {
+    attackDivisions.forEach((div, i) => {
       const targetId = attackTargets[i % attackTargets.length];
       divsByTarget.get(targetId)!.push(div);
     });
