@@ -252,3 +252,112 @@ describe('defendArmyGroup – in-transit divisions prevent duplicate dispatch', 
     expect(fromRear.length).toBeLessThanOrEqual(1);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Scenario 4a (regression): DEFEND must never dispatch a movement into enemy
+// territory when the only path from source to border goes through enemy land.
+//
+//   Layout:
+//
+//   [REAR]---[ENEMY]---[B1]
+//
+//   The only path from REAR to B1 passes through ENEMY.
+//   With the old canEnter (war = accessible) BFS would route
+//   REAR → ENEMY → B1 and the movement toRegion = ENEMY, causing an invasion.
+//   With the fix, no friendly-only path exists, so no movement is dispatched.
+// ---------------------------------------------------------------------------
+
+describe('defendArmyGroup – no invasion when only path goes through enemy territory', () => {
+  // Only path from REAR to B1 passes through ENEMY.
+  const adjacency: Adjacency = {
+    REAR: ['ENEMY'],
+    ENEMY: ['REAR', 'B1'],
+    B1: ['ENEMY'],
+  };
+
+  const rearDiv = makeDiv('d-rear');
+
+  const regions: RegionState = {
+    REAR: makeRegion('REAR', 'soviet', [rearDiv]),
+    B1: makeRegion('B1', 'soviet'),
+    ENEMY: makeRegion('ENEMY', 'white'),
+  };
+
+  const relationships: Relationship[] = [
+    { fromCountry: 'soviet', toCountry: 'white', type: 'war' },
+  ];
+
+  const group = makeGroup({ regionIds: ['REAR', 'B1'] });
+
+  it('does not dispatch any movement into enemy territory when there is no friendly path', () => {
+    const state = makeState(regions, adjacency, [group], [], [], relationships);
+    let captured: Partial<GameStore> = {};
+    defendArmyGroup('ag-1', state, (partial) => { captured = partial; });
+
+    // No movement should be dispatched — or if somehow dispatched, never into enemy territory.
+    const movements = (captured.movingUnits ?? []) as Movement[];
+    movements.forEach(m => {
+      const dest = regions[m.toRegion];
+      expect(dest?.owner).toBe('soviet');
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Scenario 4b (regression): DEFEND still moves via a friendly-only path when
+// one exists, even when an enemy shortcut is present in the adjacency graph.
+//
+//   Layout:
+//
+//   [REAR2]---[MID]---[B1]---[ENEMY]
+//                 \          /
+//                  \--------/    ← MID also borders ENEMY
+//
+//   REAR2 is only adjacent to MID (not to ENEMY), so REAR2 is a true rear.
+//   MID borders ENEMY so it is a border region.
+//   B1 borders ENEMY so it is a border region.
+//   With old canEnter, BFS from REAR2 targeting B1 might traverse via
+//   MID→ENEMY→B1.  With canEnterFriendlyOnly it goes MID→B1 (friendly hop).
+//   Either way the movement's first step must be a friendly region (MID).
+// ---------------------------------------------------------------------------
+
+describe('defendArmyGroup – routes through friendly territory when a direct path exists', () => {
+  const adjacency: Adjacency = {
+    REAR2: ['MID'],
+    MID: ['REAR2', 'B1', 'ENEMY'],
+    B1: ['MID', 'ENEMY'],
+    ENEMY: ['MID', 'B1'],
+  };
+
+  const rearDiv = makeDiv('d-rear2');
+
+  const regions: RegionState = {
+    REAR2: makeRegion('REAR2', 'soviet', [rearDiv]),
+    MID: makeRegion('MID', 'soviet'),
+    B1: makeRegion('B1', 'soviet'),
+    ENEMY: makeRegion('ENEMY', 'white'),
+  };
+
+  const relationships: Relationship[] = [
+    { fromCountry: 'soviet', toCountry: 'white', type: 'war' },
+  ];
+
+  const group = makeGroup({ regionIds: ['REAR2', 'MID', 'B1'] });
+
+  it('dispatches a movement whose toRegion is friendly (never enemy)', () => {
+    const state = makeState(regions, adjacency, [group], [], [], relationships);
+    let captured: Partial<GameStore> = {};
+    defendArmyGroup('ag-1', state, (partial) => { captured = partial; });
+
+    const movements = (captured.movingUnits ?? []) as Movement[];
+    // At least one movement should be dispatched from REAR2
+    const fromRear = movements.filter(m => m.fromRegion === 'REAR2');
+    expect(fromRear.length).toBeGreaterThan(0);
+
+    // Every dispatched movement must land on friendly territory
+    fromRear.forEach(m => {
+      const dest = regions[m.toRegion];
+      expect(dest?.owner).toBe('soviet');
+    });
+  });
+});
