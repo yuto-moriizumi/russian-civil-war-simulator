@@ -17,9 +17,9 @@ interface MapToolHeaderProps {
   onGenerateAdjacency: () => void;
   onShowAdjacencyChange: (show: boolean) => void;
   // Edit mode props
-  editMode: 'ownership' | 'core' | 'units';
+  editMode: 'ownership' | 'core' | 'units' | 'value';
   isPaintEnabled: boolean;
-  onEditModeChange: (mode: 'ownership' | 'core' | 'units') => void;
+  onEditModeChange: (mode: 'ownership' | 'core' | 'units' | 'value') => void;
   onPaintToggle: () => void;
   // Export props
   ownership: Record<string, CountryId>;
@@ -140,10 +140,20 @@ export default function MapToolHeader({
               >
                 Units
               </button>
+              <button
+                onClick={() => onEditModeChange('value')}
+                className={`rounded px-2 py-0.5 text-[11px] transition-colors whitespace-nowrap ${
+                  editMode === 'value'
+                    ? "bg-yellow-600 text-white"
+                    : "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                }`}
+              >
+                Value
+              </button>
             </div>
 
-            {/* Paint Mode – hidden in Units mode (click-to-place is always active) */}
-            {editMode !== 'units' && (
+            {/* Paint Mode – hidden in Units and Value modes */}
+            {editMode !== 'units' && editMode !== 'value' && (
               <div className="flex items-center gap-2 border-r border-gray-700 pr-3">
                 <button
                   onClick={onPaintToggle}

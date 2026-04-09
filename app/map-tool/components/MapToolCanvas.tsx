@@ -29,7 +29,7 @@ interface MapToolCanvasProps {
   adjacency: Record<string, string[]> | null;
   showAdjacency: boolean;
   isPaintEnabled: boolean;
-  editMode: 'ownership' | 'core' | 'units';
+  editMode: 'ownership' | 'core' | 'units' | 'value';
   coreRegions: Record<CountryId, string[]>;
   // Unit placement props
   unitPlacement: UnitPlacementData;
@@ -43,6 +43,9 @@ interface MapToolCanvasProps {
   onRegionUnitAdd: (regionId: string) => void;
   onRegionUnitRemove: (regionId: string) => void;
   onRegionCoreRemove: (regionId: string) => void;
+  // Value edit props
+  regionValues: Record<string, number>;
+  onRegionValueChange: (regionId: string, delta: number) => void;
 }
 
 export default function MapToolCanvas({
@@ -65,6 +68,8 @@ export default function MapToolCanvas({
   onRegionUnitAdd,
   onRegionUnitRemove,
   onRegionCoreRemove,
+  regionValues,
+  onRegionValueChange,
 }: MapToolCanvasProps) {
   const mapRef = useRef<MapRef>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -164,6 +169,19 @@ export default function MapToolCanvas({
           expression.push(regionId, "#404040");
         }
       }
+    } else if (editMode === 'value') {
+      // Heat-map: value 1 = dark blue, higher values = warmer colors
+      const valueColors: Record<number, string> = {
+        1: '#1a3a5c',
+        2: '#2e6da4',
+        3: '#f0a500',
+        4: '#e06000',
+        5: '#c00000',
+      };
+      for (const regionId of Object.keys(ownership)) {
+        const v = regionValues[regionId] ?? 1;
+        expression.push(regionId, valueColors[Math.min(Math.max(v, 1), 5)] ?? '#8b0000');
+      }
     } else {
       // units mode – color by owner, same as ownership mode
       for (const [regionId, owner] of Object.entries(ownership)) {
@@ -173,7 +191,7 @@ export default function MapToolCanvas({
 
     expression.push("#808080");
     return expression;
-  }, [ownership, editMode, coreRegions, selectedCountry]);
+  }, [ownership, editMode, coreRegions, selectedCountry, regionValues]);
 
   // Line color expression for highlighting
   const lineColorExpression = useMemo(() => {
@@ -222,6 +240,14 @@ export default function MapToolCanvas({
         return;
       }
 
+      if (editMode === 'value') {
+        const regionId = (features[0].id as string) || props?.regionId;
+        if (!regionId) return;
+        // Left click = +1
+        onRegionValueChange(regionId, +1);
+        return;
+      }
+
       // Ownership/core mode uses feature.id as the canonical key
       const regionId = (features[0].id as string) || props?.regionId;
       if (!regionId) return;
@@ -231,7 +257,7 @@ export default function MapToolCanvas({
 
       onRegionPaint(regionId);
     },
-    [onRegionPaint, onRegionUnitAdd, isDragging, isPaintEnabled, editMode]
+    [onRegionPaint, onRegionUnitAdd, onRegionValueChange, isDragging, isPaintEnabled, editMode]
   );
 
   // Handle right-click
@@ -248,6 +274,14 @@ export default function MapToolCanvas({
         const regionId = (features[0].id as string) || props?.regionId;
         if (!regionId) return;
         onRegionUnitRemove(regionId);
+        return;
+      }
+
+      if (editMode === 'value') {
+        const regionId = (features[0].id as string) || props?.regionId;
+        if (!regionId) return;
+        // Right click = -1
+        onRegionValueChange(regionId, -1);
         return;
       }
 
@@ -268,7 +302,7 @@ export default function MapToolCanvas({
         onCountryPick(ownership[regionId]);
       }
     },
-    [ownership, onCountryPick, onRegionCoreRemove, isPaintEnabled, editMode, onRegionUnitRemove]
+    [ownership, onCountryPick, onRegionCoreRemove, isPaintEnabled, editMode, onRegionUnitRemove, onRegionValueChange]
   );
 
   // Handle mouse move
@@ -305,7 +339,7 @@ export default function MapToolCanvas({
         }
 
         // Paint while dragging in paint mode (ownership/core only)
-        if (isPainting && isPaintEnabled && regionId && editMode !== 'units') {
+        if (isPainting && isPaintEnabled && regionId && editMode !== 'units' && editMode !== 'value') {
           onRegionPaint(regionId);
         }
       } else {
@@ -330,8 +364,8 @@ export default function MapToolCanvas({
   // Handle mouse down
   const handleMouseDown = useCallback(
     (e: MapLayerMouseEvent) => {
-      if (editMode === 'units') {
-        // Units mode: no drag-paint, just track for panning
+      if (editMode === 'units' || editMode === 'value') {
+        // Units/Value mode: no drag-paint, just track for panning
         if (e.originalEvent.button === 2) {
           setIsPanning(true);
           setPanStart({
@@ -455,6 +489,7 @@ export default function MapToolCanvas({
 
   // Active army group color for brush indicator
   const activeBrushColor = useMemo(() => {
+    if (editMode === 'value') return '#ca8a04';
     if (editMode !== 'units' || !selectedArmyGroup) return getCountryColor(selectedCountry);
     return armyGroupColor(unitCountry, selectedArmyGroup);
   }, [editMode, selectedArmyGroup, selectedCountry, unitCountry, armyGroupColor]);
@@ -483,11 +518,13 @@ export default function MapToolCanvas({
         cursor={
           editMode === 'units'
             ? (selectedArmyGroup ? "crosshair" : "not-allowed")
+            : editMode === 'value'
+            ? "crosshair"
             : isPaintEnabled
             ? "crosshair"
             : "pointer"
         }
-        dragPan={editMode !== 'units' && isPaintEnabled ? false : true}
+        dragPan={editMode !== 'units' && editMode !== 'value' && isPaintEnabled ? false : true}
         dragRotate={false}
         touchZoomRotate={false}
         touchPitch={false}
@@ -578,6 +615,11 @@ export default function MapToolCanvas({
               }
             </div>
           )}
+          {editMode === 'value' && (
+            <div className="mt-1 text-xs text-yellow-300">
+              Value: {regionValues[hoveredRegion] ?? 1}
+            </div>
+          )}
           {editMode === 'units' && hoveredUnitSummary && (
             <div className="mt-1 space-y-0.5">
               {hoveredUnitSummary.map((e, i) => (
@@ -623,6 +665,10 @@ export default function MapToolCanvas({
                 : "| select army group in panel"}
             </span>
           </>
+        ) : editMode === 'value' ? (
+          <span className="text-xs text-gray-400">
+            Value Mode | Left: +1 | Right: -1 | Min: 1
+          </span>
         ) : (
           <>
             <span className="font-semibold">{selectedCountry}</span>
