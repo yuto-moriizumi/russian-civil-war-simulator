@@ -48,6 +48,8 @@ export interface GameStore extends GameState {
   addDivisionsInRegion: (regionId: string) => void;
   /** Toggle a single division in/out of the current selection */
   toggleDivisionInSelection: (divisionId: string) => void;
+  /** Narrow the selection to a single division by ID (keeps selectedUnitRegion) */
+  selectSingleDivision: (divisionId: string) => void;
   /** Clear all selected divisions */
   clearSelectedDivisions: () => void;
   setIsEventsModalOpen: (isOpen: boolean) => void;

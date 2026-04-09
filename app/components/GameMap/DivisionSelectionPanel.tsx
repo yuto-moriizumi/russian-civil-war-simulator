@@ -22,6 +22,7 @@ export function DivisionSelectionPanel() {
   const playerCountry = useGameStore(state => state.selectedCountry?.id);
   const clearSelectedDivisions = useGameStore(state => state.clearSelectedDivisions);
   const toggleDivisionInSelection = useGameStore(state => state.toggleDivisionInSelection);
+  const selectSingleDivision = useGameStore(state => state.selectSingleDivision);
 
   if (selectedDivisionIds.length === 0) return null;
 
@@ -99,11 +100,17 @@ export function DivisionSelectionPanel() {
           allDivisions.map((div) => (
             <div
               key={div.id}
-              className="flex items-center justify-between text-xs rounded px-1 hover:bg-stone-700 cursor-pointer select-none"
-              title="Shift+click to deselect this division"
+              className={`flex items-center justify-between text-xs rounded px-1 py-0.5 cursor-pointer transition-colors select-none ${
+                selectedDivisionIds.length === 1 && selectedDivisionIds[0] === div.id
+                  ? 'bg-cyan-700/50 text-cyan-100'
+                  : 'hover:bg-stone-700'
+              }`}
+              title="Click to select only this division · Shift+click to toggle"
               onClick={(e) => {
                 if (e.shiftKey) {
                   toggleDivisionInSelection(div.id);
+                } else {
+                  selectSingleDivision(div.id);
                 }
               }}
             >
