@@ -13,7 +13,8 @@ interface UnitMarkerProps {
   isSelected: boolean;
   isPlayerUnit: boolean;
   onRegionSelect: (regionId: string) => void;
-  onDivisionSelect: (regionId: string) => void;
+  /** Called with (regionId, shiftHeld) so callers can implement multi-select */
+  onDivisionSelect: (regionId: string, shiftHeld: boolean) => void;
 }
 
 export function UnitMarker({
@@ -52,7 +53,7 @@ export function UnitMarker({
       onClick={(e) => {
         e.originalEvent.stopPropagation();
         if (isPlayerUnit) {
-          onDivisionSelect(regionId);
+          onDivisionSelect(regionId, e.originalEvent.shiftKey);
         } else {
           onRegionSelect(regionId);
         }

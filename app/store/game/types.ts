@@ -44,6 +44,10 @@ export interface GameStore extends GameState {
   setSelectedUnitRegion: (regionId: string | null) => void;
   /** Select divisions by region; clears selectedRegion (mutual exclusivity) */
   selectDivisionsInRegion: (regionId: string) => void;
+  /** Shift+click on a unit marker: append all divisions from regionId to the current selection */
+  addDivisionsInRegion: (regionId: string) => void;
+  /** Toggle a single division in/out of the current selection */
+  toggleDivisionInSelection: (divisionId: string) => void;
   /** Narrow the selection to a single division by ID (keeps selectedUnitRegion) */
   selectSingleDivision: (divisionId: string) => void;
   /** Clear all selected divisions */
