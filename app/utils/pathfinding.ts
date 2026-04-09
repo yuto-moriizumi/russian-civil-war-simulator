@@ -139,6 +139,10 @@ export function findNearestEnemyRegion(
  * Only traverses regions that pass the canEnter predicate (if provided).
  * Returns an array of region IDs (excluding start, including end),
  * or null if no path exists.
+ *
+ * Performance: O(V+E) — uses a parent Map instead of carrying path arrays
+ * in the queue, eliminating O(depth) array copies per BFS step and the
+ * O(n) cost of Array.shift() by using a simple index pointer.
  */
 export function findPath(
   fromRegionId: string,
@@ -148,28 +152,41 @@ export function findPath(
 ): string[] | null {
   if (fromRegionId === toRegionId) return [];
 
-  const visited = new Set<string>();
-  const queue: { id: string; path: string[] }[] = [{ id: fromRegionId, path: [] }];
-  visited.add(fromRegionId);
+  // parent[node] = the node we came from (for path reconstruction)
+  const parent = new Map<string, string>();
+  parent.set(fromRegionId, '');           // sentinel: start has no parent
 
-  while (queue.length > 0) {
-    const { id: currentId, path } = queue.shift()!;
+  // Use a plain array + head pointer instead of Array.shift() to keep
+  // dequeue cost O(1) rather than O(n).
+  const queue: string[] = [fromRegionId];
+  let head = 0;
+
+  while (head < queue.length) {
+    const currentId = queue[head++];
     const neighbors = adjacency[currentId] || [];
 
     for (const neighborId of neighbors) {
-      if (visited.has(neighborId)) continue;
-      visited.add(neighborId);
+      if (parent.has(neighborId)) continue;   // already visited
 
-      const newPath = [...path, neighborId];
+      parent.set(neighborId, currentId);
 
       if (neighborId === toRegionId) {
-        return newPath;
+        // Reconstruct path from toRegionId back to fromRegionId
+        const path: string[] = [];
+        let node = neighborId;
+        while (node !== fromRegionId) {
+          path.push(node);
+          node = parent.get(node)!;
+        }
+        path.reverse();
+        return path;
       }
 
-      // Only expand through accessible regions
+      // Only expand through accessible regions (but we always record the
+      // parent so canEnter-blocked nodes won't be revisited either).
       if (canEnter && !canEnter(neighborId)) continue;
 
-      queue.push({ id: neighborId, path: newPath });
+      queue.push(neighborId);
     }
   }
 

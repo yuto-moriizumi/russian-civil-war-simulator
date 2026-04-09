@@ -179,6 +179,19 @@ export function defendArmyGroup(
     availBySource.get(regionId)!.push(divisionId);
   });
 
+  // BN-2: memoize getNextStepToward results across the (source × border) loop.
+  // canEnter and adjacency are both constant within a single tick, so each
+  // (from, to) pair always yields the same first-step.  Caching eliminates
+  // redundant BFS calls when multiple needy borders share the same source pool.
+  const nextStepCache = new Map<string, string | null>();
+  const cachedNextStep = (from: string, to: string): string | null => {
+    const key = `${from}|${to}`;
+    if (nextStepCache.has(key)) return nextStepCache.get(key)!;
+    const result = getNextStepToward(from, to, adjacency, canEnter);
+    nextStepCache.set(key, result);
+    return result;
+  };
+
   for (const borderRegionId of needyBorders) {
     const target = allocationTarget.get(borderRegionId) ?? 0;
     let committed = committedAtBorder.get(borderRegionId) ?? 0;
@@ -198,8 +211,8 @@ export function defendArmyGroup(
       // Don't send from a border toward itself
       if (sourceRegionId === borderRegionId) continue;
 
-      // Find the next BFS step toward the border
-      const nextStep = getNextStepToward(sourceRegionId, borderRegionId, adjacency, canEnter);
+      // Find the next BFS step toward the border (cached)
+      const nextStep = cachedNextStep(sourceRegionId, borderRegionId);
       if (!nextStep) {
         console.warn(`[DEFEND] No valid path from ${sourceRegionId} to ${borderRegionId}`);
         continue;
