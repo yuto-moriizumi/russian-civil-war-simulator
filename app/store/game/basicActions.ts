@@ -10,6 +10,7 @@ import * as turf from '@turf/turf';
 import { initialUnitPlacement, initialArmyGroupDefs } from '../../data/map/initialUnitPlacement';
 import { createDivision } from '../../utils/combat';
 import { getDivisionPrefix } from '../../data/countries';
+import { createDivisionSelectionActions } from './divisionSelectionActions';
 
 /**
  * Defines basic state management actions:
@@ -57,36 +58,9 @@ export const createBasicActions = (
   
   setSelectedUnitRegion: (regionId: string | null) => set({ selectedUnitRegion: regionId }),
 
-  /**
-   * Select all divisions in a region for the Division Selection Window.
-   * Clears selectedRegion to enforce mutual exclusivity between the two panels.
-   */
-  selectDivisionsInRegion: (regionId: string) => {
-    const { regions } = get();
-    const region = regions[regionId];
-    if (!region) return;
-    const divisionIds = region.divisions.map(d => d.id);
-    set({
-      selectedDivisionIds: divisionIds,
-      selectedUnitRegion: regionId,
-      // Clear region selection — mutual exclusivity
-      selectedRegion: null,
-    });
-  },
+  // Division selection actions (HOI4-style multi-select)
+  ...createDivisionSelectionActions(set, get),
 
-  /** Clear all selected divisions, also clearing the unit region. */
-  clearSelectedDivisions: () => {
-    set({ selectedDivisionIds: [], selectedUnitRegion: null });
-  },
-
-  /**
-   * Narrow the current selection to a single division.
-   * selectedUnitRegion is preserved so movement context is kept.
-   */
-  selectSingleDivision: (divisionId: string) => {
-    set({ selectedDivisionIds: [divisionId] });
-  },
-  
   setIsEventsModalOpen: (isOpen: boolean) => set({ isEventsModalOpen: isOpen }),
   
   setSelectedCombatId: (combatId: string | null) => set({ selectedCombatId: combatId }),

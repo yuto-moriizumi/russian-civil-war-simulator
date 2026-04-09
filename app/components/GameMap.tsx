@@ -49,6 +49,7 @@ export default function GameMap() {
   const setSelectedRegion = useGameStore(state => state.setSelectedRegion);
   const setSelectedUnitRegion = useGameStore(state => state.setSelectedUnitRegion);
   const selectDivisionsInRegion = useGameStore(state => state.selectDivisionsInRegion);
+  const addDivisionsInRegion = useGameStore(state => state.addDivisionsInRegion);
   const setSelectedCombatId = useGameStore(state => state.setSelectedCombatId);
   const setSelectedMovementId = useGameStore(state => state.setSelectedMovementId);
 
@@ -81,6 +82,22 @@ export default function GameMap() {
   const handleMapLoad = useCallback(() => {
     setMapLoaded(true);
   }, []);
+
+  /**
+   * Handles clicking a unit marker on the map.
+   * - Normal click: select all divisions in that region (replaces current selection).
+   * - Shift+click: add all divisions in that region to the existing selection.
+   */
+  const handleDivisionSelect = useCallback(
+    (regionId: string, shiftHeld: boolean) => {
+      if (shiftHeld && selectedDivisionIds.length > 0) {
+        addDivisionsInRegion(regionId);
+      } else {
+        selectDivisionsInRegion(regionId);
+      }
+    },
+    [selectedDivisionIds, addDivisionsInRegion, selectDivisionsInRegion]
+  );
 
   // Map style expressions
   const fillColorExpression = useMemo(() =>
@@ -200,7 +217,7 @@ export default function GameMap() {
               isSelected={isSelected}
               isPlayerUnit={isPlayerUnit}
               onRegionSelect={setSelectedRegion}
-              onDivisionSelect={selectDivisionsInRegion}
+              onDivisionSelect={handleDivisionSelect}
             />
           );
         })}

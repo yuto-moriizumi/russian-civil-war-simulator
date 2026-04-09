@@ -21,6 +21,7 @@ export function DivisionSelectionPanel() {
   const adjacency = useGameStore(state => state.adjacency);
   const playerCountry = useGameStore(state => state.selectedCountry?.id);
   const clearSelectedDivisions = useGameStore(state => state.clearSelectedDivisions);
+  const toggleDivisionInSelection = useGameStore(state => state.toggleDivisionInSelection);
   const selectSingleDivision = useGameStore(state => state.selectSingleDivision);
 
   if (selectedDivisionIds.length === 0) return null;
@@ -99,13 +100,19 @@ export function DivisionSelectionPanel() {
           allDivisions.map((div) => (
             <div
               key={div.id}
-              className={`flex items-center justify-between text-xs rounded px-1 py-0.5 cursor-pointer transition-colors ${
+              className={`flex items-center justify-between text-xs rounded px-1 py-0.5 cursor-pointer transition-colors select-none ${
                 selectedDivisionIds.length === 1 && selectedDivisionIds[0] === div.id
                   ? 'bg-cyan-700/50 text-cyan-100'
                   : 'hover:bg-stone-700'
               }`}
-              title="Click to select only this division"
-              onClick={() => selectSingleDivision(div.id)}
+              title="Click to select only this division · Shift+click to toggle"
+              onClick={(e) => {
+                if (e.shiftKey) {
+                  toggleDivisionInSelection(div.id);
+                } else {
+                  selectSingleDivision(div.id);
+                }
+              }}
             >
               <span
                 className="text-stone-300 truncate max-w-[130px]"
@@ -159,6 +166,12 @@ export function DivisionSelectionPanel() {
             </p>
           )}
           <p className="text-xs text-stone-500">Travel time: ~6 hours</p>
+          <p className="text-xs text-stone-500">
+            Shift+click a marker to add more divisions
+          </p>
+          <p className="text-xs text-stone-500">
+            Shift+click a row above to deselect it
+          </p>
         </div>
       )}
 
