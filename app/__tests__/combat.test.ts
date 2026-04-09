@@ -20,7 +20,7 @@ function makeDiv(
   attack = 10,
   defence = 10
 ): Division {
-  return { id, name: id, owner, armyGroupId: null, hp, maxHp: 100, attack, defence };
+  return { id, name: id, owner, armyGroupId: 'ag-test', hp, maxHp: 100, attack, defence };
 }
 
 /** Build a minimal combat with lastRoundTime far in the past so it always processes. */
