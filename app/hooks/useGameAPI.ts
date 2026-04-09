@@ -44,10 +44,12 @@ export function useGameAPI() {
           return false;
         }
         
-        const unitsToMove = count ?? state.regions[fromRegion]?.divisions.length ?? 0;
+        const selectedIds = state.selectedDivisionIds;
+        const idsToMove = !count && selectedIds.length > 0 ? selectedIds : undefined;
+        const unitsToMove = count ?? (selectedIds.length > 0 ? selectedIds.length : state.regions[fromRegion]?.divisions.length ?? 0);
         if (unitsToMove <= 0) return false;
 
-        state.moveUnits(fromRegion, toRegionId, unitsToMove);
+        state.moveUnits(fromRegion, toRegionId, unitsToMove, idsToMove);
         state.setSelectedUnitRegion(null);
         return true;
       },

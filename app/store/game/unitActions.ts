@@ -142,7 +142,7 @@ export const createUnitActions = (
     console.warn('deployUnit is deprecated - units are now deployed directly when created');
   },
 
-  moveUnits: (fromRegion: string, toRegion: string, count: number) => {
+  moveUnits: (fromRegion: string, toRegion: string, count: number, divisionIds?: string[]) => {
     const { adjacency, regions, selectedCountry, dateTime, movingUnits, relationships, activeCombats, gameEvents, notifications } = get();
 
     // --- Multi-step movement: if toRegion is not directly adjacent, find a path ---
@@ -227,7 +227,9 @@ export const createUnitActions = (
     
     // Only move divisions that belong to the player (important when in an ally region)
     const ownDivisions = from.divisions.filter(d => d.owner === selectedCountry.id);
-    const divisionsToMove = ownDivisions.slice(0, count);
+    const divisionsToMove = divisionIds && divisionIds.length > 0
+      ? ownDivisions.filter(d => divisionIds.includes(d.id))
+      : ownDivisions.slice(0, count);
     
     // Calculate distance-based travel time (only for the first hop)
     const { regionCentroids } = get();
