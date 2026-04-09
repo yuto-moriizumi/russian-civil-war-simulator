@@ -4,7 +4,6 @@ import { generateArmyGroupName } from '../../utils/armyGroupNaming';
 import { ARMY_GROUP_COLORS } from './initialState';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
-import { advanceArmyGroup } from './armyGroupAdvance';
 import { defendArmyGroup } from './armyGroupDefend';
 import { attackArmyGroup } from './armyGroupAttack';
 
