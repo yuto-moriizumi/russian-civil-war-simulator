@@ -17,6 +17,8 @@ import {
   processProductionQueue,
   processScheduledEvents
 } from './tickHelpers';
+import { attackArmyGroup } from './armyGroupAttack';
+import { defendArmyGroup } from './armyGroupDefend';
 
 /**
  * Defines the game tick action which runs every game hour
@@ -251,14 +253,43 @@ export const createTickActions = (
     console.timeEnd('[tick] 10-set-state');
 
     // Now trigger automatic actions for ALL army groups in advance/defend mode (player + AI)
+    // All patches are collected in-memory and merged into a single setState call at the end.
     console.time('[tick] 11-army-group-actions');
+    const armyGroupPatches: Partial<GameStore>[] = [];
+
+    // Snapshot of current state after step 10 — each pure function reads from this
+    // and writes its patch into armyGroupPatches. We thread updated state through
+    // so that later groups see the regions/movingUnits produced by earlier groups.
+    let batchState = get();
+
     armyGroupActionsNeeded.forEach(group => {
+      const collectPatch = (partial: Partial<GameStore>) => {
+        armyGroupPatches.push(partial);
+        // Keep batchState in sync so subsequent groups see already-committed moves
+        batchState = { ...batchState, ...partial };
+      };
+
       if (group.mode === 'advance') {
-        get().attackArmyGroup(group.id);
+        attackArmyGroup(group.id, batchState, collectPatch);
       } else if (group.mode === 'defend') {
-        get().defendArmyGroup(group.id);
+        defendArmyGroup(group.id, batchState, collectPatch);
       }
     });
+
+    // Merge all patches into a single setState call — only commit fields that changed
+    if (armyGroupPatches.length > 0) {
+      // Build a merged patch from all keys touched by any individual patch
+      const mergedPatch: Partial<GameStore> = {};
+      for (const patch of armyGroupPatches) {
+        Object.assign(mergedPatch, patch);
+      }
+      // The final values for each key live in batchState (threaded through above)
+      const finalPatch: Partial<GameStore> = {};
+      for (const key of Object.keys(mergedPatch) as (keyof GameStore)[]) {
+        (finalPatch as Record<string, unknown>)[key] = batchState[key];
+      }
+      set(finalPatch);
+    }
     console.timeEnd('[tick] 11-army-group-actions');
     
     // Step 11: Check and auto-complete missions
