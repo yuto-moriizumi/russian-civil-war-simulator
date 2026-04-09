@@ -6,6 +6,7 @@ import { GameStore } from './types';
 import { StoreApi } from 'zustand';
 import { advanceArmyGroup } from './armyGroupAdvance';
 import { defendArmyGroup } from './armyGroupDefend';
+import { attackArmyGroup } from './armyGroupAttack';
 
 /**
  * Defines actions related to army group management:
@@ -170,7 +171,11 @@ export const createArmyGroupActions = (
   },
 
   advanceArmyGroup: (groupId: string) => {
-    advanceArmyGroup(groupId, get(), set);
+    attackArmyGroup(groupId, get(), set);
+  },
+
+  attackArmyGroup: (groupId: string) => {
+    attackArmyGroup(groupId, get(), set);
   },
 
   defendArmyGroup: (groupId: string) => {

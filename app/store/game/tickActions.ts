@@ -254,7 +254,7 @@ export const createTickActions = (
     console.time('[tick] 11-army-group-actions');
     armyGroupActionsNeeded.forEach(group => {
       if (group.mode === 'advance') {
-        get().advanceArmyGroup(group.id);
+        get().attackArmyGroup(group.id);
       } else if (group.mode === 'defend') {
         get().defendArmyGroup(group.id);
       }

@@ -143,13 +143,7 @@ export const initialUnitPlacement: UnitPlacementData = {
   'RU-VLA': [
     { owner: 'soviet', armyGroupName: 'Red Army Group', count: 1 },
   ],
-  'UA-09': [
-    { owner: 'ukraine', armyGroupName: 'Ukrainian Army', count: 1 },
-  ],
-  'UA-32': [
-    { owner: 'ukraine', armyGroupName: 'Ukrainian Army', count: 1 },
-  ],
-  'UA-74': [
+  'UA-30': [
     { owner: 'ukraine', armyGroupName: 'Ukrainian Army', count: 1 },
   ],
   'XKX': [

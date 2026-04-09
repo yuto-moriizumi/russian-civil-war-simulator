@@ -83,6 +83,7 @@ export interface GameStore extends GameState {
   assignTheaterToGroup: (groupId: string, theaterId: string | null) => void;
   selectArmyGroup: (groupId: string | null) => void;
   advanceArmyGroup: (groupId: string) => void;
+  attackArmyGroup: (groupId: string) => void;
   defendArmyGroup: (groupId: string) => void;
   setArmyGroupMode: (groupId: string, mode: ArmyGroupMode) => void;
   deployToArmyGroup: (groupId: string, count?: number) => void;
