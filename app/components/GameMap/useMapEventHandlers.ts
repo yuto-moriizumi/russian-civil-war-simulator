@@ -122,7 +122,6 @@ export function useMapEventHandlers(
           const sourceRegion = regionsRef.current[currentSelectedUnit];
           if (sourceRegion && sourceRegion.divisions.length > 0) {
             moveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.divisions.length);
-            setSelectedUnitRegionRef.current(null);
             moved = true;
           }
         }
