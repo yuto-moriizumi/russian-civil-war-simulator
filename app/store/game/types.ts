@@ -44,6 +44,8 @@ export interface GameStore extends GameState {
   setSelectedUnitRegion: (regionId: string | null) => void;
   /** Select divisions by region; clears selectedRegion (mutual exclusivity) */
   selectDivisionsInRegion: (regionId: string) => void;
+  /** Narrow the selection to a single division by ID (keeps selectedUnitRegion) */
+  selectSingleDivision: (divisionId: string) => void;
   /** Clear all selected divisions */
   clearSelectedDivisions: () => void;
   setIsEventsModalOpen: (isOpen: boolean) => void;

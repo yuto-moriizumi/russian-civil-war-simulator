@@ -78,6 +78,14 @@ export const createBasicActions = (
   clearSelectedDivisions: () => {
     set({ selectedDivisionIds: [], selectedUnitRegion: null });
   },
+
+  /**
+   * Narrow the current selection to a single division.
+   * selectedUnitRegion is preserved so movement context is kept.
+   */
+  selectSingleDivision: (divisionId: string) => {
+    set({ selectedDivisionIds: [divisionId] });
+  },
   
   setIsEventsModalOpen: (isOpen: boolean) => set({ isEventsModalOpen: isOpen }),
   
