@@ -212,49 +212,7 @@ export function RegionInfoPanel() {
         </div>
       )}
 
-      {/* Show adjacent regions when unit is selected */}
-      {selectedUnitRegion === selectedRegion && region.owner === playerCountry && (
-        <div className="mt-3 space-y-1 border-t border-stone-700 pt-3">
-          <p className="text-xs text-stone-400 mb-2">Adjacent regions (right-click to move):</p>
-          <div className="max-h-32 overflow-y-auto space-y-1">
-            {getAdjacentRegions(adjacency, selectedRegion).map((adjId) => {
-              const adjRegion = regions[adjId];
-              if (!adjRegion) return null;
-              const isEnemy = adjRegion.owner !== playerCountry && adjRegion.owner !== 'neutral';
-              return (
-                <div
-                  key={adjId}
-                  className={`w-full rounded px-2 py-1 text-left text-xs ${
-                    isEnemy 
-                      ? 'bg-red-900/50 text-red-200' 
-                      : adjRegion.owner === playerCountry
-                      ? 'bg-green-900/50 text-green-200'
-                      : 'bg-stone-700 text-stone-200'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span>{adjRegion.name}</span>
-                    <span className="flex items-center gap-1">
-                      <span
-                        className="h-2 w-2 rounded-full"
-                        style={{ backgroundColor: COUNTRY_COLORS[adjRegion.owner] }}
-                      />
-                      {adjRegion.divisions.length > 0 && <span>({adjRegion.divisions.length})</span>}
-                    </span>
-                  </div>
-                  {isEnemy && adjRegion.divisions.length > 0 && (
-                    <div className="mt-1 flex items-center gap-2 text-[10px] text-red-300">
-                      <span>❤ {adjRegion.divisions.reduce((sum, d) => sum + d.hp, 0)}</span>
-                      <span>⚔ {adjRegion.divisions.reduce((sum, d) => sum + d.attack, 0)}</span>
-                      <span>🛡 {Math.round(adjRegion.divisions.reduce((sum, d) => sum + d.defence, 0) / adjRegion.divisions.length)}</span>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+
       
       <button
         onClick={() => {
