@@ -48,6 +48,7 @@ export default function GameMap() {
   // Actions
   const setSelectedRegion = useGameStore(state => state.setSelectedRegion);
   const setSelectedUnitRegion = useGameStore(state => state.setSelectedUnitRegion);
+  const selectDivisionsInRegion = useGameStore(state => state.selectDivisionsInRegion);
   const setSelectedCombatId = useGameStore(state => state.setSelectedCombatId);
   const setSelectedMovementId = useGameStore(state => state.setSelectedMovementId);
 
@@ -199,7 +200,7 @@ export default function GameMap() {
               isSelected={isSelected}
               isPlayerUnit={isPlayerUnit}
               onRegionSelect={setSelectedRegion}
-              onUnitSelect={setSelectedUnitRegion}
+              onDivisionSelect={selectDivisionsInRegion}
             />
           );
         })}
