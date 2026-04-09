@@ -74,6 +74,45 @@ export const createBasicActions = (
     });
   },
 
+  /**
+   * Shift+click on a unit marker: add all divisions from the given region to the
+   * current selection (HOI4-style multi-region selection).
+   * If a selection from a different region is already active, the new divisions
+   * are appended.  selectedUnitRegion keeps pointing to the *first* selected
+   * region so right-click movement still has a sensible source.
+   */
+  addDivisionsInRegion: (regionId: string) => {
+    const { regions, selectedDivisionIds, selectedUnitRegion } = get();
+    const region = regions[regionId];
+    if (!region) return;
+    const newIds = region.divisions.map(d => d.id);
+    const existing = new Set(selectedDivisionIds);
+    const merged = [...selectedDivisionIds, ...newIds.filter(id => !existing.has(id))];
+    set({
+      selectedDivisionIds: merged,
+      // Keep the original source region if one is already set; otherwise use this region.
+      selectedUnitRegion: selectedUnitRegion ?? regionId,
+      selectedRegion: null,
+    });
+  },
+
+  /**
+   * Toggle a single division in/out of the current selection.
+   * Used for Shift+click on individual division rows in DivisionSelectionPanel.
+   */
+  toggleDivisionInSelection: (divisionId: string) => {
+    const { selectedDivisionIds } = get();
+    const isSelected = selectedDivisionIds.includes(divisionId);
+    const next = isSelected
+      ? selectedDivisionIds.filter(id => id !== divisionId)
+      : [...selectedDivisionIds, divisionId];
+    set({ selectedDivisionIds: next });
+    // If all divisions were deselected, also clear the unit region
+    if (next.length === 0) {
+      set({ selectedUnitRegion: null });
+    }
+  },
+
   /** Clear all selected divisions, also clearing the unit region. */
   clearSelectedDivisions: () => {
     set({ selectedDivisionIds: [], selectedUnitRegion: null });

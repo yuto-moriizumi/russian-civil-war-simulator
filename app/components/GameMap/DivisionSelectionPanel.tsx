@@ -21,6 +21,7 @@ export function DivisionSelectionPanel() {
   const adjacency = useGameStore(state => state.adjacency);
   const playerCountry = useGameStore(state => state.selectedCountry?.id);
   const clearSelectedDivisions = useGameStore(state => state.clearSelectedDivisions);
+  const toggleDivisionInSelection = useGameStore(state => state.toggleDivisionInSelection);
 
   if (selectedDivisionIds.length === 0) return null;
 
@@ -98,7 +99,13 @@ export function DivisionSelectionPanel() {
           allDivisions.map((div) => (
             <div
               key={div.id}
-              className="flex items-center justify-between text-xs"
+              className="flex items-center justify-between text-xs rounded px-1 hover:bg-stone-700 cursor-pointer select-none"
+              title="Shift+click to deselect this division"
+              onClick={(e) => {
+                if (e.shiftKey) {
+                  toggleDivisionInSelection(div.id);
+                }
+              }}
             >
               <span
                 className="text-stone-300 truncate max-w-[130px]"
@@ -152,6 +159,12 @@ export function DivisionSelectionPanel() {
             </p>
           )}
           <p className="text-xs text-stone-500">Travel time: ~6 hours</p>
+          <p className="text-xs text-stone-500">
+            Shift+click a marker to add more divisions
+          </p>
+          <p className="text-xs text-stone-500">
+            Shift+click a row above to deselect it
+          </p>
         </div>
       )}
 
