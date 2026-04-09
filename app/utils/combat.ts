@@ -402,6 +402,28 @@ export function processCombatRound(
       // - Both sides reach 0 simultaneously (attacker loses in a draw — no mutual annihilation)
       victor = combat.defenderCountry;
     }
+
+    // When combat ends, restore winner's HP=0 divisions to HP=1 so they remain
+    // in the victorious region rather than retreating away from it.
+    // Remove them from retreatingDivisions and add back to the winner's array.
+    const winnerCountry = victor;
+    const loserIndicies: number[] = [];
+    retreatingDivisions.forEach((r, i) => {
+      if (r.division.owner === winnerCountry) {
+        loserIndicies.push(i);
+        const restoredDivision = { ...r.division, hp: 1 };
+        if (winnerCountry === combat.attackerCountry) {
+          attackerDivisions.push(restoredDivision);
+        } else {
+          defenderDivisions.push(restoredDivision);
+        }
+        console.log(`[VICTORY RESTORE] ${r.division.name} (${r.division.owner}) restored to HP=1 after winning in ${combat.regionName}`);
+      }
+    });
+    // Remove winner's divisions from retreatingDivisions (iterate in reverse to preserve indices)
+    for (let i = loserIndicies.length - 1; i >= 0; i--) {
+      retreatingDivisions.splice(loserIndicies[i], 1);
+    }
   }
   
   // Log combat progress
