@@ -110,8 +110,8 @@ export default function GameMap() {
 
   // Calculate markers
   const unitMarkers = useMemo(
-    () => playerCountry ? calculateUnitMarkers(regions, regionCentroids, selectedUnitRegion, playerCountry) : [],
-    [regions, regionCentroids, selectedUnitRegion, playerCountry]
+    () => playerCountry ? calculateUnitMarkers(regions, regionCentroids, selectedUnitRegion, playerCountry, selectedDivisionIds) : [],
+    [regions, regionCentroids, selectedUnitRegion, playerCountry, selectedDivisionIds]
   );
 
   const movingUnitMarkers = useMemo(
