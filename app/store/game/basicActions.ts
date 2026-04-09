@@ -34,7 +34,8 @@ export const createBasicActions = (
   
   setSelectedRegion: (regionId: string | null) => {
     const { regions, selectedCountry } = get();
-    set({ selectedRegion: regionId });
+    // Selecting a region clears any division selection (mutual exclusivity)
+    set({ selectedRegion: regionId, selectedDivisionIds: [] });
     
     if (regionId && regions[regionId]) {
       const region = regions[regionId];
@@ -55,6 +56,28 @@ export const createBasicActions = (
   },
   
   setSelectedUnitRegion: (regionId: string | null) => set({ selectedUnitRegion: regionId }),
+
+  /**
+   * Select all divisions in a region for the Division Selection Window.
+   * Clears selectedRegion to enforce mutual exclusivity between the two panels.
+   */
+  selectDivisionsInRegion: (regionId: string) => {
+    const { regions } = get();
+    const region = regions[regionId];
+    if (!region) return;
+    const divisionIds = region.divisions.map(d => d.id);
+    set({
+      selectedDivisionIds: divisionIds,
+      selectedUnitRegion: regionId,
+      // Clear region selection — mutual exclusivity
+      selectedRegion: null,
+    });
+  },
+
+  /** Clear all selected divisions, also clearing the unit region. */
+  clearSelectedDivisions: () => {
+    set({ selectedDivisionIds: [], selectedUnitRegion: null });
+  },
   
   setIsEventsModalOpen: (isOpen: boolean) => set({ isEventsModalOpen: isOpen }),
   

@@ -6,7 +6,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { useGameStore } from '../store/useGameStore';
 
 import { UnitMarker, MovingUnitMarker, CombatMarker } from './GameMap/MapMarkers';
-import { RegionTooltip, RegionInfoPanel, MovingUnitInfoPanel } from './GameMap/RegionPanels';
+import { RegionTooltip, RegionInfoPanel, MovingUnitInfoPanel, DivisionSelectionPanel } from './GameMap/RegionPanels';
 import { useMapState } from './GameMap/useMapState';
 import { useMapEventHandlers } from './GameMap/useMapEventHandlers';
 import {
@@ -43,6 +43,7 @@ export default function GameMap() {
   const regionCentroids = useGameStore(state => state.regionCentroids);
   const getRelationship = useGameStore(state => state.getRelationship);
   const selectedMovementId = useGameStore(state => state.selectedMovementId);
+  const selectedDivisionIds = useGameStore(state => state.selectedDivisionIds);
 
   // Actions
   const setSelectedRegion = useGameStore(state => state.setSelectedRegion);
@@ -244,7 +245,11 @@ export default function GameMap() {
         <RegionInfoPanel />
       )}
 
-      {selectedMovementId && !selectedRegion && (
+      {selectedDivisionIds.length > 0 && !selectedRegion && (
+        <DivisionSelectionPanel />
+      )}
+
+      {selectedMovementId && !selectedRegion && selectedDivisionIds.length === 0 && (
         <MovingUnitInfoPanel />
       )}
     </div>

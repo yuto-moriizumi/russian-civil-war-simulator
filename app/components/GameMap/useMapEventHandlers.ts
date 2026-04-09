@@ -26,6 +26,7 @@ export function useMapEventHandlers(
   const isSwitchModeActive = useGameStore(state => state.isSwitchModeActive);
   const setSwitchModeActive = useGameStore(state => state.setSwitchModeActive);
   const selectCountry = useGameStore(state => state.selectCountry);
+  const clearSelectedDivisions = useGameStore(state => state.clearSelectedDivisions);
 
   const selectedUnitRegionRef = useRef<string | null>(null);
   const selectedMovementIdRef = useRef<string | null>(null);
@@ -40,6 +41,7 @@ export function useMapEventHandlers(
   const isSwitchModeActiveRef = useRef(isSwitchModeActive);
   const setSwitchModeActiveRef = useRef(setSwitchModeActive);
   const selectCountryRef = useRef(selectCountry);
+  const clearSelectedDivisionsRef = useRef(clearSelectedDivisions);
 
   const selectedUnitRegion = useGameStore(state => state.selectedUnitRegion);
 
@@ -56,6 +58,7 @@ export function useMapEventHandlers(
   useEffect(() => { isSwitchModeActiveRef.current = isSwitchModeActive; }, [isSwitchModeActive]);
   useEffect(() => { setSwitchModeActiveRef.current = setSwitchModeActive; }, [setSwitchModeActive]);
   useEffect(() => { selectCountryRef.current = selectCountry; }, [selectCountry]);
+  useEffect(() => { clearSelectedDivisionsRef.current = clearSelectedDivisions; }, [clearSelectedDivisions]);
 
   const handleMapClick = useCallback(
     (e: MapLayerMouseEvent) => {
@@ -122,6 +125,8 @@ export function useMapEventHandlers(
           const sourceRegion = regionsRef.current[currentSelectedUnit];
           if (sourceRegion && sourceRegion.divisions.length > 0) {
             moveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.divisions.length);
+            // Clear division selection after initiating movement
+            clearSelectedDivisionsRef.current();
             moved = true;
           }
         }

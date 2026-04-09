@@ -6,6 +6,7 @@ import { MAJOR_CITY_CAP_BONUS, DIVISIONS_PER_STATE } from '../../utils/commandPo
 import { getCountriesWithCoreRegion, getCountryName, getCountryColor } from '../../data/countries';
 
 export { MovingUnitInfoPanel } from './MovingUnitInfoPanel';
+export { DivisionSelectionPanel } from './DivisionSelectionPanel';
 
 interface RegionTooltipProps {
   hoveredRegion: string;
@@ -46,30 +47,22 @@ export function RegionTooltip({ hoveredRegion }: RegionTooltipProps) {
 
 export function RegionInfoPanel() {
   const selectedRegion = useGameStore(state => state.selectedRegion);
-  const selectedUnitRegion = useGameStore(state => state.selectedUnitRegion);
   const regions = useGameStore(state => state.regions);
   const adjacency = useGameStore(state => state.adjacency);
   const playerCountry = useGameStore(state => state.selectedCountry?.id);
   const coreRegions = useGameStore(state => state.selectedCountry?.coreRegions);
   
   const setSelectedRegion = useGameStore(state => state.setSelectedRegion);
-  const setSelectedUnitRegion = useGameStore(state => state.setSelectedUnitRegion);
+  const selectDivisionsInRegion = useGameStore(state => state.selectDivisionsInRegion);
 
   if (!selectedRegion) return null;
   const region = regions[selectedRegion];
   if (!region) return null;
 
   return (
-    <div className={`absolute left-4 bottom-16 z-10 rounded-lg border-2 bg-stone-900/95 p-4 min-w-[280px] ${
-      selectedUnitRegion === selectedRegion ? 'border-cyan-400' : 'border-amber-500'
-    }`}>
-      <div className={`mb-2 text-lg font-bold ${
-        selectedUnitRegion === selectedRegion ? 'text-cyan-400' : 'text-amber-400'
-      }`}>
+    <div className="absolute left-4 bottom-16 z-10 rounded-lg border-2 border-amber-500 bg-stone-900/95 p-4 min-w-[280px]">
+      <div className="mb-2 text-lg font-bold text-amber-400">
         {region.name}
-        {selectedUnitRegion === selectedRegion && (
-          <span className="ml-2 text-xs font-normal">(Unit Selected)</span>
-        )}
       </div>
       <div className="text-xs text-stone-500 -mt-1 mb-2">
         ID: {selectedRegion}
@@ -184,41 +177,20 @@ export function RegionInfoPanel() {
       </div>
       
       {/* Actions for player-owned regions */}
-      {region.owner === playerCountry && (
+      {region.owner === playerCountry && region.divisions.length > 0 && (
         <div className="mt-3 space-y-2 border-t border-stone-700 pt-3">
-          {/* Deploy unit button */}
-          {/* Note: reserve units logic might need updating if we use it, but currently units are created via deployToArmyGroup */}
-          
-          {/* Unit selection info */}
-          {region.divisions.length > 0 && selectedUnitRegion === selectedRegion && (
-            <div className="space-y-2 rounded bg-cyan-900/30 p-2">
-              <p className="text-xs text-cyan-300">
-                Right-click an adjacent region to move {region.divisions.length} division(s)
-              </p>
-              <p className="text-xs text-stone-400">
-                Travel time: ~6 hours
-              </p>
-            </div>
-          )}
-          
-          {region.divisions.length > 0 && selectedUnitRegion !== selectedRegion && (
-            <button
-              onClick={() => setSelectedUnitRegion(selectedRegion)}
-              className="w-full rounded bg-blue-700 py-2 text-sm font-semibold text-white hover:bg-blue-600"
-            >
-              Select Divisions ({region.divisions.length})
-            </button>
-          )}
+          {/* Select Divisions button — opens the Division Selection Window (mutual exclusivity enforced) */}
+          <button
+            onClick={() => selectDivisionsInRegion(selectedRegion)}
+            className="w-full rounded bg-blue-700 py-2 text-sm font-semibold text-white hover:bg-blue-600"
+          >
+            Select Divisions ({region.divisions.length})
+          </button>
         </div>
       )}
 
-
-      
       <button
-        onClick={() => {
-          setSelectedRegion(null);
-          setSelectedUnitRegion(null);
-        }}
+        onClick={() => setSelectedRegion(null)}
         className="mt-3 w-full rounded bg-stone-700 py-1 text-xs text-stone-300 hover:bg-stone-600"
       >
         Deselect
