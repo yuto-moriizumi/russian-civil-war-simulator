@@ -13,7 +13,7 @@ interface UnitMarkerProps {
   isSelected: boolean;
   isPlayerUnit: boolean;
   onRegionSelect: (regionId: string) => void;
-  onUnitSelect: (regionId: string | null) => void;
+  onDivisionSelect: (regionId: string) => void;
 }
 
 export function UnitMarker({
@@ -23,7 +23,7 @@ export function UnitMarker({
   isSelected,
   isPlayerUnit,
   onRegionSelect,
-  onUnitSelect,
+  onDivisionSelect,
 }: UnitMarkerProps) {
   // Group divisions by owner so the marker reflects who actually controls the units,
   // not just who owns the territory. This is critical for military-access scenarios
@@ -51,9 +51,10 @@ export function UnitMarker({
       offset={[0, -4]}
       onClick={(e) => {
         e.originalEvent.stopPropagation();
-        onRegionSelect(regionId);
         if (isPlayerUnit) {
-          onUnitSelect(regionId);
+          onDivisionSelect(regionId);
+        } else {
+          onRegionSelect(regionId);
         }
       }}
     >
