@@ -16,6 +16,7 @@ interface ArmyGroupsPanelProps {
   onRenameGroup: (groupId: string, name: string) => void;
   onSelectGroup: (groupId: string | null) => void;
   onSetGroupMode: (groupId: string, mode: 'none' | 'advance' | 'defend') => void;
+  onSelectDivisionsInArmyGroup: (groupId: string) => void;
 }
 
 export default function ArmyGroupsPanel({
@@ -30,6 +31,7 @@ export default function ArmyGroupsPanel({
   onRenameGroup,
   onSelectGroup,
   onSetGroupMode,
+  onSelectDivisionsInArmyGroup,
 }: ArmyGroupsPanelProps) {
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
@@ -98,7 +100,13 @@ export default function ArmyGroupsPanel({
                         ? 'border-white bg-stone-700'
                         : 'border-stone-600 bg-stone-800 hover:border-stone-500'
                     }`}
-                    onClick={() => onSelectGroup(isSelected ? null : group.id)}
+                    onClick={() => {
+                      const newSelected = isSelected ? null : group.id;
+                      onSelectGroup(newSelected);
+                      if (newSelected) {
+                        onSelectDivisionsInArmyGroup(newSelected);
+                      }
+                    }}
                   >
                     {/* Color indicator */}
                     <div

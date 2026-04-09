@@ -61,6 +61,31 @@ export const createBasicActions = (
   // Division selection actions (HOI4-style multi-select)
   ...createDivisionSelectionActions(set, get),
 
+  /**
+   * Select all divisions across every region belonging to an army group.
+   * Clears selectedRegion (mutual exclusivity with the region info panel).
+   * selectedUnitRegion is set to null because divisions span multiple regions.
+   */
+  selectDivisionsInArmyGroup: (groupId: string) => {
+    const { regions, armyGroups } = get();
+    const group = armyGroups.find(g => g.id === groupId);
+    if (!group) return;
+    const divisionIds: string[] = [];
+    for (const regionId of group.regionIds) {
+      const region = regions[regionId];
+      if (region) {
+        for (const div of region.divisions) {
+          divisionIds.push(div.id);
+        }
+      }
+    }
+    set({
+      selectedDivisionIds: divisionIds,
+      selectedUnitRegion: null,
+      selectedRegion: null,
+    });
+  },
+
   setIsEventsModalOpen: (isOpen: boolean) => set({ isEventsModalOpen: isOpen }),
   
   setSelectedCombatId: (combatId: string | null) => set({ selectedCombatId: combatId }),
