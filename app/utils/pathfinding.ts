@@ -21,6 +21,12 @@ export function buildIsHostilePredicate(
   regions: RegionState,
   relationships: Relationship[]
 ): (regionId: string) => boolean {
+  // Build a Map for O(1) lookup instead of O(L) Array.find() on every edge evaluation
+  const relMap = new Map<string, Relationship>();
+  for (const r of relationships) {
+    relMap.set(`${r.fromCountry}|${r.toCountry}`, r);
+  }
+
   return (regionId: string): boolean => {
     const region = regions[regionId];
     if (!region) return false;
@@ -30,12 +36,8 @@ export function buildIsHostilePredicate(
     // advance into it, so it should trigger frontline / theater detection.
     if (region.owner === 'neutral') return true;
 
-    const theirRel = relationships.find(
-      r => r.fromCountry === region.owner && r.toCountry === countryId
-    );
-    const ourRel = relationships.find(
-      r => r.fromCountry === countryId && r.toCountry === region.owner
-    );
+    const theirRel = relMap.get(`${region.owner}|${countryId}`);
+    const ourRel   = relMap.get(`${countryId}|${region.owner}`);
 
     const theirType = theirRel?.type ?? 'neutral';
     const ourType   = ourRel?.type   ?? 'neutral';
@@ -67,17 +69,19 @@ export function buildCanEnterPredicate(
   regions: RegionState,
   relationships: Relationship[]
 ): (regionId: string) => boolean {
+  // Build a Map for O(1) lookup instead of O(L) Array.find() on every edge evaluation
+  const relMap = new Map<string, Relationship>();
+  for (const r of relationships) {
+    relMap.set(`${r.fromCountry}|${r.toCountry}`, r);
+  }
+
   return (regionId: string): boolean => {
     const region = regions[regionId];
     if (!region) return false;
     if (region.owner === countryId) return true;
 
-    const theirRel = relationships.find(
-      r => r.fromCountry === region.owner && r.toCountry === countryId
-    );
-    const ourRel = relationships.find(
-      r => r.fromCountry === countryId && r.toCountry === region.owner
-    );
+    const theirRel = relMap.get(`${region.owner}|${countryId}`);
+    const ourRel   = relMap.get(`${countryId}|${region.owner}`);
 
     const theyGrantUs = theirRel?.type ?? 'neutral';
     const weDeclared  = ourRel?.type  ?? 'neutral';
