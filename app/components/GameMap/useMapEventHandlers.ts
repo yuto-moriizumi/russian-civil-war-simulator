@@ -27,6 +27,7 @@ export function useMapEventHandlers(
   const setSwitchModeActive = useGameStore(state => state.setSwitchModeActive);
   const selectCountry = useGameStore(state => state.selectCountry);
   const clearSelectedDivisions = useGameStore(state => state.clearSelectedDivisions);
+  const selectedDivisionIds = useGameStore(state => state.selectedDivisionIds);
 
   const selectedUnitRegionRef = useRef<string | null>(null);
   const selectedMovementIdRef = useRef<string | null>(null);
@@ -42,6 +43,7 @@ export function useMapEventHandlers(
   const setSwitchModeActiveRef = useRef(setSwitchModeActive);
   const selectCountryRef = useRef(selectCountry);
   const clearSelectedDivisionsRef = useRef(clearSelectedDivisions);
+  const selectedDivisionIdsRef = useRef(selectedDivisionIds);
 
   const selectedUnitRegion = useGameStore(state => state.selectedUnitRegion);
 
@@ -59,6 +61,7 @@ export function useMapEventHandlers(
   useEffect(() => { setSwitchModeActiveRef.current = setSwitchModeActive; }, [setSwitchModeActive]);
   useEffect(() => { selectCountryRef.current = selectCountry; }, [selectCountry]);
   useEffect(() => { clearSelectedDivisionsRef.current = clearSelectedDivisions; }, [clearSelectedDivisions]);
+  useEffect(() => { selectedDivisionIdsRef.current = selectedDivisionIds; }, [selectedDivisionIds]);
 
   const handleMapClick = useCallback(
     (e: MapLayerMouseEvent) => {
@@ -124,7 +127,10 @@ export function useMapEventHandlers(
         if (!moved && currentSelectedUnit && targetRegionId && targetRegionId !== currentSelectedUnit) {
           const sourceRegion = regionsRef.current[currentSelectedUnit];
           if (sourceRegion && sourceRegion.divisions.length > 0) {
-            moveUnitsRef.current(currentSelectedUnit, targetRegionId, sourceRegion.divisions.length);
+            const selectedIds = selectedDivisionIdsRef.current;
+            const idsToMove = selectedIds.length > 0 ? selectedIds : undefined;
+            const countToMove = idsToMove ? idsToMove.length : sourceRegion.divisions.length;
+            moveUnitsRef.current(currentSelectedUnit, targetRegionId, countToMove, idsToMove);
             // Clear division selection after initiating movement
             clearSelectedDivisionsRef.current();
             moved = true;
