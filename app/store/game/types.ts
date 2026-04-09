@@ -18,6 +18,8 @@ export interface GameStore extends GameState {
   adjacency: Adjacency;
   selectedRegion: string | null;
   selectedUnitRegion: string | null;
+  /** IDs of divisions currently selected in the Division Selection Window */
+  selectedDivisionIds: string[];
   mapDataLoaded: boolean;
   aiStates: AIState[]; // Multiple AI states for different countries
   isEventsModalOpen: boolean;
@@ -40,6 +42,10 @@ export interface GameStore extends GameState {
   setMapDataLoaded: (loaded: boolean) => void;
   setSelectedRegion: (regionId: string | null) => void;
   setSelectedUnitRegion: (regionId: string | null) => void;
+  /** Select divisions by region; clears selectedRegion (mutual exclusivity) */
+  selectDivisionsInRegion: (regionId: string) => void;
+  /** Clear all selected divisions */
+  clearSelectedDivisions: () => void;
   setIsEventsModalOpen: (isOpen: boolean) => void;
   setSelectedCombatId: (combatId: string | null) => void;
   setSelectedMovementId: (movementId: string | null) => void;

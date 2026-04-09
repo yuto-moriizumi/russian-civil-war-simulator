@@ -23,6 +23,7 @@ export const useGameStore = create<GameStore>()(
       adjacency: {},
       selectedRegion: null,
       selectedUnitRegion: null,
+      selectedDivisionIds: [],
       mapDataLoaded: false,
       aiStates: [], // Initialize with empty array for multiple AI states
       isEventsModalOpen: false,
