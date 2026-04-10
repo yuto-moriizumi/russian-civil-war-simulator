@@ -324,6 +324,18 @@ describe('attackArmyGroup – Phase 2 advances surplus into defended enemy regio
 //   ActiveCombat should be created.
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Scenario 5: Single-enemy auto-advance
+//
+//   A border region has exactly 1 stationary division AND exactly 1 adjacent
+//   hostile region.  Even though stationaryDivs.length (1) == target (1),
+//   surplus = 0, the lone division MUST auto-advance.
+//
+//   Layout:
+//     BORDER (1 div) ──[ENEMY (1 white div)]
+//     target = 1/1 = 1 → surplus = 0, but single-enemy rule fires.
+// ---------------------------------------------------------------------------
+
 describe('attackArmyGroup – Phase 2 advances into undefended enemy without creating combat', () => {
   const b1Divs = Array.from({ length: 10 }, (_, i) => makeDiv(`b1-${i + 1}`));
   const b2Divs = Array.from({ length: 3 }, (_, i) => makeDiv(`b2-${i + 1}`));
@@ -378,5 +390,91 @@ describe('attackArmyGroup – Phase 2 advances into undefended enemy without cre
 
     const combats = (captured.activeCombats ?? []) as ActiveCombat[];
     expect(combats.length).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Scenario 5: Single-enemy auto-advance
+//
+//   A border region has exactly 1 stationary division AND exactly 1 adjacent
+//   hostile region.  Even though surplus = 0 (stationaryDivs == target),
+//   the lone division MUST auto-advance.
+//
+//   Layout:
+//     BORDER (1 soviet div) ──[ENEMY (1 white div)]
+//     total=1, N=1 border → target=1 → surplus=0 normally, but auto-advance fires.
+// ---------------------------------------------------------------------------
+
+describe('attackArmyGroup – Phase 2 single-enemy auto-advance', () => {
+  const adjacency: Adjacency = {
+    BORDER: ['ENEMY'],
+    ENEMY: ['BORDER'],
+  };
+
+  const relationships: Relationship[] = [
+    { fromCountry: 'soviet', toCountry: 'white', type: 'war' },
+  ];
+
+  it('auto-advances the lone division when there is exactly 1 adjacent enemy', () => {
+    const regions: RegionState = {
+      BORDER: makeRegion('BORDER', 'soviet', [makeDiv('lone-div')]),
+      ENEMY: makeRegion('ENEMY', 'white', [makeDiv('e-def', 'ag-enemy', 'white')]),
+    };
+    const group = makeGroup({ regionIds: ['BORDER'] });
+    const state = makeState(regions, adjacency, [group], [], [], relationships);
+    let captured: Partial<GameStore> = {};
+    attackArmyGroup('ag-1', state, (partial) => { captured = partial; });
+
+    const movements = (captured.movingUnits ?? []) as Movement[];
+    const advance = movements.find(m => m.fromRegion === 'BORDER' && m.toRegion === 'ENEMY');
+    expect(advance).toBeDefined();
+    expect(advance!.divisions.length).toBe(1);
+  });
+
+  it('creates an ActiveCombat when auto-advancing into a defended enemy region', () => {
+    const regions: RegionState = {
+      BORDER: makeRegion('BORDER', 'soviet', [makeDiv('lone-div')]),
+      ENEMY: makeRegion('ENEMY', 'white', [makeDiv('e-def', 'ag-enemy', 'white')]),
+    };
+    const group = makeGroup({ regionIds: ['BORDER'] });
+    const state = makeState(regions, adjacency, [group], [], [], relationships);
+    let captured: Partial<GameStore> = {};
+    attackArmyGroup('ag-1', state, (partial) => { captured = partial; });
+
+    const combats = (captured.activeCombats ?? []) as ActiveCombat[];
+    expect(combats.length).toBe(1);
+    expect(combats[0].regionId).toBe('ENEMY');
+  });
+
+  it('does NOT auto-advance when there are 2 adjacent enemy regions (ambiguous front)', () => {
+    const adjacency2: Adjacency = {
+      BORDER: ['ENEMY_1', 'ENEMY_2'],
+      ENEMY_1: ['BORDER'],
+      ENEMY_2: ['BORDER'],
+    };
+    const regions: RegionState = {
+      BORDER: makeRegion('BORDER', 'soviet', [makeDiv('lone-div')]),
+      ENEMY_1: makeRegion('ENEMY_1', 'white'),
+      ENEMY_2: makeRegion('ENEMY_2', 'white'),
+    };
+    const group = makeGroup({ regionIds: ['BORDER'] });
+    const state = makeState(regions, adjacency2, [group], [], [], relationships);
+    let called = false;
+    attackArmyGroup('ag-1', state, () => { called = true; });
+    // surplus=0 and NOT single-enemy → no movement
+    expect(called).toBe(false);
+  });
+
+  it('does NOT auto-advance when there are 2 stationary divisions (only surplus rule applies)', () => {
+    const regions: RegionState = {
+      BORDER: makeRegion('BORDER', 'soviet', [makeDiv('div-1'), makeDiv('div-2')]),
+      ENEMY: makeRegion('ENEMY', 'white'),
+    };
+    const group = makeGroup({ regionIds: ['BORDER'] });
+    const state = makeState(regions, adjacency, [group], [], [], relationships);
+    let called = false;
+    attackArmyGroup('ag-1', state, () => { called = true; });
+    // total=2, N=1 border → target=2 → surplus=0, stationaryDivs.length=2 ≠ 1 → no move
+    expect(called).toBe(false);
   });
 });
