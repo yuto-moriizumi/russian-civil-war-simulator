@@ -71,10 +71,9 @@ export const createBasicActions = (
     const group = armyGroups.find(g => g.id === groupId);
     if (!group) return;
     const divisionIds: string[] = [];
-    for (const regionId of group.regionIds) {
-      const region = regions[regionId];
-      if (region) {
-        for (const div of region.divisions) {
+    for (const region of Object.values(regions)) {
+      for (const div of region.divisions) {
+        if (div.armyGroupId === groupId) {
           divisionIds.push(div.id);
         }
       }
