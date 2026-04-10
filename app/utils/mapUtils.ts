@@ -154,11 +154,10 @@ export function getArmyGroupUnitCount(
   armyGroupId: string,
   movingUnits: Movement[] = []
 ): number {
-  // Count divisions in regions that belong to this army group
-  const unitsInRegions = regionIds.reduce((count, regionId) => {
-    const region = regions[regionId];
+  // Count divisions in all regions that belong to this army group (by armyGroupId, not regionIds)
+  const unitsInRegions = Object.values(regions).reduce((count, region) => {
     if (!region || region.owner !== country) return count;
-    
+
     // Count divisions that belong to this army group
     const groupDivisions = region.divisions.filter(d => d.armyGroupId === armyGroupId).length;
     return count + groupDivisions;
