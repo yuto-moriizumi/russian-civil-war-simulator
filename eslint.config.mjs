@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     ".worktrees/**",
     // OpenCode configuration directory
     ".opencode/**",
+    // Claude Code configuration directory
+    ".claude/**",
   ]),
   // Enforce file length guidelines from AGENTS.md
   {
