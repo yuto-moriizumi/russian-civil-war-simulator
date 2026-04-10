@@ -101,6 +101,8 @@ export interface GameStore extends GameState {
   defendArmyGroup: (groupId: string) => void;
   setArmyGroupMode: (groupId: string, mode: ArmyGroupMode) => void;
   deployToArmyGroup: (groupId: string, count?: number) => void;
+  /** Assign the given division IDs to the specified army group (skips already-assigned divisions). */
+  addDivisionsToArmyGroup: (groupId: string, divisionIds: string[]) => void;
   
   // Relationship Actions
   setRelationship: (fromCountry: CountryId, toCountry: CountryId, type: RelationshipType) => void;

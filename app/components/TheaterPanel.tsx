@@ -28,6 +28,8 @@ export default function TheaterPanel() {
   const deployToArmyGroup = useGameStore(state => state.deployToArmyGroup);
   const assignTheaterToGroup = useGameStore(state => state.assignTheaterToGroup);
   const selectDivisionsInArmyGroup = useGameStore(state => state.selectDivisionsInArmyGroup);
+  const addDivisionsToArmyGroup = useGameStore(state => state.addDivisionsToArmyGroup);
+  const selectedDivisionIds = useGameStore(state => state.selectedDivisionIds);
   
   // Local state
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
@@ -101,6 +103,13 @@ export default function TheaterPanel() {
               selectArmyGroup(newSelected);
               if (newSelected) {
                 selectDivisionsInArmyGroup(newSelected);
+              }
+            }}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (selectedDivisionIds.length > 0) {
+                addDivisionsToArmyGroup(group.id, selectedDivisionIds);
               }
             }}
           >

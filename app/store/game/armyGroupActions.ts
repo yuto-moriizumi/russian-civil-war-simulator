@@ -180,4 +180,29 @@ export const createArmyGroupActions = (
   defendArmyGroup: (groupId: string) => {
     defendArmyGroup(groupId, get(), set);
   },
+
+  /**
+   * Assign the currently selected divisions to the given army group.
+   * Divisions that already belong to the group are left unchanged.
+   */
+  addDivisionsToArmyGroup: (groupId: string, divisionIds: string[]) => {
+    const { regions } = get();
+
+    if (divisionIds.length === 0) return;
+
+    const divisionIdSet = new Set(divisionIds);
+
+    const updatedRegions = Object.fromEntries(
+      Object.entries(regions).map(([regionId, region]) => {
+        const updatedDivisions = region.divisions.map(division => {
+          if (!divisionIdSet.has(division.id)) return division;
+          if (division.armyGroupId === groupId) return division;
+          return { ...division, armyGroupId: groupId };
+        });
+        return [regionId, { ...region, divisions: updatedDivisions }];
+      })
+    );
+
+    set({ regions: updatedRegions });
+  },
 });
