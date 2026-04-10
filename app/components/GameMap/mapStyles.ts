@@ -1,6 +1,5 @@
 import type { RegionState, CountryId, MapMode } from '../../types/game';
 import { COUNTRY_COLORS } from '../../utils/mapUtils';
-import { DIVISIONS_PER_STATE, MAJOR_CITY_CAP_BONUS } from '../../utils/commandPower';
 
 // Colors for diplomacy map mode
 const DIPLOMACY_COLORS = {
@@ -81,21 +80,15 @@ export function createDiplomacyFillColorExpression(
 }
 
 /**
- * Build color expression for region fill based on command power (value map mode)
- * Uses a gradient from dark to bright based on the region's command power contribution
+ * Build color expression for region fill based on income value (value map mode)
+ * Uses a gradient from dark to bright based on the region's economic value
  */
-export function createValueFillColorExpression(regions: RegionState, coreRegions?: string[]) {
+export function createValueFillColorExpression(regions: RegionState) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const expression: any[] = ['match', getRegionIdExpression()];
-  
-  // Value mode should reflect the same per-region contribution shown in the region panel.
-  const getCapContribution = (regionId: string): number => {
-    const baseContribution = DIVISIONS_PER_STATE + (MAJOR_CITY_CAP_BONUS[regionId] ?? 0);
-    return coreRegions?.includes(regionId) ? baseContribution * 2 : baseContribution;
-  };
-  
-  // Find min and max command power contributions for normalization
-  const values = Object.keys(regions).map(regionId => getCapContribution(regionId));
+
+  // Find min and max income values for normalization
+  const values = Object.values(regions).map(region => region.value);
   const minValue = Math.min(...values);
   const maxValue = Math.max(...values);
   const range = maxValue - minValue;
@@ -141,9 +134,8 @@ export function createValueFillColorExpression(regions: RegionState, coreRegions
     }
   };
   
-  for (const id of Object.keys(regions)) {
-    const capContribution = getCapContribution(id);
-    const normalized = range > 0 ? (capContribution - minValue) / range : 0.5;
+  for (const [id, region] of Object.entries(regions)) {
+    const normalized = range > 0 ? (region.value - minValue) / range : 0.5;
     const color = interpolateColor(normalized);
     expression.push(id, color);
   }
@@ -171,7 +163,7 @@ export function createMapModeFillColorExpression(
   mapMode: MapMode,
   regions: RegionState,
   playerCountry: CountryId | undefined,
-  playerCoreRegions: string[] | undefined,
+  _playerCoreRegions: string[] | undefined,
   getRelationship: (from: CountryId, to: CountryId) => string
 ) {
   if (mapMode === 'diplomacy' && playerCountry) {
@@ -179,7 +171,7 @@ export function createMapModeFillColorExpression(
   }
   
   if (mapMode === 'value') {
-    return createValueFillColorExpression(regions, playerCoreRegions);
+    return createValueFillColorExpression(regions);
   }
   
   // Default to country map mode

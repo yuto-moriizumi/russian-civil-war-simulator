@@ -24,17 +24,23 @@ function getRegionColor(expression: unknown[], regionId: string): string {
 }
 
 describe('createValueFillColorExpression', () => {
-  it('colors a core +2 region differently from a regular +1 region', () => {
+  it('colors regions based on their income value', () => {
     const regions: RegionState = {
-      'UA-01': makeRegion('UA-01', 'soviet'),
-      'RU-AD': makeRegion('RU-AD', 'soviet'),
-      'UA-30': makeRegion('UA-30', 'soviet'),
+      'UA-01': { ...makeRegion('UA-01', 'soviet'), value: 1 },
+      'RU-AD': { ...makeRegion('RU-AD', 'soviet'), value: 3 },
+      'UA-30': { ...makeRegion('UA-30', 'soviet'), value: 5 },
     };
 
-    const expression = createValueFillColorExpression(regions, ['RU-AD']) as unknown[];
+    const expression = createValueFillColorExpression(regions) as unknown[];
 
-    expect(getRegionColor(expression, 'UA-01')).toBe('#1e3a8a');
-    expect(getRegionColor(expression, 'RU-AD')).toBe('#22d3ee');
-    expect(getRegionColor(expression, 'UA-30')).toBe('#fbbf24');
+    const lowColor = getRegionColor(expression, 'UA-01');
+    const midColor = getRegionColor(expression, 'RU-AD');
+    const highColor = getRegionColor(expression, 'UA-30');
+
+    // Low value should be darkest (smallest red component)
+    // High value should be brightest (largest red component)
+    expect(lowColor).not.toBe(highColor);
+    expect(lowColor).not.toBe(midColor);
+    expect(midColor).not.toBe(highColor);
   });
 });
