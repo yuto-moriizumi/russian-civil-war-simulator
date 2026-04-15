@@ -232,7 +232,7 @@ export default function GameMap() {
               movement={movement}
               longitude={longitude}
               latitude={latitude}
-              isSelected={selectedMovementId === movement.id}
+              isSelected={selectedMovementId === movement.id || (selectedDivisionIds.length > 0 && movement.divisions.some(d => selectedDivisionIds.includes(d.id)))}
               isPlayerUnit={movement.owner === playerCountry}
               onSelect={setSelectedMovementId}
             />

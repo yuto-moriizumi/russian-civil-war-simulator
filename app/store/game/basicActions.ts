@@ -67,12 +67,19 @@ export const createBasicActions = (
    * selectedUnitRegion is set to null because divisions span multiple regions.
    */
   selectDivisionsInArmyGroup: (groupId: string) => {
-    const { regions, armyGroups } = get();
+    const { regions, armyGroups, movingUnits } = get();
     const group = armyGroups.find(g => g.id === groupId);
     if (!group) return;
     const divisionIds: string[] = [];
     for (const region of Object.values(regions)) {
       for (const div of region.divisions) {
+        if (div.armyGroupId === groupId) {
+          divisionIds.push(div.id);
+        }
+      }
+    }
+    for (const movement of movingUnits) {
+      for (const div of movement.divisions) {
         if (div.armyGroupId === groupId) {
           divisionIds.push(div.id);
         }

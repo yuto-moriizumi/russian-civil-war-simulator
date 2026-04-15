@@ -18,6 +18,7 @@ export function DivisionSelectionPanel() {
   const selectedDivisionIds = useGameStore(state => state.selectedDivisionIds);
   const selectedUnitRegion = useGameStore(state => state.selectedUnitRegion);
   const regions = useGameStore(state => state.regions);
+  const movingUnits = useGameStore(state => state.movingUnits);
   const adjacency = useGameStore(state => state.adjacency);
   const playerCountry = useGameStore(state => state.selectedCountry?.id);
   const clearSelectedDivisions = useGameStore(state => state.clearSelectedDivisions);
@@ -44,6 +45,16 @@ export function DivisionSelectionPanel() {
     const foundIds = new Set(allDivisions.map(d => d.id));
     for (const region of Object.values(regions)) {
       for (const div of region.divisions) {
+        if (divisionIdSet.has(div.id) && !foundIds.has(div.id)) {
+          allDivisions.push(div);
+          foundIds.add(div.id);
+        }
+      }
+      if (allDivisions.length >= selectedDivisionIds.length) break;
+    }
+    // Also search moving units
+    for (const movement of movingUnits) {
+      for (const div of movement.divisions) {
         if (divisionIdSet.has(div.id) && !foundIds.has(div.id)) {
           allDivisions.push(div);
           foundIds.add(div.id);
