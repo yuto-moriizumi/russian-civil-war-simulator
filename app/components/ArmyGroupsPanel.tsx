@@ -185,7 +185,9 @@ export default function ArmyGroupsPanel({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onDeleteGroup(group.id);
+                        if (window.confirm(`Army group "${group.name}" を削除しますか？`)) {
+                          onDeleteGroup(group.id);
+                        }
                       }}
                       className="rounded bg-red-900/50 px-1.5 py-0.5 text-xs text-red-400 transition-colors hover:bg-red-800 hover:text-red-300"
                       title="Delete group"
