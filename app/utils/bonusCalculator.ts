@@ -13,7 +13,7 @@ export const BASE_DIVISION_STATS = {
 /**
  * Base production time in hours
  */
-export const BASE_PRODUCTION_TIME_HOURS = 72;
+export const BASE_PRODUCTION_TIME_HOURS = 168;
 
 /**
  * Calculate country bonuses from all claimed missions
