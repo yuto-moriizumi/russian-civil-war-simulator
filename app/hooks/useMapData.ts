@@ -26,7 +26,7 @@ export function useMapData() {
         const freshRegions = createInitialOwnership(geoData.features);
 
         // If the store already has persisted region data (from a saved game),
-        // merge only the GeoJSON-derived metadata (name, countryIso3, value) into
+        // merge only the GeoJSON-derived metadata (name, countryIso3) into
         // the persisted regions so that gameplay ownership and divisions are preserved.
         const hasSavedRegions = Object.keys(persistedRegions).length > 0;
         const regions = hasSavedRegions
@@ -34,7 +34,7 @@ export function useMapData() {
               Object.entries(freshRegions).map(([id, fresh]) => {
                 const saved = persistedRegions[id];
                 if (saved) {
-                  return [id, { ...saved, name: fresh.name, countryIso3: fresh.countryIso3, value: fresh.value }];
+                  return [id, { ...saved, name: fresh.name, countryIso3: fresh.countryIso3 }];
                 }
                 // Region exists in GeoJSON but not in save — use fresh data
                 return [id, fresh];

@@ -10,7 +10,6 @@ function makeRegion(id: string, owner: Region['owner']): Region {
     countryIso3: 'TEST',
     owner,
     divisions: [],
-    value: 1,
   };
 }
 
@@ -24,21 +23,24 @@ function getRegionColor(expression: unknown[], regionId: string): string {
 }
 
 describe('createValueFillColorExpression', () => {
-  it('colors regions based on their income value', () => {
+  it('colors regions based on CP contribution', () => {
     const regions: RegionState = {
-      'UA-01': { ...makeRegion('UA-01', 'soviet'), value: 1 },
-      'RU-AD': { ...makeRegion('RU-AD', 'soviet'), value: 3 },
-      'UA-30': { ...makeRegion('UA-30', 'soviet'), value: 5 },
+      // Regular region: CP contribution = 1
+      'UA-01': makeRegion('UA-01', 'soviet'),
+      // Major city with +2 bonus (UA-30 = Kyiv): CP contribution = 3
+      'UA-30': makeRegion('UA-30', 'soviet'),
+      // Major city with +2 bonus and core region: CP contribution = 6
+      'RU-MOW': makeRegion('RU-MOW', 'soviet'),
     };
 
-    const expression = createValueFillColorExpression(regions) as unknown[];
+    const coreRegions = ['RU-MOW'];
+    const expression = createValueFillColorExpression(regions, coreRegions) as unknown[];
 
     const lowColor = getRegionColor(expression, 'UA-01');
-    const midColor = getRegionColor(expression, 'RU-AD');
-    const highColor = getRegionColor(expression, 'UA-30');
+    const midColor = getRegionColor(expression, 'UA-30');
+    const highColor = getRegionColor(expression, 'RU-MOW');
 
-    // Low value should be darkest (smallest red component)
-    // High value should be brightest (largest red component)
+    // Higher CP contribution should produce different (warmer) colors
     expect(lowColor).not.toBe(highColor);
     expect(lowColor).not.toBe(midColor);
     expect(midColor).not.toBe(highColor);

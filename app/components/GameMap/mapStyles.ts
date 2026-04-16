@@ -1,5 +1,6 @@
 import type { RegionState, CountryId, MapMode } from '../../types/game';
 import { COUNTRY_COLORS } from '../../utils/mapUtils';
+import { DIVISIONS_PER_STATE, MAJOR_CITY_CAP_BONUS } from '../../utils/commandPower';
 
 // Colors for diplomacy map mode
 const DIPLOMACY_COLORS = {
@@ -79,26 +80,35 @@ export function createDiplomacyFillColorExpression(
   return expression;
 }
 
-// Fixed colors per value level (matches MapToolCanvas heat-map)
-const VALUE_COLORS: Record<number, string> = {
-  1: '#1a3a5c',
-  2: '#2e6da4',
-  3: '#f0a500',
-  4: '#e06000',
-  5: '#c00000',
+// Colors per CP contribution level
+const CP_CONTRIBUTION_COLORS: Record<number, string> = {
+  1: '#1a3a5c',  // Regular region (contribution = 1)
+  2: '#2e6da4',  // Minor bonus region (contribution = 2)
+  3: '#f0a500',  // Moderate bonus region (contribution = 3)
+  4: '#e06000',  // High bonus region (contribution = 4)
+  5: '#c00000',  // Very high bonus region (contribution = 5+)
 };
 
 /**
- * Build color expression for region fill based on income value (value map mode)
- * Uses fixed discrete colors per value level (1–5) to match the map-tool heat-map.
+ * Calculate CP contribution for a region (without core region multiplier).
+ * Core region multiplier is applied separately based on the player's core regions.
  */
-export function createValueFillColorExpression(regions: RegionState) {
+function getRegionCpContribution(regionId: string, coreRegions?: string[]): number {
+  const base = DIVISIONS_PER_STATE + (MAJOR_CITY_CAP_BONUS[regionId] || 0);
+  return coreRegions?.includes(regionId) ? base * 2 : base;
+}
+
+/**
+ * Build color expression for region fill based on CP contribution (value map mode).
+ */
+export function createValueFillColorExpression(regions: RegionState, coreRegions?: string[]) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const expression: any[] = ['match', getRegionIdExpression()];
 
-  for (const [id, region] of Object.entries(regions)) {
-    const clamped = Math.min(Math.max(region.value, 1), 5);
-    expression.push(id, VALUE_COLORS[clamped] ?? '#8b0000');
+  for (const [id] of Object.entries(regions)) {
+    const contribution = getRegionCpContribution(id, coreRegions);
+    const level = Math.min(contribution, 5);
+    expression.push(id, CP_CONTRIBUTION_COLORS[level] ?? '#c00000');
   }
 
   // Default color for unmatched regions
@@ -115,15 +125,15 @@ export function createMapModeFillColorExpression(
   mapMode: MapMode,
   regions: RegionState,
   playerCountry: CountryId | undefined,
-  _playerCoreRegions: string[] | undefined,
+  playerCoreRegions: string[] | undefined,
   getRelationship: (from: CountryId, to: CountryId) => string
 ) {
   if (mapMode === 'diplomacy' && playerCountry) {
     return createDiplomacyFillColorExpression(regions, playerCountry, getRelationship);
   }
-  
+
   if (mapMode === 'value') {
-    return createValueFillColorExpression(regions);
+    return createValueFillColorExpression(regions, playerCoreRegions);
   }
   
   // Default to country map mode

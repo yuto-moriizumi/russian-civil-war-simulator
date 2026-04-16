@@ -57,7 +57,7 @@ function makeRegion(id: string, divisions: Division[] = []): Region {
     countryIso3: 'RUS',
     owner: COUNTRY,
     divisions,
-    value: 1,
+    
   };
 }
 

@@ -358,7 +358,7 @@ describe('getNextStepToward', () => {
 // ---------------------------------------------------------------------------
 
 function makeRegion(id: string, owner: 'soviet' | 'white' | 'neutral' = 'soviet'): Region {
-  return { id, name: id, countryIso3: 'RUS', owner, divisions: [], value: 1 };
+  return { id, name: id, countryIso3: 'RUS', owner, divisions: [] };
 }
 
 describe('redirectMovement – path computation logic', () => {

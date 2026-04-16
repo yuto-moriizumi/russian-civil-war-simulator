@@ -1,5 +1,6 @@
 import { Adjacency, CountryId, RegionState, Movement, ArmyGroup, Division } from '../types/game';
-import { initialRegionOwnership, regionValues } from '../data/map';
+import { DIVISIONS_PER_STATE, MAJOR_CITY_CAP_BONUS } from './commandPower';
+import { initialRegionOwnership } from '../data/map';
 import { COUNTRY_COLORS } from '../data/countries';
 import { UnitPlacementData } from '../data/map/initialUnitPlacement';
 import { generateDivisionId } from './combat';
@@ -174,12 +175,12 @@ export function getArmyGroupUnitCount(
   return unitsInRegions + unitsInTransit;
 }
 
-// Calculate total income from regions controlled by a country (using region values/weights)
+// Calculate total income from regions controlled by a country (based on CP contribution per region)
 // minus unit maintenance costs ($1 per unit per hour)
 export function calculateCountryIncome(regions: RegionState, country: CountryId, movingUnits: Movement[] = []): number {
-  const grossIncome = Object.values(regions)
-    .filter(region => region.owner === country)
-    .reduce((total, region) => total + region.value, 0);
+  const grossIncome = Object.entries(regions)
+    .filter(([, region]) => region.owner === country)
+    .reduce((total, [id, ]) => total + DIVISIONS_PER_STATE + (MAJOR_CITY_CAP_BONUS[id] || 0), 0);
   
   const unitCount = countCountryUnits(regions, country, movingUnits);
   const maintenanceCost = unitCount; // $1 per unit per hour
@@ -207,7 +208,6 @@ export function initializeRegionState(
       countryIso3: props.countryIso3 || props.shapeGroup || 'UNK',
       owner: defaultOwner,
       divisions: [],
-      value: regionValues[id] ?? 1,  // Default value of 1 if not specified
     };
   }
   
@@ -239,7 +239,6 @@ export function createInitialOwnership(
       countryIso3,
       owner,
       divisions: [],
-      value: regionValues[id] ?? 1,  // Default value of 1 if not specified
     };
   }
   

@@ -64,7 +64,7 @@ function makeDiv(
 }
 
 function makeRegion(id: string, owner: 'soviet' | 'white', divs: Division[] = []): Region {
-  return { id, name: id, countryIso3: 'TST', owner, divisions: divs, value: 1 };
+  return { id, name: id, countryIso3: 'TST', owner, divisions: divs };
 }
 
 function makeGroup(overrides: Partial<ArmyGroup> = {}): ArmyGroup {

@@ -32,7 +32,6 @@ export interface Region {
   countryIso3: string;  // "RUS", "UKR"
   owner: CountryId;     // Which country controls this region
   divisions: Division[]; // Divisions stationed in this region
-  value: number;        // Economic value/weight for income (default 1, capitals higher)
 }
 
 export interface Adjacency {
