@@ -30,6 +30,8 @@ export const createBasicActions = (
   setRegions: (regions: Record<string, Region>) => set({ regions }),
   
   setAdjacency: (adjacency: Adjacency) => set({ adjacency }),
+
+  setBorderMidpoints: (midpoints: Record<string, [number, number]>) => set({ borderMidpoints: midpoints }),
   
   setMapDataLoaded: (loaded: boolean) => set({ mapDataLoaded: loaded }),
   

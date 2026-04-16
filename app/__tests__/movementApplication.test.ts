@@ -35,7 +35,7 @@ function makeMovement(overrides: Partial<Movement> = {}): Movement {
 }
 
 function makeCombat(overrides: Partial<ActiveCombat> = {}): ActiveCombat {
-  return { id: 'combat-1', regionId: 'B', regionName: 'B',
+  return { id: 'combat-1', attackerRegionId: 'A', attackerRegionName: 'A', defenderRegionId: 'B', defenderRegionName: 'B',
     attackerCountry: 'soviet', defenderCountry: 'white',
     attackerDivisions: [makeDiv({ id: 'div-atk' })],
     defenderDivisions: [makeDiv({ id: 'div-def', owner: 'white' })],
@@ -111,7 +111,7 @@ describe('applyCompletedMovements', () => {
   it('reinforces the attacker side in an ongoing combat', () => {
     const regions: RegionState = { B: makeRegion('B', { owner: 'white', divisions: [] }) };
     const ongoing = makeCombat({
-      regionId: 'B', attackerCountry: 'soviet', defenderCountry: 'white',
+      defenderRegionId: 'B', attackerCountry: 'soviet', defenderCountry: 'white',
       attackerDivisions: [makeDiv({ id: 'original-attacker' })],
       defenderDivisions: [makeDiv({ id: 'defender', owner: 'white' })],
       initialAttackerCount: 1,
@@ -125,7 +125,7 @@ describe('applyCompletedMovements', () => {
 
   it('skips movement that has a pendingCombatId pointing to a known combat', () => {
     const regions: RegionState = { B: makeRegion('B', { owner: 'white', divisions: [] }) };
-    const linked = makeCombat({ id: 'combat-linked', regionId: 'B', isComplete: true });
+    const linked = makeCombat({ id: 'combat-linked', defenderRegionId: 'B', isComplete: true });
     const mv = makeMovement({ toRegion: 'B', pendingCombatId: 'combat-linked' });
     const { nextCombats } = applyCompletedMovements([mv], [mv], ctx(regions, [], NO_REL, [linked]), NOW);
     expect(nextCombats).toHaveLength(0);
@@ -247,7 +247,7 @@ describe('multi-step movement (remainingPath)', () => {
 
     // Combat should have started at B
     expect(nextCombats).toHaveLength(1);
-    expect(nextCombats[0].regionId).toBe('B');
+    expect(nextCombats[0].defenderRegionId).toBe('B');
     // Multi-step should be halted — no next hop dispatched
     expect(newHopMovements).toHaveLength(0);
   });
@@ -322,7 +322,7 @@ describe('applyFinishedCombats', () => {
   it('transfers region ownership to attacker on attacker victory', () => {
     const regions: RegionState = { B: makeRegion('B', { owner: 'white', divisions: [] }) };
     const combat = makeCombat({
-      regionId: 'B', attackerDivisions: [makeDiv({ id: 'winner' })],
+      defenderRegionId: 'B', attackerDivisions: [makeDiv({ id: 'winner' })],
       defenderDivisions: [], isComplete: true, victor: 'soviet',
     });
     const nextRegions = applyFinishedCombats([combat], regions);
@@ -332,9 +332,9 @@ describe('applyFinishedCombats', () => {
   });
 
   it('keeps region under defender ownership when defender wins', () => {
-    const regions: RegionState = { B: makeRegion('B', { owner: 'white', divisions: [] }) };
+    const regions: RegionState = { A: makeRegion('A'), B: makeRegion('B', { owner: 'white', divisions: [] }) };
     const combat = makeCombat({
-      regionId: 'B', attackerDivisions: [],
+      defenderRegionId: 'B', attackerDivisions: [],
       defenderDivisions: [makeDiv({ id: 'surviving-defender', owner: 'white' })],
       isComplete: true, victor: 'white',
     });
@@ -344,8 +344,8 @@ describe('applyFinishedCombats', () => {
   });
 
   it('does not mutate original regions object', () => {
-    const regions: RegionState = { B: makeRegion('B', { owner: 'white' }) };
-    const combat = makeCombat({ regionId: 'B', isComplete: true, victor: 'soviet' });
+    const regions: RegionState = { A: makeRegion('A'), B: makeRegion('B', { owner: 'white' }) };
+    const combat = makeCombat({ defenderRegionId: 'B', isComplete: true, victor: 'soviet' });
     applyFinishedCombats([combat], regions);
     expect(regions['B'].owner).toBe('white');
   });
@@ -360,7 +360,7 @@ describe('applyFinishedCombats', () => {
     // Region ownership must stay with the defender; no attacker divisions remain.
     const regions: RegionState = { B: makeRegion('B', { owner: 'white', divisions: [] }) };
     const combat = makeCombat({
-      regionId: 'B',
+      defenderRegionId: 'B',
       attackerDivisions: [],
       defenderDivisions: [],
       isComplete: true,

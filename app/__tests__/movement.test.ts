@@ -62,8 +62,10 @@ function makeCombat(overrides: Partial<ActiveCombat> = {}): ActiveCombat {
   const now = new Date('1918-01-01T00:00:00Z');
   return {
     id: 'combat-1',
-    regionId: 'B',
-    regionName: 'B',
+    attackerRegionId: 'A',
+    attackerRegionName: 'A',
+    defenderRegionId: 'B',
+    defenderRegionName: 'B',
     attackerCountry: 'soviet',
     defenderCountry: 'white',
     attackerDivisions: [makeDiv({ id: 'div-atk' })],

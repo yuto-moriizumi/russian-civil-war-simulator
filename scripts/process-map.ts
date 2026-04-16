@@ -15,7 +15,7 @@ import type { Topology, GeometryCollection } from 'topojson-specification';
 
 import { loadConfig, mergeGeoJSON } from './lib/geojson-utils.js';
 import type { RegionFeatureCollection } from './lib/types.js';
-import { extractAdjacency } from './lib/topojson-utils.js';
+import { extractAdjacency, computeBorderMidpoints } from './lib/topojson-utils.js';
 import { 
   detectCrossBorderAdjacency, 
   detectSameCountryAdjacency, 
@@ -135,7 +135,16 @@ async function main() {
   
   fs.writeFileSync(adjacencyOutputPath, JSON.stringify(customAdjacencyResult, null, 2));
   console.log(`  Adjacency: ${adjacencyOutputPath}`);
-  
+
+  // Step 4b: 国境中間点を計算
+  console.log('Step 4b: Computing border midpoints...');
+
+  const borderMidpoints = computeBorderMidpoints(topology, outputGeoJSON, customAdjacencyResult);
+
+  const midpointsOutputPath = path.resolve(__dirname, '../public/map/borderMidpoints.json');
+  fs.writeFileSync(midpointsOutputPath, JSON.stringify(borderMidpoints, null, 2));
+  console.log(`  Border midpoints: ${midpointsOutputPath}`);
+
   console.log('\n=== Processing Complete ===');
   
   // 隣接関係のサンプル表示

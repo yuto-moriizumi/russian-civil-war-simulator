@@ -287,25 +287,41 @@ export function attackArmyGroup(
 
       // Check if target region is truly hostile (not just accessible via military access)
       const existingCombat = [...activeCombats, ...newCombats].find(
-        c => c.regionId === attackTargetId && !c.isComplete
+        c => c.attackerRegionId === borderRegionId &&
+             c.defenderRegionId === attackTargetId &&
+             !c.isComplete
       );
       if (existingCombat) {
         pendingCombatId = existingCombat.id;
       } else {
         const defenderDivisions = destRegion.divisions.filter(d => d.owner === destRegion.owner);
         if (defenderDivisions.length > 0) {
+          // Check for other combats on the same defender region (multi-front)
+          const otherCombatsOnRegion = [...activeCombats, ...newCombats].filter(
+            c => c.defenderRegionId === attackTargetId && !c.isComplete
+          );
+          const combatDefenderDivisions = otherCombatsOnRegion.length > 0
+            ? otherCombatsOnRegion[0].defenderDivisions.map(d => ({ ...d }))
+            : defenderDivisions;
+
           const newCombat = createActiveCombat(
+            borderRegionId,
+            newRegions[borderRegionId]?.name ?? borderRegionId,
             attackTargetId,
             destRegion.name,
             countryId,
             destRegion.owner,
             divsForAttack,
-            defenderDivisions,
+            combatDefenderDivisions,
             dateTime
           );
           pendingCombatId = newCombat.id;
           newCombats.push(newCombat);
-          newRegions[attackTargetId] = { ...destRegion, divisions: [] };
+          // Only clear defender divisions on first combat on this region
+          const isFirstCombatOnRegion = otherCombatsOnRegion.length === 0;
+          if (isFirstCombatOnRegion) {
+            newRegions[attackTargetId] = { ...destRegion, divisions: [] };
+          }
 
           const battleEvent = createGameEvent(
             'combat_victory',

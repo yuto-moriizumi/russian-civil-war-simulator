@@ -152,7 +152,7 @@ export function runAITick(
   
   // Filter out regions with active combat
   const regionsWithActiveCombat = new Set(
-    activeCombats.filter(c => !c.isComplete).map(c => c.regionId)
+    activeCombats.filter(c => !c.isComplete).map(c => c.defenderRegionId)
   );
   const availableRegions = ownedRegions.filter(r => !regionsWithActiveCombat.has(r.id));
   

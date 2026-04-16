@@ -21,14 +21,18 @@ export interface CombatMarkerData {
 }
 
 /**
- * Calculate unit marker data for all regions with units
+ * Calculate unit marker data for all regions with units.
+ * Also synthesizes markers for defender divisions that are locked in active
+ * combats (they are removed from region.divisions when combat starts, but
+ * should still appear on the map at their defending region).
  */
 export function calculateUnitMarkers(
   regions: RegionState,
   regionCentroids: Record<string, [number, number]>,
   selectedUnitRegion: string | null,
   playerCountry: CountryId,
-  selectedDivisionIds: string[] = []
+  selectedDivisionIds: string[] = [],
+  activeCombats: ActiveCombat[] = []
 ): (UnitMarkerData | null)[] {
   // Early return if centroids haven't loaded yet
   if (Object.keys(regionCentroids).length === 0) {
@@ -38,35 +42,63 @@ export function calculateUnitMarkers(
 
   const selectedDivisionSet = new Set(selectedDivisionIds);
 
-  return Object.entries(regions)
-    .filter(([, region]) => region.divisions.length > 0)
-    .map(([regionId, region]) => {
-      const centroid = regionCentroids[regionId];
-      if (!centroid) {
-        console.warn(`calculateUnitMarkers: Missing centroid for region ${regionId} (${region.name})`);
-        return null;
-      }
-      
-      // Highlight the marker only when at least one division in this region is
-      // explicitly selected via the division-selection system.  Selecting a
-      // region (selectedUnitRegion) alone must NOT trigger the highlight, so
-      // that clicking a province no longer glows the unit marker.
-      const isSelected = selectedDivisionSet.size > 0 &&
-        region.divisions.some(d => selectedDivisionSet.has(d.id));
-      // A marker is a player-controllable unit if the player owns the region
-      // OR if the player has their own divisions there (military access / autonomy).
-      const isPlayerUnit = region.owner === playerCountry ||
-        region.divisions.some(d => d.owner === playerCountry);
-      
-      return {
-        regionId,
-        region,
-        centroid,
-        isSelected,
-        isPlayerUnit,
-      };
-    })
-    .filter(Boolean);
+  // Build a map of extra divisions to overlay per region from active combats.
+  // Defender divisions are pulled out of region.divisions when combat starts,
+  // so we re-inject them here so they remain visible.
+  const combatDefendersByRegion = new Map<string, typeof activeCombats[0]['defenderDivisions']>();
+  for (const combat of activeCombats) {
+    if (combat.isComplete) continue;
+    const regionId = combat.defenderRegionId;
+    const existing = combatDefendersByRegion.get(regionId) ?? [];
+    combatDefendersByRegion.set(regionId, [...existing, ...combat.defenderDivisions]);
+  }
+
+  // Collect all region IDs we need markers for: regions with divisions, plus
+  // regions that only have combat defenders
+  const regionIds = new Set([
+    ...Object.keys(regions).filter(id => regions[id].divisions.length > 0),
+    ...combatDefendersByRegion.keys(),
+  ]);
+
+  return Array.from(regionIds).map(regionId => {
+    const region = regions[regionId];
+    if (!region) return null;
+
+    const centroid = regionCentroids[regionId];
+    if (!centroid) {
+      console.warn(`calculateUnitMarkers: Missing centroid for region ${regionId} (${region.name})`);
+      return null;
+    }
+
+    // Merge resident divisions with defender divisions from ongoing combats
+    const combatDivisions = combatDefendersByRegion.get(regionId) ?? [];
+    const allDivisions = [...region.divisions, ...combatDivisions];
+    if (allDivisions.length === 0) return null;
+
+    // Highlight the marker only when at least one division in this region is
+    // explicitly selected via the division-selection system.  Selecting a
+    // region (selectedUnitRegion) alone must NOT trigger the highlight, so
+    // that clicking a province no longer glows the unit marker.
+    const isSelected = selectedDivisionSet.size > 0 &&
+      allDivisions.some(d => selectedDivisionSet.has(d.id));
+    // A marker is a player-controllable unit if the player owns the region
+    // OR if the player has their own divisions there (military access / autonomy).
+    const isPlayerUnit = region.owner === playerCountry ||
+      allDivisions.some(d => d.owner === playerCountry);
+
+    // Use the merged division list so the marker reflects all units present
+    const regionWithCombatDivisions: Region = combatDivisions.length > 0
+      ? { ...region, divisions: allDivisions }
+      : region;
+
+    return {
+      regionId,
+      region: regionWithCombatDivisions,
+      centroid,
+      isSelected,
+      isPlayerUnit,
+    };
+  }).filter(Boolean);
 }
 
 /**
@@ -109,16 +141,29 @@ export function calculateMovingUnitMarkers(
  */
 export function calculateCombatMarkers(
   activeCombats: ActiveCombat[],
-  regionCentroids: Record<string, [number, number]>
+  regionCentroids: Record<string, [number, number]>,
+  borderMidpoints: Record<string, [number, number]> = {}
 ): (CombatMarkerData | null)[] {
   // Early return if centroids haven't loaded yet
   if (Object.keys(regionCentroids).length === 0) return [];
-  
+
   return activeCombats
     .filter(combat => !combat.isComplete)
     .map((combat) => {
-      const centroid = regionCentroids[combat.regionId];
-      if (!centroid || !Array.isArray(centroid) || centroid.length !== 2 || 
+      // Prefer pre-computed border midpoint; fall back to average of the two centroids
+      const pairKey = [combat.attackerRegionId, combat.defenderRegionId].sort().join('|');
+      const midpoint = borderMidpoints[pairKey];
+      let centroid: [number, number];
+      if (midpoint) {
+        centroid = midpoint;
+      } else {
+        const a = regionCentroids[combat.attackerRegionId];
+        const d = regionCentroids[combat.defenderRegionId];
+        if (!a || !d) return null;
+        centroid = [(a[0] + d[0]) / 2, (a[1] + d[1]) / 2];
+      }
+
+      if (!Array.isArray(centroid) || centroid.length !== 2 ||
           typeof centroid[0] !== 'number' || typeof centroid[1] !== 'number' ||
           isNaN(centroid[0]) || isNaN(centroid[1])) {
         return null;

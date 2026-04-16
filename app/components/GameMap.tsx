@@ -41,6 +41,7 @@ export default function GameMap() {
   const armyGroups = useGameStore(state => state.armyGroups);
   const mapMode = useGameStore(state => state.mapMode);
   const regionCentroids = useGameStore(state => state.regionCentroids);
+  const borderMidpoints = useGameStore(state => state.borderMidpoints);
   const getRelationship = useGameStore(state => state.getRelationship);
   const selectedMovementId = useGameStore(state => state.selectedMovementId);
   const selectedDivisionIds = useGameStore(state => state.selectedDivisionIds);
@@ -110,8 +111,8 @@ export default function GameMap() {
 
   // Calculate markers
   const unitMarkers = useMemo(
-    () => playerCountry ? calculateUnitMarkers(regions, regionCentroids, selectedUnitRegion, playerCountry, selectedDivisionIds) : [],
-    [regions, regionCentroids, selectedUnitRegion, playerCountry, selectedDivisionIds]
+    () => playerCountry ? calculateUnitMarkers(regions, regionCentroids, selectedUnitRegion, playerCountry, selectedDivisionIds, activeCombats) : [],
+    [regions, regionCentroids, selectedUnitRegion, playerCountry, selectedDivisionIds, activeCombats]
   );
 
   const movingUnitMarkers = useMemo(
@@ -120,8 +121,8 @@ export default function GameMap() {
   );
 
   const combatMarkers = useMemo(
-    () => calculateCombatMarkers(activeCombats, regionCentroids),
-    [activeCombats, regionCentroids]
+    () => calculateCombatMarkers(activeCombats, regionCentroids, borderMidpoints),
+    [activeCombats, regionCentroids, borderMidpoints]
   );
 
   /**

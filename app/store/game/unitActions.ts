@@ -268,7 +268,11 @@ export const createUnitActions = (
     let nextNotifications = notifications;
 
     if (isHostile) {
-      const existingCombat = activeCombats.find(c => c.regionId === actualToRegion && !c.isComplete);
+      const existingCombat = activeCombats.find(c =>
+        c.attackerRegionId === fromRegion &&
+        c.defenderRegionId === actualToRegion &&
+        !c.isComplete
+      );
       if (existingCombat) {
         // Reinforce attacker side of the existing combat
         nextActiveCombats = activeCombats.map(c => {
@@ -306,21 +310,35 @@ export const createUnitActions = (
       // Check if there are defenders to fight
       const defenderDivisions = to.divisions.filter(d => d.owner === to.owner);
       if (defenderDivisions.length > 0) {
+        // Check if there are already other combats on the same defender region
+        // (multi-front combat: same defenders fight on multiple borders)
+        const otherCombatsOnRegion = activeCombats.filter(
+          c => c.defenderRegionId === actualToRegion && !c.isComplete
+        );
+        const combatDefenderDivisions = otherCombatsOnRegion.length > 0
+          ? otherCombatsOnRegion[0].defenderDivisions.map(d => ({ ...d }))
+          : defenderDivisions;
+
         // Create combat immediately — divisions in transit are the attackers
         newCombat = createActiveCombat(
+          fromRegion,
+          from.name,
           actualToRegion,
           to.name,
           selectedCountry.id,
           to.owner,
           divisionsToMove,
-          defenderDivisions,
+          combatDefenderDivisions,
           dateTime
         );
-        // Clear defender divisions from region (absorbed into combat)
-        nextRegions = {
-          ...nextRegions,
-          [actualToRegion]: { ...to, divisions: [] },
-        };
+        // Clear defender divisions from region only if this is the first combat on this region
+        const isFirstCombatOnRegion = otherCombatsOnRegion.length === 0;
+        nextRegions = isFirstCombatOnRegion
+          ? {
+              ...nextRegions,
+              [actualToRegion]: { ...to, divisions: [] },
+            }
+          : nextRegions;
         nextActiveCombats = [...activeCombats, newCombat];
 
         const battleEvent = createGameEvent(

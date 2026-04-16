@@ -71,6 +71,7 @@ export const initialGameState: GameState = {
   ], // Initial relationships (autonomy = puppet state)
   mapMode: 'country', // Default map mode
   regionCentroids: {}, // Will be loaded asynchronously
+  borderMidpoints: {}, // Will be loaded asynchronously
   scheduledEvents: scheduledEvents, // Historical events
   countryBonuses: createInitialCountryBonuses(),
 };

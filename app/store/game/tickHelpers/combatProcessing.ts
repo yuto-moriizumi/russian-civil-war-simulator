@@ -79,13 +79,13 @@ export function processCombats(
         
         const combatEvent = createGameEvent(
           attackerWon ? 'region_captured' : 'combat_defeat',
-          attackerWon ? `${updatedCombat.regionName} Captured!` : `Battle for ${updatedCombat.regionName} Lost`,
-          `${updatedCombat.attackerCountry === 'soviet' ? 'Soviet' : 'White'} forces ${attackerWon ? 'captured' : 'failed to capture'} ${updatedCombat.regionName}. Attackers lost ${attackerLosses} divisions. Defenders lost ${defenderLosses} divisions.`,
+          attackerWon ? `${updatedCombat.defenderRegionName} Captured!` : `Battle for ${updatedCombat.defenderRegionName} Lost`,
+          `${updatedCombat.attackerCountry === 'soviet' ? 'Soviet' : 'White'} forces ${attackerWon ? 'captured' : 'failed to capture'} ${updatedCombat.defenderRegionName} from ${updatedCombat.attackerRegionName}. Attackers lost ${attackerLosses} divisions. Defenders lost ${defenderLosses} divisions.`,
           currentDate,
           updatedCombat.attackerCountry,
-          updatedCombat.regionId
+          updatedCombat.defenderRegionId
         );
-        
+
         newCombatEvents.push(combatEvent);
         newCombatNotifications.push(createNotification(combatEvent, currentDate));
 
@@ -94,11 +94,11 @@ export function processCombats(
           // Notify the defender that they lost the region
           const defenderLostEvent = createGameEvent(
             'region_lost',
-            `${updatedCombat.regionName} Lost!`,
-            `${updatedCombat.attackerCountry === 'soviet' ? 'Soviet' : 'White'} forces captured ${updatedCombat.regionName}. Attackers lost ${attackerLosses} divisions. Defenders lost ${defenderLosses} divisions.`,
+            `${updatedCombat.defenderRegionName} Lost!`,
+            `${updatedCombat.attackerCountry === 'soviet' ? 'Soviet' : 'White'} forces captured ${updatedCombat.defenderRegionName}. Attackers lost ${attackerLosses} divisions. Defenders lost ${defenderLosses} divisions.`,
             currentDate,
             updatedCombat.defenderCountry,
-            updatedCombat.regionId
+            updatedCombat.defenderRegionId
           );
           newCombatEvents.push(defenderLostEvent);
           newCombatNotifications.push(createNotification(defenderLostEvent, currentDate));
@@ -106,11 +106,11 @@ export function processCombats(
           // Notify the defender (winner) that they repelled the attack
           const defenderWonEvent = createGameEvent(
             'combat_victory',
-            `${updatedCombat.regionName} Defended!`,
-            `${updatedCombat.defenderCountry === 'soviet' ? 'Soviet' : 'White'} forces repelled the attack on ${updatedCombat.regionName}. Attackers lost ${attackerLosses} divisions. Defenders lost ${defenderLosses} divisions.`,
+            `${updatedCombat.defenderRegionName} Defended!`,
+            `${updatedCombat.defenderCountry === 'soviet' ? 'Soviet' : 'White'} forces repelled the attack on ${updatedCombat.defenderRegionName} from ${updatedCombat.attackerRegionName}. Attackers lost ${attackerLosses} divisions. Defenders lost ${defenderLosses} divisions.`,
             currentDate,
             updatedCombat.defenderCountry,
-            updatedCombat.regionId
+            updatedCombat.defenderRegionId
           );
           newCombatEvents.push(defenderWonEvent);
           newCombatNotifications.push(createNotification(defenderWonEvent, currentDate));

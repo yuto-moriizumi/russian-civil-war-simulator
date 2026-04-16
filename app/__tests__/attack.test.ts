@@ -300,7 +300,7 @@ describe('attackArmyGroup – Phase 2 advances surplus into defended enemy regio
 
     const combats = (captured.activeCombats ?? []) as ActiveCombat[];
     expect(combats.length).toBe(1);
-    expect(combats[0].regionId).toBe('ENEMY_1');
+    expect(combats[0].defenderRegionId).toBe('ENEMY_1');
   });
 
   it('sets pendingCombatId on the advance movement', () => {
@@ -443,7 +443,7 @@ describe('attackArmyGroup – Phase 2 single-enemy auto-advance', () => {
 
     const combats = (captured.activeCombats ?? []) as ActiveCombat[];
     expect(combats.length).toBe(1);
-    expect(combats[0].regionId).toBe('ENEMY');
+    expect(combats[0].defenderRegionId).toBe('ENEMY');
   });
 
   it('does NOT auto-advance when there are 2 adjacent enemy regions (ambiguous front)', () => {

@@ -208,6 +208,7 @@ export interface GameState {
   relationships: Relationship[]; // Diplomatic/military relationships between countries
   mapMode: MapMode; // Current map visualization mode
   regionCentroids: Record<string, [number, number]>; // Region centroids for distance calculations [longitude, latitude]
+  borderMidpoints: Record<string, [number, number]>; // Pre-computed midpoints of shared borders between adjacent regions [longitude, latitude]
   scheduledEvents: ScheduledEvent[]; // Scheduled historical events
   countryBonuses: Record<CountryId, CountryBonuses>; // Per-country bonuses from claimed missions
 }
@@ -227,10 +228,13 @@ export interface CombatResult {
 }
 
 // Active combat - represents an ongoing battle that resolves over time
+// Combat occurs on the border between attackerRegionId and defenderRegionId
 export interface ActiveCombat {
   id: string;                       // Unique combat ID
-  regionId: string;                 // Where the combat is taking place
-  regionName: string;               // Display name of the region
+  attackerRegionId: string;         // Region the attacker is coming FROM
+  defenderRegionId: string;         // Region being defended (the attacked tile)
+  attackerRegionName: string;       // Display name of attacker's region
+  defenderRegionName: string;       // Display name of defender's region
   attackerCountry: CountryId;       // Who is attacking
   defenderCountry: CountryId;       // Who is defending
   attackerDivisions: Division[];    // Current attacker divisions

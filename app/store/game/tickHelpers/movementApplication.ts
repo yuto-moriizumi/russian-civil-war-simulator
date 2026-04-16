@@ -140,8 +140,12 @@ export function applyCompletedMovements(
           });
         }
 
-        // Check for ongoing combat
-        const ongoingCombat = nextCombats.find(c => c.regionId === toRegion && !c.isComplete);
+        // Check for ongoing combat (border-specific: same attacker origin AND same defender)
+        const ongoingCombat = nextCombats.find(c =>
+          c.attackerRegionId === movement.fromRegion &&
+          c.defenderRegionId === toRegion &&
+          !c.isComplete
+        );
         
         if (ongoingCombat) {
           // There's an ongoing combat - add reinforcements to the appropriate side
@@ -268,17 +272,31 @@ export function applyCompletedMovements(
             }
           } else {
             // Initiate new combat
+            // Check for other combats on the same defender region (multi-front)
+            const otherCombatsOnRegion = nextCombats.filter(
+              c => c.defenderRegionId === toRegion && !c.isComplete
+            );
+            const combatDefenderDivisions = otherCombatsOnRegion.length > 0
+              ? otherCombatsOnRegion[0].defenderDivisions.map(d => ({ ...d }))
+              : totalDefenderDivisions;
+            const fromRegionState = nextRegions[movement.fromRegion];
             const newCombat = createActiveCombat(
+              movement.fromRegion,
+              fromRegionState?.name ?? movement.fromRegion,
               toRegion,
               to.name,
               owner,
               to.owner,
               divisions,
-              totalDefenderDivisions,
+              combatDefenderDivisions,
               currentDate
             );
             nextCombats.push(newCombat);
-            nextRegions[toRegion] = { ...to, divisions: [] };
+            // Only clear defender divisions on first combat on this region
+            const isFirstCombatOnRegion = otherCombatsOnRegion.length === 0;
+            if (isFirstCombatOnRegion) {
+              nextRegions[toRegion] = { ...to, divisions: [] };
+            }
             const battleEvent = createGameEvent(
               'combat_victory',
               `Battle for ${to.name} Begins!`,
@@ -350,20 +368,35 @@ export function applyFinishedCombats(
   const nextRegions = { ...regions };
 
   finishedCombats.forEach(combat => {
-    const region = nextRegions[combat.regionId];
-    if (!region) return;
-
     if (combat.victor === combat.attackerCountry) {
-      nextRegions[combat.regionId] = {
-        ...region,
+      // Attacker wins: move attacker divisions into the defender's region
+      const defenderRegion = nextRegions[combat.defenderRegionId];
+      if (!defenderRegion) return;
+      const existingAttackerDivs = defenderRegion.divisions.filter(d => d.owner === combat.attackerCountry);
+      nextRegions[combat.defenderRegionId] = {
+        ...defenderRegion,
         owner: combat.attackerCountry,
-        divisions: combat.attackerDivisions,
+        divisions: [...existingAttackerDivs, ...combat.attackerDivisions],
       };
     } else {
-      nextRegions[combat.regionId] = {
-        ...region,
-        divisions: combat.defenderDivisions,
-      };
+      // Defender wins: return attacker divisions to their origin region
+      const attackerRegion = nextRegions[combat.attackerRegionId];
+      if (attackerRegion) {
+        nextRegions[combat.attackerRegionId] = {
+          ...attackerRegion,
+          divisions: [...attackerRegion.divisions, ...combat.attackerDivisions],
+        };
+      }
+      // Restore defender divisions (deduplicated) to defender region
+      const defenderRegion = nextRegions[combat.defenderRegionId];
+      if (defenderRegion) {
+        const existingIds = new Set(defenderRegion.divisions.map(d => d.id));
+        const newDefenderDivs = combat.defenderDivisions.filter(d => !existingIds.has(d.id));
+        nextRegions[combat.defenderRegionId] = {
+          ...defenderRegion,
+          divisions: [...defenderRegion.divisions, ...newDefenderDivs],
+        };
+      }
     }
   });
 

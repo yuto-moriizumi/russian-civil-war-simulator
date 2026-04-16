@@ -5,6 +5,7 @@ import { createInitialOwnership } from '../utils/mapUtils';
 export function useMapData() {
   const setRegions = useGameStore(state => state.setRegions);
   const setAdjacency = useGameStore(state => state.setAdjacency);
+  const setBorderMidpoints = useGameStore(state => state.setBorderMidpoints);
   const setMapDataLoaded = useGameStore(state => state.setMapDataLoaded);
   const mapDataLoaded = useGameStore(state => state.mapDataLoaded);
   const initializeCentroids = useGameStore(state => state.initializeCentroids);
@@ -15,13 +16,15 @@ export function useMapData() {
 
     const loadMapData = async () => {
       try {
-        const [geoResponse, adjResponse] = await Promise.all([
+        const [geoResponse, adjResponse, midpointsResponse] = await Promise.all([
           fetch('/map/regions.geojson'),
           fetch('/map/adjacency.json'),
+          fetch('/map/borderMidpoints.json'),
         ]);
 
         const geoData = await geoResponse.json();
         const adjData = await adjResponse.json();
+        const midpointsData = await midpointsResponse.json();
 
         const freshRegions = createInitialOwnership(geoData.features);
 
@@ -44,8 +47,9 @@ export function useMapData() {
 
         setRegions(regions);
         setAdjacency(adjData);
+        setBorderMidpoints(midpointsData);
         setMapDataLoaded(true);
-        
+
         // Initialize centroids for distance calculations
         await initializeCentroids();
       } catch (error) {
@@ -55,5 +59,5 @@ export function useMapData() {
 
     loadMapData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setRegions, setAdjacency, setMapDataLoaded, mapDataLoaded, initializeCentroids]);
+  }, [setRegions, setAdjacency, setBorderMidpoints, setMapDataLoaded, mapDataLoaded, initializeCentroids]);
 }

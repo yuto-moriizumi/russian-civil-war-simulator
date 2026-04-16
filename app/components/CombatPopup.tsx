@@ -60,7 +60,7 @@ export default function CombatPopup() {
 
             <div className="flex flex-col items-center">
                <div className="text-amber-400 text-lg font-bold uppercase tracking-widest mb-1 drop-shadow-md">
-                 Battle of {combat.regionName}
+                 Battle for {combat.defenderRegionName} from {combat.attackerRegionName}
                </div>
                <div className="flex items-center gap-2">
                  <div className="h-0.5 w-12 bg-stone-600"></div>

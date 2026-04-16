@@ -80,9 +80,11 @@ export function processMovements(
         const isHostile = !hasAutonomy && theyGrantUs !== 'military_access';
 
         if (isHostile) {
-          // Check if there is already an active combat at the destination
+          // Check if there is already an active combat at the destination (border-specific)
           const existingCombat = [...activeCombats, ...newMidTransitCombats].find(
-            c => c.regionId === regeneratedMovement.toRegion && !c.isComplete
+            c => c.attackerRegionId === regeneratedMovement.fromRegion &&
+                 c.defenderRegionId === regeneratedMovement.toRegion &&
+                 !c.isComplete
           );
 
           if (existingCombat) {
@@ -93,13 +95,24 @@ export function processMovements(
             // Check for newly appeared defenders
             const defenders = destRegion.divisions.filter(d => d.owner === destRegion.owner);
             if (defenders.length > 0) {
+              // Check for other combats on the same defender region (multi-front)
+              const otherCombatsOnRegion = [...activeCombats, ...newMidTransitCombats].filter(
+                c => c.defenderRegionId === regeneratedMovement.toRegion && !c.isComplete
+              );
+              const combatDefenders = otherCombatsOnRegion.length > 0
+                ? otherCombatsOnRegion[0].defenderDivisions.map(d => ({ ...d }))
+                : defenders;
+
+              const fromRegion = regions[regeneratedMovement.fromRegion];
               const newCombat = createActiveCombat(
+                regeneratedMovement.fromRegion,
+                fromRegion?.name ?? regeneratedMovement.fromRegion,
                 regeneratedMovement.toRegion,
                 destRegion.name,
                 regeneratedMovement.owner,
                 destRegion.owner,
                 regeneratedMovement.divisions,
-                defenders,
+                combatDefenders,
                 currentDate
               );
               newMidTransitCombats.push(newCombat);

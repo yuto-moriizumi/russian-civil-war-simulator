@@ -124,25 +124,41 @@ export function advanceArmyGroup(
 
     if (isHostile) {
       const existingCombat = [...activeCombats, ...newCombats].find(
-        c => c.regionId === toRegion && !c.isComplete
+        c => c.attackerRegionId === fromRegion &&
+             c.defenderRegionId === toRegion &&
+             !c.isComplete
       );
       if (existingCombat) {
         pendingCombatId = existingCombat.id;
       } else {
         const defenderDivisions = destRegion.divisions.filter(d => d.owner === destRegion.owner);
         if (defenderDivisions.length > 0) {
+          // Check for other combats on the same defender region (multi-front)
+          const otherCombatsOnRegion = [...activeCombats, ...newCombats].filter(
+            c => c.defenderRegionId === toRegion && !c.isComplete
+          );
+          const combatDefenderDivisions = otherCombatsOnRegion.length > 0
+            ? otherCombatsOnRegion[0].defenderDivisions.map(d => ({ ...d }))
+            : defenderDivisions;
+
           const newCombat = createActiveCombat(
+            fromRegion,
+            sourceRegion.name,
             toRegion,
             destRegion.name,
             countryId,
             destRegion.owner,
             divsForMove,
-            defenderDivisions,
+            combatDefenderDivisions,
             dateTime
           );
           pendingCombatId = newCombat.id;
           newCombats.push(newCombat);
-          newRegions[toRegion] = { ...destRegion, divisions: [] };
+          // Only clear defender divisions on first combat on this region
+          const isFirstCombatOnRegion = otherCombatsOnRegion.length === 0;
+          if (isFirstCombatOnRegion) {
+            newRegions[toRegion] = { ...destRegion, divisions: [] };
+          }
 
           const battleEvent = createGameEvent(
             'combat_victory',

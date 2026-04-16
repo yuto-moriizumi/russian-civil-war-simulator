@@ -39,6 +39,7 @@ export interface GameStore extends GameState {
   // Actions
   setRegions: (regions: RegionState) => void;
   setAdjacency: (adjacency: Adjacency) => void;
+  setBorderMidpoints: (midpoints: Record<string, [number, number]>) => void;
   setMapDataLoaded: (loaded: boolean) => void;
   setSelectedRegion: (regionId: string | null) => void;
   setSelectedUnitRegion: (regionId: string | null) => void;

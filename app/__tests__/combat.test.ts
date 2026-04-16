@@ -30,6 +30,8 @@ function makeCombat(
   regionId = 'REGION_A'
 ) {
   const combat = createActiveCombat(
+    'SOVIET_REAR',
+    'SOVIET_REAR',
     regionId,
     regionId,
     'soviet',

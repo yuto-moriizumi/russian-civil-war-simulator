@@ -1,105 +1,358 @@
-# Performance: `[tick] 11-army-group-actions` が遅い
+# 国境戦闘モデル（HOI4スタイル）実装計画
 
-## 背景
+## Context
 
-`tickActions.ts` のステップ 11 は、`advance` または `defend` モードのすべての army group に対して
-`attackArmyGroup` / `defendArmyGroup` を逐次呼び出す。
-各関数は内部で `setState` を発行するため、グループ数 N に比例して
-store reconciliation と React re-render が発生する。
+現在、戦闘は特定のマス（`regionId`）上で発生する。これをHOI4のように、マスとマスの「間」（国境）で発生するように変更する。
 
-さらに各関数内部でグラフ BFS・`relationships` 線形スキャン・frontline BFS といった
-計算量の大きい処理が繰り返されている。
+- 同じ防御地域に複数方向からの戦闘が独立して発生可能
+- 攻撃側勝利時、自動的に防御側の地域へ進軍
+- 戦闘インジケーターは国境線の中間点に配置
 
 ---
 
-## ボトルネック一覧
+## Step 1: `ActiveCombat` 型の更新
 
-### 1. N 回の `setState` 呼び出し（最重要）
+**File:** `app/types/game.ts:230-248`
 
-**場所**: `tickActions.ts:254–262`
+`regionId`/`regionName` を以下に置き換え：
 
 ```typescript
-armyGroupActionsNeeded.forEach(group => {
-  if (group.mode === 'advance') get().attackArmyGroup(group.id);   // setState inside
-  else if (group.mode === 'defend') get().defendArmyGroup(group.id); // setState inside
-});
+export interface ActiveCombat {
+  id: string;
+  attackerRegionId: string;    // 攻撃元の地域
+  defenderRegionId: string;    // 防御されている地域（旧 `regionId`）
+  attackerRegionName: string;  // 表示名
+  defenderRegionName: string;  // 表示名（旧 `regionName`）
+  attackerCountry: CountryId;
+  defenderCountry: CountryId;
+  attackerDivisions: Division[];
+  defenderDivisions: Division[];
+  initialAttackerCount: number;
+  initialDefenderCount: number;
+  initialAttackerHp: number;
+  initialDefenderHp: number;
+  currentRound: number;
+  startTime: Date;
+  lastRoundTime: Date;
+  roundIntervalHours: number;
+  isComplete: boolean;
+  victor: CountryId | null;
+}
 ```
 
-グループごとに store が確定・React が再レンダリングされる。
-N グループ = N 回の不要な store 更新。
+また `GameState` に追加：
 
-**対策**: `attackArmyGroup` / `defendArmyGroup` を pure function 化し、
-差分を集約して Step 11 末尾で **1回だけ `setState`** を呼ぶ。
-
----
-
-### 2. ネストループ内での BFS 毎回実行
-
-**場所**: `armyGroupDefend.ts:182–206`, `armyGroupAttack.ts:148–213`
-
-- 外ループ: `needyBorders` (B 個)
-- 内ループ: `availBySource` (S 個のソースリージョン)
-- 各組み合わせで **グラフ全体を BFS** → **O(B × S × R)** / グループ / tick
-
-**対策**: ループ前に全ソースリージョンの BFS 結果をまとめてキャッシュし、
-ループ内では参照のみにする（1グループあたり BFS を1回に削減）。
+```typescript
+borderMidpoints: Record<string, [number, number]>;  // Key: ソート済み "A|B"
+```
 
 ---
 
-### 3. `relationships` 配列の線形スキャンが述語内で毎回実行
+## Step 2: 国境中間点の事前計算
 
-**場所**: `pathfinding.ts:33–46`, `pathfinding.ts:75–87`
+**File:** `scripts/process-map.ts`
 
-`buildCanEnterPredicate` / `buildIsHostilePredicate` が返す述語は
-呼び出しのたびに `Array.find()` を2回走査する。
-BFS の各エッジ評価で発動するため **O(R × D × L)** / グループ。
+Step 4（出力ファイル保存）の後に追加：TopoJSONのarcデータを利用して、共有国境の中間点を計算。
 
-**対策**: 述語生成時に `Map<"countryA|countryB", Relationship>` を構築し、
-述語内の参照を O(1) にする。
+**File:** `scripts/lib/topojson-utils.ts`
 
----
+関数 `computeBorderMidpoints(topology, mergedGeoJSON)` を追加：
+- `extractAdjacency` の既存の `arcToRegions` ロジックを再利用
+- 国境を共有する各ペアについて、共有arcの全座標点を収集
+- それらの点の重心（セントロイド）を国境中間点として計算
+- 出力キー形式：ソート済み `"A|B"` → `[longitude, latitude]`
 
-### 4. Frontline BFS が後方リージョンごとに再実行
+**出力:** `public/map/borderMidpoints.json`
 
-**場所**: `frontlineAssignment.ts:149–200`（`assignDivisionsToFrontline` Phase 1）
-
-後方リージョンの数だけ BFS を個別に実行 → **O(Rear × R)** / グループ。
-
-**対策**: 全 frontline スロットを始点とする **多始点 BFS (multi-source BFS)** を
-1回実行し、各後方リージョンから最近傍スロットへのパスを一括取得する。
-
----
-
-### 5. `syncArmyGroupTerritories` の O(G × R × D) スキャン
-
-**場所**: `armyGroupSync.ts`（ステップ 9）
-
-全リージョンを全グループ分スキャンし、`region.divisions.some(d => d.armyGroupId === group.id)` を評価。
-
-**対策**: division の追加・削除時に `regionId → Set<armyGroupId>` の逆引きインデックスを
-維持し、スキャンを O(R × D) に削減する。
+```json
+{
+  "RU-ALT|RU-NOV": [83.5, 53.2],
+  "RU-ALT|RU-KEM": [85.1, 52.8]
+}
+```
 
 ---
 
-## 対応優先度
+## Step 3: ランタイムでの国境中間点ロード
 
-| 優先度 | 問題 | 効果 | 難易度 |
-|--------|------|------|--------|
-| 高 | N 回 `setState` のバッチ化 | 即効・確実 | 中 |
-| 高 | `relationships` の Map 化 | 広範囲に効く | 低 |
-| 中 | BFS キャッシュ化 | O 記法を大幅削減 | 中 |
-| 中 | 多始点 BFS | Frontline 割り当て高速化 | 中 |
-| 低 | `syncArmyGroupTerritories` 逆引きインデックス | ステップ 9 高速化 | 高 |
+**Files:**
+- `app/hooks/useMapData.ts` — adjacencyと一緒に `/map/borderMidpoints.json` をfetch
+- `app/store/game/basicActions.ts` — `setBorderMidpoints` アクションを追加
+- `app/store/game/types.ts` — `borderMidpoints` を `GameStore` に追加
+- `app/store/game/initialState.ts` — `{}` で初期化
 
 ---
 
-## Files Changed（予定）
+## Step 4: `createActiveCombat()` シグネチャの更新
 
-| File | Change |
-|------|--------|
-| `app/store/game/tickActions.ts` | Step 11 を pure function 呼び出し + 1回 `setState` に変更 |
-| `app/store/game/armyGroupAttack.ts` | pure function 化、setState 削除 |
-| `app/store/game/armyGroupDefend.ts` | pure function 化、setState 削除 |
-| `app/utils/pathfinding.ts` | `relationships` を Map に変換して述語に渡す |
-| `app/utils/frontlineAssignment.ts` | Phase 1 を多始点 BFS に置き換え |
-| `app/store/game/tickHelpers/armyGroupSync.ts` | 逆引きインデックス導入（優先度低） |
+**File:** `app/utils/combat.ts:156`
+
+新しいシグネチャ：
+
+```typescript
+export function createActiveCombat(
+  attackerRegionId: string,
+  attackerRegionName: string,
+  defenderRegionId: string,
+  defenderRegionName: string,
+  attackerCountry: CountryId,
+  defenderCountry: CountryId,
+  attackerDivisions: Division[],
+  defenderDivisions: Division[],
+  currentTime: Date
+): ActiveCombat
+```
+
+---
+
+## Step 5: `findRetreatDestination()` の更新
+
+**File:** `app/utils/combat.ts:328-341`
+
+- 攻撃側師団 → `attackerRegionId` に退却（フォールバック：attackerRegionIdの味方隣接地域）
+- 防御側師団 → `defenderRegionId` の味方隣接地を検索（`attackerRegionId` は除外）
+
+```typescript
+function findRetreatDestination(
+  combatRegionId: string,      // defenderRegionId（防御側の退却用）
+  divisionOwner: CountryId,
+  regions: RegionState,
+  adjacency: Adjacency,
+  isAttacker: boolean,         // NEW
+  attackerRegionId: string     // NEW
+): string | null
+```
+
+---
+
+## Step 6: `processCombatRound()` の更新
+
+**File:** `app/utils/combat.ts:200-326`
+
+1. `combat.regionId` → `combat.defenderRegionId` に置換
+2. 退却時に `isAttacker` と `attackerRegionId` を `findRetreatDestination` に渡す
+3. 攻撃側退却の `fromRegionId` = `combat.attackerRegionId`、防御側退却の `fromRegionId` = `combat.defenderRegionId`
+4. **有効性チェックを追加**：`defenderRegionId` の所有者が変更された場合（別の戦闘が先に解決した場合）、この戦闘を自動キャンセル
+
+有効性チェックのロジック：
+
+```typescript
+const defenderRegion = regions[combat.defenderRegionId];
+if (defenderRegion && defenderRegion.owner !== combat.defenderCountry) {
+  const newOwnerIsAttacker = defenderRegion.owner === combat.attackerCountry;
+  if (newOwnerIsAttacker) {
+    return { combat: { ...combat, isComplete: true, victor: combat.attackerCountry }, retreatingDivisions: [] };
+  } else {
+    return {
+      combat: { ...combat, isComplete: true, victor: combat.defenderCountry },
+      retreatingDivisions: combat.attackerDivisions.map(d => ({
+        division: d, toRegionId: combat.attackerRegionId, fromRegionId: combat.attackerRegionId,
+      }))
+    };
+  }
+}
+```
+
+---
+
+## Step 7: 全5箇所の戦闘生成エントリポイントの更新
+
+全サイトで以下を実施：
+- `createActiveCombat` に `attackerRegionId`/`attackerRegionName` を渡す
+- ボーダー固有検索に変更：`c.attackerRegionId === from && c.defenderRegionId === to`
+- 複数戦闘時の防御側コピーハンドリング：同じ `defenderRegionId` に2回目以降の戦闘を作成する場合、最初のアクティブな戦闘から `defenderDivisions` をコピー
+- 最初の戦闘時のみ地域の師団をクリア：`existingCombatsOnRegion.length === 0` の場合のみ
+
+### 7a: `moveUnits()` — `app/store/game/unitActions.ts`
+
+~line 271: 戦闘検索をボーダー固有に変更
+~line 310: `createActiveCombat` に攻撃元の地域情報を追加
+
+### 7b: `attackArmyGroup()` — `app/store/game/armyGroupAttack.ts`
+
+~line 290: ボーダー固有検索
+~line 297: `createActiveCombat` に攻撃元情報を追加
+
+### 7c: `advanceArmyGroup()` — `app/store/game/armyGroupAdvance.ts`
+
+~line 126: ボーダー固有検索
+~line 134: `createActiveCombat` に攻撃元情報を追加
+
+### 7d: `processMovements()` — `app/store/game/tickHelpers/movementProcessing.ts`
+
+~line 85: ボーダー固有検索
+~line 96: `createActiveCombat` に攻撃元情報を追加
+
+### 7e: `applyCompletedMovements()` — `app/store/game/tickHelpers/movementApplication.ts`
+
+~line 144: ボーダー固有検索
+~line 271: `createActiveCombat` に攻撃元情報を追加
+
+---
+
+## Step 8: `applyFinishedCombats()` の更新
+
+**File:** `app/store/game/tickHelpers/movementApplication.ts:346-371`
+
+- **攻撃側勝利**：攻撃側師団を `defenderRegionId` に配置、所有者を変更。既存の攻撃側師団とマージ（重複排除）
+- **防御側勝利**：攻撃側師団を `attackerRegionId` に戻す。防御側師団は `defenderRegionId` に残る
+
+```typescript
+export function applyFinishedCombats(
+  finishedCombats: ActiveCombat[],
+  regions: Record<string, Region>
+): Record<string, Region> {
+  const nextRegions = { ...regions };
+
+  finishedCombats.forEach(combat => {
+    if (combat.victor === combat.attackerCountry) {
+      const existing = nextRegions[combat.defenderRegionId];
+      if (!existing) return;
+      const existingAttackerDivs = existing.divisions.filter(d => d.owner === combat.attackerCountry);
+      nextRegions[combat.defenderRegionId] = {
+        ...existing,
+        owner: combat.attackerCountry,
+        divisions: [...existingAttackerDivs, ...combat.attackerDivisions],
+      };
+    } else {
+      const attackerRegion = nextRegions[combat.attackerRegionId];
+      if (attackerRegion) {
+        nextRegions[combat.attackerRegionId] = {
+          ...attackerRegion,
+          divisions: [...attackerRegion.divisions, ...combat.attackerDivisions],
+        };
+      }
+      const defenderRegion = nextRegions[combat.defenderRegionId];
+      if (defenderRegion) {
+        const existingIds = new Set(defenderRegion.divisions.map(d => d.id));
+        const newDefenderDivs = combat.defenderDivisions.filter(d => !existingIds.has(d.id));
+        nextRegions[combat.defenderRegionId] = {
+          ...defenderRegion,
+          divisions: [...defenderRegion.divisions, ...newDefenderDivs],
+        };
+      }
+    }
+  });
+
+  return nextRegions;
+}
+```
+
+---
+
+## Step 9: 増援ロジックの更新
+
+**File:** `app/store/game/tickHelpers/movementApplication.ts:144`
+
+ボーダー固有の戦闘マッチング：
+
+```typescript
+const ongoingCombat = nextCombats.find(c =>
+  c.attackerRegionId === movement.fromRegion &&
+  c.defenderRegionId === toRegion &&
+  !c.isComplete
+);
+```
+
+---
+
+## Step 10: 戦闘処理イベントの更新
+
+**File:** `app/store/game/tickHelpers/combatProcessing.ts`
+
+- `combat.regionId` → `combat.defenderRegionId`
+- `combat.regionName` → `combat.defenderRegionName`
+- イベントテキストに方向性を追加（例：「Battle for Moscow from Tula」）
+
+**File:** `app/store/game/tickActions.ts:127-129`
+
+- `combat.regionId` → `combat.defenderRegionId`（mid-transit戦闘のクリア処理）
+- 「最初の戦闘時のみクリア」チェックを追加
+
+---
+
+## Step 11: マップ表示の更新
+
+**File:** `app/components/GameMap/mapCalculations.ts:110-133`
+
+`calculateCombatMarkers()` — `borderMidpoints` を使用、フォールバックとして重心平均：
+
+```typescript
+export function calculateCombatMarkers(
+  activeCombats: ActiveCombat[],
+  regionCentroids: Record<string, [number, number]>,
+  borderMidpoints: Record<string, [number, number]>  // NEW parameter
+): (CombatMarkerData | null)[] {
+  // ...
+  const pairKey = [combat.attackerRegionId, combat.defenderRegionId].sort().join('|');
+  const midpoint = borderMidpoints[pairKey];
+  if (midpoint) {
+    position = midpoint;
+  } else {
+    const a = regionCentroids[combat.attackerRegionId];
+    const d = regionCentroids[combat.defenderRegionId];
+    position = [(a[0]+d[0])/2, (a[1]+d[1])/2];
+  }
+}
+```
+
+**File:** `app/components/CombatPopup.tsx:63`
+
+「Battle of {regionName}」→「Battle for {defenderRegionName} from {attackerRegionName}」
+
+---
+
+## Step 12: セーブ/ロード互換性
+
+**File:** `app/utils/saveLoad.ts`
+
+- `SAVE_VERSION` を7にインクリメント
+- `SerializedActiveCombat` を新しいフィールドに更新
+- マイグレーション追加：
+
+```typescript
+activeCombats: (data.activeCombats || []).map((c: any) => ({
+  ...c,
+  attackerRegionId: c.attackerRegionId ?? c.regionId,
+  defenderRegionId: c.defenderRegionId ?? c.regionId,
+  attackerRegionName: c.attackerRegionName ?? c.regionName ?? '',
+  defenderRegionName: c.defenderRegionName ?? c.regionName ?? '',
+  startTime: new Date(c.startTime),
+  lastRoundTime: new Date(c.lastRoundTime),
+})),
+```
+
+---
+
+## Step 13: CPUプレイヤーの更新
+
+**File:** `app/ai/cpuPlayer.ts:155`
+
+`c.regionId` → `c.defenderRegionId`
+
+---
+
+## Step 14: テストの更新と追加
+
+**Files:** `app/__tests__/movementApplication.test.ts`, `app/__tests__/attack.test.ts`
+
+- `makeCombat()` ヘルパーに新しいフィールドを追加
+- 全 `combat.regionId` アサーションを更新
+- 新規テストケース：
+  - 同じ防御地域に2方向からの戦闘が独立して発生
+  - 最初の戦闘が解決（攻撃側勝利）→2番目の戦闘が自動キャンセル
+  - 攻撃側の退却先が `attackerRegionId`
+  - 防御側の退却先が `attackerRegionId` を除外
+  - 戦闘マーカーが国境中間点に配置される
+
+---
+
+## 検証手順
+
+1. `npx tsx scripts/process-map.ts` を実行して `borderMidpoints.json` を生成
+2. `npx vitest` を実行して全テストが通ることを確認
+3. ゲームを起動、戦争を開始、一方向から攻撃 → 国境中間点に戦闘インジケーター
+4. 同じ地域に別方向から攻撃 → その国境に2つ目の戦闘インジケーター
+5. 最初の戦闘に勝利 → 師団が地域に進軍、地域所有権が変更されたら2番目の戦闘が自動キャンセル
+6. 戦闘に敗北 → 攻撃側師団が元の地域に戻る
+7. 古いセーブをロード → 後方互換性マイグレーションが動作すること

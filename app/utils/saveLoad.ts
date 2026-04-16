@@ -21,7 +21,7 @@ import { getInitialCountryBonuses } from './bonusCalculator';
 import { countries } from '../data/countries';
 
 const STORAGE_KEY = 'rcw-save';
-const SAVE_VERSION = 6; // Bumped version for countryBonuses
+const SAVE_VERSION = 7; // Bumped version for border-combat model (attackerRegionId/defenderRegionId)
 
 // Serialized types (Date objects converted to ISO strings)
 interface SerializedMovement {
@@ -57,8 +57,13 @@ interface SerializedNotificationItem {
 
 interface SerializedActiveCombat {
   id: string;
-  regionId: string;
-  regionName: string;
+  attackerRegionId: string;
+  attackerRegionName: string;
+  defenderRegionId: string;
+  defenderRegionName: string;
+  // Legacy fields for migration
+  regionId?: string;
+  regionName?: string;
   attackerCountry: CountryId;
   defenderCountry: CountryId;
   attackerDivisions: Division[];
@@ -104,6 +109,7 @@ interface SerializedGameState {
   mapMode: MapMode;
   scheduledEvents: ScheduledEvent[];
   countryBonuses?: GameState['countryBonuses']; // Optional for backward compatibility
+  borderMidpoints?: Record<string, [number, number]>; // Optional for backward compatibility
 }
 
 interface SaveData {
@@ -237,9 +243,14 @@ function deserializeGameState(data: SerializedGameState): GameState {
     })),
     activeCombats: (data.activeCombats || []).map((c) => ({
       ...c,
+      attackerRegionId: c.attackerRegionId ?? c.regionId ?? '',
+      defenderRegionId: c.defenderRegionId ?? c.regionId ?? '',
+      attackerRegionName: c.attackerRegionName ?? c.regionName ?? '',
+      defenderRegionName: c.defenderRegionName ?? c.regionName ?? '',
       startTime: new Date(c.startTime),
       lastRoundTime: new Date(c.lastRoundTime),
     })),
+    borderMidpoints: data.borderMidpoints ?? {}, // Will be re-loaded from map data
     productionQueues,
     relationships: data.relationships || [], // Default to empty array if not present
     mapMode: data.mapMode || 'country', // Default to country map mode
@@ -286,13 +297,14 @@ export function loadGame(): {
     // Version check (for future migrations)
     if (data.version !== SAVE_VERSION) {
       console.warn(`Save version mismatch: expected ${SAVE_VERSION}, got ${data.version}`);
-      // Version 4 saves (with single production queue) can be migrated to version 5
       if (data.version < 4) {
         console.warn('Old save format detected (pre-army-group-assignment), clearing incompatible save');
         deleteSaveGame();
         return null;
       }
-      // Version 4 to 5 migration is handled in deserializeGameState
+      // Version 4→5: production queue migration (handled in deserializeGameState)
+      // Version 5→6: countryBonuses (handled in deserializeGameState)
+      // Version 6→7: border-combat model (attackerRegionId/defenderRegionId migration in deserializeGameState)
     }
 
     // Validate required fields
