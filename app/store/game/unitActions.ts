@@ -1,4 +1,4 @@
-import { Movement, ArmyGroup, ActiveCombat } from '../../types/game';
+import { Movement, ArmyGroup, ActiveCombat, Region } from '../../types/game';
 import { createDivision, createActiveCombat } from '../../utils/combat';
 import { createGameEvent, createNotification, getOrdinalSuffix } from '../../utils/eventUtils';
 import { generateArmyGroupName } from '../../utils/armyGroupNaming';
@@ -7,6 +7,26 @@ import { GameStore } from './types';
 import { StoreApi } from 'zustand';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { findPath, buildCanEnterPredicate } from '../../utils/pathfinding';
+
+/**
+ * Returns the effective defenderDivisions to use when starting a new combat,
+ * copying from an existing combat if there is already one on the same region
+ * (multi-front: same defenders fight on multiple borders).
+ * Also returns whether this is the first combat on the defender region.
+ */
+function resolveMultiFrontDefenders(
+  toRegion: string,
+  to: Region,
+  activeCombats: ActiveCombat[]
+): { combatDefenderDivisions: ActiveCombat['defenderDivisions']; isFirstCombat: boolean } {
+  const existing = activeCombats.filter(c => c.defenderRegionId === toRegion && !c.isComplete);
+  return {
+    combatDefenderDivisions: existing.length > 0
+      ? existing[0].defenderDivisions.map(d => ({ ...d }))
+      : to.divisions.filter(d => d.owner === to.owner),
+    isFirstCombat: existing.length === 0,
+  };
+}
 
 /**
  * Defines actions related to unit creation, deployment, and movement:
@@ -196,62 +216,38 @@ export const createUnitActions = (
     
     // Check relationship with the first-hop target region owner
     const targetOwner = to.owner;
+    const theyGrantUs = relationships.find(r => r.fromCountry === targetOwner && r.toCountry === selectedCountry.id)?.type ?? 'neutral';
+    const weDeclared = relationships.find(r => r.fromCountry === selectedCountry.id && r.toCountry === targetOwner)?.type ?? 'neutral';
+    const hasAutonomy = theyGrantUs === 'autonomy' || weDeclared === 'autonomy';
+
     if (targetOwner !== selectedCountry.id) {
-      // Moving to another country's territory
-      // Check if they grant us access/war
-      const theirRelationship = relationships.find(
-        r => r.fromCountry === targetOwner && r.toCountry === selectedCountry.id
-      );
-      const theyGrantUs = theirRelationship ? theirRelationship.type : 'neutral';
-      
-      // Check if we declared war on them
-      const ourRelationship = relationships.find(
-        r => r.fromCountry === selectedCountry.id && r.toCountry === targetOwner
-      );
-      const weDeclared = ourRelationship ? ourRelationship.type : 'neutral';
-      
-      // Check for autonomy relationship (grants mutual military access)
-      const hasAutonomy = theyGrantUs === 'autonomy' || weDeclared === 'autonomy';
-      
-      // Can move if:
-      // 1. They grant us military access or war, OR
-      // 2. We declared war on them, OR
-      // 3. Either side has autonomy relationship (mutual military access)
       const canMove = theyGrantUs !== 'neutral' || weDeclared === 'war' || hasAutonomy;
-      
       if (!canMove) {
         console.warn(`Cannot move to ${to.name}: No military access or war state with ${targetOwner}`);
         return;
       }
     }
-    
+
     // Only move divisions that belong to the player (important when in an ally region)
     const ownDivisions = from.divisions.filter(d => d.owner === selectedCountry.id);
     const divisionsToMove = divisionIds && divisionIds.length > 0
       ? ownDivisions.filter(d => divisionIds.includes(d.id))
       : ownDivisions.slice(0, count);
-    
+
     // Calculate distance-based travel time (only for the first hop)
     const { regionCentroids } = get();
     const distanceKm = calculateDistance(fromRegion, actualToRegion, regionCentroids);
     const travelTimeHours = calculateTravelTime(distanceKm, false);
-    
     const destLabel = finalDestination
       ? `${to.name} → … → ${regions[finalDestination]?.name ?? finalDestination}`
       : to.name;
     console.log(`Moving from ${from.name} to ${destLabel} (first hop: ${to.name}): ${Math.round(distanceKm)} km, ${travelTimeHours.toFixed(1)} hours (${Math.floor(travelTimeHours / 24)}d ${Math.round(travelTimeHours % 24)}h)`);
-    
     const arrivalTime = new Date(dateTime);
     arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
 
     // Determine if this movement is heading into enemy territory (first hop only)
-    const isEnemy = targetOwner !== selectedCountry.id;
-    const theyGrantUs = relationships.find(r => r.fromCountry === targetOwner && r.toCountry === selectedCountry.id)?.type ?? 'neutral';
-    const weDeclared = relationships.find(r => r.fromCountry === selectedCountry.id && r.toCountry === targetOwner)?.type ?? 'neutral';
-    const hasAutonomy = theyGrantUs === 'autonomy' || weDeclared === 'autonomy';
-    // For multi-step movement through friendly territory, first hop is not hostile even if
-    // the final destination would be — hostility is evaluated hop by hop at arrival.
-    const isHostile = isEnemy && !hasAutonomy && theyGrantUs !== 'military_access';
+    // Hostility is evaluated hop-by-hop at arrival for multi-step routes.
+    const isHostile = targetOwner !== selectedCountry.id && !hasAutonomy && theyGrantUs !== 'military_access';
 
     let newCombat: ActiveCombat | null = null;
     // Remove only the moving divisions from the region (preserve ally divisions)
@@ -310,37 +306,18 @@ export const createUnitActions = (
       // Check if there are defenders to fight
       const defenderDivisions = to.divisions.filter(d => d.owner === to.owner);
       if (defenderDivisions.length > 0) {
-        // Check if there are already other combats on the same defender region
-        // (multi-front combat: same defenders fight on multiple borders)
-        const otherCombatsOnRegion = activeCombats.filter(
-          c => c.defenderRegionId === actualToRegion && !c.isComplete
-        );
-        const combatDefenderDivisions = otherCombatsOnRegion.length > 0
-          ? otherCombatsOnRegion[0].defenderDivisions.map(d => ({ ...d }))
-          : defenderDivisions;
+        const { combatDefenderDivisions, isFirstCombat } = resolveMultiFrontDefenders(actualToRegion, to, activeCombats);
 
         // Create combat immediately — divisions in transit are the attackers
         newCombat = createActiveCombat(
-          fromRegion,
-          from.name,
-          actualToRegion,
-          to.name,
-          selectedCountry.id,
-          to.owner,
-          divisionsToMove,
-          combatDefenderDivisions,
-          dateTime
+          fromRegion, from.name, actualToRegion, to.name,
+          selectedCountry.id, to.owner, divisionsToMove, combatDefenderDivisions, dateTime
         );
         // Clear defender divisions from region only if this is the first combat on this region
-        const isFirstCombatOnRegion = otherCombatsOnRegion.length === 0;
-        nextRegions = isFirstCombatOnRegion
-          ? {
-              ...nextRegions,
-              [actualToRegion]: { ...to, divisions: [] },
-            }
+        nextRegions = isFirstCombat
+          ? { ...nextRegions, [actualToRegion]: { ...to, divisions: [] } }
           : nextRegions;
         nextActiveCombats = [...activeCombats, newCombat];
-
         const battleEvent = createGameEvent(
           'combat_victory',
           `Battle for ${to.name} Begins!`,
@@ -376,7 +353,6 @@ export const createUnitActions = (
       notifications: nextNotifications,
     });
   },
-
   /** Cancel an in-transit movement and return divisions to their origin region. */
   cancelMovement: (movementId: string) => {
     const { regions, selectedCountry, movingUnits } = get();

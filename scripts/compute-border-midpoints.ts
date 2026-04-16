@@ -167,7 +167,7 @@ function main() {
       const rings2 = getAllRings(feature2);
 
       // Find shared boundary points between all ring combinations
-      let allSharedPoints: [number, number][] = [];
+      const allSharedPoints: [number, number][] = [];
 
       for (const ring1 of rings1) {
         for (const ring2 of rings2) {

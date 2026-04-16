@@ -277,6 +277,7 @@ function decodeArc(topology: Topology, arcIndex: number): [number, number][] {
 /**
  * GeoJSONフィーチャーの重心を計算する
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function computeFeatureCentroid(feature: { geometry: { type: string; coordinates: any } }): [number, number] | null {
   let coords: number[][] = [];
 
