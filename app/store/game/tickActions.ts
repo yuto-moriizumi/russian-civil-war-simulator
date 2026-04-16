@@ -106,12 +106,35 @@ export const createTickActions = (
     
     // Step 4: Process unit movements
     TickPerf.start('[tick] 4-movements');
-    const { remainingMovements, completedMovements } = processMovements(updatedMovingUnits, newDate, activeCombats);
+    const { remainingMovements, completedMovements, newMidTransitCombats } = processMovements(
+      updatedMovingUnits,
+      newDate,
+      activeCombats,
+      regionsAfterEvents,
+      relationshipsAfterEvents
+    );
     TickPerf.end('[tick] 4-movements');
+
+    // Step 4.5: Incorporate mid-transit combats (enemy appeared at destination after movement started)
+    // Merge new combats into the active list and clear the defender divisions from those regions
+    // so they are absorbed into the combat (matching the behaviour of combats started at dispatch time).
+    let combatsBeforeStep5 = activeCombats;
+    let regionsBeforeStep5 = regionsAfterEvents;
+    if (newMidTransitCombats.length > 0) {
+      combatsBeforeStep5 = [...activeCombats, ...newMidTransitCombats];
+      const clearedRegions = { ...regionsBeforeStep5 };
+      newMidTransitCombats.forEach(combat => {
+        const r = clearedRegions[combat.regionId];
+        if (r) {
+          clearedRegions[combat.regionId] = { ...r, divisions: [] };
+        }
+      });
+      regionsBeforeStep5 = clearedRegions;
+    }
 
     // Step 5: Process active combats
     TickPerf.start('[tick] 5-combats');
-    const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements } = processCombats(activeCombats, newDate, regionsAfterEvents, adjacency, regionCentroids);
+    const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements } = processCombats(combatsBeforeStep5, newDate, regionsBeforeStep5, adjacency, regionCentroids);
     TickPerf.end('[tick] 5-combats');
 
     // Step 6: Apply completed movements to regions
@@ -122,7 +145,7 @@ export const createTickActions = (
         completedMovements,
         updatedMovingUnits,
         {
-          regions: regionsAfterEvents,
+          regions: regionsBeforeStep5,
           combats: updatedCombats,
           finishedCombats,
           events: [...gameEvents, ...newCombatEvents, ...productionEvents, ...scheduledEventEvents],
