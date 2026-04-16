@@ -78,6 +78,7 @@ export interface GameStore extends GameState {
   createInfantry: () => void;
   deployUnit: () => void;
   moveUnits: (fromRegion: string, toRegion: string, count: number, divisionIds?: string[]) => void;
+  cancelMovement: (movementId: string) => void;
   redirectMovement: (movementId: string, newDestinationRegionId: string) => void;
   claimMission: (missionId: string) => void;
   openMissions: () => void;

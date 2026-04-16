@@ -20,6 +20,8 @@ export function useMapEventHandlers(
 ) {
   const moveUnits = useGameStore(state => state.moveUnits);
   const redirectMovement = useGameStore(state => state.redirectMovement);
+  const cancelMovement = useGameStore(state => state.cancelMovement);
+  const movingUnits = useGameStore(state => state.movingUnits);
   const setSelectedCountryId = useGameStore(state => state.setSelectedCountryId);
   const setIsCountrySidebarOpen = useGameStore(state => state.setIsCountrySidebarOpen);
   const selectedMovementId = useGameStore(state => state.selectedMovementId);
@@ -34,6 +36,8 @@ export function useMapEventHandlers(
   const adjacencyRef = useRef(useGameStore.getState().adjacency);
   const moveUnitsRef = useRef(moveUnits);
   const redirectMovementRef = useRef(redirectMovement);
+  const cancelMovementRef = useRef(cancelMovement);
+  const movingUnitsRef = useRef(movingUnits);
   const setSelectedMovementIdRef = useRef(setSelectedMovementId);
   const setSelectedUnitRegionRef = useRef(setSelectedUnitRegion);
   const setSelectedCountryIdRef = useRef(setSelectedCountryId);
@@ -55,6 +59,8 @@ export function useMapEventHandlers(
   useEffect(() => { adjacencyRef.current = useGameStore.getState().adjacency; });
   useEffect(() => { moveUnitsRef.current = moveUnits; }, [moveUnits]);
   useEffect(() => { redirectMovementRef.current = redirectMovement; }, [redirectMovement]);
+  useEffect(() => { cancelMovementRef.current = cancelMovement; }, [cancelMovement]);
+  useEffect(() => { movingUnitsRef.current = movingUnits; }, [movingUnits]);
   useEffect(() => { setSelectedMovementIdRef.current = setSelectedMovementId; }, [setSelectedMovementId]);
   useEffect(() => { setSelectedUnitRegionRef.current = setSelectedUnitRegion; }, [setSelectedUnitRegion]);
   useEffect(() => { setSelectedCountryIdRef.current = setSelectedCountryId; }, [setSelectedCountryId]);
@@ -121,7 +127,12 @@ export function useMapEventHandlers(
         let moved = false;
 
         if (currentSelectedMovement && targetRegionId) {
-          redirectMovementRef.current(currentSelectedMovement, targetRegionId);
+          const movement = movingUnitsRef.current.find(m => m.id === currentSelectedMovement);
+          if (movement && targetRegionId === movement.fromRegion) {
+            cancelMovementRef.current(currentSelectedMovement);
+          } else {
+            redirectMovementRef.current(currentSelectedMovement, targetRegionId);
+          }
           setSelectedMovementIdRef.current(null);
           moved = true;
         }

@@ -359,6 +359,22 @@ export const createUnitActions = (
     });
   },
 
+  /** Cancel an in-transit movement and return divisions to their origin region. */
+  cancelMovement: (movementId: string) => {
+    const { regions, selectedCountry, movingUnits } = get();
+    const movement = movingUnits.find(m => m.id === movementId);
+    if (!movement || !selectedCountry || movement.owner !== selectedCountry.id || movement.pendingCombatId) return;
+    const fromRegion = regions[movement.fromRegion];
+    if (!fromRegion) return;
+    set({
+      movingUnits: movingUnits.filter(m => m.id !== movementId),
+      regions: {
+        ...regions,
+        [movement.fromRegion]: { ...fromRegion, divisions: [...fromRegion.divisions, ...movement.divisions] },
+      },
+    });
+  },
+
   /**
    * Redirect an in-transit movement to a new destination.
    *
