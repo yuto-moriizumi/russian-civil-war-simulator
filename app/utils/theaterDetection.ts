@@ -28,6 +28,21 @@ export function detectTheaters(
     relMap.set(`${r.fromCountry}|${r.toCountry}`, r.type);
   }
 
+  // Build set of allied owners: playerCountry + puppet states (autonomy servants)
+  const alliedOwners = new Set<CountryId>([playerCountry]);
+  for (const r of relationships) {
+    // If playerCountry is the overlord (fromCountry) and the other is a puppet (autonomy),
+    // the puppet's territory counts as allied frontline.
+    if (r.fromCountry === playerCountry && r.type === 'autonomy') {
+      alliedOwners.add(r.toCountry);
+    }
+    // If playerCountry is the puppet (toCountry) and another country declared autonomy,
+    // that country is the overlord — include overlord territory as well.
+    if (r.toCountry === playerCountry && r.type === 'autonomy') {
+      alliedOwners.add(r.fromCountry);
+    }
+  }
+
   /**
    * Return a theater key for an enemy country:
    *   - "war"           for at-war enemies (C, D → grouped together)
@@ -47,7 +62,7 @@ export function detectTheaters(
   const regionKeys = new Map<string, Set<string>>(); // regionId -> Set<theaterKey>
 
   Object.entries(regions).forEach(([regionId, region]) => {
-    if (region.owner !== playerCountry) return;
+    if (!alliedOwners.has(region.owner)) return;
 
     const keys = new Set<string>();
     (adjacency[regionId] || []).forEach(neighborId => {
@@ -80,7 +95,8 @@ export function detectTheaters(
         .map(([id]) => id)
     );
 
-    // BFS within keyRegions to find connected components
+    // BFS to find connected components of frontline regions, traversing through
+    // allied territories (including puppet states) for connectivity
     const visited = new Set<string>();
     keyRegions.forEach(startId => {
       if (visited.has(startId)) return;
@@ -91,10 +107,17 @@ export function detectTheaters(
 
       while (queue.length > 0) {
         const cur = queue.shift()!;
-        component.push(cur);
+        // Only include frontline regions in the component
+        if (keyRegions.has(cur)) {
+          component.push(cur);
+        }
 
         (adjacency[cur] || []).forEach(nId => {
-          if (!visited.has(nId) && keyRegions.has(nId)) {
+          if (visited.has(nId)) return;
+          const neighbor = regions[nId];
+          if (!neighbor) return;
+          // Traverse through allied territories (for connectivity) and other keyRegions
+          if (keyRegions.has(nId) || alliedOwners.has(neighbor.owner)) {
             visited.add(nId);
             queue.push(nId);
           }

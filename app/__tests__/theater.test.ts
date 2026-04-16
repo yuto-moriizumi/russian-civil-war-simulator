@@ -128,6 +128,94 @@ describe('detectTheaters', () => {
 });
 
 // ---------------------------------------------------------------------------
+// detectTheaters — puppet territory included in player's frontline
+// ---------------------------------------------------------------------------
+
+describe('detectTheaters — puppet territory on frontline', () => {
+  /**
+   * Map layout:
+   *
+   *   [soviet-A]--[iskolat-B]--[white-C]
+   *
+   * soviet owns A, iskolat (puppet) owns B, white (enemy) owns C.
+   * iskolat-B borders the enemy but is not owned by the player.
+   * With autonomy relationship, iskolat-B should be included in soviet's front.
+   */
+  const adj: Adjacency = {
+    'soviet-A':  ['iskolat-B'],
+    'iskolat-B': ['soviet-A', 'white-C'],
+    'white-C':   ['iskolat-B'],
+  };
+
+  const regs: RegionState = {
+    'soviet-A':  makeRegion('soviet-A', 'soviet'),
+    'iskolat-B': makeRegion('iskolat-B', 'iskolat'),
+    'white-C':   makeRegion('white-C', 'white'),
+  };
+
+  it('includes puppet territory in frontline when puppet borders enemy', () => {
+    const relationships: Relationship[] = [
+      { fromCountry: 'soviet', toCountry: 'iskolat', type: 'autonomy' },
+      { fromCountry: 'soviet', toCountry: 'white', type: 'war' },
+    ];
+
+    const theaters = detectTheaters(regs, adj, 'soviet', [], relationships);
+    expect(theaters).toHaveLength(1);
+    expect(theaters[0].frontlineRegions).toContain('iskolat-B');
+    expect(theaters[0].enemyCountry).toBe('white');
+  });
+
+  it('connects player and puppet frontline regions through allied territory', () => {
+    /**
+     * Map layout:
+     *
+     *   [soviet-A]--[soviet-D]--[iskolat-B]--[white-C]
+     *
+     * soviet-A and soviet-D are not adjacent to enemy.
+     * iskolat-B (puppet) borders enemy white-C.
+     * soviet-A should NOT be in frontline, but iskolat-B should.
+     * All should be connected in the same theater through allied territory.
+     */
+    const adj2: Adjacency = {
+      'soviet-A':  ['soviet-D'],
+      'soviet-D':  ['soviet-A', 'iskolat-B'],
+      'iskolat-B': ['soviet-D', 'white-C'],
+      'white-C':   ['iskolat-B'],
+    };
+
+    const regs2: RegionState = {
+      'soviet-A':  makeRegion('soviet-A', 'soviet'),
+      'soviet-D':  makeRegion('soviet-D', 'soviet'),
+      'iskolat-B': makeRegion('iskolat-B', 'iskolat'),
+      'white-C':   makeRegion('white-C', 'white'),
+    };
+
+    const relationships: Relationship[] = [
+      { fromCountry: 'soviet', toCountry: 'iskolat', type: 'autonomy' },
+      { fromCountry: 'soviet', toCountry: 'white', type: 'war' },
+    ];
+
+    const theaters = detectTheaters(regs2, adj2, 'soviet', [], relationships);
+    expect(theaters).toHaveLength(1);
+    expect(theaters[0].frontlineRegions).toContain('iskolat-B');
+    expect(theaters[0].enemyCountry).toBe('white');
+  });
+
+  it('does not include puppet territory when there is no autonomy relationship', () => {
+    const relationships: Relationship[] = [
+      { fromCountry: 'soviet', toCountry: 'white', type: 'war' },
+      // No autonomy relationship with iskolat
+    ];
+
+    const theaters = detectTheaters(regs, adj, 'soviet', [], relationships);
+    // iskolat is a neutral country with no relationship — it gets its own theater
+    expect(theaters.length).toBeGreaterThanOrEqual(1);
+    const whiteTheater = theaters.find(t => t.enemyCountry === 'white');
+    expect(whiteTheater).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // detectTheaters — neutral country (unowned territory) regression
 // ---------------------------------------------------------------------------
 
