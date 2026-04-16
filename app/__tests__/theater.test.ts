@@ -150,3 +150,70 @@ describe('detectTheaters — neutral territory', () => {
     expect(theaters[0].enemyCountry).toBe('iskolat');
   });
 });
+
+// ---------------------------------------------------------------------------
+// detectTheaters — neutral A/B vs enemy C/D split
+// ---------------------------------------------------------------------------
+
+describe('detectTheaters — neutral vs war theater split', () => {
+  /**
+   * Map layout:
+   *
+   *   [neutral-A] \
+   *   [neutral-B]  -- [soviet-X] -- [enemy-C]
+   *   [enemy-D]   /
+   *
+   * soviet-X is adjacent to neutral A, neutral B, war enemy C, and war enemy D.
+   * Expected: 3 theaters — vs-A, vs-B, vs-CD (war).
+   */
+  const adj: Adjacency = {
+    'soviet-X':  ['neutral-A', 'neutral-B', 'enemy-C', 'enemy-D'],
+    'neutral-A': ['soviet-X'],
+    'neutral-B': ['soviet-X'],
+    'enemy-C':   ['soviet-X'],
+    'enemy-D':   ['soviet-X'],
+  };
+
+  const regs: RegionState = {
+    'soviet-X':  makeRegion('soviet-X',  'soviet'),
+    'neutral-A': makeRegion('neutral-A', 'countryA'),
+    'neutral-B': makeRegion('neutral-B', 'countryB'),
+    'enemy-C':   makeRegion('enemy-C',   'countryC'),
+    'enemy-D':   makeRegion('enemy-D',   'countryD'),
+  };
+
+  const rels: Relationship[] = [
+    { fromCountry: 'soviet', toCountry: 'countryC', type: 'war' },
+    { fromCountry: 'soviet', toCountry: 'countryD', type: 'war' },
+    // countryA and countryB have no relationship → neutral
+  ];
+
+  it('produces 3 theaters: one per neutral country, one combined war theater', () => {
+    const theaters = detectTheaters(regs, adj, 'soviet', [], rels);
+    expect(theaters).toHaveLength(3);
+
+    const warTheater = theaters.find(t => t.enemyCountry === 'countryC' || t.enemyCountry === 'countryD');
+    expect(warTheater).toBeDefined();
+
+    const theaterEnemies = theaters.map(t => t.enemyCountry);
+    expect(theaterEnemies).toContain('countryA');
+    expect(theaterEnemies).toContain('countryB');
+  });
+
+  it('neutral countries each get their own theater', () => {
+    const theaters = detectTheaters(regs, adj, 'soviet', [], rels);
+    const aTheater = theaters.find(t => t.enemyCountry === 'countryA');
+    const bTheater = theaters.find(t => t.enemyCountry === 'countryB');
+    expect(aTheater).toBeDefined();
+    expect(bTheater).toBeDefined();
+    expect(aTheater?.id).not.toBe(bTheater?.id);
+  });
+
+  it('war enemies are grouped into one theater', () => {
+    const theaters = detectTheaters(regs, adj, 'soviet', [], rels);
+    const warTheaters = theaters.filter(
+      t => t.enemyCountry === 'countryC' || t.enemyCountry === 'countryD'
+    );
+    expect(warTheaters).toHaveLength(1);
+  });
+});
