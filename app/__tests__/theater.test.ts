@@ -26,7 +26,7 @@ function makeRegion(
   owner: CountryId,
   divs: Division[] = []
 ): Region {
-  return { id, name: id, countryIso3: 'TST', owner, divisions: divs, value: 1 };
+  return { id, name: id, countryIso3: 'TST', owner, divisions: divs };
 }
 
 /**

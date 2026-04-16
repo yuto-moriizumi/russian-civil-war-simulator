@@ -55,9 +55,9 @@ const adjacency: Adjacency = {
 };
 
 const regions: RegionState = {
-  REGION_A: { id: 'REGION_A', name: 'Region A', countryIso3: 'TST', owner: 'white', divisions: [], value: 1 },
-  SOVIET_REAR: { id: 'SOVIET_REAR', name: 'Soviet Rear', countryIso3: 'TST', owner: 'soviet', divisions: [], value: 1 },
-  WHITE_REAR: { id: 'WHITE_REAR', name: 'White Rear', countryIso3: 'TST', owner: 'white', divisions: [], value: 1 },
+  REGION_A: { id: 'REGION_A', name: 'Region A', countryIso3: 'TST', owner: 'white', divisions: [] },
+  SOVIET_REAR: { id: 'SOVIET_REAR', name: 'Soviet Rear', countryIso3: 'TST', owner: 'soviet', divisions: [] },
+  WHITE_REAR: { id: 'WHITE_REAR', name: 'White Rear', countryIso3: 'TST', owner: 'white', divisions: [] },
 };
 
 // ---------------------------------------------------------------------------
