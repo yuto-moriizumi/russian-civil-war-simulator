@@ -22,73 +22,106 @@ export function detectTheaters(
   // Build a predicate that is true only for genuinely hostile (at-war) regions
   const isHostile = buildIsHostilePredicate(playerCountry, regions, relationships);
 
-  // Step 1: Find all frontline regions (player regions adjacent to enemies)
-  const frontlineRegions = new Map<string, Set<CountryId>>(); // regionId -> enemy countries it faces
-  
+  // Build relMap to distinguish at-war vs neutral relationships
+  const relMap = new Map<string, string>();
+  for (const r of relationships) {
+    relMap.set(`${r.fromCountry}|${r.toCountry}`, r.type);
+  }
+
+  /**
+   * Return a theater key for an enemy country:
+   *   - "war"           for at-war enemies (C, D → grouped together)
+   *   - "neutral:<id>"  for neutral countries (A, B → each gets its own theater)
+   *   - "war"           for unowned 'neutral' territory (treated like war)
+   */
+  function theaterKeyFor(enemyCountry: CountryId): string {
+    if (enemyCountry === 'neutral') return 'war';
+    const theirType = relMap.get(`${enemyCountry}|${playerCountry}`);
+    const ourType   = relMap.get(`${playerCountry}|${enemyCountry}`);
+    if (theirType === 'war' || ourType === 'war') return 'war';
+    return `neutral:${enemyCountry}`;
+  }
+
+  // Step 1: For each frontline region, record the theater keys it belongs to.
+  // A single region can face multiple keys (e.g. neutral-A, neutral-B, and war).
+  const regionKeys = new Map<string, Set<string>>(); // regionId -> Set<theaterKey>
+
   Object.entries(regions).forEach(([regionId, region]) => {
     if (region.owner !== playerCountry) return;
-    
-    const adjacentEnemies = new Set<CountryId>();
-    const neighbors = adjacency[regionId] || [];
-    
-    neighbors.forEach(neighborId => {
+
+    const keys = new Set<string>();
+    (adjacency[regionId] || []).forEach(neighborId => {
       const neighbor = regions[neighborId];
       if (neighbor && isHostile(neighborId)) {
-        adjacentEnemies.add(neighbor.owner);
+        keys.add(theaterKeyFor(neighbor.owner));
       }
     });
-    
-    if (adjacentEnemies.size > 0) {
-      frontlineRegions.set(regionId, adjacentEnemies);
+
+    if (keys.size > 0) {
+      regionKeys.set(regionId, keys);
     }
   });
-  
-  if (frontlineRegions.size === 0) {
+
+  if (regionKeys.size === 0) {
     return []; // No frontlines = no theaters
   }
-  
-  // Step 2: Group frontline regions into connected components (theaters)
-  const visited = new Set<string>();
+
+  // Step 2: For each theater key, find connected components of regions that share it.
+  const allKeys = new Set<string>();
+  regionKeys.forEach(keys => keys.forEach(k => allKeys.add(k)));
+
   const theaterGroups: Array<{ regions: string[]; enemies: Set<CountryId> }> = [];
-  
-  frontlineRegions.forEach((_, startRegionId) => {
-    if (visited.has(startRegionId)) return;
-    
-    // BFS to find all connected frontline regions
-    const theaterRegions: string[] = [];
-    const theaterEnemies = new Set<CountryId>();
-    const queue = [startRegionId];
-    visited.add(startRegionId);
-    
-    while (queue.length > 0) {
-      const currentId = queue.shift()!;
-      theaterRegions.push(currentId);
-      
-      // Add enemies this region faces
-      const enemies = frontlineRegions.get(currentId);
-      if (enemies) {
-        enemies.forEach(e => theaterEnemies.add(e));
+
+  allKeys.forEach(key => {
+    // Regions that participate in this theater key
+    const keyRegions = new Set<string>(
+      [...regionKeys.entries()]
+        .filter(([, keys]) => keys.has(key))
+        .map(([id]) => id)
+    );
+
+    // BFS within keyRegions to find connected components
+    const visited = new Set<string>();
+    keyRegions.forEach(startId => {
+      if (visited.has(startId)) return;
+
+      const component: string[] = [];
+      const queue = [startId];
+      visited.add(startId);
+
+      while (queue.length > 0) {
+        const cur = queue.shift()!;
+        component.push(cur);
+
+        (adjacency[cur] || []).forEach(nId => {
+          if (!visited.has(nId) && keyRegions.has(nId)) {
+            visited.add(nId);
+            queue.push(nId);
+          }
+        });
       }
-      
-      // Find adjacent frontline regions (must be player-owned and also frontline)
-      const neighbors = adjacency[currentId] || [];
-      neighbors.forEach(neighborId => {
-        if (!visited.has(neighborId) && frontlineRegions.has(neighborId)) {
-          visited.add(neighborId);
-          queue.push(neighborId);
-        }
+
+      // Collect the enemy countries this component actually faces for this key
+      const enemies = new Set<CountryId>();
+      component.forEach(regionId => {
+        (adjacency[regionId] || []).forEach(nId => {
+          const n = regions[nId];
+          if (n && isHostile(nId) && theaterKeyFor(n.owner) === key) {
+            enemies.add(n.owner);
+          }
+        });
       });
-    }
-    
-    theaterGroups.push({ regions: theaterRegions, enemies: theaterEnemies });
+
+      theaterGroups.push({ regions: component, enemies });
+    });
   });
-  
+
   // Step 3: Create Theater objects with auto-generated names
   // Try to preserve existing theater IDs by matching regions
   return theaterGroups.map((group, index) => {
     const primaryEnemy = Array.from(group.enemies)[0]; // Use first enemy as primary
     const name = generateTheaterName(group.regions, regions, primaryEnemy, index);
-    
+
     // Check if this theater matches an existing one (same frontline regions)
     const matchingTheater = existingTheaters.find(existingTheater => {
       // Consider it a match if >80% of regions overlap
@@ -98,7 +131,7 @@ export function detectTheaters(
       const overlap = intersection / union;
       return overlap > 0.8 && existingTheater.enemyCountry === primaryEnemy;
     });
-    
+
     return {
       id: matchingTheater?.id || `theater-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
       name,
