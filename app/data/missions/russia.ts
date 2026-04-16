@@ -14,6 +14,17 @@ export const sovietMissions: Mission[] = [
     available: [{ type: 'hasUnits', count: 5 }],
   },
   {
+    id: 'soviet_capture_kharkiv',
+    country: 'soviet',
+    name: 'ハリコフの占領',
+    description: 'ハリコフ（UA-63）を支配下に置け',
+    completed: false,
+    claimed: false,
+    rewards: {},
+    prerequisites: ['soviet_mobilize'],
+    available: [{ type: 'controlRegion', regionId: 'UA-63' }],
+  },
+  {
     id: 'soviet_terror',
     country: 'soviet',
     name: 'Red Terror',
