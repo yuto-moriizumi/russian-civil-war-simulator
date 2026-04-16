@@ -166,53 +166,54 @@ describe('detectTheaters — neutral vs war theater split', () => {
    * soviet-X is adjacent to neutral A, neutral B, war enemy C, and war enemy D.
    * Expected: 3 theaters — vs-A, vs-B, vs-CD (war).
    */
+  // Reuse valid CountryId values: finland and ukraine as neutrals, white and don as war enemies
   const adj: Adjacency = {
-    'soviet-X':  ['neutral-A', 'neutral-B', 'enemy-C', 'enemy-D'],
-    'neutral-A': ['soviet-X'],
-    'neutral-B': ['soviet-X'],
-    'enemy-C':   ['soviet-X'],
-    'enemy-D':   ['soviet-X'],
+    'soviet-X':   ['neutral-fin', 'neutral-ukr', 'enemy-wht', 'enemy-don'],
+    'neutral-fin': ['soviet-X'],
+    'neutral-ukr': ['soviet-X'],
+    'enemy-wht':   ['soviet-X'],
+    'enemy-don':   ['soviet-X'],
   };
 
   const regs: RegionState = {
-    'soviet-X':  makeRegion('soviet-X',  'soviet'),
-    'neutral-A': makeRegion('neutral-A', 'countryA'),
-    'neutral-B': makeRegion('neutral-B', 'countryB'),
-    'enemy-C':   makeRegion('enemy-C',   'countryC'),
-    'enemy-D':   makeRegion('enemy-D',   'countryD'),
+    'soviet-X':   makeRegion('soviet-X',   'soviet'),
+    'neutral-fin': makeRegion('neutral-fin', 'finland'),
+    'neutral-ukr': makeRegion('neutral-ukr', 'ukraine'),
+    'enemy-wht':   makeRegion('enemy-wht',   'white'),
+    'enemy-don':   makeRegion('enemy-don',   'don'),
   };
 
   const rels: Relationship[] = [
-    { fromCountry: 'soviet', toCountry: 'countryC', type: 'war' },
-    { fromCountry: 'soviet', toCountry: 'countryD', type: 'war' },
-    // countryA and countryB have no relationship → neutral
+    { fromCountry: 'soviet', toCountry: 'white', type: 'war' },
+    { fromCountry: 'soviet', toCountry: 'don',   type: 'war' },
+    // finland and ukraine have no relationship → neutral
   ];
 
   it('produces 3 theaters: one per neutral country, one combined war theater', () => {
     const theaters = detectTheaters(regs, adj, 'soviet', [], rels);
     expect(theaters).toHaveLength(3);
 
-    const warTheater = theaters.find(t => t.enemyCountry === 'countryC' || t.enemyCountry === 'countryD');
+    const warTheater = theaters.find(t => t.enemyCountry === 'white' || t.enemyCountry === 'don');
     expect(warTheater).toBeDefined();
 
     const theaterEnemies = theaters.map(t => t.enemyCountry);
-    expect(theaterEnemies).toContain('countryA');
-    expect(theaterEnemies).toContain('countryB');
+    expect(theaterEnemies).toContain('finland');
+    expect(theaterEnemies).toContain('ukraine');
   });
 
   it('neutral countries each get their own theater', () => {
     const theaters = detectTheaters(regs, adj, 'soviet', [], rels);
-    const aTheater = theaters.find(t => t.enemyCountry === 'countryA');
-    const bTheater = theaters.find(t => t.enemyCountry === 'countryB');
-    expect(aTheater).toBeDefined();
-    expect(bTheater).toBeDefined();
-    expect(aTheater?.id).not.toBe(bTheater?.id);
+    const finTheater = theaters.find(t => t.enemyCountry === 'finland');
+    const ukrTheater = theaters.find(t => t.enemyCountry === 'ukraine');
+    expect(finTheater).toBeDefined();
+    expect(ukrTheater).toBeDefined();
+    expect(finTheater?.id).not.toBe(ukrTheater?.id);
   });
 
   it('war enemies are grouped into one theater', () => {
     const theaters = detectTheaters(regs, adj, 'soviet', [], rels);
     const warTheaters = theaters.filter(
-      t => t.enemyCountry === 'countryC' || t.enemyCountry === 'countryD'
+      t => t.enemyCountry === 'white' || t.enemyCountry === 'don'
     );
     expect(warTheaters).toHaveLength(1);
   });
