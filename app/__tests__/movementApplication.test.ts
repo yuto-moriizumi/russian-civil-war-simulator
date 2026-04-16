@@ -24,7 +24,7 @@ function makeDiv(overrides: Partial<Division> = {}): Division {
 }
 
 function makeRegion(id: string, overrides: Partial<Region> = {}): Region {
-  return { id, name: id, countryIso3: 'RUS', owner: 'soviet', divisions: [], value: 1, ...overrides };
+  return { id, name: id, countryIso3: 'RUS', owner: 'soviet', divisions: [], ...overrides };
 }
 
 function makeMovement(overrides: Partial<Movement> = {}): Movement {

@@ -54,7 +54,7 @@ function makeRegion(id: string, divisions: Division[] = []): Region {
     countryIso3: 'RUS',
     owner: 'soviet',
     divisions,
-    value: 1,
+    
   };
 }
 
@@ -204,9 +204,9 @@ describe('initialGameState mutation — AI production tick must not dirty the si
     // Give the country enough owned regions to be below the CP cap
     // so the AI will actually try to produce something.
     const regions: RegionState = {
-      'RU-X': { id: 'RU-X', name: 'RU-X', countryIso3: 'RUS', owner: COUNTRY, divisions: [], value: 1 },
-      'RU-Y': { id: 'RU-Y', name: 'RU-Y', countryIso3: 'RUS', owner: COUNTRY, divisions: [], value: 1 },
-      'RU-Z': { id: 'RU-Z', name: 'RU-Z', countryIso3: 'RUS', owner: COUNTRY, divisions: [], value: 1 },
+      'RU-X': { id: 'RU-X', name: 'RU-X', countryIso3: 'RUS', owner: COUNTRY, divisions: [] },
+      'RU-Y': { id: 'RU-Y', name: 'RU-Y', countryIso3: 'RUS', owner: COUNTRY, divisions: [] },
+      'RU-Z': { id: 'RU-Z', name: 'RU-Z', countryIso3: 'RUS', owner: COUNTRY, divisions: [] },
     };
 
     // Pass the REAL initialGameState.productionQueues as the snapshot to the
@@ -376,7 +376,7 @@ describe('processProductionQueue — stale armyGroupId after country switch', ()
       countryIso3: 'RUS',
       owner: COUNTRY,
       divisions: [],
-      value: 1,
+      
     };
   }
 

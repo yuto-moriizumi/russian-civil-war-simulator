@@ -32,7 +32,7 @@ function makeRegion(id: string, owner: 'soviet' | 'white', divs: Division[] = []
     countryIso3: 'TST',
     owner,
     divisions: divs,
-    value: 1,
+    
   };
 }
 

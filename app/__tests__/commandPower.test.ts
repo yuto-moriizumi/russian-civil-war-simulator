@@ -53,7 +53,7 @@ function makeRegion(
     countryIso3: 'RUS',
     owner,
     divisions,
-    value: 1,
+    
   };
 }
 
