@@ -1,4 +1,4 @@
-import { Adjacency, CountryId, RegionState, Movement, ArmyGroup, Division } from '../types/game';
+import { Adjacency, CountryId, RegionState, Movement, ArmyGroup, Division, ActiveCombat } from '../types/game';
 import { DIVISIONS_PER_STATE, MAJOR_CITY_CAP_BONUS } from './commandPower';
 import { initialRegionOwnership } from '../data/map';
 import { COUNTRY_COLORS } from '../data/countries';
@@ -153,17 +153,19 @@ export function getArmyGroupUnitCount(
   regions: RegionState,
   country: CountryId,
   armyGroupId: string,
-  movingUnits: Movement[] = []
+  movingUnits: Movement[] = [],
+  activeCombats: ActiveCombat[] = []
 ): number {
   // Count divisions in all regions that belong to this army group (by armyGroupId, not regionIds)
   const unitsInRegions = Object.values(regions).reduce((count, region) => {
-    if (!region || region.owner !== country) return count;
+    if (!region) return count;
 
-    // Count divisions that belong to this army group
-    const groupDivisions = region.divisions.filter(d => d.armyGroupId === armyGroupId).length;
+    // Count divisions that belong to this army group regardless of region owner
+    // (attacker divisions may be in enemy regions during combat)
+    const groupDivisions = region.divisions.filter(d => d.armyGroupId === armyGroupId && d.owner === country).length;
     return count + groupDivisions;
   }, 0);
-  
+
   // Count divisions in transit that belong to this army group
   const unitsInTransit = movingUnits
     .filter(m => m.owner === country)
@@ -171,8 +173,21 @@ export function getArmyGroupUnitCount(
       const groupDivisions = movement.divisions.filter(d => d.armyGroupId === armyGroupId).length;
       return count + groupDivisions;
     }, 0);
-  
-  return unitsInRegions + unitsInTransit;
+
+  // Count divisions currently in active combat (region.divisions is cleared during combat)
+  const unitsInCombat = activeCombats
+    .filter(c => !c.isComplete)
+    .reduce((count, combat) => {
+      const attackerMatches = combat.attackerCountry === country
+        ? combat.attackerDivisions.filter(d => d.armyGroupId === armyGroupId).length
+        : 0;
+      const defenderMatches = combat.defenderCountry === country
+        ? combat.defenderDivisions.filter(d => d.armyGroupId === armyGroupId).length
+        : 0;
+      return count + attackerMatches + defenderMatches;
+    }, 0);
+
+  return unitsInRegions + unitsInTransit + unitsInCombat;
 }
 
 // Calculate total income from regions controlled by a country (based on CP contribution per region)
