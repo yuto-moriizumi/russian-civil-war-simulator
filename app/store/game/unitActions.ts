@@ -250,15 +250,8 @@ export const createUnitActions = (
     const isHostile = targetOwner !== selectedCountry.id && !hasAutonomy && theyGrantUs !== 'military_access';
 
     let newCombat: ActiveCombat | null = null;
-    // Remove only the moving divisions from the region (preserve ally divisions)
-    const movingDivisionIds = new Set(divisionsToMove.map(d => d.id));
-    let nextRegions = {
-      ...regions,
-      [fromRegion]: {
-        ...from,
-        divisions: from.divisions.filter(d => !movingDivisionIds.has(d.id)),
-      },
-    };
+    // Divisions stay in fromRegion — they are removed only when the movement completes.
+    let nextRegions = { ...regions };
     let nextActiveCombats = activeCombats;
     let nextGameEvents = gameEvents;
     let nextNotifications = notifications;
@@ -303,8 +296,12 @@ export const createUnitActions = (
         return;
       }
 
+      // Exclude divisions that are already moving out of the destination (in-transit)
+      const inTransitFromDest = new Set(
+        movingUnits.filter(m => m.fromRegion === actualToRegion).flatMap(m => m.divisions.map(d => d.id))
+      );
       // Check if there are defenders to fight
-      const defenderDivisions = to.divisions.filter(d => d.owner === to.owner);
+      const defenderDivisions = to.divisions.filter(d => d.owner === to.owner && !inTransitFromDest.has(d.id));
       if (defenderDivisions.length > 0) {
         const { combatDefenderDivisions, isFirstCombat } = resolveMultiFrontDefenders(actualToRegion, to, activeCombats);
 
@@ -358,15 +355,9 @@ export const createUnitActions = (
     const { regions, selectedCountry, movingUnits } = get();
     const movement = movingUnits.find(m => m.id === movementId);
     if (!movement || !selectedCountry || movement.owner !== selectedCountry.id || movement.pendingCombatId) return;
-    const fromRegion = regions[movement.fromRegion];
-    if (!fromRegion) return;
-    set({
-      movingUnits: movingUnits.filter(m => m.id !== movementId),
-      regions: {
-        ...regions,
-        [movement.fromRegion]: { ...fromRegion, divisions: [...fromRegion.divisions, ...movement.divisions] },
-      },
-    });
+    if (!regions[movement.fromRegion]) return;
+    // Divisions are already in fromRegion (they were never removed), so just drop the movement.
+    set({ movingUnits: movingUnits.filter(m => m.id !== movementId) });
   },
 
   /**

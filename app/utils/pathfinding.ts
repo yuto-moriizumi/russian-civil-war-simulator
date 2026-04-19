@@ -386,15 +386,7 @@ export function getArmyGroupUnitCount(
       return sum + matchingDivisions.length;
     }, 0);
 
-    // Count divisions in transit
-    if (movingUnits) {
-      const inTransit = movingUnits.reduce((sum, movement) => {
-        if (movement.owner !== playerCountry) return sum;
-        const matchingDivisions = movement.divisions.filter(d => d.armyGroupId === armyGroupId);
-        return sum + matchingDivisions.length;
-      }, 0);
-      total += inTransit;
-    }
+    // In-transit divisions are already counted in regions above.
 
     // Count divisions currently in active combat (region.divisions is cleared during combat)
     if (activeCombats) {

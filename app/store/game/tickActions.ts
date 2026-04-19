@@ -140,8 +140,24 @@ export const createTickActions = (
 
     // Step 5: Process active combats
     TickPerf.start('[tick] 5-combats');
-    const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements } = processCombats(combatsBeforeStep5, newDate, regionsBeforeStep5, adjacency, regionCentroids);
+    const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements, retreatingDivisionUpdates } = processCombats(combatsBeforeStep5, newDate, regionsBeforeStep5, adjacency, regionCentroids);
     TickPerf.end('[tick] 5-combats');
+
+    // Step 5.5: Apply retreating division HP updates to regions so retreat movements
+    // find the correct post-combat HP when they complete.
+    if (retreatingDivisionUpdates.length > 0) {
+      retreatingDivisionUpdates.forEach(({ regionId, division }) => {
+        const region = regionsBeforeStep5[regionId];
+        if (!region) return;
+        regionsBeforeStep5 = {
+          ...regionsBeforeStep5,
+          [regionId]: {
+            ...region,
+            divisions: region.divisions.map(d => d.id === division.id ? division : d),
+          },
+        };
+      });
+    }
 
     // Step 6: Apply completed movements to regions
     TickPerf.start('[tick] 6-apply-movements');

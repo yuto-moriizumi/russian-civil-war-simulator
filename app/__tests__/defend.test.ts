@@ -145,9 +145,12 @@ describe('defendArmyGroup – redistribution from stacked border region', () => 
     const movements = captured.movingUnits as Movement[];
     // All movements must originate from B1 (the only region with divisions)
     movements.forEach(m => expect(m.fromRegion).toBe('B1'));
-    // B1 should have fewer divisions after dispatch
-    const b1After = (captured.regions as RegionState)['B1'];
-    expect(b1After.divisions.length).toBeLessThan(15);
+    // Divisions stay in the region during transit; count dispatched via movements
+    const dispatched = (captured.movingUnits as Movement[])
+      .filter(m => m.fromRegion === 'B1')
+      .reduce((s, m) => s + m.divisions.length, 0);
+    expect(dispatched).toBeGreaterThan(0);
+    expect(dispatched).toBeLessThan(15);
   });
 
   it('does not send more than the excess (keeps target count in B1)', () => {
@@ -155,15 +158,14 @@ describe('defendArmyGroup – redistribution from stacked border region', () => 
     let captured: Partial<GameStore> = {};
     defendArmyGroup('ag-1', state, (partial) => { captured = partial; });
 
-    const b1After = (captured.regions as RegionState)?.['B1'];
-    if (!b1After) return; // no dispatch at all means the bug is still present
+    if (!captured.movingUnits) return; // no dispatch at all means the bug is still present
 
     // Target is 15/5 = 3 per border. B1 keeps 3, sends 12.
-    // B1 remaining + dispatched should equal 15.
+    // Divisions stay in region during transit, so we check dispatch count only.
     const dispatched = (captured.movingUnits as Movement[])
       .filter(m => m.fromRegion === 'B1')
       .reduce((s, m) => s + m.divisions.length, 0);
-    expect(b1After.divisions.length + dispatched).toBe(15);
+    expect(dispatched).toBe(12);
   });
 });
 
