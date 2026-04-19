@@ -163,13 +163,18 @@ export interface Relationship {
 
 // Scheduled events that trigger on specific dates
 export interface ScheduledEventAction {
-  type: 'transferRegion' | 'declareWar';
+  type: 'transferRegion' | 'declareWar' | 'spawnDivision' | 'setRelationship';
   // For transferRegion
   regionId?: string;
   newOwner?: CountryId;
-  // For declareWar
+  // For declareWar / setRelationship
   fromCountry?: CountryId;
   toCountry?: CountryId;
+  // For setRelationship
+  relationshipType?: RelationshipType;
+  // For spawnDivision
+  owner?: CountryId;
+  armyGroupName?: string;
 }
 
 export interface ScheduledEvent {
