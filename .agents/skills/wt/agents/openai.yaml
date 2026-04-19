@@ -1,0 +1,4 @@
+interface:
+  display_name: "WT"
+  short_description: "Create isolated git worktrees fast"
+  default_prompt: "Use $wt to create a git worktree for this task."
