@@ -317,6 +317,9 @@ export const createBasicActions = (
           const percentReduction = Math.round(mission.rewards.productionSpeedBonus * 100);
           rewardParts.push(`+${percentReduction}% Production Speed`);
         }
+        if (mission.rewards.liberatePuppet) {
+          rewardParts.push(`Liberate ${mission.rewards.liberatePuppet.country} as puppet`);
+        }
         const rewardDescription = rewardParts.length > 0 ? rewardParts.join(', ') : 'No bonuses';
         
         const claimEvent = createGameEvent(
@@ -340,16 +343,16 @@ export const createBasicActions = (
           events.push(victoryEvent);
           notifs.push(createNotification(victoryEvent, state.dateTime));
         }
-        
+
         // Mark mission as claimed
         const updatedMissions = state.missions.map(m =>
           m.id === missionId ? { ...m, claimed: true } : m
         );
-        
+
         // Recalculate country bonuses
         const newCountryBonuses = calculateCountryBonuses(updatedMissions, countryId);
         const newDivisionStats = getDivisionStats(countryId, newCountryBonuses);
-        
+
         // Apply bonuses retroactively to ALL existing divisions
         const updatedRegions: RegionState = {};
         Object.keys(state.regions).forEach(regionId => {
@@ -368,13 +371,13 @@ export const createBasicActions = (
             }
             return div;
           });
-          
+
           updatedRegions[regionId] = {
             ...region,
             divisions: updatedDivisions,
           };
         });
-        
+
         // All divisions (including in-transit) are in regions, so no separate movingUnits update needed.
         // However, update movement.divisions snapshots too so panels show correct stats.
         const updatedMovingUnits = state.movingUnits.map(movement => {
@@ -394,6 +397,43 @@ export const createBasicActions = (
         console.log(`[MISSION CLAIMED] ${mission.name} - Applied bonuses to ${countryId} divisions`);
         console.log(`[BONUSES] Attack: +${newCountryBonuses.attackBonus}, Defence: +${newCountryBonuses.defenceBonus}, HP: +${newCountryBonuses.hpBonus}, Command Power: +${newCountryBonuses.commandPowerBonus}, Prod Speed: ${newCountryBonuses.productionSpeedMultiplier.toFixed(2)}x`);
 
+        // Handle liberatePuppet reward
+        let updatedRelationships = [...state.relationships];
+        if (mission.rewards.liberatePuppet) {
+          const { country: puppetId, spawnRegionId, divisions: divisionCount } = mission.rewards.liberatePuppet;
+
+          // Establish autonomy (puppet) relationship
+          updatedRelationships = updatedRelationships.filter(
+            r => !(r.fromCountry === countryId && r.toCountry === puppetId)
+          );
+          updatedRelationships.push({ fromCountry: countryId, toCountry: puppetId, type: 'autonomy' });
+
+          // Spawn initial divisions for the puppet in the spawn region
+          const puppetBonuses = state.countryBonuses[puppetId];
+          const puppetPrefix = getDivisionPrefix(puppetId);
+          const spawnRegion = updatedRegions[spawnRegionId];
+          if (spawnRegion && puppetBonuses) {
+            const newDivisions = Array.from({ length: divisionCount }, (_, i) =>
+              createDivision(puppetId, `${puppetPrefix} ${i + 1}`, '', puppetBonuses)
+            );
+            updatedRegions[spawnRegionId] = {
+              ...spawnRegion,
+              divisions: [...spawnRegion.divisions, ...newDivisions],
+            };
+          }
+
+          const liberateEvent = createGameEvent(
+            'mission_claimed',
+            `${puppetId} Liberated`,
+            `The Ukrainian People's Republic of Soviets has been established as a puppet state under ${state.selectedCountry.name}!`,
+            state.dateTime,
+            countryId
+          );
+          events.push(liberateEvent);
+          notifs.push(createNotification(liberateEvent, state.dateTime));
+          console.log(`[PUPPET LIBERATED] ${puppetId} established as puppet of ${countryId}`);
+        }
+
         return {
           missions: updatedMissions,
           countryBonuses: {
@@ -402,6 +442,7 @@ export const createBasicActions = (
           },
           regions: updatedRegions,
           movingUnits: updatedMovingUnits,
+          relationships: updatedRelationships,
           gameEvents: events,
           notifications: notifs,
         };
