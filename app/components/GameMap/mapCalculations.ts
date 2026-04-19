@@ -32,7 +32,8 @@ export function calculateUnitMarkers(
   selectedUnitRegion: string | null,
   playerCountry: CountryId,
   selectedDivisionIds: string[] = [],
-  activeCombats: ActiveCombat[] = []
+  activeCombats: ActiveCombat[] = [],
+  movingUnits: Movement[] = []
 ): (UnitMarkerData | null)[] {
   // Early return if centroids haven't loaded yet
   if (Object.keys(regionCentroids).length === 0) {
@@ -41,6 +42,13 @@ export function calculateUnitMarkers(
   }
 
   const selectedDivisionSet = new Set(selectedDivisionIds);
+
+  // Divisions currently in transit stay in region.divisions (design intent) but
+  // should not be shown on the static region marker — they are rendered separately
+  // by the MovingUnitMarker. Exclude them from the region display.
+  const inTransitDivisionIds = new Set<string>(
+    movingUnits.flatMap(m => m.divisions.map(d => d.id))
+  );
 
   // Build a map of extra divisions to overlay per region from active combats.
   // Defender divisions are pulled out of region.divisions when combat starts,
@@ -72,9 +80,10 @@ export function calculateUnitMarkers(
       return null;
     }
 
-    // Merge resident divisions with defender divisions from ongoing combats
+    // Merge resident divisions with defender divisions from ongoing combats,
+    // but exclude in-transit divisions (shown separately by MovingUnitMarker).
     const combatDivisions = combatDefendersByRegion.get(regionId) ?? [];
-    const allDivisions = [...region.divisions, ...combatDivisions];
+    const allDivisions = [...region.divisions.filter(d => !inTransitDivisionIds.has(d.id)), ...combatDivisions];
     if (allDivisions.length === 0) return null;
 
     // Highlight the marker only when at least one division in this region is
