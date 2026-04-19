@@ -1,5 +1,6 @@
 import { Adjacency, CountryId, RegionState, Movement, ArmyGroup, Division, ActiveCombat } from '../types/game';
-import { DIVISIONS_PER_STATE, MAJOR_CITY_CAP_BONUS } from './commandPower';
+import { DIVISIONS_PER_STATE } from './commandPower';
+import { regionValues } from '../data/map/regionValues';
 import { initialRegionOwnership } from '../data/map';
 import { COUNTRY_COLORS } from '../data/countries';
 import { UnitPlacementData } from '../data/map/initialUnitPlacement';
@@ -195,7 +196,7 @@ export function getArmyGroupUnitCount(
 export function calculateCountryIncome(regions: RegionState, country: CountryId, movingUnits: Movement[] = []): number {
   const grossIncome = Object.entries(regions)
     .filter(([, region]) => region.owner === country)
-    .reduce((total, [id, ]) => total + DIVISIONS_PER_STATE + (MAJOR_CITY_CAP_BONUS[id] || 0), 0);
+    .reduce((total, [id, ]) => total + (regionValues[id] ?? DIVISIONS_PER_STATE), 0);
   
   const unitCount = countCountryUnits(regions, country, movingUnits);
   const maintenanceCost = unitCount; // $1 per unit per hour

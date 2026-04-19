@@ -2,7 +2,8 @@
 
 import { useGameStore } from '../../store/useGameStore';
 import { COUNTRY_COLORS, getAdjacentRegions } from '../../utils/mapUtils';
-import { MAJOR_CITY_CAP_BONUS, DIVISIONS_PER_STATE } from '../../utils/commandPower';
+import { DIVISIONS_PER_STATE } from '../../utils/commandPower';
+import { regionValues } from '../../data/map/regionValues';
 import { getCountriesWithCoreRegion, getCountryName, getCountryColor } from '../../data/countries';
 
 export { MovingUnitInfoPanel } from './MovingUnitInfoPanel';
@@ -121,10 +122,10 @@ export function RegionInfoPanel() {
               <span className="text-stone-400">Base:</span>
               <span className="text-green-400">+{DIVISIONS_PER_STATE}</span>
             </div>
-            {MAJOR_CITY_CAP_BONUS[selectedRegion] && (
+            {(regionValues[selectedRegion] ?? DIVISIONS_PER_STATE) > DIVISIONS_PER_STATE && (
               <div className="flex items-center justify-between text-xs">
                 <span className="text-stone-400">Major City Bonus:</span>
-                <span className="text-amber-400 font-semibold">+{MAJOR_CITY_CAP_BONUS[selectedRegion]}</span>
+                <span className="text-amber-400 font-semibold">+{(regionValues[selectedRegion] ?? DIVISIONS_PER_STATE) - DIVISIONS_PER_STATE}</span>
               </div>
             )}
             {coreRegions?.includes(selectedRegion) && (
@@ -135,8 +136,8 @@ export function RegionInfoPanel() {
             )}
             <div className="flex items-center justify-between text-xs border-t border-stone-700 pt-1 font-semibold">
               <span className="text-stone-300">Total Contribution:</span>
-              <span className={MAJOR_CITY_CAP_BONUS[selectedRegion] || coreRegions?.includes(selectedRegion) ? "text-amber-400" : "text-green-400"}>
-                +{(DIVISIONS_PER_STATE + (MAJOR_CITY_CAP_BONUS[selectedRegion] || 0)) * (coreRegions?.includes(selectedRegion) ? 2 : 1)}
+              <span className={(regionValues[selectedRegion] ?? DIVISIONS_PER_STATE) > DIVISIONS_PER_STATE || coreRegions?.includes(selectedRegion) ? "text-amber-400" : "text-green-400"}>
+                +{(regionValues[selectedRegion] ?? DIVISIONS_PER_STATE) * (coreRegions?.includes(selectedRegion) ? 2 : 1)}
               </span>
             </div>
           </div>
