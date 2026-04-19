@@ -159,9 +159,6 @@ export function getArmyGroupUnitCount(
     return count + groupDivisions;
   }, 0);
 
-  // In-transit divisions are already counted in regions above.
-  const unitsInTransit = 0;
-
   // Count divisions currently in active combat (region.divisions is cleared during combat)
   const unitsInCombat = activeCombats
     .filter(c => !c.isComplete)
@@ -175,7 +172,8 @@ export function getArmyGroupUnitCount(
       return count + attackerMatches + defenderMatches;
     }, 0);
 
-  return unitsInRegions + unitsInTransit + unitsInCombat;
+  // In-transit divisions are already counted in unitsInRegions above.
+  return unitsInRegions + unitsInCombat;
 }
 
 // Calculate total income from regions controlled by a country (based on CP contribution per region)
