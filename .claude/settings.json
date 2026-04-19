@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(npx tsx *)",
+      "Bash(npx tsc *)",
+      "Bash(npx vitest *)",
+      "Bash(npx eslint *)",
+      "Bash(grep -r \"max-lines\" .eslintrc* eslint.config*)",
+      "Bash(grep -n \"^$\" app/store/game/unitActions.ts)",
+      "Bash(grep -v \"^$\")"
+    ]
+  }
+}
