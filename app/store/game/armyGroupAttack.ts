@@ -256,11 +256,15 @@ export function attackArmyGroup(
     //   - Surplus case: border holds more than its allocation target → advance the excess.
     //   - Single-enemy auto-advance: exactly 1 stationary division AND exactly 1 hostile
     //     adjacent target → the lone division advances even though surplus = 0.
+    //   - Safe-advance: border holds more than 1 division → advance all but 1 as garrison,
+    //     because at least 1 remaining division prevents the enemy from occupying the border.
     const surplus = Math.max(0, stationaryDivs.length - target);
-    const attackDivisions =
-      stationaryDivs.length === 1 && attackTargets.length === 1
-        ? stationaryDivs
-        : stationaryDivs.slice(stationaryDivs.length - surplus);
+    const isSingleEnemyAutoAdvance = stationaryDivs.length === 1 && attackTargets.length === 1;
+    // When no surplus, still advance if we can leave a garrison behind (>1 divisions present).
+    const effectiveAdvanceCount = surplus > 0 ? surplus : Math.max(0, stationaryDivs.length - 1);
+    const attackDivisions = isSingleEnemyAutoAdvance
+      ? stationaryDivs
+      : stationaryDivs.slice(stationaryDivs.length - effectiveAdvanceCount);
     if (attackDivisions.length === 0) continue;
 
     // Distribute advancing divisions round-robin across attack targets
