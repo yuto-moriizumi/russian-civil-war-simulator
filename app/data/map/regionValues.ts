@@ -1,22 +1,82 @@
 /**
- * Region CP contribution values for command power calculation.
- * Default value is 1. Major cities and industrial centers have higher values.
+ * Region economic values/weights for income generation.
+ * Default value is 1, major cities and industrial centers have higher values.
+ *
+ * Moscow: 5 (capital, political center)
+ * St. Petersburg: 4 (former capital, major industrial city)
+ * Kyiv: 3 (major city, strategic importance)
+ * Other major cities: 2 (significant economic centers)
+ * Standard regions: 1 (default)
  */
 export const regionValues: Record<string, number> = {
-  // Russia
-  'RU-MOW': 3,  // Moscow - Capital
-  'RU-SPE': 2,  // Saint Petersburg
-  'RU-MOS': 2,  // Moscow Oblast
-
-  // Ukraine
-  'UA-30': 3,   // Kyiv
-
-  // Belarus
-  'BY-HM': 3,   // Minsk
-
-  // Poland
-  'PL-MZ': 4,   // Warsaw
-  'PL-SL': 2,   // Silesia
+  ARM: 2,
+  AZE: 2,
+  "BY-BR": 2,
+  "BY-HM": 2,
+  "BY-HO": 2,
+  "BY-HR": 2,
+  "BY-MA": 2,
+  "BY-MI": 2,
+  "BY-VI": 2,
+  "DE-BB": 2,
+  "DE-BE": 2,
+  "DE-BW": 2,
+  "DE-BY": 3,
+  "DE-HB": 2,
+  "DE-HE": 2,
+  "DE-HH": 2,
+  "DE-MV": 2,
+  "DE-NI": 2,
+  "DE-NW": 2,
+  "DE-RP": 2,
+  "DE-SH": 2,
+  "DE-SL": 2,
+  "DE-SN": 2,
+  "DE-ST": 2,
+  "DE-TH": 2,
+  GEO: 2,
+  "GR-EM": 2,
+  "GR-MH": 2,
+  "GR-PW": 2,
+  "GR-TC": 2,
+  "PL-DS": 2,
+  "PL-KP": 2,
+  "PL-LB": 2,
+  "PL-LD": 2,
+  "PL-LU": 2,
+  "PL-MA": 2,
+  "PL-MZ": 2,
+  "PL-OP": 2,
+  "PL-PD": 2,
+  "PL-PK": 2,
+  "PL-PM": 2,
+  "PL-SK": 2,
+  "PL-SL": 2,
+  "PL-WN": 2,
+  "PL-WP": 2,
+  "PL-ZP": 2,
+  "RU-KGD": 2,
+  "RU-KLU": 2,
+  "RU-KR": 2,
+  "RU-LEN": 2,
+  "RU-MOS": 2,
+  "RU-MOW": 3,
+  "RU-MUR": 2,
+  "RU-NGR": 2,
+  "RU-PSK": 2,
+  "RU-RYA": 2,
+  "RU-SA": 2,
+  "RU-SMO": 2,
+  "RU-SPE": 2,
+  "RU-TUL": 2,
+  "RU-TVE": 2,
+  "RU-VGG": 2,
+  "RU-VLA": 2,
+  "RU-VLG": 2,
+  "RU-YAR": 2,
+  "TR-34": 2,
+  "UA-30": 2,
+  "UA-40": 2,
 
   // All other regions default to value 1
 };
