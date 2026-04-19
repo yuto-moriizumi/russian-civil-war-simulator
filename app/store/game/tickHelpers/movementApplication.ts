@@ -233,7 +233,19 @@ export function applyCompletedMovements(
           const existingDefenderDivisions = to.divisions.filter(d => d.owner === to.owner);
           const totalDefenderDivisions = [...existingDefenderDivisions, ...interceptingDivisions];
 
-          if (totalDefenderDivisions.length === 0) {
+          // Check for other combats on the same defender region (multi-front).
+          // If defender divisions are absent from the region (already pulled into another combat),
+          // use those combat divisions as the effective defenders.
+          const otherCombatsOnRegion = nextCombats.filter(
+            c => c.defenderRegionId === toRegion && !c.isComplete
+          );
+          const effectiveDefenderDivisions = totalDefenderDivisions.length > 0
+            ? totalDefenderDivisions
+            : otherCombatsOnRegion.length > 0
+              ? otherCombatsOnRegion[0].defenderDivisions.map(d => ({ ...d }))
+              : [];
+
+          if (effectiveDefenderDivisions.length === 0) {
             // Undefended capture
             const previousOwner = to.owner;
             nextRegions[toRegion] = {
@@ -272,13 +284,7 @@ export function applyCompletedMovements(
             }
           } else {
             // Initiate new combat
-            // Check for other combats on the same defender region (multi-front)
-            const otherCombatsOnRegion = nextCombats.filter(
-              c => c.defenderRegionId === toRegion && !c.isComplete
-            );
-            const combatDefenderDivisions = otherCombatsOnRegion.length > 0
-              ? otherCombatsOnRegion[0].defenderDivisions.map(d => ({ ...d }))
-              : totalDefenderDivisions;
+            const combatDefenderDivisions = effectiveDefenderDivisions;
             const fromRegionState = nextRegions[movement.fromRegion];
             const newCombat = createActiveCombat(
               movement.fromRegion,
@@ -293,14 +299,14 @@ export function applyCompletedMovements(
             );
             nextCombats.push(newCombat);
             // Only clear defender divisions on first combat on this region
-            const isFirstCombatOnRegion = otherCombatsOnRegion.length === 0;
+            const isFirstCombatOnRegion = otherCombatsOnRegion.length === 0 && totalDefenderDivisions.length > 0;
             if (isFirstCombatOnRegion) {
               nextRegions[toRegion] = { ...to, divisions: [] };
             }
             const battleEvent = createGameEvent(
               'combat_victory',
               `Battle for ${to.name} Begins!`,
-              `${owner === 'soviet' ? 'Soviet' : 'White'} forces (${divisions.length} divisions) are attacking ${to.owner === 'soviet' ? 'Soviet' : 'White'} defenders (${totalDefenderDivisions.length} divisions) at ${to.name}.`,
+              `${owner === 'soviet' ? 'Soviet' : 'White'} forces (${divisions.length} divisions) are attacking ${to.owner === 'soviet' ? 'Soviet' : 'White'} defenders (${combatDefenderDivisions.length} divisions) at ${to.name}.`,
               currentDate,
               owner,
               toRegion

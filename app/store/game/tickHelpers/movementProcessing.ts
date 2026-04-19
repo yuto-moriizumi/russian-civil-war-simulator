@@ -94,15 +94,18 @@ export function processMovements(
           } else {
             // Check for newly appeared defenders
             const defenders = destRegion.divisions.filter(d => d.owner === destRegion.owner);
-            if (defenders.length > 0) {
-              // Check for other combats on the same defender region (multi-front)
-              const otherCombatsOnRegion = [...activeCombats, ...newMidTransitCombats].filter(
-                c => c.defenderRegionId === regeneratedMovement.toRegion && !c.isComplete
-              );
-              const combatDefenders = otherCombatsOnRegion.length > 0
+            // Check for other combats on the same defender region (multi-front).
+            // If defender divisions are absent from the region (already in another combat),
+            // use those combat divisions as the effective defenders.
+            const otherCombatsOnRegion = [...activeCombats, ...newMidTransitCombats].filter(
+              c => c.defenderRegionId === regeneratedMovement.toRegion && !c.isComplete
+            );
+            const combatDefenders = defenders.length > 0
+              ? defenders
+              : otherCombatsOnRegion.length > 0
                 ? otherCombatsOnRegion[0].defenderDivisions.map(d => ({ ...d }))
-                : defenders;
-
+                : [];
+            if (combatDefenders.length > 0) {
               const fromRegion = regions[regeneratedMovement.fromRegion];
               const newCombat = createActiveCombat(
                 regeneratedMovement.fromRegion,
