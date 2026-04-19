@@ -1,6 +1,7 @@
 import type { RegionState, CountryId, MapMode } from '../../types/game';
 import { COUNTRY_COLORS } from '../../utils/mapUtils';
-import { DIVISIONS_PER_STATE, MAJOR_CITY_CAP_BONUS } from '../../utils/commandPower';
+import { DIVISIONS_PER_STATE } from '../../utils/commandPower';
+import { regionValues } from '../../data/map/regionValues';
 
 // Colors for diplomacy map mode
 const DIPLOMACY_COLORS = {
@@ -94,7 +95,7 @@ const CP_CONTRIBUTION_COLORS: Record<number, string> = {
  * Core region multiplier is applied separately based on the player's core regions.
  */
 function getRegionCpContribution(regionId: string, coreRegions?: string[]): number {
-  const base = DIVISIONS_PER_STATE + (MAJOR_CITY_CAP_BONUS[regionId] || 0);
+  const base = regionValues[regionId] ?? DIVISIONS_PER_STATE;
   return coreRegions?.includes(regionId) ? base * 2 : base;
 }
 
