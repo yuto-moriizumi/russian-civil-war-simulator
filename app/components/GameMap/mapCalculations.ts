@@ -50,7 +50,9 @@ export function calculateUnitMarkers(
     if (combat.isComplete) continue;
     const regionId = combat.defenderRegionId;
     const existing = combatDefendersByRegion.get(regionId) ?? [];
-    combatDefendersByRegion.set(regionId, [...existing, ...combat.defenderDivisions]);
+    const existingIds = new Set(existing.map(d => d.id));
+    const newDivisions = combat.defenderDivisions.filter(d => !existingIds.has(d.id));
+    combatDefendersByRegion.set(regionId, [...existing, ...newDivisions]);
   }
 
   // Collect all region IDs we need markers for: regions with divisions, plus
