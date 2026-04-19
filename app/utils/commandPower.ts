@@ -1,4 +1,5 @@
 import { CountryId, RegionState, ProductionQueueItem, Movement, CountryBonuses } from '../types/game';
+import { regionValues } from '../data/map/regionValues';
 
 /**
  * Base divisions per state (configurable)
@@ -15,18 +16,6 @@ export const COMMAND_POWER_PER_UNIT = 4;
  * Base command power provided to all countries
  */
 export const BASE_COMMAND_POWER = 2;
-
-/**
- * Cap bonuses for major cities
- * These regions provide additional divisions beyond the base amount
- */
-export const MAJOR_CITY_CAP_BONUS: Record<string, number> = {
-  'RU-MOW': 2,  // Moscow - +3 total (1 base + 2 bonus)
-  'UA-30': 2,   // Kyiv - +3 total (1 base + 2 bonus)
-  'BY-HM': 2,   // Minsk - +3 total (1 base + 2 bonus)
-  'RU-SPE': 1,  // Saint Petersburg - +2 total (1 base + 1 bonus)
-  'RU-MOS': 1,  // Moscow Oblast - +2 total (1 base + 1 bonus)
-};
 
 /**
  * Calculate the maximum divisions a country can have based on controlled states
@@ -48,7 +37,7 @@ export function calculateCommandPower(
   Object.entries(regions).forEach(([regionId, region]) => {
     if (region.owner === countryId) {
       // Base cap for controlling any state
-      const regionContribution = DIVISIONS_PER_STATE + (MAJOR_CITY_CAP_BONUS[regionId] || 0);
+      const regionContribution = regionValues[regionId] ?? DIVISIONS_PER_STATE;
 
       // Core regions provide x2 command power (double their total contribution)
       if (coreRegions?.includes(regionId)) {
