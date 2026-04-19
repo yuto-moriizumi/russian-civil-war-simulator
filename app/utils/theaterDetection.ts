@@ -125,10 +125,9 @@ export function detectTheaters(
 
         (adjacency[cur] || []).forEach(nId => {
           if (visited.has(nId)) return;
-          const neighbor = regions[nId];
-          if (!neighbor) return;
-          // Traverse through allied territories (for connectivity) and other keyRegions
-          if (keyRegions.has(nId) || alliedOwners.has(neighbor.owner)) {
+          // Only traverse to other frontline regions — traversing through
+          // non-frontline allied territory would merge discontinuous frontlines.
+          if (keyRegions.has(nId)) {
             visited.add(nId);
             queue.push(nId);
           }

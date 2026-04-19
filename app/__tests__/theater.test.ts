@@ -306,3 +306,56 @@ describe('detectTheaters — neutral vs war theater split', () => {
     expect(warTheaters).toHaveLength(1);
   });
 });
+
+// ---------------------------------------------------------------------------
+// detectTheaters — non-contiguous frontline regions must not be merged
+// ---------------------------------------------------------------------------
+
+describe('detectTheaters — non-contiguous frontline split', () => {
+  /**
+   * Map layout:
+   *
+   *   [a(A)] -- [c1(C)] -- [c2(C)] -- [c3(C)] -- [b(B)]
+   *
+   * A owns a, B (puppet of A) owns b, C owns c1/c2/c3.
+   * C is at war with A. c2 is NOT adjacent to any enemy → not a frontline region.
+   * c1 and c3 are frontline but separated by non-frontline c2.
+   * Expected: 2 separate theaters (one for c1, one for c3).
+   */
+  const adj: Adjacency = {
+    'a':  ['c1'],
+    'c1': ['a', 'c2'],
+    'c2': ['c1', 'c3'],
+    'c3': ['c2', 'b'],
+    'b':  ['c3'],
+  };
+
+  const regs: RegionState = {
+    'a':  makeRegion('a',  'A' as CountryId),
+    'c1': makeRegion('c1', 'C' as CountryId),
+    'c2': makeRegion('c2', 'C' as CountryId),
+    'c3': makeRegion('c3', 'C' as CountryId),
+    'b':  makeRegion('b',  'B' as CountryId),
+  };
+
+  const rels: Relationship[] = [
+    { fromCountry: 'A' as CountryId, toCountry: 'B' as CountryId, type: 'autonomy' },
+    { fromCountry: 'A' as CountryId, toCountry: 'C' as CountryId, type: 'war' },
+  ];
+
+  it('creates 2 theaters — one for c1, one for c3 — not merged through c2', () => {
+    const theaters = detectTheaters(regs, adj, 'C' as CountryId, [], rels);
+    expect(theaters).toHaveLength(2);
+    const allFrontline = theaters.flatMap(t => t.frontlineRegions);
+    expect(allFrontline).toContain('c1');
+    expect(allFrontline).toContain('c3');
+    expect(allFrontline).not.toContain('c2');
+  });
+
+  it('does not include non-frontline c2 in any theater', () => {
+    const theaters = detectTheaters(regs, adj, 'C' as CountryId, [], rels);
+    for (const t of theaters) {
+      expect(t.frontlineRegions).not.toContain('c2');
+    }
+  });
+});
