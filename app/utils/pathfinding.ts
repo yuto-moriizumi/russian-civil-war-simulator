@@ -171,6 +171,11 @@ export function findPath(
       parent.set(neighborId, currentId);
 
       if (neighborId === toRegionId) {
+        // The destination must also pass the access check (same rule as
+        // intermediate hops). Without this guard, redirectMovement can route
+        // to a province that has neither war state nor right-of-passage.
+        if (canEnter && !canEnter(neighborId)) continue;
+
         // Reconstruct path from toRegionId back to fromRegionId
         const path: string[] = [];
         let node = neighborId;
