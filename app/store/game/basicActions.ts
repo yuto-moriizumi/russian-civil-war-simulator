@@ -92,7 +92,21 @@ export const createBasicActions = (
   
   setSelectedCombatId: (combatId: string | null) => set({ selectedCombatId: combatId }),
   
-  setSelectedMovementId: (movementId: string | null) => set({ selectedMovementId: movementId }),
+  setSelectedMovementId: (movementId: string | null) => {
+    if (movementId === null) {
+      set({ selectedMovementId: null });
+      return;
+    }
+    const { movingUnits } = get();
+    const movement = movingUnits.find(m => m.id === movementId);
+    const divisionIds = movement ? movement.divisions.map(d => d.id) : [];
+    set({
+      selectedMovementId: movementId,
+      selectedDivisionIds: divisionIds,
+      selectedRegion: null,
+      selectedUnitRegion: null,
+    });
+  },
   
   setIsProductionModalOpen: (isOpen: boolean) => set({ isProductionModalOpen: isOpen }),
 
