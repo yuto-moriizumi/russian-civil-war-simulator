@@ -28,6 +28,14 @@ export function detectTheaters(
     relMap.set(`${r.fromCountry}|${r.toCountry}`, r.type);
   }
 
+  // Build map of puppet -> overlord for merging frontlines
+  const puppetOverlords = new Map<CountryId, CountryId>();
+  for (const r of relationships) {
+    if (r.type === 'autonomy') {
+      puppetOverlords.set(r.toCountry, r.fromCountry);
+    }
+  }
+
   // Build set of allied owners: playerCountry + puppet states (autonomy servants)
   const alliedOwners = new Set<CountryId>([playerCountry]);
   for (const r of relationships) {
@@ -54,6 +62,9 @@ export function detectTheaters(
     const theirType = relMap.get(`${enemyCountry}|${playerCountry}`);
     const ourType   = relMap.get(`${playerCountry}|${enemyCountry}`);
     if (theirType === 'war' || ourType === 'war') return 'war';
+    // If this enemy is a puppet, merge its frontline with the overlord's theater
+    const overlord = puppetOverlords.get(enemyCountry);
+    if (overlord) return theaterKeyFor(overlord);
     return `neutral:${enemyCountry}`;
   }
 
