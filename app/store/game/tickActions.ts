@@ -94,13 +94,15 @@ export const createTickActions = (
       updatedScheduledEvents,
       updatedRegions: regionsAfterEvents,
       updatedRelationships: relationshipsAfterEvents,
+      updatedArmyGroups: armyGroupsAfterEvents,
       newEvents: scheduledEventEvents,
       newNotifications: scheduledEventNotifications
     } = processScheduledEvents(
       scheduledEvents,
       newDate,
       regionsAfterProduction,
-      relationships
+      relationships,
+      armyGroups
     );
     TickPerf.end('[tick] 3-scheduled-events');
     
@@ -204,7 +206,7 @@ export const createTickActions = (
     // Step 8: AI Tick - process AI actions and deployments for all AI countries
     TickPerf.start('[tick] 8-ai');
     let nextAIStates = aiStates;
-    let nextArmyGroups = armyGroups;
+    let nextArmyGroups = armyGroupsAfterEvents;
     const nextProductionQueues: Record<CountryId, ProductionQueueItem[]> = { ...remainingProductions };
 
     if (aiStates.length > 0) {

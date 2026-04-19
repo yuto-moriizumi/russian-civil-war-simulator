@@ -58,4 +58,30 @@ export const scheduledEvents: ScheduledEvent[] = [
     ],
     triggered: false,
   },
+  {
+    id: 'stavropol-soviet-republic-uprising',
+    date: '1918-01-14',
+    title: 'Stavropol Soviet Republic Proclaimed',
+    description: 'Bolshevik forces seize control of Stavropol, proclaiming the Stavropol Soviet Republic as a revolutionary government under Soviet Russian patronage.',
+    actions: [
+      {
+        type: 'transferRegion',
+        regionId: 'RU-STA',
+        newOwner: 'stavropol',
+      },
+      {
+        type: 'spawnDivision',
+        owner: 'stavropol',
+        regionId: 'RU-STA',
+        armyGroupName: 'Stavropol Red Guard',
+      },
+      {
+        type: 'setRelationship',
+        fromCountry: 'soviet',
+        toCountry: 'stavropol',
+        relationshipType: 'autonomy',
+      },
+    ],
+    triggered: false,
+  },
 ];
