@@ -126,18 +126,11 @@ export function getRegionsByCountry(regions: RegionState, country: CountryId): s
     .map(([id]) => id);
 }
 
-// Count total units owned by a country (in regions and in transit)
-export function countCountryUnits(regions: RegionState, country: CountryId, movingUnits: Movement[] = []): number {
-  // Count units owned by the country across all regions (not just owned regions)
-  const unitsInRegions = Object.values(regions)
+// Count total units owned by a country (divisions always live in regions)
+export function countCountryUnits(regions: RegionState, country: CountryId, _movingUnits: Movement[] = []): number {
+  // All divisions (including in-transit) are always present in region.divisions.
+  return Object.values(regions)
     .reduce((total, region) => total + region.divisions.filter(d => d.owner === country).length, 0);
-  
-  // Count units in transit
-  const unitsInTransit = movingUnits
-    .filter(movement => movement.owner === country)
-    .reduce((total, movement) => total + movement.divisions.length, 0);
-  
-  return unitsInRegions + unitsInTransit;
 }
 
 /**
@@ -154,7 +147,7 @@ export function getArmyGroupUnitCount(
   regions: RegionState,
   country: CountryId,
   armyGroupId: string,
-  movingUnits: Movement[] = [],
+  _movingUnits: Movement[] = [],
   activeCombats: ActiveCombat[] = []
 ): number {
   // Count divisions in all regions that belong to this army group (by armyGroupId, not regionIds)
@@ -166,14 +159,6 @@ export function getArmyGroupUnitCount(
     const groupDivisions = region.divisions.filter(d => d.armyGroupId === armyGroupId && d.owner === country).length;
     return count + groupDivisions;
   }, 0);
-
-  // Count divisions in transit that belong to this army group
-  const unitsInTransit = movingUnits
-    .filter(m => m.owner === country)
-    .reduce((count, movement) => {
-      const groupDivisions = movement.divisions.filter(d => d.armyGroupId === armyGroupId).length;
-      return count + groupDivisions;
-    }, 0);
 
   // Count divisions currently in active combat (region.divisions is cleared during combat)
   const unitsInCombat = activeCombats
@@ -188,7 +173,8 @@ export function getArmyGroupUnitCount(
       return count + attackerMatches + defenderMatches;
     }, 0);
 
-  return unitsInRegions + unitsInTransit + unitsInCombat;
+  // In-transit divisions are already counted in unitsInRegions above.
+  return unitsInRegions + unitsInCombat;
 }
 
 // Calculate total income from regions controlled by a country (based on CP contribution per region)

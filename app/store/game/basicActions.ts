@@ -69,7 +69,7 @@ export const createBasicActions = (
    * selectedUnitRegion is set to null because divisions span multiple regions.
    */
   selectDivisionsInArmyGroup: (groupId: string) => {
-    const { regions, armyGroups, movingUnits } = get();
+    const { regions, armyGroups } = get();
     const group = armyGroups.find(g => g.id === groupId);
     if (!group) return;
     const divisionIds: string[] = [];
@@ -80,13 +80,7 @@ export const createBasicActions = (
         }
       }
     }
-    for (const movement of movingUnits) {
-      for (const div of movement.divisions) {
-        if (div.armyGroupId === groupId) {
-          divisionIds.push(div.id);
-        }
-      }
-    }
+    // No need to search movingUnits — all divisions (including in-transit) are in regions.
     set({
       selectedDivisionIds: divisionIds,
       selectedUnitRegion: null,
@@ -381,7 +375,8 @@ export const createBasicActions = (
           };
         });
         
-        // Also apply bonuses to divisions in transit
+        // All divisions (including in-transit) are in regions, so no separate movingUnits update needed.
+        // However, update movement.divisions snapshots too so panels show correct stats.
         const updatedMovingUnits = state.movingUnits.map(movement => {
           if (movement.owner === countryId) {
             const updatedDivisions = movement.divisions.map(div => ({
@@ -391,17 +386,14 @@ export const createBasicActions = (
               maxHp: newDivisionStats.maxHp,
               hp: Math.min(div.hp, newDivisionStats.maxHp),
             }));
-            return {
-              ...movement,
-              divisions: updatedDivisions,
-            };
+            return { ...movement, divisions: updatedDivisions };
           }
           return movement;
         });
-        
+
         console.log(`[MISSION CLAIMED] ${mission.name} - Applied bonuses to ${countryId} divisions`);
         console.log(`[BONUSES] Attack: +${newCountryBonuses.attackBonus}, Defence: +${newCountryBonuses.defenceBonus}, HP: +${newCountryBonuses.hpBonus}, Command Power: +${newCountryBonuses.commandPowerBonus}, Prod Speed: ${newCountryBonuses.productionSpeedMultiplier.toFixed(2)}x`);
-        
+
         return {
           missions: updatedMissions,
           countryBonuses: {

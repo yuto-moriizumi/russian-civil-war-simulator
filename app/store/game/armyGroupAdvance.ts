@@ -131,7 +131,10 @@ export function advanceArmyGroup(
       if (existingCombat) {
         pendingCombatId = existingCombat.id;
       } else {
-        const defenderDivisions = destRegion.divisions.filter(d => d.owner === destRegion.owner);
+          const inTransitFromDest = new Set(
+          movingUnits.filter(m => m.fromRegion === toRegion).flatMap(m => m.divisions.map(d => d.id))
+        );
+        const defenderDivisions = destRegion.divisions.filter(d => d.owner === destRegion.owner && !inTransitFromDest.has(d.id));
         if (defenderDivisions.length > 0) {
           // Check for other combats on the same defender region (multi-front)
           const otherCombatsOnRegion = [...activeCombats, ...newCombats].filter(
@@ -187,12 +190,7 @@ export function advanceArmyGroup(
     newMovements.push(newMovement);
     targetRegionIds.add(toRegion);
 
-    // Remove dispatched divisions from the source region
-    const dispatchedIds = new Set(divIds);
-    newRegions[fromRegion] = {
-      ...sourceRegion,
-      divisions: sourceRegion.divisions.filter(d => !dispatchedIds.has(d.id)),
-    };
+    // Divisions stay in the region; they are removed only when the movement completes.
     movedRegions.add(fromRegion);
   }
 

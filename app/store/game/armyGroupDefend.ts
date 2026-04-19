@@ -76,6 +76,7 @@ export function defendArmyGroup(
 
   // All in-transit group divisions — regardless of their current toRegion.
   // Used in Step 5 to exclude them from the available pool entirely.
+  // In-transit division IDs — present in regions but already committed to movement.
   const inTransitDivisionIds = new Set<string>();
   movingUnits.forEach(m => {
     if (m.owner !== countryId) return;
@@ -92,12 +93,13 @@ export function defendArmyGroup(
   });
 
   // ── Step 3: Compute allocation targets ──────────────────────────────────────
-  // Count ALL group divisions: stationed + in-transit (regardless of destination).
-  // This gives a stable total that doesn't shrink just because units are moving.
+  // Stationary divisions + in-transit (avoid double-counting since both are in regions).
   let totalGroupDivisions = 0;
   Object.values(regions).forEach(region => {
     if (!region) return;
-    totalGroupDivisions += region.divisions.filter(d => d.armyGroupId === groupId && d.owner === countryId).length;
+    totalGroupDivisions += region.divisions.filter(
+      d => d.armyGroupId === groupId && d.owner === countryId && !inTransitDivisionIds.has(d.id)
+    ).length;
   });
   movingUnits.forEach(m => {
     if (m.owner !== countryId) return;
@@ -211,7 +213,7 @@ export function defendArmyGroup(
       const alreadyMovingFromSource = movingUnits.some(m =>
         m.fromRegion === sourceRegionId &&
         m.owner === countryId &&
-        m.divisions.some(d => d.armyGroupId === groupId)
+        m.divisions.some(d => d.armyGroupId === groupId && inTransitDivisionIds.has(d.id))
       );
       if (alreadyMovingFromSource) continue;
 
@@ -262,14 +264,7 @@ export function defendArmyGroup(
         owner: countryId,
       });
 
-      // Remove dispatched divisions from source region state
-      newRegions[sourceRegionId] = {
-        ...newRegions[sourceRegionId],
-        divisions: newRegions[sourceRegionId].divisions.filter(
-          d => !divsToSend.some(dfs => dfs.id === d.id)
-        ),
-      };
-
+      // Divisions stay in the region; they are removed only when the movement completes.
       movedRegions.add(sourceRegionId);
       targetRegionSet.add(nextStep);
       divsToSend.forEach(d => inTransitDivisionIds.add(d.id));

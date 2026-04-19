@@ -9,6 +9,9 @@ interface CombatProcessingResult {
   newCombatEvents: GameEvent[];
   newCombatNotifications: NotificationItem[];
   retreatMovements: Movement[];
+  /** Divisions that have retreated with their post-combat HP, keyed by fromRegion.
+   *  tickActions applies these to regions so retreat movements find correct HP. */
+  retreatingDivisionUpdates: { regionId: string; division: import('../../../types/game').Division }[];
 }
 
 /**
@@ -26,6 +29,7 @@ export function processCombats(
   const newCombatEvents: GameEvent[] = [];
   const newCombatNotifications: NotificationItem[] = [];
   const retreatMovements: Movement[] = [];
+  const retreatingDivisionUpdates: CombatProcessingResult['retreatingDivisionUpdates'] = [];
 
   activeCombats.forEach(combat => {
     if (combat.isComplete) {
@@ -47,14 +51,17 @@ export function processCombats(
       
       // Convert retreating divisions to movements
       result.retreatingDivisions.forEach(({ division, toRegionId, fromRegionId }) => {
+        // Record the post-combat division state so tickActions can update the region.
+        // This ensures the region has the correct HP when the retreat movement resolves.
+        retreatingDivisionUpdates.push({ regionId: fromRegionId, division });
+
         if (toRegionId) {
-          // Create a retreat movement (faster than normal movement - 2x speed = 8 km/h)
           const distanceKm = calculateDistance(fromRegionId, toRegionId, regionCentroids);
-          const travelTimeHours = calculateTravelTime(distanceKm, true); // true = retreat speed
-          
+          const travelTimeHours = calculateTravelTime(distanceKm, true);
+
           const arrivalTime = new Date(currentDate);
           arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
-          
+
           const retreatMovement: Movement = {
             id: `retreat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             fromRegion: fromRegionId,
@@ -64,10 +71,10 @@ export function processCombats(
             arrivalTime,
             owner: division.owner,
           };
-          
+
           retreatMovements.push(retreatMovement);
         }
-        // If toRegionId is null, division is destroyed (handled by not creating movement)
+        // If toRegionId is null, division is destroyed
       });
 
       if (updatedCombat.isComplete) {
@@ -123,5 +130,5 @@ export function processCombats(
     }
   });
 
-  return { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements };
+  return { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements, retreatingDivisionUpdates };
 }

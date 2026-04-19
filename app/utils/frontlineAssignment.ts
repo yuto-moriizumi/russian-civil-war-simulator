@@ -108,6 +108,11 @@ export function assignDivisionsToFrontline(
     m.divisions.some(d => d.armyGroupId === groupId)
   );
 
+  // IDs of all in-transit group divisions (present in regions but committed to movement).
+  const inTransitDivisionIds = new Set<string>(
+    groupMovements.flatMap(m => m.divisions.filter(d => d.armyGroupId === groupId).map(d => d.id))
+  );
+
   // Source regions already dispatching — skip to avoid double-dispatch.
   const alreadyMovingFromRegion = new Set<string>(groupMovements.map(m => m.fromRegion));
 
@@ -115,13 +120,13 @@ export function assignDivisionsToFrontline(
   // re-dispatch upon arrival (loop prevention).
   const inTransitToRegion = new Set<string>(groupMovements.map(m => m.toRegion));
 
-  // Frontline slot coverage: stationed divisions + in-transit divisions
-  // heading directly to a frontline slot.
+  // Frontline slot coverage: stationary divisions + in-transit divisions heading there.
   const frontlineCoverage = new Map<string, number>();
   for (const flRegion of frontlineRegions) {
     const region = regions[flRegion];
+    // Exclude in-transit divisions to avoid double-counting with inbound below.
     const stationed = region
-      ? region.divisions.filter(d => d.armyGroupId === groupId).length
+      ? region.divisions.filter(d => d.armyGroupId === groupId && !inTransitDivisionIds.has(d.id)).length
       : 0;
     const inbound = groupMovements
       .filter(m => m.toRegion === flRegion)
@@ -137,7 +142,8 @@ export function assignDivisionsToFrontline(
     if (inTransitToRegion.has(rId)) return false;
     const r = regions[rId];
     if (!r) return false;
-    return r.divisions.some(d => d.armyGroupId === groupId && d.owner === countryId);
+    // Only consider stationary (non-in-transit) divisions as available in rear regions.
+    return r.divisions.some(d => d.armyGroupId === groupId && d.owner === countryId && !inTransitDivisionIds.has(d.id));
   });
 
   const emptySlots = (): string[] =>

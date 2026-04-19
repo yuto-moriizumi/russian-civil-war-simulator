@@ -93,7 +93,11 @@ export function processMovements(
             console.log(`[MID-TRANSIT] ${regeneratedMovement.owner} movement linked to existing combat at ${destRegion.name}`);
           } else {
             // Check for newly appeared defenders
-            const defenders = destRegion.divisions.filter(d => d.owner === destRegion.owner);
+            // Exclude divisions already moving out of destRegion (they are in-transit).
+            const inTransitFromDest = new Set(
+              movingUnits.filter(m => m.fromRegion === regeneratedMovement.toRegion).flatMap(m => m.divisions.map(d => d.id))
+            );
+            const defenders = destRegion.divisions.filter(d => d.owner === destRegion.owner && !inTransitFromDest.has(d.id));
             // Check for other combats on the same defender region (multi-front).
             // If defender divisions are absent from the region (already in another combat),
             // use those combat divisions as the effective defenders.

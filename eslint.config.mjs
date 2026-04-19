@@ -32,7 +32,8 @@ const eslintConfig = defineConfig([
         },
       ],
       // Change @typescript-eslint/no-unused-vars to error level
-      "@typescript-eslint/no-unused-vars": "error",
+      // Parameters and variables prefixed with _ are intentionally unused.
+      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
       // Prohibit importing Feature, FeatureCollection, or GeoJSON from the geojson
       // package directly. Use RegionFeature / RegionFeatureCollection from /types.ts
       // (repo root) instead.

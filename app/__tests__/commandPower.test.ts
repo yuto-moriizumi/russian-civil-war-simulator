@@ -129,11 +129,14 @@ describe('countCurrentDivisions', () => {
   });
 
   it('counts in-transit own divisions', () => {
+    // In-transit divisions are always present in their fromRegion.
+    const d1 = makeDiv('d-1', 'soviet');
+    const d2 = makeDiv('d-2', 'soviet');
     const regions: RegionState = {
-      'RU-A': makeRegion('RU-A', 'soviet'),
+      'RU-A': makeRegion('RU-A', 'soviet', [d1, d2]),
     };
 
-    const movement = makeMovement('soviet', [makeDiv('d-1', 'soviet'), makeDiv('d-2', 'soviet')]);
+    const movement = makeMovement('soviet', [d1, d2]);
 
     const result = countCurrentDivisions('soviet', regions, [movement]);
     expect(result).toBe(2 * COMMAND_POWER_PER_UNIT);
@@ -178,11 +181,14 @@ describe('countCountryUnits', () => {
   });
 
   it('includes in-transit divisions in the count', () => {
+    // In-transit divisions are in their fromRegion, so regions must include them.
+    const d1 = makeDiv('d-1', 'soviet');
+    const d2 = makeDiv('d-2', 'soviet');
     const regions: RegionState = {
-      'RU-A': makeRegion('RU-A', 'soviet'),
+      'RU-A': makeRegion('RU-A', 'soviet', [d1, d2]),
     };
 
-    const movement = makeMovement('soviet', [makeDiv('d-1', 'soviet'), makeDiv('d-2', 'soviet')]);
+    const movement = makeMovement('soviet', [d1, d2]);
 
     expect(countCountryUnits(regions, 'soviet', [movement])).toBe(2);
   });

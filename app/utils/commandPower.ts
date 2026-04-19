@@ -65,23 +65,15 @@ export function calculateCommandPower(
 export function countCurrentDivisions(
   countryId: CountryId,
   regions: RegionState,
-  movements: Movement[]
+  _movements: Movement[]
 ): number {
   // Count divisions in regions
   const divisionsInRegions = Object.values(regions).reduce((count, region) => {
     return count + region.divisions.filter(d => d.owner === countryId).length;
   }, 0);
 
-  // Count divisions in transit
-  const divisionsInTransit = movements.reduce((count, movement) => {
-    if (movement.owner === countryId) {
-      return count + movement.divisions.length;
-    }
-    return count;
-  }, 0);
-
-  // Each division consumes COMMAND_POWER_PER_UNIT command power slots
-  return (divisionsInRegions + divisionsInTransit) * COMMAND_POWER_PER_UNIT;
+  // All divisions (including in-transit) are present in regions; no separate transit count.
+  return divisionsInRegions * COMMAND_POWER_PER_UNIT;
 }
 
 /**
