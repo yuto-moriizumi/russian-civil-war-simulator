@@ -65,7 +65,8 @@ export default function CountrySidebar() {
 
   const playerToTargetStatus = getRelationshipStatus(playerCountry, countryId);
   const targetToPlayerStatus = getRelationshipStatus(countryId, playerCountry);
-  const isPlayable = countryId === 'soviet' || countryId === 'white' || countryId === 'finland' || countryId === 'ukraine' || countryId === 'don' || countryId === 'fswr' || countryId === 'romania';
+  const NON_DIPLOMACY_COUNTRIES: CountryId[] = ['neutral', 'foreign'];
+  const isPlayable = !NON_DIPLOMACY_COUNTRIES.includes(countryId);
 
   return (
     <SidebarPanel
