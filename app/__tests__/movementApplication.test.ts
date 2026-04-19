@@ -362,6 +362,31 @@ describe('applyFinishedCombats', () => {
     expect(nextRegions['B'].divisions[0].id).toBe('surviving-defender');
   });
 
+  it('does not duplicate victorious attacker divisions already present in the captured region', () => {
+    const staleWinner = makeDiv({ id: 'winner', hp: 100 });
+    const postCombatWinner = makeDiv({ id: 'winner', hp: 42 });
+    const regions: RegionState = {
+      A: makeRegion('A', { divisions: [staleWinner] }),
+      B: makeRegion('B', { owner: 'white', divisions: [staleWinner] }),
+    };
+    const combat = makeCombat({
+      attackerRegionId: 'A',
+      defenderRegionId: 'B',
+      attackerDivisions: [postCombatWinner],
+      defenderDivisions: [],
+      isComplete: true,
+      victor: 'soviet',
+    });
+
+    const nextRegions = applyFinishedCombats([combat], regions);
+
+    expect(nextRegions['A'].divisions).toHaveLength(0);
+    expect(nextRegions['B'].owner).toBe('soviet');
+    expect(nextRegions['B'].divisions).toHaveLength(1);
+    expect(nextRegions['B'].divisions[0].id).toBe('winner');
+    expect(nextRegions['B'].divisions[0].hp).toBe(42);
+  });
+
   it('does not mutate original regions object', () => {
     const regions: RegionState = { A: makeRegion('A'), B: makeRegion('B', { owner: 'white' }) };
     const combat = makeCombat({ defenderRegionId: 'B', isComplete: true, victor: 'soviet' });

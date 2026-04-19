@@ -380,11 +380,14 @@ export function applyFinishedCombats(
       // 2. Place attacker divisions (with post-combat HP) in defenderRegion.
       const defenderRegion = nextRegions[combat.defenderRegionId];
       if (!defenderRegion) return;
-      const existingAttackerDivs = defenderRegion.divisions.filter(d => d.owner === combat.attackerCountry);
+      const attackerDivisionIds = new Set(combat.attackerDivisions.map(d => d.id));
+      const preservedDivisions = defenderRegion.divisions.filter(d =>
+        d.owner !== combat.defenderCountry && !attackerDivisionIds.has(d.id)
+      );
       nextRegions[combat.defenderRegionId] = {
         ...defenderRegion,
         owner: combat.attackerCountry,
-        divisions: [...existingAttackerDivs, ...combat.attackerDivisions],
+        divisions: [...preservedDivisions, ...combat.attackerDivisions],
       };
     } else {
       // Defender wins:
