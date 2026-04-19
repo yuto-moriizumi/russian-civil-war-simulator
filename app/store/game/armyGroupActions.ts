@@ -186,7 +186,7 @@ export const createArmyGroupActions = (
    * Divisions that already belong to the group are left unchanged.
    */
   addDivisionsToArmyGroup: (groupId: string, divisionIds: string[]) => {
-    const { regions } = get();
+    const { regions, movingUnits } = get();
 
     if (divisionIds.length === 0) return;
 
@@ -203,6 +203,17 @@ export const createArmyGroupActions = (
       })
     );
 
-    set({ regions: updatedRegions });
+    const updatedMovingUnits = movingUnits.map(movement => {
+      const hasMatch = movement.divisions.some(d => divisionIdSet.has(d.id));
+      if (!hasMatch) return movement;
+      return {
+        ...movement,
+        divisions: movement.divisions.map(d =>
+          divisionIdSet.has(d.id) ? { ...d, armyGroupId: groupId } : d
+        ),
+      };
+    });
+
+    set({ regions: updatedRegions, movingUnits: updatedMovingUnits });
   },
 });
