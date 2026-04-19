@@ -20,7 +20,13 @@ export const sovietMissions: Mission[] = [
     description: 'ハリコフ（UA-63）を支配下に置け',
     completed: false,
     claimed: false,
-    rewards: {},
+    rewards: {
+      liberatePuppet: {
+        country: 'ukrainesoviet',
+        spawnRegionId: 'UA-63',
+        divisions: 3,
+      },
+    },
     prerequisites: ['soviet_mobilize'],
     available: [{ type: 'controlRegion', regionId: 'UA-63' }],
   },
