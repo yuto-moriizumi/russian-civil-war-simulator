@@ -8,6 +8,7 @@
       "Bash(npx tsc *)",
       "Bash(npx vitest *)",
       "Bash(npx eslint *)",
+      "Bash(npm test *)",
       "Bash(grep -r \"max-lines\" .eslintrc* eslint.config*)",
       "Bash(grep -n \"^$\" app/store/game/unitActions.ts)",
       "Bash(grep -v \"^$\")"
