@@ -76,7 +76,7 @@ export function calculateCommandPower(
 export function countCurrentDivisions(
   countryId: CountryId,
   regions: RegionState,
-  movements: Movement[]
+  _movements: Movement[]
 ): number {
   // Count divisions in regions
   const divisionsInRegions = Object.values(regions).reduce((count, region) => {

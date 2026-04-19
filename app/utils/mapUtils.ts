@@ -146,7 +146,7 @@ export function getArmyGroupUnitCount(
   regions: RegionState,
   country: CountryId,
   armyGroupId: string,
-  movingUnits: Movement[] = [],
+  _movingUnits: Movement[] = [],
   activeCombats: ActiveCombat[] = []
 ): number {
   // Count divisions in all regions that belong to this army group (by armyGroupId, not regionIds)
@@ -159,7 +159,7 @@ export function getArmyGroupUnitCount(
     return count + groupDivisions;
   }, 0);
 
-  // In-transit divisions are already counted in regions above; no additional count needed.
+  // In-transit divisions are already counted in regions above.
   const unitsInTransit = 0;
 
   // Count divisions currently in active combat (region.divisions is cleared during combat)
