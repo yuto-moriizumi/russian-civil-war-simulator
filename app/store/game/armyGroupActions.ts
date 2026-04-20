@@ -1,5 +1,5 @@
 import { ArmyGroup, ArmyGroupMode } from '../../types/game';
-import { detectTheatersForCountries } from '../../utils/aiArmyGroupTheaters';
+import { detectTheatersForCountries, syncAIArmyGroupsToTheaters } from '../../utils/aiArmyGroupTheaters';
 import { generateArmyGroupName } from '../../utils/armyGroupNaming';
 import { ARMY_GROUP_COLORS } from './initialState';
 import { GameStore } from './types';
@@ -20,37 +20,62 @@ export const createArmyGroupActions = (
 ) => ({
   // Theater Actions
   detectAndUpdateTheaters: () => {
-    const { regions, adjacency, selectedCountry, theaters, armyGroups, relationships } = get();
+    const { regions, adjacency, selectedCountry, theaters, armyGroups, relationships, aiStates, movingUnits, activeCombats, productionQueues } = get();
     if (!selectedCountry) return;
-    
+
+    const aiCountryIds = aiStates.map(s => s.countryId).filter(id => id !== selectedCountry.id);
+    const allCountryIds = Array.from(new Set([...aiCountryIds, selectedCountry.id]));
+
     const allUpdatedTheaters = detectTheatersForCountries({
       regions,
       adjacency,
-      countryIds: [selectedCountry.id],
+      countryIds: allCountryIds,
       existingTheaters: theaters,
       relationships,
     });
+
+    let updatedArmyGroups = armyGroups;
+    let updatedRegions = regions;
+    let updatedMovingUnits = movingUnits;
+    let updatedActiveCombats = activeCombats;
+    let updatedProductionQueues = productionQueues;
+
+    if (aiCountryIds.length > 0) {
+      const aiSync = syncAIArmyGroupsToTheaters({
+        aiCountryIds,
+        theaters: allUpdatedTheaters,
+        armyGroups,
+        regions,
+        movingUnits,
+        activeCombats,
+        productionQueues,
+      });
+      updatedArmyGroups = aiSync.armyGroups;
+      updatedRegions = aiSync.regions;
+      updatedMovingUnits = aiSync.movingUnits;
+      updatedActiveCombats = aiSync.activeCombats;
+      updatedProductionQueues = aiSync.productionQueues;
+    }
+
     const newTheaters = allUpdatedTheaters.filter(theater => theater.owner === selectedCountry.id);
-    
-    // Handle army group reassignment when theaters merge or disappear
+
+    // Handle player army group reassignment when theaters merge or disappear
     const oldTheaterIds = new Set(
       theaters.filter(t => t.owner === selectedCountry.id).map(t => t.id)
     );
     const newTheaterIds = new Set(newTheaters.map(t => t.id));
     const disappearedTheaterIds = Array.from(oldTheaterIds).filter(id => !newTheaterIds.has(id));
-    
-    let updatedArmyGroups = armyGroups;
-    
+
     if (disappearedTheaterIds.length > 0) {
       console.log('[THEATER MERGE] Theaters disappeared:', disappearedTheaterIds);
-      
+
       // For each disappeared theater, find which new theater(s) contain its regions
       disappearedTheaterIds.forEach(oldTheaterId => {
         const oldTheater = theaters.find(t => t.id === oldTheaterId);
         if (!oldTheater) return;
-        
+
         // Find army groups assigned to this theater
-        const affectedGroups = armyGroups.filter(g =>
+        const affectedGroups = updatedArmyGroups.filter(g =>
           g.owner === selectedCountry.id && g.theaterId === oldTheaterId
         );
         if (affectedGroups.length === 0) return;
@@ -98,7 +123,14 @@ export const createArmyGroupActions = (
       });
     }
     
-    set({ theaters: allUpdatedTheaters, armyGroups: updatedArmyGroups });
+    set({
+      theaters: allUpdatedTheaters,
+      armyGroups: updatedArmyGroups,
+      regions: updatedRegions,
+      movingUnits: updatedMovingUnits,
+      activeCombats: updatedActiveCombats,
+      productionQueues: updatedProductionQueues,
+    });
   },
 
   selectTheater: (theaterId: string | null) => {
