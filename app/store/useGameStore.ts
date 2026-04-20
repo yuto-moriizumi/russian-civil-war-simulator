@@ -66,10 +66,12 @@ export const useGameStore = create<GameStore>()(
         productionQueues: state.productionQueues,
         relationships: state.relationships, // Persist relationships
         mapMode: state.mapMode, // Persist map mode
+        isPlayerAIEnabled: state.isPlayerAIEnabled,
       }),
       onRehydrateStorage: () => (state) => {
         // Convert date strings back to Date objects after rehydration
         if (state) {
+          state.isPlayerAIEnabled = state.isPlayerAIEnabled ?? false;
           if (state.dateTime && typeof state.dateTime === 'string') {
             state.dateTime = new Date(state.dateTime);
           }

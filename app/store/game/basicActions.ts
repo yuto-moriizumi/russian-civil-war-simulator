@@ -262,6 +262,23 @@ export const createBasicActions = (
 
   setSwitchModeActive: (active: boolean) => set({ isSwitchModeActive: active }),
 
+  setPlayerAIEnabled: (enabled: boolean) => {
+    const { selectedCountry, armyGroups } = get();
+    if (!selectedCountry) {
+      set({ isPlayerAIEnabled: enabled });
+      return;
+    }
+
+    set({
+      isPlayerAIEnabled: enabled,
+      armyGroups: armyGroups.map(group =>
+        group.owner === selectedCountry.id
+          ? { ...group, mode: enabled ? 'advance' : 'none' }
+          : group
+      ),
+    });
+  },
+
   dismissNotification: (notificationId: string) => {
     const { notifications } = get();
     set({ 
@@ -297,6 +314,7 @@ export const createBasicActions = (
     const countryMissions = initialMissions.filter(m => m.country === country.id);
     const currentRegions = get().regions;
     const currentState = get();
+    const playerArmyGroupMode = currentState.isPlayerAIEnabled ? 'advance' : 'none';
     const aiCountries = getAIControlledCountries(
       country.id,
       currentRegions,
@@ -329,7 +347,7 @@ export const createBasicActions = (
           color: def.color,
           owner: countryId as CountryId,
           theaterId: null,
-          mode: country.id === countryId ? 'none' : 'advance',
+          mode: country.id === countryId ? playerArmyGroupMode : 'advance',
         };
       }
     }
@@ -372,7 +390,7 @@ export const createBasicActions = (
             color: '#6B7280',
             owner: owner as CountryId,
             theaterId: null,
-            mode: country.id === owner ? 'none' : 'advance',
+            mode: country.id === owner ? playerArmyGroupMode : 'advance',
           };
           placementGroupsByCountry[owner][armyGroupName] = armyGroup;
         }
@@ -414,6 +432,7 @@ export const createBasicActions = (
     if (!countriesWithPlacement.has(country.id)) {
       const playerArmyGroup = createInitialAIArmyGroup(country.id, regionsWithUnits);
       playerArmyGroup.id = `player-army-group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      playerArmyGroup.mode = playerArmyGroupMode;
       playerArmyGroups.push(playerArmyGroup);
     }
     
@@ -448,6 +467,7 @@ export const createBasicActions = (
       relationships: currentState.relationships,
       scheduledEvents: currentState.scheduledEvents,
       theaters: currentState.theaters,
+      isPlayerAIEnabled: currentState.isPlayerAIEnabled,
     });
     
     // Detect theaters when game starts (synchronous so the select is populated immediately)

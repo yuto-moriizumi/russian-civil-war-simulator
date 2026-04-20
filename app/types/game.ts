@@ -216,6 +216,7 @@ export interface GameState {
   dateTime: Date;
   isPlaying: boolean;
   gameSpeed: GameSpeed;
+  isPlayerAIEnabled: boolean;
   missions: Mission[];
   movingUnits: Movement[];
   gameEvents: GameEvent[];

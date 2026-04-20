@@ -96,6 +96,7 @@ interface SerializedGameState {
   dateTime: string;
   isPlaying: boolean;
   gameSpeed: GameSpeed;
+  isPlayerAIEnabled?: boolean;
   missions: Mission[];
   movingUnits: SerializedMovement[];
   gameEvents: SerializedGameEvent[];
@@ -257,6 +258,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
      regionCentroids: {}, // Will be re-loaded from map data
      scheduledEvents: data.scheduledEvents || [], // Default to empty array if not present
        countryBonuses: data.countryBonuses || initialBonuses,
+    isPlayerAIEnabled: data.isPlayerAIEnabled ?? false,
   };
 }
 

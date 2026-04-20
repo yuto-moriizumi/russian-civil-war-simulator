@@ -46,6 +46,7 @@ export const initialGameState: GameState = {
   dateTime: new Date(GAME_START_DATE),
   isPlaying: false,
   gameSpeed: 1,
+  isPlayerAIEnabled: false,
   missions: initialMissions,
   movingUnits: [],
   gameEvents: [],
