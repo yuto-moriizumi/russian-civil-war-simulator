@@ -152,6 +152,67 @@ describe('applyCompletedMovements', () => {
   });
 });
 
+  it('initiates combat when enemy moves into a region whose defender is attacking elsewhere (pendingCombatId)', () => {
+    // A (player/soviet) has 1 division attacking B. The division has pendingCombatId and is
+    // still physically present in A. C (white) now moves into A.
+    // Expected: combat starts at A (soviet division defends), NOT an undefended capture.
+    const warRel: Relationship[] = [
+      { fromCountry: 'soviet', toCountry: 'white', type: 'war' },
+      { fromCountry: 'white', toCountry: 'soviet', type: 'war' },
+    ];
+    const sovietDiv = makeDiv({ id: 'soviet-div', owner: 'soviet' });
+    const whiteDiv = makeDiv({ id: 'white-div-c', owner: 'white' });
+    const regions: RegionState = {
+      A: makeRegion('A', { owner: 'soviet', divisions: [sovietDiv] }),
+      B: makeRegion('B', { owner: 'white', divisions: [] }),
+      C: makeRegion('C', { owner: 'white', divisions: [whiteDiv] }),
+    };
+
+    // Soviet is attacking A→B with pendingCombatId
+    const attackCombat = makeCombat({
+      id: 'combat-a-b',
+      attackerRegionId: 'A',
+      defenderRegionId: 'B',
+      attackerCountry: 'soviet',
+      defenderCountry: 'white',
+      attackerDivisions: [sovietDiv],
+      defenderDivisions: [],
+    });
+    const sovietAttackMovement = makeMovement({
+      id: 'mv-soviet-attack',
+      fromRegion: 'A',
+      toRegion: 'B',
+      owner: 'soviet',
+      divisions: [sovietDiv],
+      pendingCombatId: 'combat-a-b',
+    });
+
+    // White moves from C→A (arrives this tick)
+    const whiteMovement = makeMovement({
+      id: 'mv-white-invade',
+      fromRegion: 'C',
+      toRegion: 'A',
+      owner: 'white',
+      divisions: [whiteDiv],
+    });
+
+    const allMovements = [sovietAttackMovement, whiteMovement];
+    const { nextCombats, nextRegions } = applyCompletedMovements(
+      [whiteMovement],
+      allMovements,
+      ctx(regions, [attackCombat], warRel),
+      NOW
+    );
+
+    // A should NOT be captured by white — a combat should have started
+    expect(nextRegions['A'].owner).toBe('soviet');
+    const newCombat = nextCombats.find(c => c.defenderRegionId === 'A' && !c.isComplete && c.id !== 'combat-a-b');
+    expect(newCombat).toBeDefined();
+    expect(newCombat!.attackerCountry).toBe('white');
+    expect(newCombat!.defenderCountry).toBe('soviet');
+    expect(newCombat!.defenderDivisions).toHaveLength(1);
+  });
+
 // ---------------------------------------------------------------------------
 // 3. Multi-step movement (remainingPath)
 // ---------------------------------------------------------------------------
