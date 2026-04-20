@@ -1,5 +1,5 @@
-import { Movement, ActiveCombat, Region, GameEvent, NotificationItem, Relationship, Country, CountryId } from '../../../types/game';
-import { determineNewOwner } from '../../../utils/combat';
+import { Movement, ActiveCombat, Region, GameEvent, NotificationItem, Relationship, Country } from '../../../types/game';
+import { determineNewOwner } from '../../../utils/occupationUtils';
 import { createActiveCombat } from '../../../utils/combat';
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 import { calculateDistance, calculateTravelTime } from '../../../utils/distance';
