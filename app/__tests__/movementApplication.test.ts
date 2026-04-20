@@ -415,3 +415,4 @@ describe('applyFinishedCombats', () => {
     expect(nextRegions['B'].divisions).toHaveLength(0);
   });
 });
+

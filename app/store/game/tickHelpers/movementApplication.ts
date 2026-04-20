@@ -83,32 +83,37 @@ export function applyCompletedMovements(
       ? fromRegionState.divisions.filter(d => movingIds.has(d.id))
       : movement.divisions;
 
-    if (to.owner === owner) {
+    // Re-read toRegion after the fromRegion removal so self-moves (fromRegion === toRegion)
+    // don't operate on a stale snapshot that still contains the departing divisions.
+    const dest = nextRegions[toRegion];
+    if (!dest) return;
+
+    if (dest.owner === owner) {
       // Friendly region
       if (movement.remainingPath && movement.remainingPath.length > 0) {
         // Multi-step: divisions were just placed into the intermediate region above;
         // dispatch the next hop from there.
         nextRegions[toRegion] = {
-          ...to,
-          divisions: [...to.divisions, ...arrivingDivisions],
+          ...dest,
+          divisions: [...dest.divisions, ...arrivingDivisions],
         };
         _dispatchNextHop(movement, nextRegions, currentDate, newHopMovements, context);
       } else {
         // Final destination — land units
         nextRegions[toRegion] = {
-          ...to,
-          divisions: [...to.divisions, ...arrivingDivisions],
+          ...dest,
+          divisions: [...dest.divisions, ...arrivingDivisions],
         };
       }
     } else {
       // Enemy region - check relationship type
       const theirRelationship = context.relationships.find(
-        r => r.fromCountry === to.owner && r.toCountry === owner
+        r => r.fromCountry === dest.owner && r.toCountry === owner
       );
       const theyGrantUs = theirRelationship ? theirRelationship.type : 'neutral';
 
       const ourRelationship = context.relationships.find(
-        r => r.fromCountry === owner && r.toCountry === to.owner
+        r => r.fromCountry === owner && r.toCountry === dest.owner
       );
       const weDeclared = ourRelationship ? ourRelationship.type : 'neutral';
 
@@ -123,24 +128,24 @@ export function applyCompletedMovements(
         // Military access - units can move but no occupation or combat
         if (movement.remainingPath && movement.remainingPath.length > 0) {
           nextRegions[toRegion] = {
-            ...to,
-            divisions: [...to.divisions, ...arrivingDivisions],
+            ...dest,
+            divisions: [...dest.divisions, ...arrivingDivisions],
           };
           _dispatchNextHop(movement, nextRegions, currentDate, newHopMovements, context);
         } else {
           nextRegions[toRegion] = {
-            ...to,
-            divisions: [...to.divisions, ...arrivingDivisions],
+            ...dest,
+            divisions: [...dest.divisions, ...arrivingDivisions],
           };
         }
-        console.log(`[MILITARY ACCESS] ${arrivingDivisions.length} ${owner} divisions moved to ${to.name} with military access`);
+        console.log(`[MILITARY ACCESS] ${arrivingDivisions.length} ${owner} divisions moved to ${dest.name} with military access`);
 
       } else if (effectiveRelationship === 'war' || effectiveRelationship === 'neutral') {
         // War state or neutral (hostile) - proceed with combat/occupation logic
 
         // INTERCEPTION LOGIC: enemy movements leaving the destination are intercepted.
         // With divisions kept in fromRegion, intercepted enemy divisions are already present
-        // in to.divisions and will be included in existingDefenderDivisions below.
+        // in dest.divisions and will be included in existingDefenderDivisions below.
         const counterMovements = allMovements.filter(m =>
           m.fromRegion === toRegion &&
           m.owner !== owner &&
@@ -151,7 +156,7 @@ export function applyCompletedMovements(
         if (counterMovements.length > 0) {
           counterMovements.forEach(m => {
             interceptedMovementIds.push(m.id);
-            console.log(`[MEETING ENGAGEMENT] ${owner} forces intercepted ${m.owner} forces moving out of ${to.name} toward ${m.toRegion}`);
+            console.log(`[MEETING ENGAGEMENT] ${owner} forces intercepted ${m.owner} forces moving out of ${dest.name} toward ${m.toRegion}`);
           });
         }
 
@@ -188,12 +193,12 @@ export function applyCompletedMovements(
             }
 
             nextCombats[combatIndex] = updatedCombat;
-            console.log(`[REINFORCEMENTS] ${arrivingDivisions.length} ${owner} divisions joined the attackers in combat at ${to.name}`);
+            console.log(`[REINFORCEMENTS] ${arrivingDivisions.length} ${owner} divisions joined the attackers in combat at ${dest.name}`);
 
             nextEvents.push(createGameEvent(
               'combat_victory',
               `Reinforcements Arrive!`,
-              `${owner === 'soviet' ? 'Soviet' : 'White'} reinforcements (${arrivingDivisions.length} divisions) have joined the attack on ${to.name}.`,
+              `${owner === 'soviet' ? 'Soviet' : 'White'} reinforcements (${arrivingDivisions.length} divisions) have joined the attack on ${dest.name}.`,
               currentDate, owner, toRegion
             ));
           } else if (owner === ongoingCombat.defenderCountry) {
@@ -219,20 +224,20 @@ export function applyCompletedMovements(
             }
 
             nextCombats[combatIndex] = updatedCombat;
-            console.log(`[REINFORCEMENTS] ${arrivingDivisions.length} ${owner} divisions joined the defenders in combat at ${to.name}`);
+            console.log(`[REINFORCEMENTS] ${arrivingDivisions.length} ${owner} divisions joined the defenders in combat at ${dest.name}`);
 
             nextEvents.push(createGameEvent(
               'combat_victory',
               `Reinforcements Arrive!`,
-              `${owner === 'soviet' ? 'Soviet' : 'White'} reinforcements (${arrivingDivisions.length} divisions) have arrived to defend ${to.name}.`,
+              `${owner === 'soviet' ? 'Soviet' : 'White'} reinforcements (${arrivingDivisions.length} divisions) have arrived to defend ${dest.name}.`,
               currentDate, owner, toRegion
             ));
           }
         } else {
           // No ongoing combat - follow standard combat/occupation logic
           // Exclude in-transit divisions (they are in the region but already committed to movement).
-          const existingDefenderDivisions = to.divisions.filter(
-            d => d.owner === to.owner && !inTransitFromDest.has(d.id)
+          const existingDefenderDivisions = dest.divisions.filter(
+            d => d.owner === dest.owner && !inTransitFromDest.has(d.id)
           );
           const totalDefenderDivisions = [...existingDefenderDivisions, ...interceptingDivisions];
 
@@ -247,24 +252,24 @@ export function applyCompletedMovements(
 
           if (effectiveDefenderDivisions.length === 0) {
             // Undefended capture
-            const previousOwner = to.owner;
+            const previousOwner = dest.owner;
             nextRegions[toRegion] = {
-              ...to,
+              ...dest,
               owner: owner,
               divisions: arrivingDivisions,
             };
             const captureEvent = createGameEvent(
               'region_captured',
-              `${to.name} Captured!`,
-              `${owner === 'soviet' ? 'Soviet' : 'White'} forces captured the undefended region of ${to.name}.`,
+              `${dest.name} Captured!`,
+              `${owner === 'soviet' ? 'Soviet' : 'White'} forces captured the undefended region of ${dest.name}.`,
               currentDate, owner, toRegion
             );
             nextEvents.push(captureEvent);
             nextNotifications.push(createNotification(captureEvent, currentDate));
             const lostEvent = createGameEvent(
               'region_lost',
-              `${to.name} Lost!`,
-              `${owner === 'soviet' ? 'Soviet' : 'White'} forces captured your undefended region of ${to.name}.`,
+              `${dest.name} Lost!`,
+              `${owner === 'soviet' ? 'Soviet' : 'White'} forces captured your undefended region of ${dest.name}.`,
               currentDate, previousOwner, toRegion
             );
             nextEvents.push(lostEvent);
@@ -280,9 +285,9 @@ export function applyCompletedMovements(
               movement.fromRegion,
               fromRegionStateForCombat?.name ?? movement.fromRegion,
               toRegion,
-              to.name,
+              dest.name,
               owner,
-              to.owner,
+              dest.owner,
               arrivingDivisions,
               effectiveDefenderDivisions,
               currentDate
@@ -291,12 +296,12 @@ export function applyCompletedMovements(
             // Clear defender divisions on first combat — intercepted defenders are included
             const isFirstCombatOnRegion = otherCombatsOnRegion.length === 0 && totalDefenderDivisions.length > 0;
             if (isFirstCombatOnRegion) {
-              nextRegions[toRegion] = { ...to, divisions: [] };
+              nextRegions[toRegion] = { ...dest, divisions: [] };
             }
             const battleEvent = createGameEvent(
               'combat_victory',
-              `Battle for ${to.name} Begins!`,
-              `${owner === 'soviet' ? 'Soviet' : 'White'} forces (${arrivingDivisions.length} divisions) are attacking ${to.owner === 'soviet' ? 'Soviet' : 'White'} defenders (${effectiveDefenderDivisions.length} divisions) at ${to.name}.`,
+              `Battle for ${dest.name} Begins!`,
+              `${owner === 'soviet' ? 'Soviet' : 'White'} forces (${arrivingDivisions.length} divisions) are attacking ${dest.owner === 'soviet' ? 'Soviet' : 'White'} defenders (${effectiveDefenderDivisions.length} divisions) at ${dest.name}.`,
               currentDate, owner, toRegion
             );
             nextEvents.push(battleEvent);

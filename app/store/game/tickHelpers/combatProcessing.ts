@@ -55,7 +55,7 @@ export function processCombats(
         // This ensures the region has the correct HP when the retreat movement resolves.
         retreatingDivisionUpdates.push({ regionId: fromRegionId, division });
 
-        if (toRegionId) {
+        if (toRegionId && toRegionId !== fromRegionId) {
           const distanceKm = calculateDistance(fromRegionId, toRegionId, regionCentroids);
           const travelTimeHours = calculateTravelTime(distanceKm, true);
 
