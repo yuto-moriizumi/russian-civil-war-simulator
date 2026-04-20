@@ -336,7 +336,7 @@ export const createBasicActions = (
     const aiArmyGroups = aiCountries
       .filter(countryId => !countriesWithPlacement.has(countryId))
       .map(countryId => createInitialAIArmyGroup(countryId, regionsWithUnits));
-    
+
     // Player army group (only if the player country has no placement data)
     const playerArmyGroups: ArmyGroup[] = [];
     if (!countriesWithPlacement.has(country.id)) {
@@ -345,6 +345,19 @@ export const createBasicActions = (
       playerArmyGroup.mode = playerArmyGroupMode;
       playerArmyGroups.push(playerArmyGroup);
     }
+
+    // Preserve user-created army groups across country switches.
+    // Auto-generated groups (placement, ai, player-auto) have known ID prefixes;
+    // user-created groups have bare timestamp IDs with no prefix.
+    const oldPlacementIds = new Set(
+      (currentState.placementArmyGroups ?? []).map((g: ArmyGroup) => g.id)
+    );
+    const userCreatedArmyGroups = currentState.armyGroups.filter(
+      (g: ArmyGroup) =>
+        !oldPlacementIds.has(g.id) &&
+        !g.id.startsWith('ai-army-group-') &&
+        !g.id.startsWith('player-army-group-')
+    );
     
     // Reset all game state for a fresh start, but preserve live game state that
     // should survive a country switch: production queues, date/time, game events,
@@ -356,7 +369,7 @@ export const createBasicActions = (
       currentScreen: 'main',
       missions: mergeMissionsWithInitial(currentState.missions),
       aiStates: aiStates,
-      armyGroups: [...playerArmyGroups, ...aiArmyGroups, ...placementArmyGroups],
+      armyGroups: [...userCreatedArmyGroups, ...playerArmyGroups, ...aiArmyGroups, ...placementArmyGroups],
       placementArmyGroups,
       // Keep the regions and adjacency from map data (these are static), but
       // overlay any divisions from unit placement
