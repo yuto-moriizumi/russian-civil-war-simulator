@@ -83,7 +83,7 @@ export const germanMissions: Mission[] = [
         divisions: 2,
       },
     },
-    prerequisites: ['germany_ober_ost'],
+    prerequisites: [],
     available: [{ type: 'controlRegionByOverlord', regionId: 'LT-VL' }],
   },
   {
