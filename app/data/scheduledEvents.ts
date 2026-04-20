@@ -84,6 +84,76 @@ export const scheduledEvents: ScheduledEvent[] = [
     triggered: false,
   },
   {
+    id: 'donetsk-krivoy-rog-soviet-republic-independence',
+    date: '1918-02-12',
+    title: 'Donetsk–Krivoy Rog Soviet Republic Declared',
+    description: 'The Donetsk–Krivoy Rog Soviet Republic is proclaimed as an independent Soviet republic, encompassing the industrial Donbass and Krivoy Rog regions under Bolshevik control.',
+    conditions: [
+      {
+        type: 'atLeastOneRegionOwnedByOrPuppetOf',
+        regions: ['UA-09', 'UA-12', 'UA-14', 'UA-23', 'UA-59', 'UA-63', 'UA-65'],
+        country: 'soviet',
+      },
+    ],
+    actions: [
+      {
+        type: 'transferRegionIfOwnedByOrPuppetOf',
+        regionId: 'UA-09',
+        newOwner: 'dkr',
+        overlordCountry: 'soviet',
+      },
+      {
+        type: 'transferRegionIfOwnedByOrPuppetOf',
+        regionId: 'UA-12',
+        newOwner: 'dkr',
+        overlordCountry: 'soviet',
+      },
+      {
+        type: 'transferRegionIfOwnedByOrPuppetOf',
+        regionId: 'UA-14',
+        newOwner: 'dkr',
+        overlordCountry: 'soviet',
+      },
+      {
+        type: 'transferRegionIfOwnedByOrPuppetOf',
+        regionId: 'UA-23',
+        newOwner: 'dkr',
+        overlordCountry: 'soviet',
+      },
+      {
+        type: 'transferRegionIfOwnedByOrPuppetOf',
+        regionId: 'UA-59',
+        newOwner: 'dkr',
+        overlordCountry: 'soviet',
+      },
+      {
+        type: 'transferRegionIfOwnedByOrPuppetOf',
+        regionId: 'UA-63',
+        newOwner: 'dkr',
+        overlordCountry: 'soviet',
+      },
+      {
+        type: 'transferRegionIfOwnedByOrPuppetOf',
+        regionId: 'UA-65',
+        newOwner: 'dkr',
+        overlordCountry: 'soviet',
+      },
+      {
+        type: 'spawnDivision',
+        owner: 'dkr',
+        regionId: 'UA-14',
+        armyGroupName: 'Southern Red Guard',
+      },
+      {
+        type: 'setRelationship',
+        fromCountry: 'soviet',
+        toCountry: 'dkr',
+        relationshipType: 'autonomy',
+      },
+    ],
+    triggered: false,
+  },
+  {
     id: 'stavropol-soviet-republic-uprising',
     date: '1918-01-14',
     title: 'Stavropol Soviet Republic Proclaimed',

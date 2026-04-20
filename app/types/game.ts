@@ -168,10 +168,12 @@ export interface Relationship {
 
 // Scheduled events that trigger on specific dates
 export interface ScheduledEventAction {
-  type: 'transferRegion' | 'declareWar' | 'spawnDivision' | 'setRelationship';
-  // For transferRegion
+  type: 'transferRegion' | 'transferRegionIfOwnedByOrPuppetOf' | 'declareWar' | 'spawnDivision' | 'setRelationship';
+  // For transferRegion / transferRegionIfOwnedByOrPuppetOf
   regionId?: string;
   newOwner?: CountryId;
+  // For transferRegionIfOwnedByOrPuppetOf: only transfer if current owner is this country or its puppet
+  overlordCountry?: CountryId;
   // For declareWar / setRelationship
   fromCountry?: CountryId;
   toCountry?: CountryId;
@@ -182,11 +184,18 @@ export interface ScheduledEventAction {
   armyGroupName?: string;
 }
 
+export interface ScheduledEventCondition {
+  type: 'atLeastOneRegionOwnedByOrPuppetOf';
+  regions: string[];    // region IDs to check
+  country: CountryId;  // overlord country
+}
+
 export interface ScheduledEvent {
   id: string;
-  date: string; // YYYY-MM-DD format
+  date: string; // YYYY-MM-DD format; if conditions present, treated as earliest possible trigger date
   title: string;
   description: string;
+  conditions?: ScheduledEventCondition[]; // all conditions must be met (AND); if present, triggers on first matching date >= date
   actions: ScheduledEventAction[];
   triggered: boolean; // Track if event has already been triggered
 }
