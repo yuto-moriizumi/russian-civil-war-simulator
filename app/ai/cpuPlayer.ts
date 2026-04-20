@@ -47,6 +47,40 @@ function pickRandomRegion(regionList: Region[]): Region | null {
   return regionList[index];
 }
 
+function countAssignedDivisions(
+  groupId: string,
+  regions: RegionState,
+  movingUnits: Movement[],
+  productionQueue: ProductionQueueItem[]
+): number {
+  const onMap = Object.values(regions).reduce(
+    (count, region) => count + region.divisions.filter(division => division.armyGroupId === groupId).length,
+    0
+  );
+  const inTransit = movingUnits.reduce(
+    (count, movement) => count + movement.divisions.filter(division => division.armyGroupId === groupId).length,
+    0
+  );
+  const queued = productionQueue.filter(item => item.armyGroupId === groupId).length;
+
+  return onMap + inTransit + queued;
+}
+
+function selectProductionArmyGroup(
+  countryId: CountryId,
+  regions: RegionState,
+  armyGroups: ArmyGroup[],
+  movingUnits: Movement[],
+  productionQueue: ProductionQueueItem[]
+): ArmyGroup | undefined {
+  return armyGroups
+    .filter(group => group.owner === countryId)
+    .sort((a, b) =>
+      countAssignedDivisions(a.id, regions, movingUnits, productionQueue) -
+      countAssignedDivisions(b.id, regions, movingUnits, productionQueue)
+    )[0];
+}
+
 /**
  * Generate a unique division name for the AI
  */
@@ -114,7 +148,7 @@ export function runAITick(
   const { countryId } = aiState;
   
   // 1. Find or create an army group for the AI
-  let aiArmyGroup = armyGroups.find(g => g.owner === countryId);
+  let aiArmyGroup = selectProductionArmyGroup(countryId, regions, armyGroups, movingUnits, productionQueue);
   let newArmyGroup: ArmyGroup | undefined = undefined;
   
   if (!aiArmyGroup) {
@@ -146,6 +180,8 @@ export function runAITick(
     aiArmyGroup = newArmyGroup;
   }
   
+  const availableArmyGroups = newArmyGroup ? [...armyGroups, newArmyGroup] : armyGroups;
+
   // 2. Create production requests
   const productionRequests: AIProductionRequest[] = [];
   const ownedRegions = getOwnedRegions(regions, countryId);
@@ -184,8 +220,15 @@ export function runAITick(
       break;
     }
     
+    aiArmyGroup = selectProductionArmyGroup(countryId, regions, availableArmyGroups, movingUnits, localQueues[countryId] ?? []);
+    if (!aiArmyGroup) break;
+
+    const groupRegionIds = new Set(aiArmyGroup.regionIds);
+    const groupAvailableRegions = availableRegions.filter(region => groupRegionIds.has(region.id));
+    const deploymentRegions = groupAvailableRegions.length > 0 ? groupAvailableRegions : availableRegions;
+
     // Pick target region
-    const targetRegion = pickRandomRegion(availableRegions);
+    const targetRegion = pickRandomRegion(deploymentRegions);
     if (!targetRegion) break;
     
     productionRequests.push({

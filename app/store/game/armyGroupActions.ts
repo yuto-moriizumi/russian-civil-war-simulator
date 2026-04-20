@@ -1,5 +1,5 @@
 import { ArmyGroup, ArmyGroupMode } from '../../types/game';
-import { detectTheaters } from '../../utils/theaterDetection';
+import { detectTheatersForCountries } from '../../utils/aiArmyGroupTheaters';
 import { generateArmyGroupName } from '../../utils/armyGroupNaming';
 import { ARMY_GROUP_COLORS } from './initialState';
 import { GameStore } from './types';
@@ -23,10 +23,19 @@ export const createArmyGroupActions = (
     const { regions, adjacency, selectedCountry, theaters, armyGroups, relationships } = get();
     if (!selectedCountry) return;
     
-    const newTheaters = detectTheaters(regions, adjacency, selectedCountry.id, theaters, relationships);
+    const allUpdatedTheaters = detectTheatersForCountries({
+      regions,
+      adjacency,
+      countryIds: [selectedCountry.id],
+      existingTheaters: theaters,
+      relationships,
+    });
+    const newTheaters = allUpdatedTheaters.filter(theater => theater.owner === selectedCountry.id);
     
     // Handle army group reassignment when theaters merge or disappear
-    const oldTheaterIds = new Set(theaters.map(t => t.id));
+    const oldTheaterIds = new Set(
+      theaters.filter(t => t.owner === selectedCountry.id).map(t => t.id)
+    );
     const newTheaterIds = new Set(newTheaters.map(t => t.id));
     const disappearedTheaterIds = Array.from(oldTheaterIds).filter(id => !newTheaterIds.has(id));
     
@@ -41,7 +50,9 @@ export const createArmyGroupActions = (
         if (!oldTheater) return;
         
         // Find army groups assigned to this theater
-        const affectedGroups = armyGroups.filter(g => g.theaterId === oldTheaterId);
+        const affectedGroups = armyGroups.filter(g =>
+          g.owner === selectedCountry.id && g.theaterId === oldTheaterId
+        );
         if (affectedGroups.length === 0) return;
         
         console.log(`[THEATER MERGE] ${affectedGroups.length} army groups affected by theater ${oldTheaterId} disappearing`);
@@ -87,7 +98,7 @@ export const createArmyGroupActions = (
       });
     }
     
-    set({ theaters: newTheaters, armyGroups: updatedArmyGroups });
+    set({ theaters: allUpdatedTheaters, armyGroups: updatedArmyGroups });
   },
 
   selectTheater: (theaterId: string | null) => {
