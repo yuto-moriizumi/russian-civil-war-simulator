@@ -69,7 +69,7 @@ export interface GameStore extends GameState {
   navigateToScreen: (screen: Screen) => void;
   /** Reset all game state and clear persistence, then navigate to country select. */
   startNewGame: () => void;
-  selectCountry: (country: Country) => void;
+  selectCountry: (country: Country, isInitial?: boolean) => void;
   togglePlay: () => void;
   setGameSpeed: (speed: GameSpeed) => void;
   

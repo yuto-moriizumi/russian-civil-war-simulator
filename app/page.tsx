@@ -75,7 +75,7 @@ function CountrySelectScreenView() {
   const navigateToScreen = useGameStore(state => state.navigateToScreen);
   return (
     <CountrySelectScreen
-      onSelectCountry={selectCountry}
+      onSelectCountry={(country) => selectCountry(country, true)}
       onBack={() => navigateToScreen('title')}
     />
   );
