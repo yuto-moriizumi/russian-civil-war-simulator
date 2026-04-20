@@ -16,7 +16,6 @@ export default function TopBar({ showSavedIndicator }: TopBarProps) {
   const dateTime = useGameStore(state => state.dateTime);
   const isPlaying = useGameStore(state => state.isPlaying);
   const gameSpeed = useGameStore(state => state.gameSpeed);
-  const gameEvents = useGameStore(state => state.gameEvents);
   const productionQueue = useGameStore(state => state.productionQueues);
   const mapMode = useGameStore(state => state.mapMode);
   const regions = useGameStore(state => state.regions);
@@ -28,7 +27,6 @@ export default function TopBar({ showSavedIndicator }: TopBarProps) {
   const togglePlay = useGameStore(state => state.togglePlay);
   const setGameSpeed = useGameStore(state => state.setGameSpeed);
   const saveGame = useGameStore(state => state.saveGame);
-  const setIsEventsModalOpen = useGameStore(state => state.setIsEventsModalOpen);
   const setIsProductionModalOpen = useGameStore(state => state.setIsProductionModalOpen);
   const setIsCountrySidebarOpen = useGameStore(state => state.setIsCountrySidebarOpen);
   const setMapMode = useGameStore(state => state.setMapMode);
@@ -118,19 +116,6 @@ export default function TopBar({ showSavedIndicator }: TopBarProps) {
           {activeProductions > 0 && (
             <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-400 text-[10px] font-bold text-black">
               {activeProductions > 9 ? '9+' : activeProductions}
-            </span>
-          )}
-        </button>
-
-        {/* Events Button */}
-        <button
-          onClick={() => setIsEventsModalOpen(true)}
-          className="relative rounded bg-stone-700 px-3 py-1 text-stone-300 transition-colors hover:bg-stone-600"
-        >
-          Events
-          {gameEvents.length > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-black">
-              {gameEvents.length > 99 ? '99+' : gameEvents.length}
             </span>
           )}
         </button>

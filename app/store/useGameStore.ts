@@ -26,7 +26,6 @@ export const useGameStore = create<GameStore>()(
       selectedDivisionIds: [],
       mapDataLoaded: false,
       aiStates: [], // Initialize with empty array for multiple AI states
-      isEventsModalOpen: false,
       selectedCombatId: null,
       selectedMovementId: null,
       lastSaveTime: null,
