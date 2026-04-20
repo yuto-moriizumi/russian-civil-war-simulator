@@ -127,13 +127,17 @@ export const createTickActions = (
       const clearedRegions = { ...regionsBeforeStep5 };
       newMidTransitCombats.forEach(combat => {
         // Only clear defender divisions if this is the first combat on this region
-        const existingCombatsOnRegion = combatsBeforeStep5.filter(
+        const existingCombatsOnRegion = activeCombats.filter(
           c => c.defenderRegionId === combat.defenderRegionId && !c.isComplete
         );
         if (existingCombatsOnRegion.length === 0) {
           const r = clearedRegions[combat.defenderRegionId];
           if (r) {
-            clearedRegions[combat.defenderRegionId] = { ...r, divisions: [] };
+            const defenderIds = new Set(combat.defenderDivisions.map(d => d.id));
+            clearedRegions[combat.defenderRegionId] = {
+              ...r,
+              divisions: r.divisions.filter(d => !defenderIds.has(d.id)),
+            };
           }
         }
       });
