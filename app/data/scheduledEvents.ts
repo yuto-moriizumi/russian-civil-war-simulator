@@ -84,4 +84,35 @@ export const scheduledEvents: ScheduledEvent[] = [
     ],
     triggered: false,
   },
+  {
+    id: 'odessa-soviet-republic-proclaimed',
+    date: '1918-02-01',
+    title: 'Odessa Soviet Republic Proclaimed',
+    description: 'Bolshevik forces establish control over Odessa and the surrounding region, proclaiming the Odessa Soviet Republic as a revolutionary Soviet state.',
+    actions: [
+      {
+        type: 'transferRegion',
+        regionId: 'UA-51', // Odessa Oblast
+        newOwner: 'odessa',
+      },
+      {
+        type: 'transferRegion',
+        regionId: 'MD-01', // Bessarabia
+        newOwner: 'odessa',
+      },
+      {
+        type: 'spawnDivision',
+        owner: 'odessa',
+        regionId: 'UA-51',
+        armyGroupName: 'Odessa Red Guard',
+      },
+      {
+        type: 'setRelationship',
+        fromCountry: 'soviet',
+        toCountry: 'odessa',
+        relationshipType: 'autonomy',
+      },
+    ],
+    triggered: false,
+  },
 ];
