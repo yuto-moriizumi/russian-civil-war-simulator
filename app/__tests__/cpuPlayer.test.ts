@@ -201,6 +201,37 @@ describe('runAITick — CP limit enforcement', () => {
     expect(result.divisionsCreated).toBe(2);
   });
 
+  it('uses the newly created army group for production when none exists', () => {
+    const regions: RegionState = {
+      'RU-A': makeRegion('RU-A'),
+      'RU-B': makeRegion('RU-B'),
+      'RU-C': makeRegion('RU-C'),
+      'RU-D': makeRegion('RU-D'),
+      'RU-E': makeRegion('RU-E'),
+      'RU-F': makeRegion('RU-F'),
+      'RU-G': makeRegion('RU-G'),
+      'RU-H': makeRegion('RU-H'),
+    };
+
+    const productionQueues = {} as Record<CountryId, ProductionQueueItem[]>;
+    const aiState: AIState = { countryId: COUNTRY };
+
+    const result = runAITick(
+      aiState,
+      regions,
+      [],
+      [],
+      [],
+      [],
+      productionQueues,
+      emptyBonuses,
+    );
+
+    expect(result.newArmyGroup).toBeDefined();
+    expect(result.productionRequests.length).toBeGreaterThan(0);
+    expect(result.productionRequests[0].armyGroupId).toBe(result.newArmyGroup?.id);
+  });
+
   it('counts existing on-map divisions against the CP cap', () => {
     // 2 regions → cap = 4 CP; 1 division on map = 4 CP used → exactly at cap, no room
     const divisions = [makeDiv('d-1')];

@@ -4,6 +4,7 @@ import { StoreApi } from 'zustand';
 import { AIState, ProductionQueueItem, CountryId } from '../../types/game';
 import { getBaseProductionTime } from '../../utils/bonusCalculator';
 import { clampProductionQueueToCommandPower } from '../../utils/commandPower';
+import { detectTheatersForCountries, syncAIArmyGroupsToTheaters } from '../../utils/aiArmyGroupTheaters';
 import { countries } from '../../data/gameData';
 import { 
   validateDivisions, 
@@ -213,7 +214,7 @@ export const createTickActions = (
     //     applied by applyFinishedCombats; keeping them would double the divisions)
     // Also include newHopMovements from multi-step routes.
     const finishedCombatIds = new Set(finishedCombats.map(c => c.id));
-    const nextMovingUnits = [...remainingMovements, ...retreatMovements, ...newHopMovements].filter(m =>
+    let nextMovingUnits = [...remainingMovements, ...retreatMovements, ...newHopMovements].filter(m =>
       !interceptedMovementIds.includes(m.id) &&
       !(m.pendingCombatId && finishedCombatIds.has(m.pendingCombatId))
     );
@@ -230,9 +231,39 @@ export const createTickActions = (
       selectedCountry?.id,
       state.isPlayerAIEnabled
     );
+    const effectiveAICountryIds = effectiveAIStates.map(aiState => aiState.countryId);
     let nextAIStates = effectiveAIStates.filter(aiState => aiState.countryId !== selectedCountry?.id);
     let nextArmyGroups = armyGroupsAfterEvents;
-    const nextProductionQueues: Record<CountryId, ProductionQueueItem[]> = { ...remainingProductions };
+    let nextProductionQueues: Record<CountryId, ProductionQueueItem[]> = { ...remainingProductions };
+    const nextTheaters = detectTheatersForCountries({
+      regions: nextRegions,
+      adjacency,
+      countryIds: Array.from(new Set([
+        ...effectiveAICountryIds,
+        ...(selectedCountry ? [selectedCountry.id] : []),
+      ])),
+      existingTheaters: state.theaters,
+      relationships: relationshipsAfterEvents,
+    });
+    let nextActiveCombats = nextCombats;
+
+    if (effectiveAICountryIds.length > 0) {
+      const aiArmyGroupSync = syncAIArmyGroupsToTheaters({
+        aiCountryIds: effectiveAICountryIds,
+        theaters: nextTheaters,
+        armyGroups: nextArmyGroups,
+        regions: nextRegions,
+        movingUnits: nextMovingUnits,
+        activeCombats: nextActiveCombats,
+        productionQueues: nextProductionQueues,
+      });
+
+      nextArmyGroups = aiArmyGroupSync.armyGroups;
+      nextRegions = aiArmyGroupSync.regions;
+      nextMovingUnits = aiArmyGroupSync.movingUnits;
+      nextActiveCombats = aiArmyGroupSync.activeCombats;
+      nextProductionQueues = aiArmyGroupSync.productionQueues;
+    }
 
     if (effectiveAIStates.length > 0) {
       // Process each AI country
@@ -256,7 +287,7 @@ export const createTickActions = (
           aiState, 
           nextRegions, 
           nextArmyGroups, 
-          nextCombats, 
+          nextActiveCombats, 
           nextMovingUnits, 
           nextProductionQueues[aiState.countryId] || [], 
           nextProductionQueues,
@@ -314,12 +345,13 @@ export const createTickActions = (
     set({
       dateTime: newDate,
       movingUnits: nextMovingUnits,
-      activeCombats: nextCombats,
+      activeCombats: nextActiveCombats,
       regions: nextRegions,
       gameEvents: nextEvents,
       notifications: nextNotifications,
       aiStates: nextAIStates, // Updated AI states
       armyGroups: nextArmyGroups,
+      theaters: nextTheaters,
       productionQueues: nextProductionQueues, // Update production queues
       scheduledEvents: updatedScheduledEvents, // Update scheduled events
       relationships: relationshipsAfterEvents, // Save updated relationships from events
