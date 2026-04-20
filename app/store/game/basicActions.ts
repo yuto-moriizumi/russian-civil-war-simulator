@@ -24,10 +24,29 @@ function applyLiberatePuppet(
     return { updatedRelationships: [...state.relationships], updatedRegions: regions, puppetEvents: [] };
   }
   const { country: puppetId, spawnRegionId, divisions: divisionCount } = reward;
-  const updatedRelationships = [
+  let updatedRelationships: Relationship[] = [
     ...state.relationships.filter(r => !(r.fromCountry === overlordId && r.toCountry === puppetId)),
     { fromCountry: overlordId, toCountry: puppetId, type: 'autonomy' as const },
   ];
+
+  // Auto-join overlord's existing wars
+  const overlordWars = state.relationships.filter(
+    r => r.fromCountry === overlordId && r.type === 'war'
+  );
+  for (const war of overlordWars) {
+    const enemy = war.toCountry;
+    if (enemy === puppetId) continue;
+    const alreadyAtWar = updatedRelationships.some(
+      r => r.fromCountry === puppetId && r.toCountry === enemy && r.type === 'war'
+    );
+    if (!alreadyAtWar) {
+      updatedRelationships = [
+        ...updatedRelationships,
+        { fromCountry: puppetId, toCountry: enemy, type: 'war' as const },
+        { fromCountry: enemy, toCountry: puppetId, type: 'war' as const },
+      ];
+    }
+  }
   const updatedRegions = { ...regions };
 
   // Transfer core regions currently owned by the overlord to the puppet
