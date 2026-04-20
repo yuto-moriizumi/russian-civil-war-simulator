@@ -70,6 +70,51 @@ function makeProductionItem(id: string, armyGroupId: string): ProductionQueueIte
 }
 
 describe('syncAIArmyGroupsToTheaters', () => {
+  it('creates a default army group when the country has no groups and no theaters', () => {
+    const regions: RegionState = {
+      'home': makeRegion('home'),
+    };
+
+    const result = syncAIArmyGroupsToTheaters({
+      aiCountryIds: [AI_COUNTRY],
+      theaters: [],
+      armyGroups: [],
+      regions,
+      movingUnits: [],
+      activeCombats: [],
+      productionQueues: {} as Record<CountryId, ProductionQueueItem[]>,
+    });
+
+    const aiGroups = result.armyGroups.filter(group => group.owner === AI_COUNTRY);
+    expect(aiGroups).toHaveLength(1);
+    expect(aiGroups[0].theaterId).toBeNull();
+  });
+
+  it('creates army groups equal to the number of theaters when starting from zero', () => {
+    const regions: RegionState = {
+      'west-front': makeRegion('west-front'),
+      'east-front': makeRegion('east-front'),
+    };
+    const theaters = [
+      makeTheater('theater-west', ['west-front']),
+      makeTheater('theater-east', ['east-front']),
+    ];
+
+    const result = syncAIArmyGroupsToTheaters({
+      aiCountryIds: [AI_COUNTRY],
+      theaters,
+      armyGroups: [],
+      regions,
+      movingUnits: [],
+      activeCombats: [],
+      productionQueues: {} as Record<CountryId, ProductionQueueItem[]>,
+    });
+
+    const aiGroups = result.armyGroups.filter(group => group.owner === AI_COUNTRY);
+    expect(aiGroups).toHaveLength(2);
+    expect(aiGroups.map(g => g.theaterId).sort()).toEqual(['theater-east', 'theater-west']);
+  });
+
   it('creates an AI army group when a new theater appears', () => {
     const regions: RegionState = {
       'west-front': makeRegion('west-front', [makeDivision('west-1', 'ag-west')]),
