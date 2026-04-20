@@ -58,6 +58,6 @@ export const createDivisionSelectionActions = (
 
   /** Clear all selected divisions and reset the unit region. */
   clearSelectedDivisions: () => {
-    set({ selectedDivisionIds: [], selectedUnitRegion: null });
+    set({ selectedDivisionIds: [], selectedUnitRegion: null, selectedMovementId: null });
   },
 });
