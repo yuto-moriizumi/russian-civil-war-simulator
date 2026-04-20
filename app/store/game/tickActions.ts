@@ -1,6 +1,6 @@
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
-import { AIState, ProductionQueueItem, CountryId } from '../../types/game';
+import { ProductionQueueItem, CountryId } from '../../types/game';
 import { detectTheatersForCountries, syncAIArmyGroupsToTheaters } from '../../utils/aiArmyGroupTheaters';
 import { countries } from '../../data/gameData';
 import {
