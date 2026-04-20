@@ -1,11 +1,15 @@
 /**
  * Tests for combat triggered when an enemy enters a region whose defender
- * is already committed to an outbound attack (has pendingCombatId).
+ * is already committed to an outbound attack (has pendingCombatId),
+ * and for second attacks on a defender region whose divisions were already
+ * cleared by a prior combat (multi-front attack bug fix).
  */
 
 import { describe, it, expect } from 'vitest';
 import { applyCompletedMovements } from '../store/game/tickHelpers/movementApplication';
-import type { Division, Movement, Region, RegionState, ActiveCombat, Relationship } from '../types/game';
+import { createUnitActions } from '../store/game/unitActions';
+import type { Division, Movement, Region, RegionState, ActiveCombat, Relationship, CountryId } from '../types/game';
+import type { GameStore } from '../store/game/types';
 
 const D0 = new Date('1918-01-01T00:00:00Z');
 const NOW = new Date('1918-01-01T12:00:00Z');
@@ -41,6 +45,65 @@ const WAR_REL: Relationship[] = [
   { fromCountry: 'soviet', toCountry: 'white', type: 'war' },
   { fromCountry: 'white', toCountry: 'soviet', type: 'war' },
 ];
+
+// ---------------------------------------------------------------------------
+// Helper: build a minimal GameStore stub for moveUnits tests
+// ---------------------------------------------------------------------------
+function makeStoreStub(overrides: Partial<GameStore>): { get: () => GameStore; set: (p: Partial<GameStore>) => void; captured: Partial<GameStore> } {
+  const captured: Partial<GameStore> = {};
+  const base: Partial<GameStore> = {
+    adjacency: {},
+    regions: {},
+    selectedCountry: { id: 'soviet' as CountryId } as GameStore['selectedCountry'],
+    dateTime: D0,
+    movingUnits: [],
+    relationships: WAR_REL,
+    activeCombats: [],
+    gameEvents: [],
+    notifications: [],
+    regionCentroids: { A: [0, 0], B: [1, 0], C: [2, 0] },
+    armyGroups: [],
+    ...overrides,
+  };
+  const get = () => ({ ...base, ...captured } as GameStore);
+  const set = (partial: Partial<GameStore>) => { Object.assign(captured, partial); };
+  return { get, set, captured };
+}
+
+describe('two-front combat: second attack on defender whose divisions are already cleared', () => {
+  it('creates a new combat when attacking a region that is already defending (divisions cleared)', () => {
+    // Layout: A(own) adjacent to B(enemy) and C(enemy). B adjacent to C.
+    // A already attacked C → C's divisions cleared into combat-a-c.
+    // Player now attacks from B to C → should also create a new combat at C.
+    const sovietDivB = makeDiv({ id: 'sov-b', owner: 'soviet' });
+    const whiteDefC = makeDiv({ id: 'wht-c', owner: 'white' });
+    const regions: RegionState = {
+      A: makeRegion('A', { owner: 'soviet', divisions: [makeDiv({ id: 'sov-a', owner: 'soviet' })] }),
+      B: makeRegion('B', { owner: 'soviet', divisions: [sovietDivB] }),
+      C: makeRegion('C', { owner: 'white', divisions: [] }), // cleared by first combat
+    };
+    const existingCombat = makeCombat({
+      id: 'combat-a-c',
+      attackerRegionId: 'A', defenderRegionId: 'C',
+      attackerCountry: 'soviet', defenderCountry: 'white',
+      attackerDivisions: [makeDiv({ id: 'sov-a', owner: 'soviet' })],
+      defenderDivisions: [whiteDefC],
+    });
+    const adjacency = { A: ['B', 'C'], B: ['A', 'C'], C: ['A', 'B'] };
+
+    const { get, set, captured } = makeStoreStub({ regions, adjacency, activeCombats: [existingCombat] });
+    const actions = createUnitActions(set as Parameters<typeof createUnitActions>[0], get as Parameters<typeof createUnitActions>[1]);
+    actions.moveUnits('B', 'C', 1);
+
+    const combats = (captured.activeCombats ?? []) as ActiveCombat[];
+    const newCombat = combats.find(c => c.id !== 'combat-a-c');
+    expect(newCombat).toBeDefined();
+    expect(newCombat!.attackerRegionId).toBe('B');
+    expect(newCombat!.defenderRegionId).toBe('C');
+    expect(newCombat!.defenderDivisions).toHaveLength(1);
+    expect(newCombat!.defenderDivisions[0].id).toBe('wht-c');
+  });
+});
 
 describe('two-front combat: enemy enters a region whose defender is attacking elsewhere', () => {
   it('initiates combat rather than undefended capture when defender has pendingCombatId', () => {

@@ -300,9 +300,10 @@ export const createUnitActions = (
       const inTransitFromDest = new Set(
         movingUnits.filter(m => m.fromRegion === actualToRegion).flatMap(m => m.divisions.map(d => d.id))
       );
-      // Check if there are defenders to fight
+      // Check if there are defenders to fight (either in region or already engaged in an existing combat)
       const defenderDivisions = to.divisions.filter(d => d.owner === to.owner && !inTransitFromDest.has(d.id));
-      if (defenderDivisions.length > 0) {
+      const hasActiveCombatAtDest = activeCombats.some(c => c.defenderRegionId === actualToRegion && !c.isComplete);
+      if (defenderDivisions.length > 0 || hasActiveCombatAtDest) {
         const { combatDefenderDivisions, isFirstCombat } = resolveMultiFrontDefenders(actualToRegion, to, activeCombats);
 
         // Create combat immediately — divisions in transit are the attackers
