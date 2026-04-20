@@ -14,6 +14,7 @@ import {
   regenerateDivisionHP, 
   syncArmyGroupTerritories, 
   checkAndCompleteMissions,
+  checkAndClaimAIMissions,
   processProductionQueue,
   processScheduledEvents
 } from './tickHelpers';
@@ -376,6 +377,26 @@ export const createTickActions = (
           missions: missionResults.updatedMissions,
           gameEvents: [...get().gameEvents, ...missionResults.newEvents],
           notifications: [...get().notifications, ...missionResults.newNotifications],
+        });
+      }
+    }
+
+    const aiMissionCountryIds = effectiveAIStates
+      .map(aiState => aiState.countryId)
+      .filter(countryId => countryId !== selectedCountry?.id);
+    if (aiMissionCountryIds.length > 0) {
+      const aiMissionResults = checkAndClaimAIMissions(get(), aiMissionCountryIds);
+
+      if (aiMissionResults.changed) {
+        set({
+          missions: aiMissionResults.updatedMissions,
+          countryBonuses: aiMissionResults.countryBonuses,
+          regions: aiMissionResults.regions,
+          movingUnits: aiMissionResults.movingUnits,
+          relationships: aiMissionResults.relationships,
+          armyGroups: aiMissionResults.armyGroups,
+          aiStates: aiMissionResults.aiStates,
+          gameEvents: [...get().gameEvents, ...aiMissionResults.newEvents],
         });
       }
     }

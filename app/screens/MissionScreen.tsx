@@ -19,9 +19,16 @@ import MissionNode from '../components/MissionNode';
 const nodeTypes = { missionNode: MissionNode };
 
 export default function MissionScreen() {
-  const missions = useGameStore(state => state.missions);
+  const allMissions = useGameStore(state => state.missions);
+  const selectedCountry = useGameStore(state => state.selectedCountry);
   const navigateToScreen = useGameStore(state => state.navigateToScreen);
   const claimMission = useGameStore(state => state.claimMission);
+  const missions = useMemo(
+    () => selectedCountry
+      ? allMissions.filter(mission => mission.country === selectedCountry.id)
+      : [],
+    [allMissions, selectedCountry]
+  );
 
   const onBack = () => navigateToScreen('main');
 

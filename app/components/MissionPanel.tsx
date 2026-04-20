@@ -1,11 +1,19 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useGameStore } from '../store/useGameStore';
 
 export default function MissionPanel() {
-  const missions = useGameStore(state => state.missions);
+  const allMissions = useGameStore(state => state.missions);
+  const selectedCountry = useGameStore(state => state.selectedCountry);
   const openMissions = useGameStore(state => state.openMissions);
   const claimMission = useGameStore(state => state.claimMission);
+  const missions = useMemo(
+    () => selectedCountry
+      ? allMissions.filter(mission => mission.country === selectedCountry.id)
+      : [],
+    [allMissions, selectedCountry]
+  );
   
   const completedMissions = missions.filter(m => m.completed && !m.claimed);
 

@@ -7,7 +7,7 @@ import { GameStore } from './game/types';
 import { initialGameState } from './game/initialState';
 
 // Action creators
-import { createBasicActions } from './game/basicActions';
+import { createBasicActions, mergeMissionsWithInitial } from './game/basicActions';
 import { createTickActions } from './game/tickActions';
 import { createUnitActions } from './game/unitActions';
 import { createArmyGroupActions } from './game/armyGroupActions';
@@ -72,6 +72,7 @@ export const useGameStore = create<GameStore>()(
         // Convert date strings back to Date objects after rehydration
         if (state) {
           state.isPlayerAIEnabled = state.isPlayerAIEnabled ?? false;
+          state.missions = mergeMissionsWithInitial(state.missions ?? initialGameState.missions);
           if (state.dateTime && typeof state.dateTime === 'string') {
             state.dateTime = new Date(state.dateTime);
           }
