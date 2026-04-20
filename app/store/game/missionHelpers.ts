@@ -116,7 +116,17 @@ export function evaluateMissionCondition(
       const countryArmyGroups = armyGroups.filter(g => g.owner === missionCountry);
       return countryArmyGroups.length >= condition.count;
     }
-    
+
+    case 'controlRegionByOverlord': {
+      const region = regions[condition.regionId];
+      if (!region) return false;
+      if (region.owner === missionCountry) return true;
+      const puppets = (state.relationships ?? [])
+        .filter(r => r.fromCountry === missionCountry && r.type === 'autonomy')
+        .map(r => r.toCountry);
+      return puppets.includes(region.owner);
+    }
+
     default:
       console.warn('Unknown mission condition type:', condition);
       return false;
