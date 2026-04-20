@@ -175,6 +175,7 @@ export const createTickActions = (
           events: [...gameEvents, ...newCombatEvents, ...productionEvents, ...scheduledEventEvents],
           notifications: [...notifications, ...newCombatNotifications, ...productionNotifications, ...scheduledEventNotifications],
           relationships: relationshipsAfterEvents,
+          countries,
           regionCentroids,
         },
         newDate
@@ -184,7 +185,7 @@ export const createTickActions = (
     })();
 
     // Step 6: Apply finished combats to regions
-    nextRegions = applyFinishedCombats(finishedCombats, nextRegions);
+    nextRegions = applyFinishedCombats(finishedCombats, nextRegions, countries, relationshipsAfterEvents);
     TickPerf.end('[tick] 6-apply-movements');
 
     // Step 6b: Add retreat movements to the moving units list, filtering out:
