@@ -400,7 +400,7 @@ export const createTickActions = (
     
     // Step 11: Check and auto-complete missions
     TickPerf.start('[tick] 12-missions');
-    if (selectedCountry) {
+    if (selectedCountry && !state.isPlayerAIEnabled) {
       const missionResults = checkAndCompleteMissions(get, selectedCountry);
       
       // Only update if missions changed
@@ -413,9 +413,10 @@ export const createTickActions = (
       }
     }
 
+    // Include player country in AI mission processing when player AI mode is enabled
     const aiMissionCountryIds = effectiveAIStates
       .map(aiState => aiState.countryId)
-      .filter(countryId => countryId !== selectedCountry?.id);
+      .filter(countryId => countryId !== selectedCountry?.id || state.isPlayerAIEnabled);
     if (aiMissionCountryIds.length > 0) {
       const aiMissionResults = checkAndClaimAIMissions(get(), aiMissionCountryIds);
 
