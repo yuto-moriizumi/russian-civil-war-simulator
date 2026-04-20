@@ -59,6 +59,31 @@ export const scheduledEvents: ScheduledEvent[] = [
     triggered: false,
   },
   {
+    id: 'crimean-peoples-republic',
+    date: '1917-12-13',
+    title: 'Crimean People\'s Republic Declared',
+    description: 'The Crimean Tatar National Assembly (Kurultay) proclaims the Crimean People\'s Republic, the first democratic republic in the Muslim world.',
+    actions: [
+      {
+        type: 'transferRegion',
+        regionId: 'UA-43',
+        newOwner: 'crimea',
+      },
+      {
+        type: 'transferRegion',
+        regionId: 'UA-40',
+        newOwner: 'crimea',
+      },
+      {
+        type: 'spawnDivision',
+        owner: 'crimea',
+        regionId: 'UA-43',
+        armyGroupName: 'Crimean National Army',
+      },
+    ],
+    triggered: false,
+  },
+  {
     id: 'stavropol-soviet-republic-uprising',
     date: '1918-01-14',
     title: 'Stavropol Soviet Republic Proclaimed',
