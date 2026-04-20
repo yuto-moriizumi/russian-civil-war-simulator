@@ -119,6 +119,32 @@ export const createRelationshipActions = (
       nextRelationships = applyRelationshipChange(nextRelationships, toCountry, fromCountry, 'war');
     }
 
+    // When autonomy is newly established, puppet joins master's existing wars
+    if (type === 'autonomy' && getCurrentStatus(fromCountry, toCountry) !== 'autonomy') {
+      const masterWars = startRelationships.filter(
+        r => r.fromCountry === fromCountry && r.type === 'war'
+      );
+      masterWars.forEach(war => {
+        const enemyId = war.toCountry;
+        if (getCurrentStatus(toCountry, enemyId) !== 'war') {
+          const puppetName = getCountryName(toCountry);
+          const masterName = getCountryName(fromCountry);
+          const enemyName = getCountryName(enemyId);
+          const event = createGameEvent(
+            'war_declared',
+            `${puppetName} joins war against ${enemyName}`,
+            `${puppetName} joins their new Master (${masterName}) in war against ${enemyName}!`,
+            dateTime,
+            toCountry
+          );
+          newEvents.push(event);
+          newNotifications.push(createNotification(event, dateTime));
+          nextRelationships = applyRelationshipChange(nextRelationships, toCountry, enemyId, 'war');
+          nextRelationships = applyRelationshipChange(nextRelationships, enemyId, toCountry, 'war');
+        }
+      });
+    }
+
     // Cascading war declarations for autonomy
     if (type === 'war') {
       // 1. If Master declares war, Servant also declares war on the target
