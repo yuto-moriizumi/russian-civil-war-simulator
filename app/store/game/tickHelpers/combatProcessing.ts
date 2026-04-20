@@ -98,9 +98,7 @@ export function processCombats(
           newCombatNotifications.push(createNotification(combatEvent, currentDate));
         }
 
-        // Also notify the relevant opposing side
         if (attackerWon) {
-          // Notify the defender that they lost the region
           const defenderLostEvent = createGameEvent(
             'region_lost',
             `${updatedCombat.defenderRegionName} Lost!`,
@@ -111,18 +109,6 @@ export function processCombats(
           );
           newCombatEvents.push(defenderLostEvent);
           newCombatNotifications.push(createNotification(defenderLostEvent, currentDate));
-        } else {
-          // Notify the defender (winner) that they repelled the attack
-          const defenderWonEvent = createGameEvent(
-            'combat_victory',
-            `${updatedCombat.defenderRegionName} Defended!`,
-            `${updatedCombat.defenderCountry === 'soviet' ? 'Soviet' : 'White'} forces repelled the attack on ${updatedCombat.defenderRegionName} from ${updatedCombat.attackerRegionName}. Attackers lost ${attackerLosses} divisions. Defenders lost ${defenderLosses} divisions.`,
-            currentDate,
-            updatedCombat.defenderCountry,
-            updatedCombat.defenderRegionId
-          );
-          newCombatEvents.push(defenderWonEvent);
-          newCombatNotifications.push(createNotification(defenderWonEvent, currentDate));
         }
       } else {
         updatedCombats.push(updatedCombat);
