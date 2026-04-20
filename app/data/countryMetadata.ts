@@ -511,7 +511,7 @@ export const COUNTRY_METADATA = {
     divisionPrefix: "Terek Guard",
     selectable: false,
     coreRegions: [
-              'RU-CE', 'RU-IN', 'RU-KB', 'RU-SE',
+              'RU-CE', 'RU-DA', 'RU-IN', 'RU-KB', 'RU-SE',
             ],
   },
   taurida: {
@@ -551,7 +551,7 @@ export const COUNTRY_METADATA = {
     divisionPrefix: "Don Soviet Guard",
     selectable: false,
     coreRegions: [
-              'RU-AST', 'RU-ROS', 'RU-VGG',
+              'RU-ROS', 'RU-VGG',
             ],
   },
   /**
@@ -630,7 +630,7 @@ export const COUNTRY_METADATA = {
     divisionPrefix: "Kuban Red Guard",
     selectable: false,
     coreRegions: [
-              'RU-AD', 'RU-KDA',
+              'RU-AD', 'RU-KC', 'RU-KDA',
             ],
   },
   /**
@@ -1143,7 +1143,8 @@ export const COUNTRY_METADATA = {
     divisionPrefix: "Caucasian Red Guard",
     selectable: false,
     coreRegions: [
-              'RU-AD', 'RU-CE', 'RU-IN', 'RU-KB', 'RU-KDA', 'RU-SE', 'RU-STA',
+              'RU-AD', 'RU-CE', 'RU-DA', 'RU-IN', 'RU-KB', 'RU-KC', 'RU-KDA', 'RU-SE',
+              'RU-STA',
             ],
   },
   /**
