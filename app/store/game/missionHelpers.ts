@@ -5,8 +5,28 @@ import {
   Theater, 
   ArmyGroup, 
   Mission, 
-  MissionCondition 
+  MissionCondition,
+  CountryId,
+  Adjacency,
+  Relationship,
 } from '../../types/game';
+import { detectTheaters } from '../../utils/theaterDetection';
+
+interface MissionEvaluationState {
+  regions: RegionState;
+  dateTime: Date;
+  gameEvents: GameEvent[];
+  selectedCountry?: Country | null;
+  countryId?: CountryId;
+  theaters: Theater[];
+  armyGroups: ArmyGroup[];
+  adjacency?: Adjacency;
+  relationships?: Relationship[];
+}
+
+function getMissionCountryId(state: MissionEvaluationState): CountryId | null {
+  return state.countryId ?? state.selectedCountry?.id ?? null;
+}
 
 /**
  * Evaluates a single mission condition against the current game state
@@ -14,42 +34,36 @@ import {
  */
 export function evaluateMissionCondition(
   condition: MissionCondition,
-  state: {
-    regions: RegionState;
-    dateTime: Date;
-    gameEvents: GameEvent[];
-    selectedCountry: Country;
-    theaters: Theater[];
-    armyGroups: ArmyGroup[];
-  }
+  state: MissionEvaluationState
 ): boolean {
-  const { regions, dateTime, gameEvents, selectedCountry, theaters, armyGroups } = state;
-  const playerCountry = selectedCountry.id;
+  const { regions, dateTime, gameEvents, theaters, armyGroups } = state;
+  const missionCountry = getMissionCountryId(state);
+  if (!missionCountry) return false;
 
   switch (condition.type) {
     case 'controlRegion': {
       const region = regions[condition.regionId];
-      return region?.owner === playerCountry;
+      return region?.owner === missionCountry;
     }
     
     case 'controlRegions': {
       return condition.regionIds.every(regionId => {
         const region = regions[regionId];
-        return region?.owner === playerCountry;
+        return region?.owner === missionCountry;
       });
     }
     
     case 'controlRegionCount': {
       const controlledCount = Object.values(regions).filter(
-        region => region.owner === playerCountry
+        region => region.owner === missionCountry
       ).length;
       return controlledCount >= condition.count;
     }
     
     case 'hasUnits': {
       const totalUnits = Object.values(regions).reduce((acc, region) => {
-        if (region.owner === playerCountry) {
-          return acc + region.divisions.filter(d => d.owner === playerCountry).length;
+        if (region.owner === missionCountry) {
+          return acc + region.divisions.filter(d => d.owner === missionCountry).length;
         }
         return acc;
       }, 0);
@@ -63,7 +77,7 @@ export function evaluateMissionCondition(
     
     case 'combatVictories': {
       const victories = gameEvents.filter(
-        event => event.type === 'combat_victory' && event.country === playerCountry
+        event => event.type === 'combat_victory' && event.country === missionCountry
       ).length;
       return victories >= condition.count;
     }
@@ -78,19 +92,29 @@ export function evaluateMissionCondition(
     case 'allRegionsControlled': {
       const countryRegions = condition.regionIds.map(id => regions[id]).filter(Boolean);
       return countryRegions.length > 0 && countryRegions.every(
-        region => region.owner === playerCountry
+        region => region.owner === missionCountry
       );
     }
     
     case 'theaterExists': {
-      return theaters.some(
-        theater => theater.owner === playerCountry && theater.enemyCountry === condition.enemyCountry
+      const existingTheater = theaters.some(
+        theater => theater.owner === missionCountry && theater.enemyCountry === condition.enemyCountry
       );
+      if (existingTheater) return true;
+      if (!state.adjacency) return false;
+
+      return detectTheaters(
+        regions,
+        state.adjacency,
+        missionCountry,
+        [],
+        state.relationships ?? []
+      ).some(theater => theater.enemyCountry === condition.enemyCountry);
     }
     
     case 'armyGroupCount': {
-      const playerArmyGroups = armyGroups.filter(g => g.owner === playerCountry);
-      return playerArmyGroups.length >= condition.count;
+      const countryArmyGroups = armyGroups.filter(g => g.owner === missionCountry);
+      return countryArmyGroups.length >= condition.count;
     }
     
     default:
@@ -105,14 +129,7 @@ export function evaluateMissionCondition(
  */
 export function areMissionConditionsMet(
   mission: Mission,
-  state: {
-    regions: RegionState;
-    dateTime: Date;
-    gameEvents: GameEvent[];
-    selectedCountry: Country;
-    theaters: Theater[];
-    armyGroups: ArmyGroup[];
-  }
+  state: MissionEvaluationState
 ): boolean {
   // If no conditions, mission is always available
   if (!mission.available || mission.available.length === 0) {

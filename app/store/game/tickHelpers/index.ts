@@ -11,6 +11,6 @@ export { processCombats } from './combatProcessing';
 export { applyCompletedMovements, applyFinishedCombats } from './movementApplication';
 export { regenerateDivisionHP } from './hpRegeneration';
 export { syncArmyGroupTerritories } from './armyGroupSync';
-export { checkAndCompleteMissions } from './missionCompletion';
+export { checkAndCompleteMissions, checkAndClaimAIMissions } from './missionCompletion';
 export { processProductionQueue } from './productionProcessing';
 export { processScheduledEvents } from './scheduledEventProcessing';

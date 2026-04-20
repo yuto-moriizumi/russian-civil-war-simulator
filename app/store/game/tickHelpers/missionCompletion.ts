@@ -1,13 +1,34 @@
-import { Mission, GameEvent, NotificationItem, Country } from '../../../types/game';
+import { Mission, GameEvent, NotificationItem, Country, CountryId } from '../../../types/game';
 import { areMissionConditionsMet } from '../missionHelpers';
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 import { StoreApi } from 'zustand';
 import { GameStore } from '../types';
+import { applyClaimedMissionRewards } from '../missionRewards';
+import { getCountryName } from '../../../data/countries';
 
 interface MissionCheckResult {
   updatedMissions: Mission[];
   newEvents: GameEvent[];
   newNotifications: NotificationItem[];
+}
+
+interface AIMissionCheckResult {
+  updatedMissions: Mission[];
+  countryBonuses: GameStore['countryBonuses'];
+  regions: GameStore['regions'];
+  movingUnits: GameStore['movingUnits'];
+  relationships: GameStore['relationships'];
+  armyGroups: GameStore['armyGroups'];
+  aiStates: GameStore['aiStates'];
+  newEvents: GameEvent[];
+  changed: boolean;
+}
+
+function arePrerequisitesClaimed(mission: Mission, missions: Mission[]): boolean {
+  return mission.prerequisites.every(prereqId => {
+    const prereqMission = missions.find(m => m.id === prereqId);
+    return prereqMission?.claimed;
+  });
 }
 
 /**
@@ -22,16 +43,17 @@ export function checkAndCompleteMissions(
   const newNotifications: NotificationItem[] = [];
   
   const updatedMissions = currentState.missions.map(mission => {
+    if (mission.country !== selectedCountry.id) {
+      return mission;
+    }
+
     // Skip if mission is already completed
     if (mission.completed) {
       return mission;
     }
     
     // Check if prerequisites are met (all must be claimed)
-    const prerequisitesMet = mission.prerequisites.every(prereqId => {
-      const prereqMission = currentState.missions.find(m => m.id === prereqId);
-      return prereqMission?.claimed;
-    });
+    const prerequisitesMet = arePrerequisitesClaimed(mission, currentState.missions);
     
     if (!prerequisitesMet) {
       return mission;
@@ -42,9 +64,12 @@ export function checkAndCompleteMissions(
       regions: currentState.regions,
       dateTime: currentState.dateTime,
       gameEvents: currentState.gameEvents,
-      selectedCountry: currentState.selectedCountry!,
+      selectedCountry,
+      countryId: selectedCountry.id,
       theaters: currentState.theaters,
       armyGroups: currentState.armyGroups,
+      adjacency: currentState.adjacency,
+      relationships: currentState.relationships,
     });
     
     if (conditionsMet) {
@@ -69,4 +94,109 @@ export function checkAndCompleteMissions(
   });
   
   return { updatedMissions, newEvents, newNotifications };
+}
+
+/**
+ * AI countries do not have a mission screen to click through, so they complete
+ * and claim every currently available mission during the tick.
+ */
+export function checkAndClaimAIMissions(
+  state: GameStore,
+  aiCountryIds: CountryId[]
+): AIMissionCheckResult {
+  const aiCountries = new Set(aiCountryIds);
+  let updatedMissions = state.missions;
+  let countryBonuses = state.countryBonuses;
+  let regions = state.regions;
+  let movingUnits = state.movingUnits;
+  let relationships = state.relationships;
+  let armyGroups = state.armyGroups;
+  let aiStates = state.aiStates;
+  const newEvents: GameEvent[] = [];
+  let changed = false;
+
+  const makeWorkingState = (): GameStore => ({
+    ...state,
+    missions: updatedMissions,
+    countryBonuses,
+    regions,
+    movingUnits,
+    relationships,
+    armyGroups,
+    aiStates,
+  });
+
+  for (const countryId of aiCountries) {
+    let claimedMissionThisPass = true;
+
+    while (claimedMissionThisPass) {
+      claimedMissionThisPass = false;
+
+      for (const mission of updatedMissions) {
+        if (mission.country !== countryId || mission.claimed) continue;
+        if (!arePrerequisitesClaimed(mission, updatedMissions)) continue;
+
+        const workingState = makeWorkingState();
+        const conditionsMet = areMissionConditionsMet(mission, {
+          regions,
+          dateTime: state.dateTime,
+          gameEvents: state.gameEvents,
+          selectedCountry: state.selectedCountry,
+          countryId,
+          theaters: state.theaters,
+          armyGroups,
+          adjacency: state.adjacency,
+          relationships,
+        });
+
+        if (!conditionsMet) continue;
+
+        const completedMission: Mission = { ...mission, completed: true, claimed: true };
+        updatedMissions = updatedMissions.map(m =>
+          m.id === mission.id ? completedMission : m
+        );
+
+        const rewards = applyClaimedMissionRewards(
+          workingState,
+          completedMission,
+          countryId,
+          updatedMissions
+        );
+
+        countryBonuses = {
+          ...countryBonuses,
+          [countryId]: rewards.updatedCountryBonuses,
+        };
+        regions = rewards.updatedRegions;
+        movingUnits = rewards.updatedMovingUnits;
+        relationships = rewards.updatedRelationships;
+        armyGroups = rewards.updatedArmyGroups;
+        aiStates = rewards.updatedAIStates;
+        newEvents.push(...rewards.puppetEvents);
+        if (completedMission.rewards.gameVictory) {
+          newEvents.push(createGameEvent(
+            'game_victory',
+            'AI Victory',
+            `${getCountryName(countryId)} has achieved total victory in the Russian Civil War!`,
+            state.dateTime,
+            countryId
+          ));
+        }
+        changed = true;
+        claimedMissionThisPass = true;
+      }
+    }
+  }
+
+  return {
+    updatedMissions,
+    countryBonuses,
+    regions,
+    movingUnits,
+    relationships,
+    armyGroups,
+    aiStates,
+    newEvents,
+    changed,
+  };
 }
