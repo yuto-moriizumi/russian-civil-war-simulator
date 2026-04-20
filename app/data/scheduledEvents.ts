@@ -180,6 +180,32 @@ export const scheduledEvents: ScheduledEvent[] = [
     triggered: false,
   },
   {
+    id: 'treaty-of-brest-litovsk-ukraine',
+    date: '1918-02-09',
+    title: 'Treaty of Brest-Litovsk (Ukraine)',
+    description: 'The Central Powers sign a separate peace treaty with the Ukrainian People\'s Republic. Germany and Ukraine grant each other military access, and Germany declares war on Soviet Russia to enforce the treaty.',
+    actions: [
+      {
+        type: 'setRelationship',
+        fromCountry: 'germany',
+        toCountry: 'ukraine',
+        relationshipType: 'military_access',
+      },
+      {
+        type: 'setRelationship',
+        fromCountry: 'ukraine',
+        toCountry: 'germany',
+        relationshipType: 'military_access',
+      },
+      {
+        type: 'declareWar',
+        fromCountry: 'germany',
+        toCountry: 'soviet',
+      },
+    ],
+    triggered: false,
+  },
+  {
     id: 'odessa-soviet-republic-proclaimed',
     date: '1918-02-01',
     title: 'Odessa Soviet Republic Proclaimed',
