@@ -225,7 +225,7 @@ export default function GameMap() {
 
         {movingUnitMarkers.map((marker) => {
           if (!marker) return null;
-          const { id, movement, longitude, latitude } = marker;
+          const { id, movement, longitude, latitude, offset } = marker;
           return (
             <MovingUnitMarker
               key={id}
@@ -233,6 +233,7 @@ export default function GameMap() {
               movement={movement}
               longitude={longitude}
               latitude={latitude}
+              offset={offset}
               isSelected={selectedMovementId === movement.id || (selectedDivisionIds.length > 0 && movement.divisions.some(d => selectedDivisionIds.includes(d.id)))}
               isPlayerUnit={movement.owner === playerCountry}
               onSelect={setSelectedMovementId}

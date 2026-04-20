@@ -110,6 +110,7 @@ interface MovingUnitMarkerProps {
   movement: Movement;
   longitude: number;
   latitude: number;
+  offset: [number, number];
   isSelected: boolean;
   isPlayerUnit: boolean;
   onSelect: (movementId: string) => void;
@@ -120,17 +121,19 @@ export function MovingUnitMarker({
   movement,
   longitude,
   latitude,
+  offset,
   isSelected,
   isPlayerUnit,
   onSelect,
 }: MovingUnitMarkerProps) {
   const flagUrl = COUNTRY_FLAGS[movement.owner];
-  
+
   return (
     <Marker
       key={id}
       longitude={longitude}
       latitude={latitude}
+      offset={offset}
       anchor="center"
       onClick={isPlayerUnit ? (e) => {
         e.originalEvent.stopPropagation();
