@@ -308,7 +308,8 @@ export function attackArmyGroup(
           movingUnits.filter(m => m.fromRegion === attackTargetId).flatMap(m => m.divisions.map(d => d.id))
         );
         const defenderDivisions = destRegion.divisions.filter(d => d.owner === destRegion.owner && !inTransitFromDest.has(d.id));
-        if (defenderDivisions.length > 0) {
+        const hasActiveCombatAtDest = [...activeCombats, ...newCombats].some(c => c.defenderRegionId === attackTargetId && !c.isComplete);
+        if (defenderDivisions.length > 0 || hasActiveCombatAtDest) {
           // Check for other combats on the same defender region (multi-front)
           const otherCombatsOnRegion = [...activeCombats, ...newCombats].filter(
             c => c.defenderRegionId === attackTargetId && !c.isComplete
