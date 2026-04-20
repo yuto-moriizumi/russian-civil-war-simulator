@@ -45,7 +45,7 @@ export const sovietMissions: Mission[] = [
       },
     },
     prerequisites: ['soviet_mobilize'],
-    available: [{ type: 'controlRegionByOrPuppetOf', regionId: 'RU-KDA' }],
+    available: [{ type: 'controlRegionByOverlord', regionId: 'RU-KDA' }],
   },
   {
     id: 'soviet_taurida',
@@ -65,6 +65,23 @@ export const sovietMissions: Mission[] = [
     available: [
       { type: 'controlRegion', regionId: 'UA-40' },
     ],
+  },
+  {
+    id: 'soviet_dagestan',
+    country: 'soviet',
+    name: 'ダゲスタンの確保',
+    description: 'ダゲスタン（RU-DA）をソビエトまたはその傀儡国の支配下に置き、テレク・ソビエト共和国を解放せよ',
+    completed: false,
+    claimed: false,
+    rewards: {
+      liberatePuppet: {
+        country: 'terek',
+        spawnRegionId: 'RU-DA',
+        divisions: 2,
+      },
+    },
+    prerequisites: ['soviet_taurida'],
+    available: [{ type: 'controlRegionByOverlord', regionId: 'RU-DA' }],
   },
   {
     id: 'soviet_terror',

@@ -117,13 +117,13 @@ export function evaluateMissionCondition(
       return countryArmyGroups.length >= condition.count;
     }
 
-    case 'controlRegionByOrPuppetOf': {
+    case 'controlRegionByOverlord': {
       const region = regions[condition.regionId];
       if (!region) return false;
       if (region.owner === missionCountry) return true;
-      const puppets = (state.relationships ?? []).filter(
-        r => r.type === 'autonomy' && r.fromCountry === missionCountry
-      ).map(r => r.toCountry);
+      const puppets = (state.relationships ?? [])
+        .filter(r => r.fromCountry === missionCountry && r.type === 'autonomy')
+        .map(r => r.toCountry);
       return puppets.includes(region.owner);
     }
 

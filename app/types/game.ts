@@ -56,7 +56,7 @@ export type MissionCondition =
   | { type: 'allRegionsControlled'; regionIds: string[] }          // Control all listed regions (replaces countryIso3)
   | { type: 'theaterExists'; enemyCountry: CountryId }             // Have at least one theater facing enemy
   | { type: 'armyGroupCount'; count: number }                      // Have at least N army groups
-  | { type: 'controlRegionByOrPuppetOf'; regionId: string };       // Region controlled by this country or its puppet
+  | { type: 'controlRegionByOverlord'; regionId: string };         // Region controlled by this country or any of its puppets
 
 // Mission rewards interface
 export interface MissionRewards {
