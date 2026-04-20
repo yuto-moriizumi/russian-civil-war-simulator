@@ -213,4 +213,39 @@ describe('processCombats – attacker defeat notifications', () => {
     expect(notificationTitles).not.toContain('Battle for Tula Oblast Lost');
     expect(result.newCombatEvents.some(event => event.type === 'combat_defeat')).toBe(false);
   });
+
+  it('does not show <region> Defended! when the defender wins', () => {
+    const attackers = [makeDiv('a1', 'soviet', 1, 1, 1)];
+    const defenders = [makeDiv('d1', 'white', 100, 50, 50)];
+    const combat = makeCombat(attackers, defenders, 'TULA');
+    const tulaRegions: RegionState = {
+      TULA: { id: 'TULA', name: 'Tula Oblast', countryIso3: 'RUS', owner: 'white', divisions: [] },
+      SOVIET_REAR: { id: 'SOVIET_REAR', name: 'Soviet Rear', countryIso3: 'RUS', owner: 'soviet', divisions: [] },
+      WHITE_REAR: { id: 'WHITE_REAR', name: 'White Rear', countryIso3: 'RUS', owner: 'white', divisions: [] },
+    };
+    const tulaAdjacency: Adjacency = {
+      TULA: ['SOVIET_REAR', 'WHITE_REAR'],
+      SOVIET_REAR: ['TULA'],
+      WHITE_REAR: ['TULA'],
+    };
+
+    const result = processCombats(
+      [combat],
+      new Date('1918-01-01T02:00:00Z'),
+      tulaRegions,
+      tulaAdjacency,
+      {
+        TULA: [37.6173, 54.2048],
+        SOVIET_REAR: [37.0, 54.0],
+        WHITE_REAR: [38.0, 54.5],
+      }
+    );
+
+    const eventTitles = result.newCombatEvents.map(event => event.title);
+    const notificationTitles = result.newCombatNotifications.map(notification => notification.title);
+
+    expect(eventTitles).not.toContain('Tula Oblast Defended!');
+    expect(notificationTitles).not.toContain('Tula Oblast Defended!');
+    expect(result.newCombatEvents.some(event => event.type === 'combat_victory')).toBe(false);
+  });
 });
