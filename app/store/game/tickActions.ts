@@ -226,8 +226,22 @@ export const createTickActions = (
 
     // Step 8: AI Tick - process AI actions and deployments for all AI countries
     TickPerf.start('[tick] 8-ai');
+    // Detect countries that appeared via scheduled events but have no AI state yet
+    const knownAICountryIds = new Set(aiStates.map(s => s.countryId));
+    const EXCLUDED_COUNTRIES = new Set<CountryId>(['neutral' as CountryId, 'foreign' as CountryId]);
+    const aiStatesWithNewCountries = [...aiStates];
+    Object.values(nextRegions).forEach(region => {
+      if (
+        region.owner !== selectedCountry?.id &&
+        !EXCLUDED_COUNTRIES.has(region.owner) &&
+        !knownAICountryIds.has(region.owner)
+      ) {
+        knownAICountryIds.add(region.owner);
+        aiStatesWithNewCountries.push(createInitialAIState(region.owner));
+      }
+    });
     const effectiveAIStates = getEffectiveAIStates(
-      aiStates,
+      aiStatesWithNewCountries,
       selectedCountry?.id,
       state.isPlayerAIEnabled
     );
