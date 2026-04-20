@@ -1,4 +1,4 @@
-import { Region, GameEvent, NotificationItem, CountryId, Relationship, ScheduledEvent, ScheduledEventAction, ArmyGroup, Division } from '../../../types/game';
+import { Region, GameEvent, NotificationItem, CountryId, Relationship, ScheduledEvent, ScheduledEventAction, ScheduledEventCondition, ArmyGroup, Division } from '../../../types/game';
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 import { BASE_DIVISION_STATS } from '../../../utils/bonusCalculator';
 
@@ -30,8 +30,17 @@ export function processScheduledEvents(
 
   // Find events that should trigger today
   const updatedScheduledEvents = scheduledEvents.map(event => {
-    // Skip if already triggered or date doesn't match
-    if (event.triggered || event.date !== dateString) {
+    if (event.triggered) return event;
+
+    // Events with conditions trigger on first date >= event.date where all conditions pass
+    // Events without conditions trigger exactly on event.date
+    const dateMatches = event.conditions
+      ? dateString >= event.date
+      : event.date === dateString;
+
+    if (!dateMatches) return event;
+
+    if (event.conditions && !checkConditions(event.conditions, updatedRegions, relationships)) {
       return event;
     }
 
@@ -40,6 +49,15 @@ export function processScheduledEvents(
       if (action.type === 'transferRegion' && action.regionId && action.newOwner) {
         const region = updatedRegions[action.regionId];
         if (region) {
+          updatedRegions[action.regionId] = {
+            ...region,
+            owner: action.newOwner,
+            divisions: [],
+          };
+        }
+      } else if (action.type === 'transferRegionIfOwnedByOrPuppetOf' && action.regionId && action.newOwner && action.overlordCountry) {
+        const region = updatedRegions[action.regionId];
+        if (region && isOwnedByOrPuppetOf(region.owner, action.overlordCountry, relationships)) {
           updatedRegions[action.regionId] = {
             ...region,
             owner: action.newOwner,
@@ -118,6 +136,27 @@ export function processScheduledEvents(
     newEvents,
     newNotifications,
   };
+}
+
+function isOwnedByOrPuppetOf(owner: CountryId, overlord: CountryId, relationships: Relationship[]): boolean {
+  if (owner === overlord) return true;
+  return relationships.some(r => r.fromCountry === overlord && r.toCountry === owner && r.type === 'autonomy');
+}
+
+function checkConditions(
+  conditions: ScheduledEventCondition[],
+  regions: Record<string, Region>,
+  relationships: Relationship[]
+): boolean {
+  return conditions.every(condition => {
+    if (condition.type === 'atLeastOneRegionOwnedByOrPuppetOf') {
+      return condition.regions.some(regionId => {
+        const region = regions[regionId];
+        return region && isOwnedByOrPuppetOf(region.owner, condition.country, relationships);
+      });
+    }
+    return true;
+  });
 }
 
 /**
