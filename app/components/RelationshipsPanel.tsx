@@ -3,6 +3,7 @@
 import { CountryId, Relationship, RelationshipType} from '../types/game';
 import SidebarPanel from './SidebarPanel';
 import { COUNTRY_NAMES } from '../data/countries';
+import { getDiplomacyCountryIds, getRelationshipStatus } from '../utils/diplomacyDisplay';
 
 interface RelationshipsPanelProps {
   isOpen: boolean;
@@ -33,25 +34,16 @@ export default function RelationshipsPanel({
   relationships,
   onSetRelationship,
 }: RelationshipsPanelProps) {
-  // Get all countries except player, neutral, and foreign
-  const otherCountries: CountryId[] = ['soviet', 'white', 'finland', 'ukraine', 'don', 'fswr', 'romania'].filter(
-    f => f !== playerCountry
-  ) as CountryId[];
+  const otherCountries = getDiplomacyCountryIds(playerCountry);
 
-  const getRelationshipStatus = (targetCountry: CountryId): RelationshipType => {
+  const getTheirRelationshipStatus = (targetCountry: CountryId): RelationshipType => {
     // Check if target grants us access/war
-    const theirRelation = relationships.find(
-      r => r.fromCountry === targetCountry && r.toCountry === playerCountry
-    );
-    return theirRelation ? theirRelation.type : 'neutral';
+    return getRelationshipStatus(relationships, targetCountry, playerCountry);
   };
 
   const getOurRelationshipStatus = (targetCountry: CountryId): RelationshipType => {
     // Check if we grant them access/war
-    const ourRelation = relationships.find(
-      r => r.fromCountry === playerCountry && r.toCountry === targetCountry
-    );
-    return ourRelation ? ourRelation.type : 'neutral';
+    return getRelationshipStatus(relationships, playerCountry, targetCountry);
   };
 
   const handleMilitaryAccessToggle = (targetCountry: CountryId, isChecked: boolean) => {
@@ -80,7 +72,7 @@ export default function RelationshipsPanel({
     >
       <div className="space-y-3">
         {otherCountries.map((country: CountryId) => {
-          const theirStatus = getRelationshipStatus(country);
+          const theirStatus = getTheirRelationshipStatus(country);
           const ourStatus = getOurRelationshipStatus(country);
 
           return (
