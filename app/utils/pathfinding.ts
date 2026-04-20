@@ -16,6 +16,15 @@ import { RegionState, Adjacency, CountryId, Movement, Relationship, ActiveCombat
  * - Autonomy servants.
  * - Military-access partners.
  */
+// Returns the overlord (suzerain) of a country if one exists, or null.
+function getOverlord(countryId: CountryId, relMap: Map<string, Relationship>, allCountries: CountryId[]): CountryId | null {
+  for (const potential of allCountries) {
+    const rel = relMap.get(`${potential}|${countryId}`);
+    if (rel?.type === 'autonomy') return potential;
+  }
+  return null;
+}
+
 export function buildIsHostilePredicate(
   countryId: CountryId,
   regions: RegionState,
@@ -26,6 +35,9 @@ export function buildIsHostilePredicate(
   for (const r of relationships) {
     relMap.set(`${r.fromCountry}|${r.toCountry}`, r);
   }
+
+  const allCountries = [...new Set(relationships.flatMap(r => [r.fromCountry, r.toCountry]))];
+  const myOverlord = getOverlord(countryId, relMap, allCountries);
 
   return (regionId: string): boolean => {
     const region = regions[regionId];
@@ -47,6 +59,9 @@ export function buildIsHostilePredicate(
       theirType === 'autonomy' || ourType === 'autonomy' ||
       theirType === 'military_access' || ourType === 'military_access';
     if (isFriendly) return false;
+
+    // Same overlord (suzerain) — treat as friendly
+    if (myOverlord !== null && myOverlord === getOverlord(region.owner, relMap, allCountries)) return false;
 
     // War, or no relationship at all (neutral) — treat as hostile
     return true;
@@ -75,6 +90,9 @@ export function buildCanEnterPredicate(
     relMap.set(`${r.fromCountry}|${r.toCountry}`, r);
   }
 
+  const allCountries = [...new Set(relationships.flatMap(r => [r.fromCountry, r.toCountry]))];
+  const myOverlord = getOverlord(countryId, relMap, allCountries);
+
   return (regionId: string): boolean => {
     const region = regions[regionId];
     if (!region) return false;
@@ -87,7 +105,12 @@ export function buildCanEnterPredicate(
     const weDeclared  = ourRel?.type  ?? 'neutral';
 
     const hasAutonomy = theyGrantUs === 'autonomy' || weDeclared === 'autonomy';
-    return theyGrantUs !== 'neutral' || weDeclared === 'war' || hasAutonomy;
+    if (theyGrantUs !== 'neutral' || weDeclared === 'war' || hasAutonomy) return true;
+
+    // Same overlord (suzerain) — automatically grant military access
+    if (myOverlord !== null && myOverlord === getOverlord(region.owner, relMap, allCountries)) return true;
+
+    return false;
   };
 }
 
