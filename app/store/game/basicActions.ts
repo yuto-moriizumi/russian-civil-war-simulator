@@ -145,8 +145,6 @@ export const createBasicActions = (
     });
   },
 
-  setIsEventsModalOpen: (isOpen: boolean) => set({ isEventsModalOpen: isOpen }),
-  
   setSelectedCombatId: (combatId: string | null) => set({ selectedCombatId: combatId }),
   
   setSelectedMovementId: (movementId: string | null) => {

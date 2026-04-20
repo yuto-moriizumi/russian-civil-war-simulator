@@ -22,7 +22,6 @@ export interface GameStore extends GameState {
   selectedDivisionIds: string[];
   mapDataLoaded: boolean;
   aiStates: AIState[]; // Multiple AI states for different countries
-  isEventsModalOpen: boolean;
   selectedCombatId: string | null;
   selectedMovementId: string | null;
   lastSaveTime: Date | null;
@@ -55,7 +54,6 @@ export interface GameStore extends GameState {
   selectSingleDivision: (divisionId: string) => void;
   /** Clear all selected divisions */
   clearSelectedDivisions: () => void;
-  setIsEventsModalOpen: (isOpen: boolean) => void;
   setSelectedCombatId: (combatId: string | null) => void;
   setSelectedMovementId: (movementId: string | null) => void;
   setIsProductionModalOpen: (isOpen: boolean) => void;

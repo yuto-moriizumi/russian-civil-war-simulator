@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useGameStore } from '../store/useGameStore';
 import CombatPopup from '../components/CombatPopup';
-import EventsModal from '../components/EventsModal';
 import TheaterPanel from '../components/TheaterPanel';
 import NotificationToast from '../components/NotificationToast';
 import TopBar from '../components/TopBar';
@@ -109,9 +108,6 @@ export default function MainScreen() {
 
       {/* Combat Popup */}
       <CombatPopup />
-
-      {/* Events Modal */}
-      <EventsModal />
 
       {/* Notification Toasts */}
       <NotificationToast />
