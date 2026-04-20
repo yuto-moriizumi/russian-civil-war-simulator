@@ -14,14 +14,75 @@ import { getDivisionPrefix } from '../../data/countries';
 import { createDivisionSelectionActions } from './divisionSelectionActions';
 import { COUNTRY_METADATA } from '../../data/countryMetadata';
 
-function applyLiberatePuppet(
+const DEFAULT_AI_COUNTRIES: CountryId[] = [
+  'soviet',
+  'white',
+  'finland',
+  'ukraine',
+  'don',
+  'fswr',
+  'iskolat',
+  'germany',
+  'bulgaria',
+  'poland',
+  'austriahungary',
+  'romania',
+  'ottoman',
+  'serbia',
+];
+
+export function getAIControlledCountries(
+  playerCountryId: CountryId,
+  regions: RegionState,
+  productionQueues: GameState['productionQueues'],
+  relationships: Relationship[]
+): CountryId[] {
+  const countryIds = new Set<CountryId>(DEFAULT_AI_COUNTRIES);
+
+  Object.values(regions).forEach(region => {
+    countryIds.add(region.owner);
+    region.divisions.forEach(division => countryIds.add(division.owner));
+  });
+
+  Object.entries(productionQueues).forEach(([countryId, queue]) => {
+    if (queue.length > 0) {
+      countryIds.add(countryId as CountryId);
+    }
+  });
+
+  relationships.forEach(relationship => {
+    if (relationship.type === 'autonomy') {
+      countryIds.add(relationship.toCountry);
+    }
+  });
+
+  countryIds.delete(playerCountryId);
+  countryIds.delete('neutral');
+  countryIds.delete('foreign');
+
+  return Array.from(countryIds);
+}
+
+export function applyLiberatePuppet(
   reward: MissionRewards['liberatePuppet'],
   overlordId: CountryId,
   state: GameStore,
   regions: RegionState,
-): { updatedRelationships: Relationship[]; updatedRegions: RegionState; puppetEvents: GameEvent[] } {
+): {
+  updatedRelationships: Relationship[];
+  updatedRegions: RegionState;
+  updatedArmyGroups: ArmyGroup[];
+  updatedAIStates: AIState[];
+  puppetEvents: GameEvent[];
+} {
   if (!reward) {
-    return { updatedRelationships: [...state.relationships], updatedRegions: regions, puppetEvents: [] };
+    return {
+      updatedRelationships: [...state.relationships],
+      updatedRegions: regions,
+      updatedArmyGroups: state.armyGroups,
+      updatedAIStates: state.aiStates,
+      puppetEvents: [],
+    };
   }
   const { country: puppetId, spawnRegionId, divisions: divisionCount } = reward;
   let updatedRelationships: Relationship[] = [
@@ -58,15 +119,32 @@ function applyLiberatePuppet(
     }
   }
 
+  let updatedArmyGroups = [...state.armyGroups];
+  let puppetArmyGroup = updatedArmyGroups.find(g => g.owner === puppetId);
+  if (!puppetArmyGroup) {
+    puppetArmyGroup = createInitialAIArmyGroup(puppetId, updatedRegions);
+    updatedArmyGroups = [...updatedArmyGroups, puppetArmyGroup];
+  } else if (puppetArmyGroup.mode === 'none') {
+    puppetArmyGroup = { ...puppetArmyGroup, mode: 'advance' };
+    updatedArmyGroups = updatedArmyGroups.map(group =>
+      group.id === puppetArmyGroup!.id ? puppetArmyGroup! : group
+    );
+  }
+
   const puppetBonuses = state.countryBonuses[puppetId];
   const spawnRegion = updatedRegions[spawnRegionId];
   if (spawnRegion && puppetBonuses) {
     const prefix = getDivisionPrefix(puppetId);
     const newDivisions = Array.from({ length: divisionCount }, (_, i) =>
-      createDivision(puppetId, `${prefix} ${i + 1}`, '', puppetBonuses)
+      createDivision(puppetId, `${prefix} ${i + 1}`, puppetArmyGroup.id, puppetBonuses)
     );
     updatedRegions[spawnRegionId] = { ...spawnRegion, divisions: [...spawnRegion.divisions, ...newDivisions] };
   }
+  const updatedAIStates = state.aiStates.some(aiState => aiState.countryId === puppetId) ||
+    state.selectedCountry?.id === puppetId
+    ? state.aiStates
+    : [...state.aiStates, createInitialAIState(puppetId)];
+
   const puppetEvents: GameEvent[] = [
     createGameEvent(
       'mission_claimed',
@@ -77,7 +155,7 @@ function applyLiberatePuppet(
     ),
   ];
   console.log(`[PUPPET LIBERATED] ${puppetId} established as puppet of ${overlordId}`);
-  return { updatedRelationships, updatedRegions, puppetEvents };
+  return { updatedRelationships, updatedRegions, updatedArmyGroups, updatedAIStates, puppetEvents };
 }
 
 /**
@@ -216,15 +294,15 @@ export const createBasicActions = (
 
   selectCountry: (country: Country) => {
     // Determine which countries become AI-controlled (all non-player countries)
-    const allCountries: CountryId[] = [
-      'soviet', 'white', 'finland', 'ukraine', 'don', 'fswr', 
-      'iskolat', 'germany', 'bulgaria', 'poland', 'austriahungary', 'romania', 'ottoman', 'serbia'
-    ];
-    const aiCountries = allCountries.filter(countryId => countryId !== country.id);
-
-    
     const countryMissions = initialMissions.filter(m => m.country === country.id);
     const currentRegions = get().regions;
+    const currentState = get();
+    const aiCountries = getAIControlledCountries(
+      country.id,
+      currentRegions,
+      currentState.productionQueues,
+      currentState.relationships
+    );
     
     // Create initial AI states for all AI countries
     const aiStates = aiCountries.map(countryId => createInitialAIState(countryId));
@@ -343,7 +421,6 @@ export const createBasicActions = (
     // should survive a country switch: production queues, date/time, game events,
     // notifications, active combats, moving units, country bonuses, relationships,
     // scheduled events, and theaters.
-    const currentState = get();
     set({
       ...initialGameState,
       selectedCountry: country,
@@ -480,7 +557,13 @@ export const createBasicActions = (
         console.log(`[BONUSES] Attack: +${newCountryBonuses.attackBonus}, Defence: +${newCountryBonuses.defenceBonus}, HP: +${newCountryBonuses.hpBonus}, Command Power: +${newCountryBonuses.commandPowerBonus}, Prod Speed: ${newCountryBonuses.productionSpeedMultiplier.toFixed(2)}x`);
 
         // Handle liberatePuppet reward
-        const { updatedRelationships, updatedRegions: regionsAfterPuppet, puppetEvents } =
+        const {
+          updatedRelationships,
+          updatedRegions: regionsAfterPuppet,
+          updatedArmyGroups,
+          updatedAIStates,
+          puppetEvents,
+        } =
           applyLiberatePuppet(mission.rewards.liberatePuppet, countryId, state, updatedRegions);
         puppetEvents.forEach(e => {
           events.push(e);
@@ -497,6 +580,8 @@ export const createBasicActions = (
           regions: finalRegions,
           movingUnits: updatedMovingUnits,
           relationships: updatedRelationships,
+          armyGroups: updatedArmyGroups,
+          aiStates: updatedAIStates,
           gameEvents: events,
           notifications: notifs,
         };
