@@ -1,4 +1,5 @@
 import { Movement, ActiveCombat, Region, GameEvent, NotificationItem, Relationship, Country, CountryId } from '../../../types/game';
+import { determineNewOwner } from '../../../utils/combat';
 import { createActiveCombat } from '../../../utils/combat';
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 import { calculateDistance, calculateTravelTime } from '../../../utils/distance';
@@ -360,31 +361,6 @@ function _dispatchNextHop(
 
   newHopMovements.push(nextHop);
   console.log(`[MULTI-STEP] ${movement.owner} divisions continuing from ${fromRegionId} → ${nextRegionId}${restPath.length > 0 ? ` (${restPath.length} more hops)` : ' (final hop)'}`);
-}
-
-/**
- * Applies finished combat results to regions
- */
-function determineNewOwner(
-  attackerCountry: CountryId,
-  regionId: string,
-  countries: Country[],
-  relationships: Relationship[]
-): CountryId {
-  const attackerData = countries.find(c => c.id === attackerCountry);
-  if (attackerData?.coreRegions?.includes(regionId)) {
-    return attackerCountry;
-  }
-  const puppets = relationships
-    .filter(r => r.fromCountry === attackerCountry && r.type === 'autonomy')
-    .map(r => r.toCountry);
-  for (const puppetId of puppets) {
-    const puppetData = countries.find(c => c.id === puppetId);
-    if (puppetData?.coreRegions?.includes(regionId)) {
-      return puppetId;
-    }
-  }
-  return attackerCountry;
 }
 
 export function applyFinishedCombats(
