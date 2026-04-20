@@ -137,19 +137,22 @@ export function checkAndClaimAIMissions(
         if (!arePrerequisitesClaimed(mission, updatedMissions)) continue;
 
         const workingState = makeWorkingState();
-        const conditionsMet = areMissionConditionsMet(mission, {
-          regions,
-          dateTime: state.dateTime,
-          gameEvents: state.gameEvents,
-          selectedCountry: state.selectedCountry,
-          countryId,
-          theaters: state.theaters,
-          armyGroups,
-          adjacency: state.adjacency,
-          relationships,
-        });
-
-        if (!conditionsMet) continue;
+        // If already completed (conditions were met previously), claim immediately
+        // Otherwise check if conditions are currently met
+        if (!mission.completed) {
+          const conditionsMet = areMissionConditionsMet(mission, {
+            regions,
+            dateTime: state.dateTime,
+            gameEvents: state.gameEvents,
+            selectedCountry: state.selectedCountry,
+            countryId,
+            theaters: state.theaters,
+            armyGroups,
+            adjacency: state.adjacency,
+            relationships,
+          });
+          if (!conditionsMet) continue;
+        }
 
         const completedMission: Mission = { ...mission, completed: true, claimed: true };
         updatedMissions = updatedMissions.map(m =>
