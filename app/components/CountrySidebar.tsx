@@ -1,10 +1,15 @@
 'use client';
 
 import { useGameStore } from '../store/useGameStore';
-import { CountryId, RelationshipType } from '../types/game';
+import { RelationshipType } from '../types/game';
 import SidebarPanel from './SidebarPanel';
 import { countries } from '../data/gameData';
 import { COUNTRY_NAMES } from '../data/countries';
+import {
+  getNonNeutralRelationshipSummaries,
+  getRelationshipStatus,
+  NON_DIPLOMACY_COUNTRIES,
+} from '../utils/diplomacyDisplay';
 import Image from 'next/image';
 
 const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
@@ -38,20 +43,8 @@ export default function CountrySidebar() {
   const country = countries.find(c => c.id === countryId);
   const countryName = country?.name || COUNTRY_NAMES[countryId];
 
-  // Get relationships from this country to others
-  const otherCountries: CountryId[] = ['soviet', 'white', 'finland', 'ukraine', 'don', 'fswr', 'romania', 'neutral', 'foreign'].filter(
-    f => f !== countryId
-  ) as CountryId[];
-
-  const getRelationshipStatus = (from: CountryId, to: CountryId): RelationshipType => {
-    const relation = relationships.find(
-      r => r.fromCountry === from && r.toCountry === to
-    );
-    return relation ? relation.type : 'neutral';
-  };
-
   const handleMilitaryAccessToggle = (isChecked: boolean) => {
-    const currentStatus = getRelationshipStatus(playerCountry, countryId);
+    const currentStatus = getRelationshipStatus(relationships, playerCountry, countryId);
     if (isChecked && currentStatus !== 'war') {
       setRelationship(playerCountry, countryId, 'military_access');
     } else if (!isChecked && currentStatus === 'military_access') {
@@ -63,9 +56,8 @@ export default function CountrySidebar() {
     setRelationship(playerCountry, countryId, 'war');
   };
 
-  const playerToTargetStatus = getRelationshipStatus(playerCountry, countryId);
-  const targetToPlayerStatus = getRelationshipStatus(countryId, playerCountry);
-  const NON_DIPLOMACY_COUNTRIES: CountryId[] = ['neutral', 'foreign'];
+  const playerToTargetStatus = getRelationshipStatus(relationships, playerCountry, countryId);
+  const targetToPlayerStatus = getRelationshipStatus(relationships, countryId, playerCountry);
   const isPlayable = !NON_DIPLOMACY_COUNTRIES.includes(countryId);
 
   return (
@@ -175,14 +167,9 @@ export default function CountrySidebar() {
 
         {/* Relationships Section (Read Only) */}
         {(() => {
-          const nonNeutralCountries = otherCountries.filter((otherId: CountryId) => {
-            if (otherId === 'neutral' || otherId === 'foreign') return false;
-            const outwardRelation = getRelationshipStatus(countryId, otherId);
-            const inwardRelation = getRelationshipStatus(otherId, countryId);
-            return outwardRelation !== 'neutral' || inwardRelation !== 'neutral';
-          });
+          const nonNeutralRelationships = getNonNeutralRelationshipSummaries(relationships, countryId);
 
-          if (nonNeutralCountries.length === 0) return null;
+          if (nonNeutralRelationships.length === 0) return null;
 
           return (
             <div className="space-y-3">
@@ -191,10 +178,7 @@ export default function CountrySidebar() {
               </h3>
               
               <div className="bg-stone-900 rounded-lg border border-stone-700 divide-y divide-stone-800">
-                {nonNeutralCountries.map((otherId: CountryId) => {
-                  const outwardRelation = getRelationshipStatus(countryId, otherId);
-                  const inwardRelation = getRelationshipStatus(otherId, countryId);
-                  
+                {nonNeutralRelationships.map(({ countryId: otherId, outwardRelation, inwardRelation }) => {
                   return (
                     <div key={otherId} className="p-3">
                       <div className="flex justify-between items-center mb-1">
