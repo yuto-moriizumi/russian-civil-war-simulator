@@ -62,6 +62,7 @@ export interface GameStore extends GameState {
   setSelectedCountryId: (countryId: CountryId | null) => void;
   setIsCountrySidebarOpen: (isOpen: boolean) => void;
   setSwitchModeActive: (active: boolean) => void;
+  setPlayerAIEnabled: (enabled: boolean) => void;
   
   // Notification Actions
   dismissNotification: (notificationId: string) => void;

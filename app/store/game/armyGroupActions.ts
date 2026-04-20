@@ -99,7 +99,7 @@ export const createArmyGroupActions = (
 
   // Army Group Actions
   createArmyGroup: (name: string, regionIds: string[], theaterId: string | null = null) => {
-    const { armyGroups, selectedCountry } = get();
+    const { armyGroups, selectedCountry, isPlayerAIEnabled } = get();
     if (!selectedCountry) return;
 
     // If no name provided, generate one systematically
@@ -115,7 +115,7 @@ export const createArmyGroupActions = (
       color: ARMY_GROUP_COLORS[armyGroups.length % ARMY_GROUP_COLORS.length],
       owner: selectedCountry.id,
       theaterId,
-      mode: 'none', // Default to no automatic mode
+      mode: isPlayerAIEnabled ? 'advance' : 'none',
     };
 
     set({

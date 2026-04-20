@@ -1,7 +1,7 @@
-import { runAITick } from '../../ai/cpuPlayer';
+import { createInitialAIState, runAITick } from '../../ai/cpuPlayer';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
-import { ProductionQueueItem, CountryId } from '../../types/game';
+import { AIState, ProductionQueueItem, CountryId } from '../../types/game';
 import { getBaseProductionTime } from '../../utils/bonusCalculator';
 import { clampProductionQueueToCommandPower } from '../../utils/commandPower';
 import { countries } from '../../data/gameData';
@@ -20,6 +20,20 @@ import {
 import { attackArmyGroup } from './armyGroupAttack';
 import { defendArmyGroup } from './armyGroupDefend';
 import { TickPerf } from './tickPerformance';
+
+export function getEffectiveAIStates(
+  aiStates: AIState[],
+  playerCountryId: CountryId | undefined,
+  isPlayerAIEnabled: boolean
+): AIState[] {
+  if (!playerCountryId) return aiStates;
+
+  const nonPlayerAIStates = aiStates.filter(aiState => aiState.countryId !== playerCountryId);
+  if (!isPlayerAIEnabled) return nonPlayerAIStates;
+
+  const existingPlayerAIState = aiStates.find(aiState => aiState.countryId === playerCountryId);
+  return [...nonPlayerAIStates, existingPlayerAIState ?? createInitialAIState(playerCountryId)];
+}
 
 /**
  * Defines the game tick action which runs every game hour
@@ -210,13 +224,18 @@ export const createTickActions = (
 
     // Step 8: AI Tick - process AI actions and deployments for all AI countries
     TickPerf.start('[tick] 8-ai');
-    let nextAIStates = aiStates;
+    const effectiveAIStates = getEffectiveAIStates(
+      aiStates,
+      selectedCountry?.id,
+      state.isPlayerAIEnabled
+    );
+    let nextAIStates = effectiveAIStates.filter(aiState => aiState.countryId !== selectedCountry?.id);
     let nextArmyGroups = armyGroupsAfterEvents;
     const nextProductionQueues: Record<CountryId, ProductionQueueItem[]> = { ...remainingProductions };
 
-    if (aiStates.length > 0) {
+    if (effectiveAIStates.length > 0) {
       // Process each AI country
-      nextAIStates = aiStates.map(aiState => {
+      nextAIStates = effectiveAIStates.map(aiState => {
         const country = countries.find(c => c.id === aiState.countryId);
         const countryBonuses = state.countryBonuses[aiState.countryId];
         const trimmedQueue = clampProductionQueueToCommandPower(
@@ -276,7 +295,7 @@ export const createTickActions = (
         }
         
         return aiActions.updatedAIState;
-      });
+      }).filter(aiState => aiState.countryId !== selectedCountry?.id);
     }
     TickPerf.end('[tick] 8-ai');
 

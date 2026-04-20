@@ -22,6 +22,7 @@ export default function TopBar({ showSavedIndicator }: TopBarProps) {
   const regions = useGameStore(state => state.regions);
   const movingUnits = useGameStore(state => state.movingUnits);
   const countryBonuses = useGameStore(state => state.countryBonuses);
+  const isPlayerAIEnabled = useGameStore(state => state.isPlayerAIEnabled);
   
   // Actions
   const togglePlay = useGameStore(state => state.togglePlay);
@@ -33,6 +34,7 @@ export default function TopBar({ showSavedIndicator }: TopBarProps) {
   const setMapMode = useGameStore(state => state.setMapMode);
   const isSwitchModeActive = useGameStore(state => state.isSwitchModeActive);
   const setSwitchModeActive = useGameStore(state => state.setSwitchModeActive);
+  const setPlayerAIEnabled = useGameStore(state => state.setPlayerAIEnabled);
   
   // Calculate derived values
   const commandPowerInfo = useMemo(() => 
@@ -145,6 +147,24 @@ export default function TopBar({ showSavedIndicator }: TopBarProps) {
         >
           Switch
         </button>
+
+        {/* Player AI Toggle */}
+        <label
+          className={`flex cursor-pointer items-center gap-2 rounded border px-3 py-1 text-xs transition-colors ${
+            isPlayerAIEnabled
+              ? 'border-blue-500 bg-blue-600 text-white'
+              : 'border-stone-600 bg-stone-800/80 text-stone-300 hover:bg-stone-700'
+          }`}
+          title="Enable AI automation for the player country"
+        >
+          <input
+            type="checkbox"
+            checked={isPlayerAIEnabled}
+            onChange={(event) => setPlayerAIEnabled(event.target.checked)}
+            className="h-4 w-4 accent-blue-600"
+          />
+          <span className="font-semibold">AI</span>
+        </label>
 
         {/* Map Mode Selector */}
         <div className="flex rounded border border-stone-600 bg-stone-800/80 overflow-hidden">
