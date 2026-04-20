@@ -157,7 +157,7 @@ describe('attackArmyGroup – Phase 1 redistributes from stacked border region',
 
   const group = makeGroup({ regionIds: ['B1', 'B2', 'B3', 'B4', 'B5'] });
 
-  it('dispatches movements from the stacked border to needy borders', () => {
+  it('dispatches movements from the stacked border to needy borders, then advances remaining divisions', () => {
     const state = makeState(regions, adjacency, [group], [], [], relationships);
     let captured: Partial<GameStore> = {};
     attackArmyGroup('ag-1', state, (partial) => { captured = partial; });
@@ -168,39 +168,48 @@ describe('attackArmyGroup – Phase 1 redistributes from stacked border region',
     const movements = captured.movingUnits as Movement[];
     movements.forEach(m => expect(m.fromRegion).toBe('B1'));
 
-    // Divisions stay in region during transit; check dispatch count via movements
-    const dispatched = (captured.movingUnits as Movement[])
-      .filter(m => m.fromRegion === 'B1')
+    // Divisions stay in region during transit; check dispatch count via movements.
+    const reinforcementDispatched = (captured.movingUnits as Movement[])
+      .filter(m => m.fromRegion === 'B1' && m.toRegion !== 'ENEMY_1')
       .reduce((s, m) => s + m.divisions.length, 0);
-    expect(dispatched).toBeGreaterThan(0);
-    expect(dispatched).toBeLessThan(15);
+    const advanced = (captured.movingUnits as Movement[])
+      .filter(m => m.fromRegion === 'B1' && m.toRegion === 'ENEMY_1')
+      .reduce((s, m) => s + m.divisions.length, 0);
+    expect(reinforcementDispatched).toBeGreaterThan(0);
+    expect(reinforcementDispatched).toBeLessThan(15);
+    expect(advanced).toBe(3);
   });
 
-  it('does not send more than the excess (keeps target count in B1)', () => {
+  it('sends only the excess to needy borders before single-enemy auto-advance uses the remainder', () => {
     const state = makeState(regions, adjacency, [group], [], [], relationships);
     let captured: Partial<GameStore> = {};
     attackArmyGroup('ag-1', state, (partial) => { captured = partial; });
 
     if (!captured.movingUnits) return;
 
-    // target = 15/5 = 3 per border.  B1 keeps 3, dispatches 12.
-    const dispatched = (captured.movingUnits as Movement[])
-      .filter(m => m.fromRegion === 'B1')
+    // target = 15/5 = 3 per border.  B1 sends 12 to needy borders, then the
+    // single-enemy rule advances the remaining 3 to ENEMY_1.
+    const reinforcementDispatched = (captured.movingUnits as Movement[])
+      .filter(m => m.fromRegion === 'B1' && m.toRegion !== 'ENEMY_1')
       .reduce((s, m) => s + m.divisions.length, 0);
-    expect(dispatched).toBe(12);
+    const advanced = (captured.movingUnits as Movement[])
+      .filter(m => m.fromRegion === 'B1' && m.toRegion === 'ENEMY_1')
+      .reduce((s, m) => s + m.divisions.length, 0);
+    expect(reinforcementDispatched).toBe(12);
+    expect(advanced).toBe(3);
   });
 });
 
 // ---------------------------------------------------------------------------
-// Scenario 2: Safe-advance when borders meet their targets but have >1 division
+// Scenario 2: Single-enemy auto-advance when borders meet their targets
 //
 //   2 borders, 2 divisions each → target = 2 → surplus = 0.
 //   Phase 1: no needy borders.
-//   Phase 2: each border has stationaryDivs.length=2 > 1 → effectiveAdvanceCount=1 → ADVANCE.
-//   Each border advances 1 division to ENEMY while keeping 1 as garrison.
+//   Phase 2: each border has exactly 1 adjacent hostile target → ADVANCE.
+//   Each border advances all stationary divisions to ENEMY.
 // ---------------------------------------------------------------------------
 
-describe('attackArmyGroup – safe-advance when borders meet target but have >1 division', () => {
+describe('attackArmyGroup – single-enemy auto-advance when borders meet target', () => {
   const adjacency: Adjacency = {
     B1: ['B2', 'ENEMY'],
     B2: ['B1', 'ENEMY'],
@@ -219,15 +228,15 @@ describe('attackArmyGroup – safe-advance when borders meet target but have >1 
 
   const group = makeGroup({ regionIds: ['B1', 'B2'] });
 
-  it('advances 1 division per border (keeping 1 as garrison) even when surplus=0', () => {
+  it('advances all divisions per border even when surplus=0', () => {
     const state = makeState(regions, adjacency, [group], [], [], relationships);
     let captured: Partial<GameStore> = {};
     attackArmyGroup('ag-1', state, (partial) => { captured = partial; });
     const movements = (captured.movingUnits ?? []) as Movement[];
     const advances = movements.filter(m => m.toRegion === 'ENEMY');
-    // Both B1 and B2 advance 1 division each to ENEMY
+    // Both B1 and B2 advance all stationary divisions to the single enemy target.
     expect(advances.length).toBe(2);
-    advances.forEach(adv => expect(adv.divisions.length).toBe(1));
+    advances.forEach(adv => expect(adv.divisions.length).toBe(2));
   });
 });
 
@@ -299,7 +308,7 @@ describe('attackArmyGroup – Phase 2 advances surplus into defended enemy regio
     const movements = (captured.movingUnits ?? []) as Movement[];
     const advance = movements.find(m => m.fromRegion === 'B1' && m.toRegion === 'ENEMY_1');
     expect(advance).toBeDefined();
-    expect(advance!.divisions.length).toBe(1);
+    expect(advance!.divisions.length).toBe(10);
   });
 
   it('creates an ActiveCombat when advancing into a defended region', () => {
@@ -474,7 +483,7 @@ describe('attackArmyGroup – Phase 2 single-enemy auto-advance', () => {
     expect(called).toBe(false);
   });
 
-  it('safe-advances 1 division when there are 2 stationary divisions (garrison remains)', () => {
+  it('auto-advances all divisions when there are 2 stationary divisions and 1 adjacent enemy', () => {
     const regions: RegionState = {
       BORDER: makeRegion('BORDER', 'soviet', [makeDiv('div-1'), makeDiv('div-2')]),
       ENEMY: makeRegion('ENEMY', 'white'),
@@ -483,10 +492,32 @@ describe('attackArmyGroup – Phase 2 single-enemy auto-advance', () => {
     const state = makeState(regions, adjacency, [group], [], [], relationships);
     let captured: Partial<GameStore> = {};
     attackArmyGroup('ag-1', state, (partial) => { captured = partial; });
-    // total=2, N=1 border → target=2 → surplus=0, but stationaryDivs.length-1=1 → advance 1
+    // total=2, N=1 border → target=2 → surplus=0, but the single-enemy rule advances both.
     const movements = (captured.movingUnits ?? []) as Movement[];
     const advance = movements.find(m => m.fromRegion === 'BORDER' && m.toRegion === 'ENEMY');
     expect(advance).toBeDefined();
-    expect(advance!.divisions.length).toBe(1);
+    expect(advance!.divisions.length).toBe(2);
+  });
+
+  it('auto-advances stationary divisions even when Phase 1 also sends reinforcements to that border', () => {
+    const adjacency2: Adjacency = { B1: ['B2', 'ENEMY_1'], B2: ['B1', 'ENEMY_2'], ENEMY_1: ['B1'], ENEMY_2: ['B2'] };
+    const regions: RegionState = {
+      B1: makeRegion('B1', 'soviet', [makeDiv('b1-stationary')]),
+      B2: makeRegion('B2', 'soviet', [makeDiv('b2-1'), makeDiv('b2-2'), makeDiv('b2-3')]),
+      ENEMY_1: makeRegion('ENEMY_1', 'white'),
+      ENEMY_2: makeRegion('ENEMY_2', 'white'),
+    };
+    const group = makeGroup({ regionIds: ['B1', 'B2'] });
+    const state = makeState(regions, adjacency2, [group], [], [], relationships);
+    let captured: Partial<GameStore> = {};
+    attackArmyGroup('ag-1', state, (partial) => { captured = partial; });
+
+    const movements = (captured.movingUnits ?? []) as Movement[];
+    const reinforcement = movements.find(m => m.fromRegion === 'B2' && m.toRegion === 'B1');
+    const advance = movements.find(m => m.fromRegion === 'B1' && m.toRegion === 'ENEMY_1');
+
+    expect(reinforcement).toBeDefined();
+    expect(advance).toBeDefined();
+    expect(advance!.divisions.map(d => d.id)).toEqual(['b1-stationary']);
   });
 });
