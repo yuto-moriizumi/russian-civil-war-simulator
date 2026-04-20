@@ -415,3 +415,27 @@ describe('applyFinishedCombats', () => {
     expect(nextRegions['B'].divisions).toHaveLength(0);
   });
 });
+
+describe('applyCompletedMovements – self-move guard', () => {
+  it('does not duplicate divisions when fromRegion === toRegion', () => {
+    // Simulates a retreat movement that targets the same region it departed from.
+    // Before the fix this caused divisions to be added twice (removed then re-added
+    // using the pre-removal snapshot, doubling the count).
+    const div = makeDiv({ id: 'retreating' });
+    const regions: RegionState = { A: makeRegion('A', { divisions: [div] }) };
+    const selfMove = makeMovement({
+      fromRegion: 'A',
+      toRegion: 'A',
+      divisions: [div],
+      arrivalTime: NOW,
+    });
+    const { nextRegions } = applyCompletedMovements([selfMove], [selfMove], {
+      regions,
+      combats: [],
+      events: [],
+      notifications: [],
+      relationships: NO_REL,
+    }, NOW);
+    expect(nextRegions['A'].divisions).toHaveLength(1);
+  });
+});
