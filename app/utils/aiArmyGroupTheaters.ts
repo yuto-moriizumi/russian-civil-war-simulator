@@ -274,7 +274,12 @@ export function syncAIArmyGroupsToTheaters({
 
     if (countryTheaters.length === 0) {
       const countryGroups = getCountryGroups(countryId);
-      if (countryGroups.length <= 1) {
+      if (countryGroups.length === 0) {
+        const defaultGroup = createAIArmyGroup(countryId, null, nextArmyGroups, nextRegions);
+        nextArmyGroups = [...nextArmyGroups, defaultGroup];
+        continue;
+      }
+      if (countryGroups.length === 1) {
         countryGroups.forEach(group => {
           if (group.theaterId !== null || group.mode !== 'advance') {
             updateGroup(group.id, current => ({ ...current, theaterId: null, mode: 'advance' }));
