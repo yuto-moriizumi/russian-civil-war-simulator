@@ -105,6 +105,7 @@ export const createTickActions = (
     TickPerf.end('[tick] 4-movements');
 
     // Step 4.5: Incorporate mid-transit combats
+    TickPerf.start('[tick] 4.5-mid-transit-combats');
     let combatsBeforeStep5 = activeCombats;
     let regionsBeforeStep5 = regionsAfterEvents;
     if (newMidTransitCombats.length > 0) {
@@ -128,12 +129,15 @@ export const createTickActions = (
       regionsBeforeStep5 = clearedRegions;
     }
 
+    TickPerf.end('[tick] 4.5-mid-transit-combats');
+
     // Step 5: Process active combats
     TickPerf.start('[tick] 5-combats');
     const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements, retreatingDivisionUpdates } = processCombats(combatsBeforeStep5, newDate, regionsBeforeStep5, adjacency, regionCentroids);
     TickPerf.end('[tick] 5-combats');
 
     // Step 5.5: Apply retreating division HP updates
+    TickPerf.start('[tick] 5.5-retreating-hp');
     if (retreatingDivisionUpdates.length > 0) {
       retreatingDivisionUpdates.forEach(({ regionId, division }) => {
         const region = regionsBeforeStep5[regionId];
@@ -147,6 +151,8 @@ export const createTickActions = (
         };
       });
     }
+
+    TickPerf.end('[tick] 5.5-retreating-hp');
 
     // Step 6: Apply completed movements to regions
     TickPerf.start('[tick] 6-apply-movements');
@@ -176,11 +182,14 @@ export const createTickActions = (
     TickPerf.end('[tick] 6-apply-movements');
 
     // Step 6b: Merge retreat, intercepted, and new-hop movements
+    TickPerf.start('[tick] 6b-merge-movements');
     const finishedCombatIds = new Set(finishedCombats.map(c => c.id));
     let nextMovingUnits = [...remainingMovements, ...retreatMovements, ...newHopMovements].filter(m =>
       !interceptedMovementIds.includes(m.id) &&
       !(m.pendingCombatId && finishedCombatIds.has(m.pendingCombatId))
     );
+
+    TickPerf.end('[tick] 6b-merge-movements');
 
     // Step 7: Regenerate HP for all stationary divisions
     TickPerf.start('[tick] 7-hp-regen');
