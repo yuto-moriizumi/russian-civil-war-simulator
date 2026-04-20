@@ -31,6 +31,25 @@ export const sovietMissions: Mission[] = [
     available: [{ type: 'controlRegion', regionId: 'UA-63' }],
   },
   {
+    id: 'soviet_taurida',
+    country: 'soviet',
+    name: 'クリミアの確保',
+    description: 'Secure Crimea (UA-40) and establish the Taurida Soviet Socialist Republic',
+    completed: false,
+    claimed: false,
+    rewards: {
+      liberatePuppet: {
+        country: 'taurida',
+        spawnRegionId: 'UA-40',
+        divisions: 2,
+      },
+    },
+    prerequisites: ['soviet_capture_kharkiv'],
+    available: [
+      { type: 'controlRegion', regionId: 'UA-40' },
+    ],
+  },
+  {
     id: 'soviet_terror',
     country: 'soviet',
     name: 'Red Terror',
