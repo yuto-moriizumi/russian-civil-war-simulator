@@ -333,14 +333,6 @@ export function processCombatRound(
     }
   }
 
-  console.log('[COMBAT PROGRESS]', {
-    combatId: combat.id, defenderRegionName: combat.defenderRegionName, round: newRound,
-    attackerCountry: combat.attackerCountry, defenderCountry: combat.defenderCountry,
-    attackerDivisionsRemaining: attackerDivisions.length, defenderDivisionsRemaining: defenderDivisions.length,
-    attackerHp: getTotalHp(attackerDivisions), defenderHp: getTotalHp(defenderDivisions),
-    attackerDamageDealt: attackerTotalDamage, defenderDamageDealt: defenderTotalDamage,
-    retreats: retreatingDivisions.length,
-  });
   if (combatEnded) {
     console.log('[COMBAT ENDED]', {
       combatId: combat.id, defenderRegionName: combat.defenderRegionName, totalRounds: newRound, victor,
