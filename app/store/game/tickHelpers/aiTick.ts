@@ -5,6 +5,21 @@ import { getBaseProductionTime } from '../../../utils/bonusCalculator';
 import { countries } from '../../../data/gameData';
 import { GameStore } from '../types';
 
+export function hasOwnershipChangedForCountries(
+  countryIds: Set<CountryId>,
+  prevRegions: RegionState,
+  nextRegions: RegionState
+): boolean {
+  for (const regionId of Object.keys(nextRegions)) {
+    const prevOwner = prevRegions[regionId]?.owner;
+    const nextOwner = nextRegions[regionId]?.owner;
+    if (prevOwner !== nextOwner && (countryIds.has(prevOwner as CountryId) || countryIds.has(nextOwner as CountryId))) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function discoverNewAIStates(
   aiStates: AIState[],
   regions: RegionState,

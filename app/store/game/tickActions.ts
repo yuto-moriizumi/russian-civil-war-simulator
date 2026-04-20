@@ -16,7 +16,7 @@ import {
   processProductionQueue,
   processScheduledEvents
 } from './tickHelpers';
-import { discoverNewAIStates, getEffectiveAIStates, processAITick } from './tickHelpers/aiTick';
+import { discoverNewAIStates, getEffectiveAIStates, processAITick, hasOwnershipChangedForCountries } from './tickHelpers/aiTick';
 import { attackArmyGroup } from './armyGroupAttack';
 import { defendArmyGroup } from './armyGroupDefend';
 import { TickPerf } from './tickPerformance';
@@ -207,19 +207,30 @@ export const createTickActions = (
     let nextAIStates = effectiveAIStates.filter(aiState => aiState.countryId !== selectedCountry?.id);
     let nextArmyGroups = armyGroupsAfterEvents;
     let nextProductionQueues: Record<CountryId, ProductionQueueItem[]> = { ...remainingProductions };
-    const nextTheaters = detectTheatersForCountries({
-      regions: nextRegions,
-      adjacency,
-      countryIds: Array.from(new Set([
-        ...effectiveAICountryIds,
-        ...(selectedCountry ? [selectedCountry.id] : []),
-      ])),
-      existingTheaters: state.theaters,
-      relationships: relationshipsAfterEvents,
-    });
     let nextActiveCombats = nextCombats;
 
-    if (effectiveAICountryIds.length > 0) {
+    const prevAIStateIds = new Set(aiStates.map(s => s.countryId));
+    const hasNewAICountries = effectiveAICountryIds.some(id => !prevAIStateIds.has(id));
+    const theaterCountryIds = new Set([
+      ...effectiveAICountryIds,
+      ...(selectedCountry ? [selectedCountry.id] : []),
+    ]);
+    const theaterInputsChanged =
+      hasNewAICountries ||
+      relationshipsAfterEvents !== state.relationships ||
+      hasOwnershipChangedForCountries(theaterCountryIds, regions, nextRegions);
+
+    const nextTheaters = theaterInputsChanged
+      ? detectTheatersForCountries({
+          regions: nextRegions,
+          adjacency,
+          countryIds: Array.from(theaterCountryIds),
+          existingTheaters: state.theaters,
+          relationships: relationshipsAfterEvents,
+        })
+      : state.theaters;
+
+    if (effectiveAICountryIds.length > 0 && theaterInputsChanged) {
       const aiArmyGroupSync = syncAIArmyGroupsToTheaters({
         aiCountryIds: effectiveAICountryIds,
         theaters: nextTheaters,

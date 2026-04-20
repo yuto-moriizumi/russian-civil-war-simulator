@@ -131,6 +131,26 @@ export function syncAIArmyGroupsToTheaters({
 
   const aiCountrySet = new Set(aiCountryIds);
 
+  // Reverse index: armyGroupId -> regionIds that contain divisions of that group
+  const groupToRegionIds = new Map<string, Set<string>>();
+  for (const [regionId, region] of Object.entries(regions)) {
+    for (const div of region.divisions) {
+      let set = groupToRegionIds.get(div.armyGroupId);
+      if (!set) { set = new Set(); groupToRegionIds.set(div.armyGroupId, set); }
+      set.add(regionId);
+    }
+  }
+
+  // Reverse index: armyGroupId -> movement indices
+  const groupToMovementIndices = new Map<string, number[]>();
+  for (let i = 0; i < movingUnits.length; i++) {
+    for (const div of movingUnits[i].divisions) {
+      let arr = groupToMovementIndices.get(div.armyGroupId);
+      if (!arr) { arr = []; groupToMovementIndices.set(div.armyGroupId, arr); }
+      arr.push(i);
+    }
+  }
+
   const getCountryGroups = (countryId: CountryId) =>
     nextArmyGroups.filter(group => group.owner === countryId);
 
@@ -141,24 +161,46 @@ export function syncAIArmyGroupsToTheaters({
   const replaceGroupId = (fromGroupId: string, toGroupId: string) => {
     if (fromGroupId === toGroupId) return;
 
-    nextRegions = Object.fromEntries(
-      Object.entries(nextRegions).map(([regionId, region]) => [
-        regionId,
-        {
+    // Update only affected regions via reverse index
+    const affectedRegions = groupToRegionIds.get(fromGroupId);
+    if (affectedRegions && affectedRegions.size > 0) {
+      nextRegions = { ...nextRegions };
+      for (const regionId of affectedRegions) {
+        const region = nextRegions[regionId];
+        nextRegions[regionId] = {
           ...region,
           divisions: region.divisions.map(division =>
             replaceDivisionArmyGroupId(division, fromGroupId, toGroupId)
           ),
-        },
-      ])
-    );
+        };
+      }
+      // Update index
+      let toSet = groupToRegionIds.get(toGroupId);
+      if (!toSet) { toSet = new Set(); groupToRegionIds.set(toGroupId, toSet); }
+      for (const id of affectedRegions) toSet.add(id);
+      groupToRegionIds.delete(fromGroupId);
+    }
 
-    nextMovingUnits = nextMovingUnits.map(movement => ({
-      ...movement,
-      divisions: movement.divisions.map(division =>
-        replaceDivisionArmyGroupId(division, fromGroupId, toGroupId)
-      ),
-    }));
+    // Update only affected movements via reverse index
+    const affectedMovements = groupToMovementIndices.get(fromGroupId);
+    if (affectedMovements && affectedMovements.length > 0) {
+      const newMovingUnits = [...nextMovingUnits];
+      const uniqueIndices = [...new Set(affectedMovements)];
+      for (const i of uniqueIndices) {
+        newMovingUnits[i] = {
+          ...newMovingUnits[i],
+          divisions: newMovingUnits[i].divisions.map(division =>
+            replaceDivisionArmyGroupId(division, fromGroupId, toGroupId)
+          ),
+        };
+      }
+      nextMovingUnits = newMovingUnits;
+      // Update index
+      let toArr = groupToMovementIndices.get(toGroupId);
+      if (!toArr) { toArr = []; groupToMovementIndices.set(toGroupId, toArr); }
+      toArr.push(...affectedMovements);
+      groupToMovementIndices.delete(fromGroupId);
+    }
 
     nextActiveCombats = nextActiveCombats.map(combat => ({
       ...combat,
