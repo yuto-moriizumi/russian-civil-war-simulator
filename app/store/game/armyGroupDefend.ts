@@ -74,13 +74,14 @@ export function defendArmyGroup(
     committedAtBorder.set(id, present);
   });
 
-  // All in-transit group divisions — regardless of their current toRegion.
-  // Used in Step 5 to exclude them from the available pool entirely.
-  // In-transit division IDs — present in regions but already committed to movement.
+  // All in-transit division IDs for the country — present in regions but already committed to movement.
+  // Track ALL country divisions regardless of armyGroupId: syncAIArmyGroupsToTheaters may reassign
+  // a division's armyGroupId inside a movement without updating the source region, causing the army
+  // group to re-dispatch the same division each tick and accumulate duplicate movement records.
   const inTransitDivisionIds = new Set<string>();
   movingUnits.forEach(m => {
     if (m.owner !== countryId) return;
-    m.divisions.forEach(d => { if (d.armyGroupId === groupId) inTransitDivisionIds.add(d.id); });
+    m.divisions.forEach(d => { inTransitDivisionIds.add(d.id); });
   });
 
   // For divisions heading directly to a border, credit that border's committed count.

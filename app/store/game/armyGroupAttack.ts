@@ -70,10 +70,13 @@ export function attackArmyGroup(
   });
 
   // In-transit division IDs — present in regions but already committed to movement.
+  // Track ALL country divisions in transit regardless of armyGroupId: syncAIArmyGroupsToTheaters
+  // may reassign a division's armyGroupId inside a movement without updating the source region,
+  // causing the army group to re-dispatch the same division each tick and accumulate duplicates.
   const inTransitDivisionIds = new Set<string>();
   movingUnits.forEach(m => {
     if (m.owner !== countryId) return;
-    m.divisions.forEach(d => { if (d.armyGroupId === groupId) inTransitDivisionIds.add(d.id); });
+    m.divisions.forEach(d => { inTransitDivisionIds.add(d.id); });
   });
 
   movingUnits.forEach(m => {
