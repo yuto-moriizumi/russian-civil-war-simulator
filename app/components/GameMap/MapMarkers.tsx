@@ -144,13 +144,13 @@ export function MovingUnitMarker({
         className="moving-unit-marker"
         style={{
           backgroundColor: COUNTRY_COLORS[movement.owner],
-          border: isSelected ? '2px solid #22d3ee' : '1px dashed #22d3ee',
+          border: isSelected ? '2px solid #22d3ee' : '1px solid rgba(0,0,0,0.5)',
           borderRadius: '50%',
           padding: '4px 8px',
           display: 'flex',
           alignItems: 'center',
           gap: '4px',
-          boxShadow: isSelected ? '0 0 12px #22d3ee, 0 0 20px rgba(34, 211, 238, 0.4)' : '0 0 8px rgba(34, 211, 238, 0.5)',
+          boxShadow: isSelected ? '0 0 12px #22d3ee, 0 0 20px rgba(34, 211, 238, 0.4)' : '0 2px 4px rgba(0,0,0,0.3)',
           animation: 'pulse 1.5s ease-in-out infinite',
           cursor: isPlayerUnit ? 'pointer' : 'default',
           transition: 'all 0.2s ease',
