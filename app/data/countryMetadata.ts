@@ -206,7 +206,7 @@ export const COUNTRY_METADATA = {
     divisionPrefix: "Industrial Guard",
     selectable: false,
     coreRegions: [
-              'UA-09', 'UA-12', 'UA-14', 'UA-63', 'UA-65',
+              'UA-09', 'UA-12', 'UA-14', 'UA-23', 'UA-59', 'UA-63', 'UA-65',
             ],
   },
   neutral: {
@@ -445,7 +445,10 @@ export const COUNTRY_METADATA = {
     divisionPrefix: "Red Ukrainian Guard",
     selectable: false,
     coreRegions: [
-              'UA-12', 'UA-14', 'UA-32', 'UA-53', 'UA-59', 'UA-63', 'UA-65',
+              'UA-05', 'UA-07', 'UA-09', 'UA-12', 'UA-14', 'UA-18', 'UA-21', 'UA-23',
+              'UA-26', 'UA-30', 'UA-32', 'UA-35', 'UA-40', 'UA-43', 'UA-46', 'UA-48',
+              'UA-51', 'UA-53', 'UA-56', 'UA-59', 'UA-61', 'UA-63', 'UA-65', 'UA-68',
+              'UA-71', 'UA-74', 'UA-77',
             ],
   },
   balticdutchy: {
@@ -494,7 +497,7 @@ export const COUNTRY_METADATA = {
     divisionPrefix: "Odessa Guard",
     selectable: false,
     coreRegions: [
-              'MD-01', 'UA-65',
+              'MD-01', 'UA-51',
             ],
   },
   terek: {
@@ -522,7 +525,7 @@ export const COUNTRY_METADATA = {
     divisionPrefix: "Taurida Guard",
     selectable: false,
     coreRegions: [
-              'RU-Cr',
+              'RU-Cr', 'UA-23', 'UA-40', 'UA-43', 'UA-65',
             ],
   },
   /**
