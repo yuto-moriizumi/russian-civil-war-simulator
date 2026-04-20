@@ -1,4 +1,5 @@
-import { Movement, ActiveCombat, Region, GameEvent, NotificationItem, Relationship } from '../../../types/game';
+import { Movement, ActiveCombat, Region, GameEvent, NotificationItem, Relationship, Country } from '../../../types/game';
+import { determineNewOwner } from '../../../utils/occupationUtils';
 import { createActiveCombat } from '../../../utils/combat';
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 import { calculateDistance, calculateTravelTime } from '../../../utils/distance';
@@ -11,6 +12,7 @@ interface MovementApplicationContext {
   events: GameEvent[];
   notifications: NotificationItem[];
   relationships: Relationship[];
+  countries?: Country[];
   /** Centroids for calculating per-hop travel time on multi-step routes */
   regionCentroids?: Record<string, [number, number]>;
 }
@@ -253,9 +255,10 @@ export function applyCompletedMovements(
           if (effectiveDefenderDivisions.length === 0) {
             // Undefended capture
             const previousOwner = dest.owner;
+            const newOwner = determineNewOwner(owner, toRegion, context.countries ?? [], context.relationships);
             nextRegions[toRegion] = {
               ...dest,
-              owner: owner,
+              owner: newOwner,
               divisions: arrivingDivisions,
             };
             const captureEvent = createGameEvent(
@@ -360,12 +363,11 @@ function _dispatchNextHop(
   console.log(`[MULTI-STEP] ${movement.owner} divisions continuing from ${fromRegionId} → ${nextRegionId}${restPath.length > 0 ? ` (${restPath.length} more hops)` : ' (final hop)'}`);
 }
 
-/**
- * Applies finished combat results to regions
- */
 export function applyFinishedCombats(
   finishedCombats: ActiveCombat[],
-  regions: Record<string, Region>
+  regions: Record<string, Region>,
+  countries: Country[] = [],
+  relationships: Relationship[] = []
 ): Record<string, Region> {
   const nextRegions = { ...regions };
 
@@ -389,9 +391,10 @@ export function applyFinishedCombats(
       const preservedDivisions = defenderRegion.divisions.filter(d =>
         d.owner !== combat.defenderCountry && !attackerDivisionIds.has(d.id)
       );
+      const newOwner = determineNewOwner(combat.attackerCountry, combat.defenderRegionId, countries, relationships);
       nextRegions[combat.defenderRegionId] = {
         ...defenderRegion,
-        owner: combat.attackerCountry,
+        owner: newOwner,
         divisions: [...preservedDivisions, ...combat.attackerDivisions],
       };
     } else {
