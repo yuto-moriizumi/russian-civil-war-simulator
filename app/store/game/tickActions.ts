@@ -1,52 +1,28 @@
-import { createInitialAIState, runAITick } from '../../ai/cpuPlayer';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
-import { AIState, ProductionQueueItem, CountryId } from '../../types/game';
-import { getBaseProductionTime } from '../../utils/bonusCalculator';
-import { clampProductionQueueToCommandPower } from '../../utils/commandPower';
+import { ProductionQueueItem, CountryId } from '../../types/game';
 import { detectTheatersForCountries, syncAIArmyGroupsToTheaters } from '../../utils/aiArmyGroupTheaters';
 import { countries } from '../../data/gameData';
-import { 
-  validateDivisions, 
-  processMovements, 
-  processCombats, 
-  applyCompletedMovements, 
-  applyFinishedCombats, 
-  regenerateDivisionHP, 
-  syncArmyGroupTerritories, 
+import {
+  validateDivisions,
+  processMovements,
+  processCombats,
+  applyCompletedMovements,
+  applyFinishedCombats,
+  regenerateDivisionHP,
+  syncArmyGroupTerritories,
   checkAndCompleteMissions,
   checkAndClaimAIMissions,
   processProductionQueue,
   processScheduledEvents
 } from './tickHelpers';
+import { discoverNewAIStates, getEffectiveAIStates, processAITick } from './tickHelpers/aiTick';
 import { attackArmyGroup } from './armyGroupAttack';
 import { defendArmyGroup } from './armyGroupDefend';
 import { TickPerf } from './tickPerformance';
 
-export function getEffectiveAIStates(
-  aiStates: AIState[],
-  playerCountryId: CountryId | undefined,
-  isPlayerAIEnabled: boolean
-): AIState[] {
-  if (!playerCountryId) return aiStates;
+export { discoverNewAIStates, getEffectiveAIStates } from './tickHelpers/aiTick';
 
-  const nonPlayerAIStates = aiStates.filter(aiState => aiState.countryId !== playerCountryId);
-  if (!isPlayerAIEnabled) return nonPlayerAIStates;
-
-  const existingPlayerAIState = aiStates.find(aiState => aiState.countryId === playerCountryId);
-  return [...nonPlayerAIStates, existingPlayerAIState ?? createInitialAIState(playerCountryId)];
-}
-
-/**
- * Defines the game tick action which runs every game hour
- * This is the main game loop that processes:
- * - Unit movements
- * - Combat resolution
- * - HP regeneration
- * - AI actions
- * - Mission completion
- * - Theater updates
- */
 export const createTickActions = (
   set: StoreApi<GameStore>['setState'],
   get: StoreApi<GameStore>['getState']
@@ -76,29 +52,24 @@ export const createTickActions = (
     );
     TickPerf.end('[tick] 2-production');
     
-    // Create events for completed productions
-    const productionEvents = completedProductions
-      .filter(p => p.owner === selectedCountry?.id) // Only show events for player
-      .map(p => ({
-        id: `event-${Date.now()}-${p.id}`,
-        type: 'production_completed' as const,
-        timestamp: dateTime,
-        title: 'Production Complete',
-        description: `${p.divisionName} has been produced and deployed.`,
-        country: p.owner,
-      }));
-    
-    const productionNotifications = completedProductions
-      .filter(p => p.owner === selectedCountry?.id)
-      .map(p => ({
-        id: `notif-${Date.now()}-${p.id}`,
-        type: 'production_completed' as const,
-        timestamp: dateTime,
-        title: 'Production Complete',
-        description: `${p.divisionName} has been produced and deployed.`,
-        country: p.owner,
-        expiresAt: new Date(dateTime.getTime() + 6 * 60 * 60 * 1000), // 6 hours
-      }));
+    const playerProductions = completedProductions.filter(p => p.owner === selectedCountry?.id);
+    const productionEvents = playerProductions.map(p => ({
+      id: `event-${Date.now()}-${p.id}`,
+      type: 'production_completed' as const,
+      timestamp: dateTime,
+      title: 'Production Complete',
+      description: `${p.divisionName} has been produced and deployed.`,
+      country: p.owner,
+    }));
+    const productionNotifications = playerProductions.map(p => ({
+      id: `notif-${Date.now()}-${p.id}`,
+      type: 'production_completed' as const,
+      timestamp: dateTime,
+      title: 'Production Complete',
+      description: `${p.divisionName} has been produced and deployed.`,
+      country: p.owner,
+      expiresAt: new Date(dateTime.getTime() + 6 * 60 * 60 * 1000),
+    }));
     
     // Step 3: Advance time
     const newDate = new Date(dateTime);
@@ -133,16 +104,13 @@ export const createTickActions = (
     );
     TickPerf.end('[tick] 4-movements');
 
-    // Step 4.5: Incorporate mid-transit combats (enemy appeared at destination after movement started)
-    // Merge new combats into the active list and clear the defender divisions from those regions
-    // so they are absorbed into the combat (matching the behaviour of combats started at dispatch time).
+    // Step 4.5: Incorporate mid-transit combats
     let combatsBeforeStep5 = activeCombats;
     let regionsBeforeStep5 = regionsAfterEvents;
     if (newMidTransitCombats.length > 0) {
       combatsBeforeStep5 = [...activeCombats, ...newMidTransitCombats];
       const clearedRegions = { ...regionsBeforeStep5 };
       newMidTransitCombats.forEach(combat => {
-        // Only clear defender divisions if this is the first combat on this region
         const existingCombatsOnRegion = activeCombats.filter(
           c => c.defenderRegionId === combat.defenderRegionId && !c.isComplete
         );
@@ -165,8 +133,7 @@ export const createTickActions = (
     const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements, retreatingDivisionUpdates } = processCombats(combatsBeforeStep5, newDate, regionsBeforeStep5, adjacency, regionCentroids);
     TickPerf.end('[tick] 5-combats');
 
-    // Step 5.5: Apply retreating division HP updates to regions so retreat movements
-    // find the correct post-combat HP when they complete.
+    // Step 5.5: Apply retreating division HP updates
     if (retreatingDivisionUpdates.length > 0) {
       retreatingDivisionUpdates.forEach(({ regionId, division }) => {
         const region = regionsBeforeStep5[regionId];
@@ -208,11 +175,7 @@ export const createTickActions = (
     nextRegions = applyFinishedCombats(finishedCombats, nextRegions, countries, relationshipsAfterEvents);
     TickPerf.end('[tick] 6-apply-movements');
 
-    // Step 6b: Add retreat movements to the moving units list, filtering out:
-    //   - intercepted movements
-    //   - movements whose linked combat just finished (their result is already
-    //     applied by applyFinishedCombats; keeping them would double the divisions)
-    // Also include newHopMovements from multi-step routes.
+    // Step 6b: Merge retreat, intercepted, and new-hop movements
     const finishedCombatIds = new Set(finishedCombats.map(c => c.id));
     let nextMovingUnits = [...remainingMovements, ...retreatMovements, ...newHopMovements].filter(m =>
       !interceptedMovementIds.includes(m.id) &&
@@ -227,7 +190,7 @@ export const createTickActions = (
     // Step 8: AI Tick - process AI actions and deployments for all AI countries
     TickPerf.start('[tick] 8-ai');
     const effectiveAIStates = getEffectiveAIStates(
-      aiStates,
+      discoverNewAIStates(aiStates, nextRegions, selectedCountry?.id),
       selectedCountry?.id,
       state.isPlayerAIEnabled
     );
@@ -266,68 +229,20 @@ export const createTickActions = (
     }
 
     if (effectiveAIStates.length > 0) {
-      // Process each AI country
-      nextAIStates = effectiveAIStates.map(aiState => {
-        const country = countries.find(c => c.id === aiState.countryId);
-        const countryBonuses = state.countryBonuses[aiState.countryId];
-        const trimmedQueue = clampProductionQueueToCommandPower(
-          aiState.countryId,
-          nextProductionQueues[aiState.countryId] || [],
-          nextRegions,
-          nextMovingUnits,
-          countryBonuses,
-          country?.coreRegions
-        );
-
-        if (trimmedQueue !== nextProductionQueues[aiState.countryId]) {
-          nextProductionQueues[aiState.countryId] = trimmedQueue;
-        }
-
-        const aiActions = runAITick(
-          aiState, 
-          nextRegions, 
-          nextArmyGroups, 
-          nextActiveCombats, 
-          nextMovingUnits, 
-          nextProductionQueues[aiState.countryId] || [], 
-          nextProductionQueues,
-          countryBonuses,
-          country?.coreRegions
-        );
-        
-        // If AI created a new army group, add it
-        if (aiActions.newArmyGroup) {
-          nextArmyGroups = [...nextArmyGroups, aiActions.newArmyGroup];
-        }
-        
-        // Handle AI production requests
-        if (aiActions.productionRequests.length > 0) {
-          // Get or initialize the country's queue — always create a new array so
-          // we never mutate a reference that may point back to initialGameState.
-          const countryQueue = [...(nextProductionQueues[aiState.countryId] || [])];
-          const bonuses = state.countryBonuses[aiState.countryId];
-          const productionTimeHours = getBaseProductionTime(bonuses);
-          
-          aiActions.productionRequests.forEach(req => {
-            const completionTime = new Date(newDate.getTime() + productionTimeHours * 60 * 60 * 1000);
-            const newItem = {
-              id: `prod-ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-              divisionName: req.divisionName,
-              owner: aiState.countryId,
-              startTime: newDate,
-              completionTime,
-              targetRegionId: req.targetRegionId,
-              armyGroupId: req.armyGroupId,
-            };
-            countryQueue.push(newItem);
-          });
-          
-          // Update the country's queue
-          nextProductionQueues[aiState.countryId] = countryQueue;
-        }
-        
-        return aiActions.updatedAIState;
-      }).filter(aiState => aiState.countryId !== selectedCountry?.id);
+      const aiResult = processAITick({
+        effectiveAIStates,
+        nextArmyGroups,
+        nextProductionQueues,
+        nextRegions,
+        nextMovingUnits,
+        nextActiveCombats,
+        countryBonuses: state.countryBonuses,
+        newDate,
+        selectedCountryId: selectedCountry?.id,
+      });
+      nextAIStates = aiResult.nextAIStates;
+      nextArmyGroups = aiResult.nextArmyGroups;
+      nextProductionQueues = aiResult.nextProductionQueues;
     }
     TickPerf.end('[tick] 8-ai');
 
@@ -349,29 +264,21 @@ export const createTickActions = (
       regions: nextRegions,
       gameEvents: nextEvents,
       notifications: nextNotifications,
-      aiStates: nextAIStates, // Updated AI states
+      aiStates: nextAIStates,
       armyGroups: nextArmyGroups,
       theaters: nextTheaters,
-      productionQueues: nextProductionQueues, // Update production queues
-      scheduledEvents: updatedScheduledEvents, // Update scheduled events
-      relationships: relationshipsAfterEvents, // Save updated relationships from events
+      productionQueues: nextProductionQueues,
+      scheduledEvents: updatedScheduledEvents,
+      relationships: relationshipsAfterEvents,
     });
     TickPerf.end('[tick] 10-set-state');
 
-    // Now trigger automatic actions for ALL army groups in advance/defend mode (player + AI)
-    // All patches are collected in-memory and merged into a single setState call at the end.
     TickPerf.start('[tick] 11-army-group-actions');
     const armyGroupPatches: Partial<GameStore>[] = [];
-
-    // Snapshot of current state after step 10 — each pure function reads from this
-    // and writes its patch into armyGroupPatches. We thread updated state through
-    // so that later groups see the regions/movingUnits produced by earlier groups.
     let batchState = get();
-
     armyGroupActionsNeeded.forEach(group => {
       const collectPatch = (partial: Partial<GameStore>) => {
         armyGroupPatches.push(partial);
-        // Keep batchState in sync so subsequent groups see already-committed moves
         batchState = { ...batchState, ...partial };
       };
 
@@ -382,14 +289,9 @@ export const createTickActions = (
       }
     });
 
-    // Merge all patches into a single setState call — only commit fields that changed
     if (armyGroupPatches.length > 0) {
-      // Build a merged patch from all keys touched by any individual patch
       const mergedPatch: Partial<GameStore> = {};
-      for (const patch of armyGroupPatches) {
-        Object.assign(mergedPatch, patch);
-      }
-      // The final values for each key live in batchState (threaded through above)
+      for (const patch of armyGroupPatches) { Object.assign(mergedPatch, patch); }
       const finalPatch: Partial<GameStore> = {};
       for (const key of Object.keys(mergedPatch) as (keyof GameStore)[]) {
         (finalPatch as Record<string, unknown>)[key] = batchState[key];

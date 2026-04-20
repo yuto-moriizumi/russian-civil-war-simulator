@@ -138,6 +138,28 @@ describe('tick mid-transit combat handling', () => {
   });
 });
 
+describe('tick AI state for new countries from scheduled events', () => {
+  it('creates an AI state and army group for a country that appears via scheduled events', () => {
+    // 'crimea' appears in regions but has no aiState entry (simulates a scheduled event spawn)
+    const crimeaDivision = makeDiv({ id: 'crimea-1', owner: 'crimea' as never, armyGroupId: 'crimea-ag' });
+    const regions: RegionState = {
+      'UA-43': { id: 'UA-43', name: 'Crimea', countryIso3: 'CRI', owner: 'crimea' as never, divisions: [crimeaDivision] },
+    };
+
+    const state = runSingleTick({
+      selectedCountry: SOVIET_COUNTRY,
+      regions,
+      aiStates: [], // 'crimea' is NOT in aiStates yet
+      armyGroups: [
+        { id: 'crimea-ag', name: 'Crimean Army', owner: 'crimea' as never, regionIds: ['UA-43'], color: '#CE1126', mode: 'none' as const, theaterId: null },
+      ],
+    });
+
+    const crimeaAIState = state.aiStates.find(s => s.countryId === ('crimea' as never));
+    expect(crimeaAIState).toBeDefined();
+  });
+});
+
 describe('tick mission completion', () => {
   it('auto-completes and claims available AI country missions', () => {
     const whiteDivision = makeDiv({ id: 'white-1', owner: 'white', armyGroupId: 'ag-white' });
