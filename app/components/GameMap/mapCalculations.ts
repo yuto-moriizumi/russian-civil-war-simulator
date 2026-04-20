@@ -13,6 +13,7 @@ export interface MovingUnitMarkerData {
   movement: Movement;
   longitude: number;
   latitude: number;
+  offset: [number, number];
 }
 
 export interface CombatMarkerData {
@@ -118,7 +119,7 @@ export function calculateUnitMarkers(
 export function calculateMovingUnitMarkers(
   movingUnits: Movement[],
   regionCentroids: Record<string, [number, number]>,
-  currentDateTime: Date
+  _currentDateTime: Date
 ): (MovingUnitMarkerData | null)[] {
   // Early return if centroids haven't loaded yet
   if (Object.keys(regionCentroids).length === 0) return [];
@@ -128,21 +129,27 @@ export function calculateMovingUnitMarkers(
     const toCentroid = regionCentroids[movement.toRegion];
     if (!fromCentroid || !toCentroid) return null;
 
-    // Calculate current position based on progress
-    const totalTime = movement.arrivalTime.getTime() - movement.departureTime.getTime();
     // Guard against zero/negative totalTime (instant-arrival movements) to avoid NaN from 0/0
+    const totalTime = movement.arrivalTime.getTime() - movement.departureTime.getTime();
     if (totalTime <= 0) return null;
-    const elapsed = currentDateTime.getTime() - movement.departureTime.getTime();
-    const progress = Math.min(1, Math.max(0, elapsed / totalTime));
-    
-    const currentLng = fromCentroid[0] + (toCentroid[0] - fromCentroid[0]) * progress;
-    const currentLat = fromCentroid[1] + (toCentroid[1] - fromCentroid[1]) * progress;
-    
+
+    // Calculate direction unit vector from source to destination in pixel space
+    // Apply cos(lat) correction so the direction is visually accurate
+    const latRad = (fromCentroid[1] * Math.PI) / 180;
+    const dLng = (toCentroid[0] - fromCentroid[0]) * Math.cos(latRad);
+    const dLat = -(toCentroid[1] - fromCentroid[1]); // invert Y for screen space
+    const magnitude = Math.sqrt(dLng * dLng + dLat * dLat);
+    const OFFSET_PX = 20;
+    const offset: [number, number] = magnitude > 0
+      ? [(dLng / magnitude) * OFFSET_PX, (dLat / magnitude) * OFFSET_PX]
+      : [0, 0];
+
     return {
       id: movement.id,
       movement,
-      longitude: currentLng,
-      latitude: currentLat,
+      longitude: fromCentroid[0],
+      latitude: fromCentroid[1],
+      offset,
     };
   }).filter(Boolean);
 }
