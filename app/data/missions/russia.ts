@@ -31,6 +31,23 @@ export const sovietMissions: Mission[] = [
     available: [{ type: 'controlRegion', regionId: 'UA-63' }],
   },
   {
+    id: 'soviet_kuban',
+    country: 'soviet',
+    name: 'クバーニの確保',
+    description: 'クバーニ（RU-KDA）をソビエトまたはその傀儡国の支配下に置け',
+    completed: false,
+    claimed: false,
+    rewards: {
+      liberatePuppet: {
+        country: 'kuban_soviet',
+        spawnRegionId: 'RU-KDA',
+        divisions: 2,
+      },
+    },
+    prerequisites: ['soviet_mobilize'],
+    available: [{ type: 'controlRegionByOrPuppetOf', regionId: 'RU-KDA' }],
+  },
+  {
     id: 'soviet_taurida',
     country: 'soviet',
     name: 'クリミアの確保',
