@@ -12,13 +12,15 @@ import { GameStore } from './types';
  *   proportionally to border regions (own regions adjacent to hostile territory).
  *
  * Phase 2 (Attack): After Phase 1 has positioned units, border regions advance
- *   into adjacent accessible hostile regions. Two cases trigger an advance:
+ *   into adjacent accessible hostile regions. Three cases trigger an advance:
  *   - Surplus: the border holds more divisions than its allocation target.
- *   - Single-enemy auto-advance: the border has exactly one stationary division
- *     AND exactly one adjacent hostile target — the lone division advances even
- *     though surplus = 0 (mirrors frontlineAssignment Phase 2 behaviour).
+ *   - Single-enemy auto-advance: the border has one adjacent hostile target.
+ *     All stationary divisions advance there, even when allocation would
+ *     otherwise keep a garrison behind.
+ *   - Safe-advance: when there are multiple hostile targets, borders with
+ *     multiple divisions can advance all but one division as a garrison.
  *   Borders that already dispatched units in Phase 1 are skipped to avoid
- *   double-moving.
+ *   double-moving, except for the single-enemy auto-advance case.
  */
 export function attackArmyGroup(
   groupId: string,
@@ -232,11 +234,6 @@ export function attackArmyGroup(
   let newEvents = [...gameEvents];
 
   for (const borderRegionId of allBorderRegions) {
-    // Skip borders that already dispatched units in Phase 1 (as destination)
-    if (bordersDispatchedInPhase1.has(borderRegionId)) continue;
-    // Skip borders that had units moved away FROM them in Phase 1
-    if (movedRegions.has(borderRegionId)) continue;
-
     const target = allocationTarget.get(borderRegionId) ?? 0;
 
     // Count stationary group divisions still present at this border after Phase 1
@@ -250,17 +247,25 @@ export function attackArmyGroup(
     );
     if (attackTargets.length === 0) continue;
 
+    const shouldAutoAdvanceSingleEnemy = attackTargets.length === 1 && stationaryDivs.length > 0;
+
+    // Skip Phase 1-touched borders only when the explicit single-enemy advance
+    // rule does not apply. Stationary divisions are filtered above, so this
+    // cannot double-dispatch divisions already committed during Phase 1.
+    if (!shouldAutoAdvanceSingleEnemy && bordersDispatchedInPhase1.has(borderRegionId)) continue;
+    if (!shouldAutoAdvanceSingleEnemy && movedRegions.has(borderRegionId)) continue;
+
     // Determine which divisions advance:
     //   - Surplus case: border holds more than its allocation target → advance the excess.
-    //   - Single-enemy auto-advance: exactly 1 stationary division AND exactly 1 hostile
-    //     adjacent target → the lone division advances even though surplus = 0.
+    //   - Single-enemy auto-advance: exactly 1 hostile adjacent target → all stationary
+    //     divisions advance there, so ATTACK mode never leaves that front idle.
     //   - Safe-advance: border holds more than 1 division → advance all but 1 as garrison,
-    //     because at least 1 remaining division prevents the enemy from occupying the border.
+    //     because at least 1 remaining division prevents enemies on ambiguous fronts
+    //     from occupying the border.
     const surplus = Math.max(0, stationaryDivs.length - target);
-    const isSingleEnemyAutoAdvance = stationaryDivs.length === 1 && attackTargets.length === 1;
     // When no surplus, still advance if we can leave a garrison behind (>1 divisions present).
     const effectiveAdvanceCount = surplus > 0 ? surplus : Math.max(0, stationaryDivs.length - 1);
-    const attackDivisions = isSingleEnemyAutoAdvance
+    const attackDivisions = shouldAutoAdvanceSingleEnemy
       ? stationaryDivs
       : stationaryDivs.slice(stationaryDivs.length - effectiveAdvanceCount);
     if (attackDivisions.length === 0) continue;
