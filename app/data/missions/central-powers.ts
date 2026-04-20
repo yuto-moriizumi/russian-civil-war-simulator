@@ -70,6 +70,23 @@ export const germanMissions: Mission[] = [
     ],
   },
   {
+    id: 'germany_secure_lithuania',
+    country: 'germany',
+    name: 'リトアニアの確保',
+    description: 'リトアニア（LT-VL）をドイツまたはその傀儡国の支配下に置き、リトアニア王国を傀儡として解放せよ',
+    completed: false,
+    claimed: false,
+    rewards: {
+      liberatePuppet: {
+        country: 'lithuania',
+        spawnRegionId: 'LT-VL',
+        divisions: 2,
+      },
+    },
+    prerequisites: ['germany_ober_ost'],
+    available: [{ type: 'controlRegionByOverlord', regionId: 'LT-VL' }],
+  },
+  {
     id: 'germany_baltic',
     country: 'germany',
     name: 'Baltic Dominance',
