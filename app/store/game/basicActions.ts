@@ -12,6 +12,7 @@ import { initialUnitPlacement, initialArmyGroupDefs } from '../../data/map/initi
 import { createDivision } from '../../utils/combat';
 import { getDivisionPrefix } from '../../data/countries';
 import { createDivisionSelectionActions } from './divisionSelectionActions';
+import { COUNTRY_METADATA } from '../../data/countryMetadata';
 
 function applyLiberatePuppet(
   reward: MissionRewards['liberatePuppet'],
@@ -28,6 +29,16 @@ function applyLiberatePuppet(
     { fromCountry: overlordId, toCountry: puppetId, type: 'autonomy' as const },
   ];
   const updatedRegions = { ...regions };
+
+  // Transfer core regions currently owned by the overlord to the puppet
+  const puppetCoreRegions = COUNTRY_METADATA[puppetId as keyof typeof COUNTRY_METADATA]?.coreRegions ?? [];
+  for (const regionId of puppetCoreRegions) {
+    const region = updatedRegions[regionId];
+    if (region && region.owner === overlordId) {
+      updatedRegions[regionId] = { ...region, owner: puppetId };
+    }
+  }
+
   const puppetBonuses = state.countryBonuses[puppetId];
   const spawnRegion = updatedRegions[spawnRegionId];
   if (spawnRegion && puppetBonuses) {
