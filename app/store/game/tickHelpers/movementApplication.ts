@@ -164,9 +164,12 @@ export function applyCompletedMovements(
 
         // Exclude divisions already in transit OUT of the destination (they are counted
         // as defenders via interceptingDivisions below, avoiding double-count).
+        // Exclude divisions that are leaving the destination (truly in transit outward).
+        // Movements with pendingCombatId are attack movements whose divisions are still
+        // physically present in fromRegion, so they remain available as defenders.
         const inTransitFromDest = new Set(
           allMovements
-            .filter(m => m.fromRegion === toRegion && m.owner !== owner && !counterMovements.includes(m))
+            .filter(m => m.fromRegion === toRegion && m.owner !== owner && !counterMovements.includes(m) && !m.pendingCombatId)
             .flatMap(m => m.divisions.map(d => d.id))
         );
 
