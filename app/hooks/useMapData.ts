@@ -9,6 +9,7 @@ export function useMapData() {
   const setMapDataLoaded = useGameStore(state => state.setMapDataLoaded);
   const mapDataLoaded = useGameStore(state => state.mapDataLoaded);
   const initializeCentroids = useGameStore(state => state.initializeCentroids);
+  const detectAndUpdateTheaters = useGameStore(state => state.detectAndUpdateTheaters);
   const persistedRegions = useGameStore(state => state.regions);
 
   useEffect(() => {
@@ -50,6 +51,11 @@ export function useMapData() {
         setBorderMidpoints(midpointsData);
         setMapDataLoaded(true);
 
+        // Re-sync theaters now that adjacency is available. This handles the case
+        // where selectCountry() was called before adjacency finished loading,
+        // leaving non-player AI countries with only a single default army group.
+        detectAndUpdateTheaters();
+
         // Initialize centroids for distance calculations
         await initializeCentroids();
       } catch (error) {
@@ -59,5 +65,5 @@ export function useMapData() {
 
     loadMapData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setRegions, setAdjacency, setBorderMidpoints, setMapDataLoaded, mapDataLoaded, initializeCentroids]);
+  }, [setRegions, setAdjacency, setBorderMidpoints, setMapDataLoaded, mapDataLoaded, initializeCentroids, detectAndUpdateTheaters]);
 }
