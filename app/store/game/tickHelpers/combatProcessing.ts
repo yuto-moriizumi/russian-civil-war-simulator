@@ -84,17 +84,19 @@ export function processCombats(
         const attackerLosses = updatedCombat.initialAttackerCount - updatedCombat.attackerDivisions.length;
         const defenderLosses = updatedCombat.initialDefenderCount - updatedCombat.defenderDivisions.length;
         
-        const combatEvent = createGameEvent(
-          attackerWon ? 'region_captured' : 'combat_defeat',
-          attackerWon ? `${updatedCombat.defenderRegionName} Captured!` : `Battle for ${updatedCombat.defenderRegionName} Lost`,
-          `${updatedCombat.attackerCountry === 'soviet' ? 'Soviet' : 'White'} forces ${attackerWon ? 'captured' : 'failed to capture'} ${updatedCombat.defenderRegionName} from ${updatedCombat.attackerRegionName}. Attackers lost ${attackerLosses} divisions. Defenders lost ${defenderLosses} divisions.`,
-          currentDate,
-          updatedCombat.attackerCountry,
-          updatedCombat.defenderRegionId
-        );
+        if (attackerWon) {
+          const combatEvent = createGameEvent(
+            'region_captured',
+            `${updatedCombat.defenderRegionName} Captured!`,
+            `${updatedCombat.attackerCountry === 'soviet' ? 'Soviet' : 'White'} forces captured ${updatedCombat.defenderRegionName} from ${updatedCombat.attackerRegionName}. Attackers lost ${attackerLosses} divisions. Defenders lost ${defenderLosses} divisions.`,
+            currentDate,
+            updatedCombat.attackerCountry,
+            updatedCombat.defenderRegionId
+          );
 
-        newCombatEvents.push(combatEvent);
-        newCombatNotifications.push(createNotification(combatEvent, currentDate));
+          newCombatEvents.push(combatEvent);
+          newCombatNotifications.push(createNotification(combatEvent, currentDate));
+        }
 
         // Also notify the relevant opposing side
         if (attackerWon) {
