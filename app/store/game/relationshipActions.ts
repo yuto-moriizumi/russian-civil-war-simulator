@@ -1,8 +1,9 @@
-import { CountryId, Relationship, RelationshipType, GameEvent, NotificationItem } from '../../types/game';
+import { CountryId, RelationshipType, GameEvent, NotificationItem } from '../../types/game';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
 import { createGameEvent, createNotification } from '../../utils/eventUtils';
 import { countries } from '../../data/gameData';
+import { applyRelationshipChange, getRelationshipStatus, joinPuppetToOverlordWars } from '../../utils/relationshipUtils';
 
 /**
  * Defines actions related to managing relationships between countries:
@@ -32,41 +33,7 @@ export const createRelationshipActions = (
 
     // Helper to get current status from startRelationships
     const getCurrentStatus = (from: CountryId, to: CountryId): RelationshipType => {
-      const rel = startRelationships.find(r => r.fromCountry === from && r.toCountry === to);
-      return rel ? rel.type : 'neutral';
-    };
-    
-    // Helper to apply a single relationship change to a list
-    const applyRelationshipChange = (
-      rels: Relationship[], 
-      from: CountryId, 
-      to: CountryId, 
-      newType: RelationshipType
-    ): Relationship[] => {
-      if (from === to) return rels;
-
-      const existingIndex = rels.findIndex(
-        r => r.fromCountry === from && r.toCountry === to
-      );
-      
-      if (newType === 'neutral') {
-        if (existingIndex !== -1) {
-          return [
-            ...rels.slice(0, existingIndex),
-            ...rels.slice(existingIndex + 1)
-          ];
-        }
-        return rels;
-      } else {
-        const newRel: Relationship = { fromCountry: from, toCountry: to, type: newType };
-        if (existingIndex !== -1) {
-          const updated = [...rels];
-          updated[existingIndex] = newRel;
-          return updated;
-        } else {
-          return [...rels, newRel];
-        }
-      }
+      return getRelationshipStatus(startRelationships, from, to);
     };
 
     // Check for autonomy relationships - cannot declare war on each other
@@ -121,27 +88,22 @@ export const createRelationshipActions = (
 
     // When autonomy is newly established, puppet joins master's existing wars
     if (type === 'autonomy' && getCurrentStatus(fromCountry, toCountry) !== 'autonomy') {
-      const masterWars = startRelationships.filter(
-        r => r.fromCountry === fromCountry && r.type === 'war'
-      );
-      masterWars.forEach(war => {
-        const enemyId = war.toCountry;
-        if (getCurrentStatus(toCountry, enemyId) !== 'war') {
-          const puppetName = getCountryName(toCountry);
-          const masterName = getCountryName(fromCountry);
-          const enemyName = getCountryName(enemyId);
-          const event = createGameEvent(
-            'war_declared',
-            `${puppetName} joins war against ${enemyName}`,
-            `${puppetName} joins their new Master (${masterName}) in war against ${enemyName}!`,
-            dateTime,
-            toCountry
-          );
-          newEvents.push(event);
-          newNotifications.push(createNotification(event, dateTime));
-          nextRelationships = applyRelationshipChange(nextRelationships, toCountry, enemyId, 'war');
-          nextRelationships = applyRelationshipChange(nextRelationships, enemyId, toCountry, 'war');
-        }
+      const joinResult = joinPuppetToOverlordWars(nextRelationships, fromCountry, toCountry);
+      nextRelationships = joinResult.updatedRelationships;
+
+      joinResult.joinedEnemies.forEach(enemyId => {
+        const puppetName = getCountryName(toCountry);
+        const masterName = getCountryName(fromCountry);
+        const enemyName = getCountryName(enemyId);
+        const event = createGameEvent(
+          'war_declared',
+          `${puppetName} joins war against ${enemyName}`,
+          `${puppetName} joins their new Master (${masterName}) in war against ${enemyName}!`,
+          dateTime,
+          toCountry
+        );
+        newEvents.push(event);
+        newNotifications.push(createNotification(event, dateTime));
       });
     }
 

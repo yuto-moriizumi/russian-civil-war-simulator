@@ -14,6 +14,7 @@ import { getCountryName, getDivisionPrefix } from '../../data/countries';
 import { COUNTRY_METADATA } from '../../data/countryMetadata';
 import { calculateCountryBonuses, getDivisionStats } from '../../utils/bonusCalculator';
 import { createGameEvent } from '../../utils/eventUtils';
+import { applyRelationshipChange, getRelationshipStatus, joinPuppetToOverlordWars } from '../../utils/relationshipUtils';
 import type { GameStore } from './types';
 
 export function buildMissionRewardDescription(rewards: MissionRewards): string {
@@ -33,38 +34,6 @@ export function buildMissionRewardDescription(rewards: MissionRewards): string {
     rewardParts.push(`Declare war on ${getCountryName(rewards.declareWar.target)}`);
   }
   return rewardParts.length > 0 ? rewardParts.join(', ') : 'No bonuses';
-}
-
-function getRelationshipStatus(
-  relationships: Relationship[],
-  fromCountry: CountryId,
-  toCountry: CountryId,
-): Relationship['type'] | 'neutral' {
-  return relationships.find(
-    r => r.fromCountry === fromCountry && r.toCountry === toCountry
-  )?.type ?? 'neutral';
-}
-
-function applyRelationshipChange(
-  relationships: Relationship[],
-  fromCountry: CountryId,
-  toCountry: CountryId,
-  type: Relationship['type'],
-): Relationship[] {
-  if (fromCountry === toCountry) return relationships;
-
-  const existingIndex = relationships.findIndex(
-    r => r.fromCountry === fromCountry && r.toCountry === toCountry
-  );
-  const relationship: Relationship = { fromCountry, toCountry, type };
-
-  if (existingIndex === -1) {
-    return [...relationships, relationship];
-  }
-
-  const updatedRelationships = [...relationships];
-  updatedRelationships[existingIndex] = relationship;
-  return updatedRelationships;
 }
 
 function applyDeclareWarReward(
@@ -174,25 +143,11 @@ export function applyLiberatePuppet(
     ...state.relationships.filter(r => !(r.fromCountry === overlordId && r.toCountry === puppetId)),
     { fromCountry: overlordId, toCountry: puppetId, type: 'autonomy' as const },
   ];
-
-  // Auto-join overlord's existing wars.
-  const overlordWars = state.relationships.filter(
-    r => r.fromCountry === overlordId && r.type === 'war'
-  );
-  for (const war of overlordWars) {
-    const enemy = war.toCountry;
-    if (enemy === puppetId) continue;
-    const alreadyAtWar = updatedRelationships.some(
-      r => r.fromCountry === puppetId && r.toCountry === enemy && r.type === 'war'
-    );
-    if (!alreadyAtWar) {
-      updatedRelationships = [
-        ...updatedRelationships,
-        { fromCountry: puppetId, toCountry: enemy, type: 'war' as const },
-        { fromCountry: enemy, toCountry: puppetId, type: 'war' as const },
-      ];
-    }
-  }
+  updatedRelationships = joinPuppetToOverlordWars(
+    updatedRelationships,
+    overlordId,
+    puppetId
+  ).updatedRelationships;
 
   const updatedRegions = { ...regions };
 
