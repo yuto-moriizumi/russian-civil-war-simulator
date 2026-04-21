@@ -258,7 +258,7 @@ export function applyCompletedMovements(
           if (effectiveDefenderDivisions.length === 0) {
             // Undefended capture
             const previousOwner = dest.owner;
-            const newOwner = determineNewOwner(owner, toRegion, context.countries ?? [], context.relationships);
+            const newOwner = determineNewOwner(owner, toRegion, context.countries ?? [], context.relationships, dest.owner);
             nextRegions[toRegion] = {
               ...dest,
               owner: newOwner,
@@ -394,7 +394,7 @@ export function applyFinishedCombats(
       const preservedDivisions = defenderRegion.divisions.filter(d =>
         d.owner !== combat.defenderCountry && !attackerDivisionIds.has(d.id)
       );
-      const newOwner = determineNewOwner(combat.attackerCountry, combat.defenderRegionId, countries, relationships);
+      const newOwner = determineNewOwner(combat.attackerCountry, combat.defenderRegionId, countries, relationships, combat.defenderCountry);
       nextRegions[combat.defenderRegionId] = {
         ...defenderRegion,
         owner: newOwner,
