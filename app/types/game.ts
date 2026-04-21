@@ -136,6 +136,7 @@ export type GameEventType =
   | 'region_lost'
   | 'unit_created'
   | 'unit_deployed'
+  | 'division_destroyed'
   | 'production_started'
   | 'production_completed'
   | 'mission_completed'
