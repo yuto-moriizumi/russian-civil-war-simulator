@@ -169,7 +169,14 @@ export interface Relationship {
 
 // Scheduled events that trigger on specific dates
 export interface ScheduledEventAction {
-  type: 'transferRegion' | 'transferRegionIfOwnedByOrPuppetOf' | 'declareWar' | 'spawnDivision' | 'setRelationship';
+  type:
+    | 'transferRegion'
+    | 'transferRegionIfOwnedByOrPuppetOf'
+    | 'declareWar'
+    | 'spawnDivision'
+    | 'setRelationship'
+    | 'removeRelationship'
+    | 'endWarWithCountryAndPuppets';
   // For transferRegion / transferRegionIfOwnedByOrPuppetOf
   regionId?: string;
   newOwner?: CountryId;
@@ -180,6 +187,9 @@ export interface ScheduledEventAction {
   toCountry?: CountryId;
   // For setRelationship
   relationshipType?: RelationshipType;
+  // For endWarWithCountryAndPuppets
+  masterCountry?: CountryId;
+  enemyCountry?: CountryId;
   // For spawnDivision
   owner?: CountryId;
   armyGroupName?: string;

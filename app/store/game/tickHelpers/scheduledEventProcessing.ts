@@ -79,6 +79,19 @@ export function processScheduledEvents(
           toCountry: action.toCountry!,
           type: action.relationshipType,
         });
+      } else if (action.type === 'removeRelationship' && action.fromCountry && action.toCountry) {
+        updatedRelationships = removeRelationship(
+          updatedRelationships,
+          action.fromCountry,
+          action.toCountry,
+          action.relationshipType
+        );
+      } else if (action.type === 'endWarWithCountryAndPuppets' && action.masterCountry && action.enemyCountry) {
+        updatedRelationships = endWarWithCountryAndPuppets(
+          updatedRelationships,
+          action.masterCountry,
+          action.enemyCountry
+        );
       } else if (action.type === 'spawnDivision' && action.owner && action.regionId) {
         const groupName = action.armyGroupName ?? `${action.owner} Army`;
         let armyGroup = updatedArmyGroups.find(g => g.owner === action.owner && g.name === groupName);
@@ -192,6 +205,52 @@ function applyWarDeclaration(
   });
   
   return updatedRelationships;
+}
+
+function removeRelationship(
+  relationships: Relationship[],
+  fromCountry: CountryId,
+  toCountry: CountryId,
+  relationshipType?: Relationship['type']
+): Relationship[] {
+  return relationships.filter(r => !(
+    r.fromCountry === fromCountry &&
+    r.toCountry === toCountry &&
+    (!relationshipType || r.type === relationshipType)
+  ));
+}
+
+function endWarWithCountryAndPuppets(
+  relationships: Relationship[],
+  masterCountry: CountryId,
+  enemyCountry: CountryId
+): Relationship[] {
+  const belligerents = getCountryAndPuppets(masterCountry, relationships);
+
+  return relationships.filter(r => !(
+    r.type === 'war' &&
+    (
+      (belligerents.has(r.fromCountry) && r.toCountry === enemyCountry) ||
+      (r.fromCountry === enemyCountry && belligerents.has(r.toCountry))
+    )
+  ));
+}
+
+function getCountryAndPuppets(masterCountry: CountryId, relationships: Relationship[]): Set<CountryId> {
+  const countries = new Set<CountryId>([masterCountry]);
+  const queue: CountryId[] = [masterCountry];
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    relationships
+      .filter(r => r.fromCountry === current && r.type === 'autonomy' && !countries.has(r.toCountry))
+      .forEach(r => {
+        countries.add(r.toCountry);
+        queue.push(r.toCountry);
+      });
+  }
+
+  return countries;
 }
 
 /**
