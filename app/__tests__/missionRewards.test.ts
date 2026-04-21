@@ -156,6 +156,26 @@ describe('Soviet Don Army subjugation mission', () => {
   });
 });
 
+describe('Soviet Dagestan mission', () => {
+  it('unlocks after subjugating the Don Army', () => {
+    const mission = sovietMissions.find(m => m.id === 'soviet_dagestan');
+
+    expect(mission).toMatchObject({
+      country: 'soviet',
+      name: 'ダゲスタンの確保',
+      prerequisites: ['soviet_subjugate_don_army'],
+      rewards: {
+        liberatePuppet: {
+          country: 'terek',
+          spawnRegionId: 'RU-DA',
+          divisions: 2,
+        },
+      },
+      available: [{ type: 'controlRegionByOverlord', regionId: 'RU-DA' }],
+    });
+  });
+});
+
 describe('mission declare war rewards', () => {
   it('declares a mutual war and emits a war event when claimed', () => {
     const mission: Mission = {
