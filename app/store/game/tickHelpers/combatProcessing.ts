@@ -1,4 +1,4 @@
-import { ActiveCombat, GameEvent, NotificationItem, RegionState, Adjacency, Movement } from '../../../types/game';
+import { ActiveCombat, Division, GameEvent, NotificationItem, RegionState, Adjacency, Movement } from '../../../types/game';
 import { processCombatRound, shouldProcessCombatRound } from '../../../utils/combat';
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 import { calculateDistance, calculateTravelTime } from '../../../utils/distance';
@@ -12,6 +12,35 @@ interface CombatProcessingResult {
   /** Divisions that have retreated with their post-combat HP, keyed by fromRegion.
    *  tickActions applies these to regions so retreat movements find correct HP. */
   retreatingDivisionUpdates: { regionId: string; division: import('../../../types/game').Division }[];
+}
+
+function getDivisionDestructionLocation(combat: ActiveCombat, fromRegionId: string): string {
+  return fromRegionId === combat.attackerRegionId
+    ? `the border of ${combat.defenderRegionName}`
+    : combat.defenderRegionName;
+}
+
+function createDivisionDestroyedEvent(
+  division: Division,
+  combat: ActiveCombat,
+  fromRegionId: string,
+  currentDate: Date
+): GameEvent {
+  const location = getDivisionDestructionLocation(combat, fromRegionId);
+  const reason = 'reduced to 0 HP in combat and no friendly retreat destination was available';
+
+  console.log(
+    `[DIVISION DESTROYED] ${division.name} (${division.owner}) disappeared at ${location}; reason: ${reason}`
+  );
+
+  return createGameEvent(
+    'division_destroyed',
+    `${division.name} Destroyed`,
+    `${division.name} (${division.owner}) disappeared at ${location}. Reason: ${reason}.`,
+    currentDate,
+    division.owner,
+    fromRegionId
+  );
 }
 
 /**
@@ -74,7 +103,9 @@ export function processCombats(
 
           retreatMovements.push(retreatMovement);
         }
-        // If toRegionId is null, division is destroyed
+        if (toRegionId === null) {
+          newCombatEvents.push(createDivisionDestroyedEvent(division, updatedCombat, fromRegionId, currentDate));
+        }
       });
 
       if (updatedCombat.isComplete) {

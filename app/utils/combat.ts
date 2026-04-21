@@ -278,8 +278,6 @@ export function processCombatRound(
       retreatingDivisions.push({ division: result.division, toRegionId: retreatTarget, fromRegionId: combat.attackerRegionId });
       if (retreatTarget) {
         console.log(`[RETREAT] ${result.division.name} (${result.division.owner}) retreating from border at ${combat.defenderRegionName} to ${regions[retreatTarget]?.name ?? retreatTarget}`);
-      } else {
-        console.log(`[DESTROYED] ${result.division.name} (${result.division.owner}) destroyed at border of ${combat.defenderRegionName} (no retreat available)`);
       }
     }
   });
@@ -296,8 +294,6 @@ export function processCombatRound(
       retreatingDivisions.push({ division: result.division, toRegionId: retreatTarget, fromRegionId: combat.defenderRegionId });
       if (retreatTarget) {
         console.log(`[RETREAT] ${result.division.name} (${result.division.owner}) retreating from ${combat.defenderRegionName} to ${regions[retreatTarget]?.name ?? retreatTarget}`);
-      } else {
-        console.log(`[DESTROYED] ${result.division.name} (${result.division.owner}) destroyed in ${combat.defenderRegionName} (no retreat available)`);
       }
     }
   });

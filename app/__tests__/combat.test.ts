@@ -249,3 +249,70 @@ describe('processCombats – attacker defeat notifications', () => {
     expect(result.newCombatEvents.some(event => event.type === 'combat_victory')).toBe(false);
   });
 });
+
+describe('processCombats – division destruction logs', () => {
+  it('emits a division_destroyed event with the reason when a division has no retreat destination', () => {
+    const attackers = [makeDiv('a1', 'soviet', 1, 1, 1)];
+    const defenders = [makeDiv('d1', 'white', 100, 50, 50)];
+    const combat = makeCombat(attackers, defenders, 'TULA');
+    const noRetreatRegions: RegionState = {
+      TULA: { id: 'TULA', name: 'Tula Oblast', countryIso3: 'RUS', owner: 'white', divisions: [] },
+      SOVIET_REAR: { id: 'SOVIET_REAR', name: 'Soviet Rear', countryIso3: 'RUS', owner: 'white', divisions: [] },
+    };
+    const noRetreatAdjacency: Adjacency = {
+      TULA: ['SOVIET_REAR'],
+      SOVIET_REAR: ['TULA'],
+    };
+
+    const result = processCombats(
+      [combat],
+      new Date('1918-01-01T02:00:00Z'),
+      noRetreatRegions,
+      noRetreatAdjacency,
+      {
+        TULA: [37.6173, 54.2048],
+        SOVIET_REAR: [37.0, 54.0],
+      }
+    );
+
+    const destroyedEvents = result.newCombatEvents.filter(event => event.type === 'division_destroyed');
+
+    expect(destroyedEvents).toHaveLength(1);
+    expect(destroyedEvents[0].title).toBe('a1 Destroyed');
+    expect(destroyedEvents[0].country).toBe('soviet');
+    expect(destroyedEvents[0].description).toContain('reduced to 0 HP in combat');
+    expect(destroyedEvents[0].description).toContain('no friendly retreat destination was available');
+  });
+
+  it('does not log restored winner-side divisions as destroyed', () => {
+    const attackers = [makeDiv('a1', 'soviet', 1, 10, 10)];
+    const defenders = [makeDiv('d1', 'white', 1, 10, 10)];
+    const combat = makeCombat(attackers, defenders, 'TULA');
+    const restoredDefenderRegions: RegionState = {
+      TULA: { id: 'TULA', name: 'Tula Oblast', countryIso3: 'RUS', owner: 'white', divisions: [] },
+      SOVIET_REAR: { id: 'SOVIET_REAR', name: 'Soviet Rear', countryIso3: 'RUS', owner: 'soviet', divisions: [] },
+    };
+    const restoredDefenderAdjacency: Adjacency = {
+      TULA: ['SOVIET_REAR'],
+      SOVIET_REAR: ['TULA'],
+    };
+
+    const result = processCombats(
+      [combat],
+      new Date('1918-01-01T02:00:00Z'),
+      restoredDefenderRegions,
+      restoredDefenderAdjacency,
+      {
+        TULA: [37.6173, 54.2048],
+        SOVIET_REAR: [37.0, 54.0],
+      }
+    );
+
+    const destroyedEvents = result.newCombatEvents.filter(event => event.type === 'division_destroyed');
+
+    expect(destroyedEvents).toHaveLength(0);
+    expect(result.finishedCombats[0].victor).toBe('white');
+    expect(result.finishedCombats[0].defenderDivisions).toHaveLength(1);
+    expect(result.finishedCombats[0].defenderDivisions[0].hp).toBe(1);
+  });
+});
