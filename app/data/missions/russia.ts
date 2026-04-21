@@ -50,8 +50,8 @@ export const sovietMissions: Mission[] = [
   {
     id: 'soviet_secure_voronezh',
     country: 'soviet',
-    name: 'ヴォロネジの確保',
-    description: 'ヴォロネジ（RU-VOR）をソビエトまたはその傀儡国の支配下に置け',
+    name: 'ドン軍制圧の準備',
+    description: 'ヴォロネジ（RU-VOR）とUA-09をソビエトまたはその傀儡国の支配下に置け',
     completed: false,
     claimed: false,
     rewards: {
@@ -60,7 +60,10 @@ export const sovietMissions: Mission[] = [
       },
     },
     prerequisites: ['soviet_mobilize'],
-    available: [{ type: 'controlRegionByOverlord', regionId: 'RU-VOR' }],
+    available: [
+      { type: 'controlRegionByOverlord', regionId: 'RU-VOR' },
+      { type: 'controlRegionByOverlord', regionId: 'UA-09' },
+    ],
   },
   {
     id: 'soviet_subjugate_don_army',
