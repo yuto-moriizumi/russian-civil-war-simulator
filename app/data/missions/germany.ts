@@ -104,6 +104,23 @@ export const germanMissions: Mission[] = [
     available: [{ type: 'controlRegionByOverlord', regionId: 'BY-HM' }],
   },
   {
+    id: 'germany_secure_haryu',
+    country: 'germany',
+    name: 'ハリュの確保',
+    description: 'ハリュ（EE-37）をドイツまたはその傀儡国の支配下に置き、バルト連合公国を傀儡として解放せよ',
+    completed: false,
+    claimed: false,
+    rewards: {
+      liberatePuppet: {
+        country: 'balticdutchy',
+        spawnRegionId: 'EE-37',
+        divisions: 2,
+      },
+    },
+    prerequisites: ['germany_secure_lithuania'],
+    available: [{ type: 'controlRegionByOverlord', regionId: 'EE-37' }],
+  },
+  {
     id: 'germany_baltic',
     country: 'germany',
     name: 'Baltic Dominance',
