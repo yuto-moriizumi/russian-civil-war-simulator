@@ -86,19 +86,28 @@ export const createArmyGroupActions = (
         let bestMatchTheaterId: string | null = null;
         let bestMatchTheaterName = '';
         let bestMatchScore = 0;
-        
+
         newTheaters.forEach(newTheater => {
-          const intersection = oldTheater.frontlineRegions.filter(r => 
+          const intersection = oldTheater.frontlineRegions.filter(r =>
             newTheater.frontlineRegions.includes(r)
           ).length;
-          
+
           if (intersection > bestMatchScore) {
             bestMatchScore = intersection;
             bestMatchTheaterId = newTheater.id;
             bestMatchTheaterName = newTheater.name;
           }
         });
-        
+
+        // Fallback: if no frontline overlap, match by same enemy country (frontline shifted forward)
+        if (bestMatchTheaterId === null && oldTheater.enemyCountry) {
+          const sameEnemyTheater = newTheaters.find(t => t.enemyCountry === oldTheater.enemyCountry);
+          if (sameEnemyTheater) {
+            bestMatchTheaterId = sameEnemyTheater.id;
+            bestMatchTheaterName = sameEnemyTheater.name;
+          }
+        }
+
         // Reassign army groups to the best matching theater
         if (bestMatchTheaterId !== null) {
           console.log(`[THEATER MERGE] Reassigning ${affectedGroups.length} army groups from ${oldTheaterId} to ${bestMatchTheaterId} (${bestMatchTheaterName})`);
