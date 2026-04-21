@@ -38,6 +38,52 @@ describe('scheduled events', () => {
     expect(result.updatedScheduledEvents[0].triggered).toBe(true);
   });
 
+  it('makes Kuban join the White Army wars when the Kuban People\'s Republic is established', () => {
+    const event = scheduledEvents.find(
+      scheduledEvent => scheduledEvent.id === 'kuban-peoples-republic-established'
+    );
+    const regions: RegionState = {
+      'RU-KDA': {
+        id: 'RU-KDA',
+        name: 'Krasnodar Krai',
+        countryIso3: 'RUS',
+        owner: 'white',
+        divisions: [],
+      },
+      'RU-AD': {
+        id: 'RU-AD',
+        name: 'Adygea',
+        countryIso3: 'RUS',
+        owner: 'white',
+        divisions: [],
+      },
+    };
+    const relationships: Relationship[] = [
+      { fromCountry: 'white', toCountry: 'soviet', type: 'war' },
+      { fromCountry: 'soviet', toCountry: 'white', type: 'war' },
+    ];
+
+    expect(event).toBeDefined();
+    expect(event?.date).toBe('1918-01-28');
+
+    const result = processScheduledEvents(
+      [event!],
+      new Date(1918, 0, 28),
+      regions,
+      relationships,
+      []
+    );
+
+    expect(result.updatedRegions['RU-KDA'].owner).toBe('kuban');
+    expect(result.updatedRegions['RU-AD'].owner).toBe('kuban');
+    expect(result.updatedRelationships).toEqual(expect.arrayContaining([
+      { fromCountry: 'white', toCountry: 'kuban', type: 'autonomy' },
+      { fromCountry: 'kuban', toCountry: 'soviet', type: 'war' },
+      { fromCountry: 'soviet', toCountry: 'kuban', type: 'war' },
+    ]));
+    expect(result.updatedScheduledEvents[0].triggered).toBe(true);
+  });
+
   it('ends Moldavia puppet relationship with the White Army on February 6, 1918', () => {
     const event = scheduledEvents.find(
       scheduledEvent => scheduledEvent.id === 'moldavian-independence'

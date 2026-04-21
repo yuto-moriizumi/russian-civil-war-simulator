@@ -75,4 +75,43 @@ describe('liberated puppets - AI readiness', () => {
     expect(kharkiv.divisions).toHaveLength(3);
     expect(kharkiv.divisions.every(division => division.armyGroupId === puppetGroup!.id)).toBe(true);
   });
+
+  it('joins the overlord wars when a puppet is liberated while the overlord is defending', () => {
+    const state = {
+      ...initialGameState,
+      selectedCountry: sovietCountry,
+      relationships: [
+        { fromCountry: 'white' as CountryId, toCountry: 'soviet' as CountryId, type: 'war' as const },
+      ],
+      armyGroups: [],
+      aiStates: [],
+    } as unknown as GameStore;
+
+    const regions: RegionState = {
+      'UA-63': {
+        id: 'UA-63',
+        name: 'Kharkiv',
+        countryIso3: 'UKR',
+        owner: 'soviet',
+        divisions: [],
+      },
+    };
+
+    const result = applyLiberatePuppet(
+      {
+        country: 'ukrainesoviet',
+        spawnRegionId: 'UA-63',
+        divisions: 1,
+      },
+      'soviet',
+      state,
+      regions
+    );
+
+    expect(result.updatedRelationships).toEqual(expect.arrayContaining([
+      { fromCountry: 'soviet', toCountry: 'ukrainesoviet', type: 'autonomy' },
+      { fromCountry: 'ukrainesoviet', toCountry: 'white', type: 'war' },
+      { fromCountry: 'white', toCountry: 'ukrainesoviet', type: 'war' },
+    ]));
+  });
 });

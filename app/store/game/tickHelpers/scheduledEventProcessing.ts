@@ -1,6 +1,7 @@
 import { Region, GameEvent, NotificationItem, CountryId, Relationship, ScheduledEvent, ScheduledEventAction, ScheduledEventCondition, ArmyGroup, Division } from '../../../types/game';
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 import { BASE_DIVISION_STATS } from '../../../utils/bonusCalculator';
+import { applyRelationshipChange, joinPuppetToOverlordWars } from '../../../utils/relationshipUtils';
 
 /**
  * Process scheduled events that should trigger on the current date
@@ -71,14 +72,19 @@ export function processScheduledEvents(
           action.toCountry
         );
       } else if (action.type === 'setRelationship' && action.fromCountry && action.toCountry && action.relationshipType) {
-        updatedRelationships = updatedRelationships.filter(
-          r => !(r.fromCountry === action.fromCountry && r.toCountry === action.toCountry)
+        updatedRelationships = applyRelationshipChange(
+          updatedRelationships,
+          action.fromCountry,
+          action.toCountry,
+          action.relationshipType
         );
-        updatedRelationships.push({
-          fromCountry: action.fromCountry,
-          toCountry: action.toCountry!,
-          type: action.relationshipType,
-        });
+        if (action.relationshipType === 'autonomy') {
+          updatedRelationships = joinPuppetToOverlordWars(
+            updatedRelationships,
+            action.fromCountry,
+            action.toCountry
+          ).updatedRelationships;
+        }
       } else if (action.type === 'removeRelationship' && action.fromCountry && action.toCountry) {
         updatedRelationships = removeRelationship(
           updatedRelationships,
