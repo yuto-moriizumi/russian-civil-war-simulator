@@ -42,7 +42,7 @@ export default function SidebarPanel({
   const sideClasses = side === 'left' ? 'left-0 rounded-r-lg border-l-0' : 'right-0 rounded-l-lg border-r-0';
 
   return (
-    <div className={`absolute top-20 ${sideClasses} bg-stone-800 border border-stone-700 p-4 shadow-xl ${width} w-full max-h-[calc(100vh-120px)] flex flex-col z-20`}>
+    <div className={`absolute top-20 ${sideClasses} bg-stone-800 border border-stone-700 p-4 shadow-xl ${width} w-full max-h-[calc(100vh-120px)] flex flex-col z-30`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4 shrink-0">
         <div>
