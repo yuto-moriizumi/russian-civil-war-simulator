@@ -13,7 +13,7 @@ export function validateDivisionArmyGroup(
     console.error(`Division ${division.id} (${division.name}) has no army group assigned`);
     return { division, isValid: false, wasFixed: false };
   }
-  
+
   const armyGroup = armyGroups.find(g => g.id === division.armyGroupId);
   if (!armyGroup) {
     console.warn(`Division ${division.id} (${division.name}) is assigned to non-existent army group ${division.armyGroupId}`);
@@ -25,12 +25,12 @@ export function validateDivisionArmyGroup(
     console.error(`Cannot auto-fix: No army group found for country ${division.owner}`);
     return { division, isValid: false, wasFixed: false };
   }
-  
+
   if (armyGroup.owner !== division.owner) {
     console.error(`Division ${division.id} (${division.name}) owner (${division.owner}) does not match army group ${armyGroup.id} owner (${armyGroup.owner})`);
     return { division, isValid: false, wasFixed: false };
   }
-  
+
   return { division, isValid: true, wasFixed: false };
 }
 
@@ -67,7 +67,7 @@ export function calculateDamage(attacker: Division, defender: Division): number 
 /**
  * Result of applying damage to a division
  */
-export type DamageResult = 
+export type DamageResult =
   | { type: 'survived'; division: Division }
   | { type: 'retreating'; division: Division };
 
@@ -85,46 +85,46 @@ export function resolveCombat(
 ): CombatResult {
   let attackerDivisions = attackers.map(d => ({ ...d }));
   let defenderDivisions = defenders.map(d => ({ ...d }));
-  
+
   const initialAttackerCount = attackerDivisions.length;
   const initialDefenderCount = defenderDivisions.length;
-  
+
   const maxRounds = 10;
-  
+
   for (let round = 0; round < maxRounds; round++) {
     if (attackerDivisions.length === 0 || defenderDivisions.length === 0) {
       break;
     }
-    
+
     const attackerTotalDamage = attackerDivisions.reduce((sum, attacker) => {
       const targetIndex = Math.floor(Math.random() * defenderDivisions.length);
       const target = defenderDivisions[targetIndex];
       return sum + calculateDamage(attacker, target);
     }, 0);
-    
+
     const defenderTotalDamage = defenderDivisions.reduce((sum, defender) => {
       const targetIndex = Math.floor(Math.random() * attackerDivisions.length);
       const target = attackerDivisions[targetIndex];
       return sum + calculateDamage(defender, target);
     }, 0);
-    
+
     const damagePerAttacker = Math.ceil(defenderTotalDamage / attackerDivisions.length);
     const attackerResults = attackerDivisions.map(div => applyDamage(div, damagePerAttacker));
     attackerDivisions = attackerResults
       .filter(result => result.type === 'survived')
       .map(result => result.division);
-    
+
     const damagePerDefender = Math.ceil(attackerTotalDamage / defenderDivisions.length);
     const defenderResults = defenderDivisions.map(div => applyDamage(div, damagePerDefender));
     defenderDivisions = defenderResults
       .filter(result => result.type === 'survived')
       .map(result => result.division);
   }
-  
+
   const attackerCasualties = initialAttackerCount - attackerDivisions.length;
   const defenderCasualties = initialDefenderCount - defenderDivisions.length;
   const regionCaptured = defenderDivisions.length === 0 && attackerDivisions.length > 0;
-  
+
   return {
     attackerDivisions,
     defenderDivisions,
@@ -185,7 +185,7 @@ export function createActiveCombat(
     currentRound: 0,
     startTime: new Date(currentTime),
     lastRoundTime: new Date(currentTime),
-    roundIntervalHours: 1, // One combat round per game hour
+    roundIntervalHours: 1,
     isComplete: false,
     victor: null,
   };
@@ -209,20 +209,16 @@ export function processCombatRound(
     return { combat, retreatingDivisions: [] };
   }
 
-  // Validity check: if the defender region's owner has changed (another combat
-  // on the same region resolved first), auto-cancel this combat.
   const defenderRegion = regions[combat.defenderRegionId];
   if (defenderRegion && defenderRegion.owner !== combat.defenderCountry) {
     const newOwnerIsAttacker = defenderRegion.owner === combat.attackerCountry;
     if (newOwnerIsAttacker) {
-      // Attacker already owns the region from another combat — cancel this combat
       console.log('[COMBAT CANCELLED]', { combatId: combat.id, reason: 'defender region already captured by attacker' });
       return {
         combat: { ...combat, isComplete: true, victor: combat.attackerCountry },
         retreatingDivisions: [],
       };
     } else {
-      // A third party now owns the region — attacker retreats
       console.log('[COMBAT CANCELLED]', { combatId: combat.id, reason: 'defender region captured by third party' });
       return {
         combat: { ...combat, isComplete: true, victor: combat.defenderCountry },
@@ -305,7 +301,6 @@ export function processCombatRound(
       ? combat.attackerCountry
       : combat.defenderCountry;
 
-    // Restore winner's HP=0 divisions to HP=1 so they stay in the victorious region.
     const winnerCountry = victor;
     const winnerRetreatingIndices: number[] = [];
     retreatingDivisions.forEach((r, i) => {
@@ -339,7 +334,7 @@ export function processCombatRound(
   };
 }
 
-function findRetreatDestination(
+export function findRetreatDestination(
   combatRegionId: string,
   divisionOwner: CountryId,
   regions: RegionState,
@@ -347,14 +342,11 @@ function findRetreatDestination(
   isAttacker: boolean,
   attackerRegionId: string
 ): string | null {
-  // For attacker divisions: retreat to attackerRegionId (their origin)
   if (isAttacker) {
     const originRegion = regions[attackerRegionId];
-    // Only retreat to origin if it's still friendly
     if (originRegion && originRegion.owner === divisionOwner) {
       return attackerRegionId;
     }
-    // Origin was captured — find any other friendly adjacent region of the origin
     const adjacentRegionIds = adjacency[attackerRegionId] || [];
     const friendlyNeighbors = adjacentRegionIds.filter(regionId => {
       const region = regions[regionId];
@@ -366,17 +358,15 @@ function findRetreatDestination(
     return null;
   }
 
-  // For defender divisions: find adjacent friendly region (excluding attackerRegionId)
   const adjacentRegionIds = adjacency[combatRegionId] || [];
   const friendlyNeighbors = adjacentRegionIds.filter(regionId => {
-    if (regionId === attackerRegionId) return false; // Don't retreat toward the attacker
+    if (regionId === attackerRegionId) return false;
     const region = regions[regionId];
     return region && region.owner === divisionOwner;
   });
   if (friendlyNeighbors.length > 0) {
     return friendlyNeighbors[Math.floor(Math.random() * friendlyNeighbors.length)];
   }
-  // If no friendly neighbor excluding attacker origin, allow retreating there as last resort
   const allFriendly = adjacentRegionIds.filter(regionId => {
     const region = regions[regionId];
     return region && region.owner === divisionOwner;
@@ -390,3 +380,5 @@ export function shouldProcessCombatRound(combat: ActiveCombat, currentTime: Date
   const hoursSinceLastRound = (currentTime.getTime() - combat.lastRoundTime.getTime()) / (1000 * 60 * 60);
   return hoursSinceLastRound >= combat.roundIntervalHours;
 }
+
+export { processCombatRounds } from './sharedDefenseProcessing';
