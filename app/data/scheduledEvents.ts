@@ -84,6 +84,26 @@ export const scheduledEvents: ScheduledEvent[] = [
     triggered: false,
   },
   {
+    id: 'moldavian-democratic-republic-established',
+    date: '1917-12-16',
+    title: 'Moldavian Democratic Republic Established',
+    description: 'The Sfatul Tarii proclaims the Moldavian Democratic Republic in Bessarabia, aligned under White Army protection.',
+    actions: [
+      {
+        type: 'transferRegion',
+        regionId: 'MDA', // Bessarabia / Moldavia
+        newOwner: 'moldavia',
+      },
+      {
+        type: 'setRelationship',
+        fromCountry: 'white',
+        toCountry: 'moldavia',
+        relationshipType: 'autonomy',
+      },
+    ],
+    triggered: false,
+  },
+  {
     id: 'donetsk-krivoy-rog-soviet-republic-independence',
     date: '1918-02-12',
     title: 'Donetsk–Krivoy Rog Soviet Republic Declared',
