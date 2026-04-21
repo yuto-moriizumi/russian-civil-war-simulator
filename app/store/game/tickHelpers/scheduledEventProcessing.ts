@@ -2,6 +2,7 @@ import { Region, GameEvent, NotificationItem, CountryId, Relationship, Scheduled
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 import { BASE_DIVISION_STATS } from '../../../utils/bonusCalculator';
 import { applyRelationshipChange, joinPuppetToOverlordWars } from '../../../utils/relationshipUtils';
+import { COUNTRY_METADATA } from '../../../data/countryMetadata';
 
 /**
  * Process scheduled events that should trigger on the current date
@@ -129,6 +130,21 @@ export function processScheduledEvents(
             ...region,
             divisions: [...region.divisions, division],
           };
+        }
+      } else if (action.type === 'transferCoreRegionsFromCountry' && action.newOwner && action.fromCountry) {
+        // Transfer all core regions of newOwner that are currently owned by fromCountry
+        const countryData = COUNTRY_METADATA[action.newOwner];
+        if (countryData?.coreRegions) {
+          for (const regionId of countryData.coreRegions) {
+            const region = updatedRegions[regionId];
+            if (region && region.owner === action.fromCountry) {
+              updatedRegions[regionId] = {
+                ...region,
+                owner: action.newOwner,
+                divisions: [],
+              };
+            }
+          }
         }
       }
     });

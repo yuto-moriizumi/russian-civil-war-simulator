@@ -268,6 +268,11 @@ export const scheduledEvents: ScheduledEvent[] = [
         fromCountry: 'germany',
         toCountry: 'soviet',
       },
+      {
+        type: 'transferCoreRegionsFromCountry',
+        newOwner: 'ukraine',
+        fromCountry: 'germany',
+      },
     ],
     triggered: false,
   },
