@@ -5,20 +5,23 @@ import { applyClaimedMissionRewards, buildMissionRewardDescription } from '../st
 import { areMissionConditionsMet } from '../store/game/missionHelpers';
 import type { Mission, RegionState } from '../types/game';
 
-describe('Soviet Voronezh mission', () => {
-  it('is unlocked after Workers Unite and requires Soviet or puppet control of Voronezh', () => {
+describe('Soviet Don Army preparation mission', () => {
+  it('is unlocked after Workers Unite and requires Soviet or puppet control of Voronezh and UA-09', () => {
     const mission = sovietMissions.find(m => m.id === 'soviet_secure_voronezh');
 
     expect(mission).toMatchObject({
       country: 'soviet',
-      name: 'ヴォロネジの確保',
+      name: 'ドン軍制圧の準備',
       prerequisites: ['soviet_mobilize'],
       rewards: { declareWar: { target: 'don' } },
-      available: [{ type: 'controlRegionByOverlord', regionId: 'RU-VOR' }],
+      available: [
+        { type: 'controlRegionByOverlord', regionId: 'RU-VOR' },
+        { type: 'controlRegionByOverlord', regionId: 'UA-09' },
+      ],
     });
   });
 
-  it('accepts Voronezh control by a Soviet puppet', () => {
+  it('accepts Voronezh and UA-09 control by Soviet puppets', () => {
     const mission = sovietMissions.find(m => m.id === 'soviet_secure_voronezh')!;
     const regions: RegionState = {
       'RU-VOR': {
@@ -26,6 +29,13 @@ describe('Soviet Voronezh mission', () => {
         name: 'Voronezh',
         countryIso3: 'RUS',
         owner: 'ukrainesoviet',
+        divisions: [],
+      },
+      'UA-09': {
+        id: 'UA-09',
+        name: 'Donbass',
+        countryIso3: 'UKR',
+        owner: 'dkr',
         divisions: [],
       },
     };
@@ -39,8 +49,39 @@ describe('Soviet Voronezh mission', () => {
       armyGroups: [],
       relationships: [
         { fromCountry: 'soviet', toCountry: 'ukrainesoviet', type: 'autonomy' },
+        { fromCountry: 'soviet', toCountry: 'dkr', type: 'autonomy' },
       ],
     })).toBe(true);
+  });
+
+  it('is incomplete without control of UA-09', () => {
+    const mission = sovietMissions.find(m => m.id === 'soviet_secure_voronezh')!;
+    const regions: RegionState = {
+      'RU-VOR': {
+        id: 'RU-VOR',
+        name: 'Voronezh',
+        countryIso3: 'RUS',
+        owner: 'soviet',
+        divisions: [],
+      },
+      'UA-09': {
+        id: 'UA-09',
+        name: 'Donbass',
+        countryIso3: 'UKR',
+        owner: 'ukraine',
+        divisions: [],
+      },
+    };
+
+    expect(areMissionConditionsMet(mission, {
+      regions,
+      dateTime: new Date('1918-01-01T00:00:00Z'),
+      gameEvents: [],
+      countryId: 'soviet',
+      theaters: [],
+      armyGroups: [],
+      relationships: [],
+    })).toBe(false);
   });
 });
 
@@ -161,13 +202,16 @@ describe('mission declare war rewards', () => {
     const mission: Mission = {
       id: 'soviet_secure_voronezh',
       country: 'soviet',
-      name: 'ヴォロネジの確保',
+      name: 'ドン軍制圧の準備',
       description: 'Secure Voronezh.',
       completed: true,
       claimed: true,
       rewards: { declareWar: { target: 'don' } },
       prerequisites: ['soviet_mobilize'],
-      available: [{ type: 'controlRegionByOverlord', regionId: 'RU-VOR' }],
+      available: [
+        { type: 'controlRegionByOverlord', regionId: 'RU-VOR' },
+        { type: 'controlRegionByOverlord', regionId: 'UA-09' },
+      ],
     };
 
     const rewards = applyClaimedMissionRewards(
