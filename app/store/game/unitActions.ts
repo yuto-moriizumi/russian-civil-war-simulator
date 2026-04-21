@@ -327,7 +327,6 @@ export const createUnitActions = (
         nextGameEvents = [...gameEvents, battleEvent];
         nextNotifications = [...notifications, createNotification(battleEvent, dateTime)];
 
-        console.log(`[COMBAT STARTED] ${selectedCountry.id} initiated combat at ${to.name} while divisions are in transit`);
       }
     }
 

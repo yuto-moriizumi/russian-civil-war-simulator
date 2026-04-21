@@ -167,10 +167,6 @@ export function createActiveCombat(
   const attackerDivisionsCopy = attackerDivisions.map(d => ({ ...d }));
   const defenderDivisionsCopy = defenderDivisions.map(d => ({ ...d }));
   const combatId = generateCombatId();
-  console.log('[COMBAT STARTED]', { combatId, attackerRegionId, defenderRegionId, attackerRegionName, defenderRegionName, attackerCountry, defenderCountry,
-    attackerDivisions: attackerDivisionsCopy.length, defenderDivisions: defenderDivisionsCopy.length,
-    attackerTotalHp: getTotalHp(attackerDivisionsCopy), defenderTotalHp: getTotalHp(defenderDivisionsCopy),
-    startTime: currentTime.toISOString() });
 
   return {
     id: combatId,
