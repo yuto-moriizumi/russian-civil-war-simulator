@@ -104,6 +104,21 @@ export const scheduledEvents: ScheduledEvent[] = [
     triggered: false,
   },
   {
+    id: 'moldavian-independence',
+    date: '1918-02-06',
+    title: 'Moldavia Declares Independence',
+    description: 'The Moldavian Democratic Republic declares independence, ending its protectorate relationship with the White Army.',
+    actions: [
+      {
+        type: 'removeRelationship',
+        fromCountry: 'white',
+        toCountry: 'moldavia',
+        relationshipType: 'autonomy',
+      },
+    ],
+    triggered: false,
+  },
+  {
     id: 'donetsk-krivoy-rog-soviet-republic-independence',
     date: '1918-02-12',
     title: 'Donetsk–Krivoy Rog Soviet Republic Declared',
