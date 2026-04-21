@@ -115,7 +115,7 @@ export const sovietMissions: Mission[] = [
         divisions: 2,
       },
     },
-    prerequisites: ['soviet_taurida'],
+    prerequisites: ['soviet_subjugate_don_army'],
     available: [{ type: 'controlRegionByOverlord', regionId: 'RU-DA' }],
   },
   {
