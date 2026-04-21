@@ -610,7 +610,7 @@ export const COUNTRY_METADATA = {
     name: "Kuban People's Republic",
     combatName: "Kuban Cossacks",
     flag: "/images/flags/kuban.svg",
-    color: "#ED1C24",
+    color: "#FF0066",
     adjective: "Kuban",
     firstArmyGroupName: "Kuban Cossack Host",
     divisionPrefix: "Kuban Cossack",
