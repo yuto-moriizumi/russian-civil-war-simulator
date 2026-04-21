@@ -48,6 +48,21 @@ export const sovietMissions: Mission[] = [
     available: [{ type: 'controlRegionByOverlord', regionId: 'RU-KDA' }],
   },
   {
+    id: 'soviet_secure_voronezh',
+    country: 'soviet',
+    name: 'ヴォロネジの確保',
+    description: 'ヴォロネジ（RU-VOR）をソビエトまたはその傀儡国の支配下に置け',
+    completed: false,
+    claimed: false,
+    rewards: {
+      declareWar: {
+        target: 'don',
+      },
+    },
+    prerequisites: ['soviet_mobilize'],
+    available: [{ type: 'controlRegionByOverlord', regionId: 'RU-VOR' }],
+  },
+  {
     id: 'soviet_taurida',
     country: 'soviet',
     name: 'クリミアの確保',

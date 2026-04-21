@@ -66,6 +66,9 @@ export interface MissionRewards {
   commandPowerBonus?: number;      // +3 flat command power increase
   productionSpeedBonus?: number;   // 0.15, 0.20 (15%, 20% production time reduction)
   gameVictory?: boolean;           // Triggers victory condition
+  declareWar?: {                   // Declares war from the mission country
+    target: CountryId;             // Country to declare war on
+  };
   liberatePuppet?: {               // Liberates a country as a puppet (autonomy) state
     country: CountryId;            // Country to liberate
     spawnRegionId: string;         // Region where initial divisions spawn
