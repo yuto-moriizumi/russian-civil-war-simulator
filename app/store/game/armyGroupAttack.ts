@@ -336,6 +336,16 @@ export function attackArmyGroup(
           if (isFirstCombatOnRegion) {
             newRegions[attackTargetId] = { ...destRegion, divisions: [] };
           }
+          // Clear attacker divisions from source region to avoid double-counting
+          // (they are tracked in the combat; applyFinishedCombats places them post-combat)
+          const attackerDivIds = new Set(divsForAttack.map(d => d.id));
+          const srcRegion = newRegions[borderRegionId];
+          if (srcRegion) {
+            newRegions[borderRegionId] = {
+              ...srcRegion,
+              divisions: srcRegion.divisions.filter(d => !attackerDivIds.has(d.id)),
+            };
+          }
 
           const battleEvent = createGameEvent(
             'combat_victory',
