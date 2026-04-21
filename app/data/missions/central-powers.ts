@@ -87,6 +87,23 @@ export const germanMissions: Mission[] = [
     available: [{ type: 'controlRegionByOverlord', regionId: 'LT-VL' }],
   },
   {
+    id: 'germany_secure_minsk',
+    country: 'germany',
+    name: 'ミンスクの確保',
+    description: 'ミンスク（BY-HM）をドイツまたはその傀儡国の支配下に置き、ベラルーシ人民共和国を傀儡として解放せよ',
+    completed: false,
+    claimed: false,
+    rewards: {
+      liberatePuppet: {
+        country: 'bpr',
+        spawnRegionId: 'BY-HM',
+        divisions: 2,
+      },
+    },
+    prerequisites: ['germany_secure_lithuania'],
+    available: [{ type: 'controlRegionByOverlord', regionId: 'BY-HM' }],
+  },
+  {
     id: 'germany_baltic',
     country: 'germany',
     name: 'Baltic Dominance',
