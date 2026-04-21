@@ -1,5 +1,5 @@
 import { ActiveCombat, Division, GameEvent, NotificationItem, RegionState, Adjacency, Movement } from '../../../types/game';
-import { processCombatRound, shouldProcessCombatRound } from '../../../utils/combat';
+import { processCombatRounds, shouldProcessCombatRound } from '../../../utils/combat';
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 import { calculateDistance, calculateTravelTime } from '../../../utils/distance';
 
@@ -59,6 +59,7 @@ export function processCombats(
   const newCombatNotifications: NotificationItem[] = [];
   const retreatMovements: Movement[] = [];
   const retreatingDivisionUpdates: CombatProcessingResult['retreatingDivisionUpdates'] = [];
+  const eligibleCombats: ActiveCombat[] = [];
 
   activeCombats.forEach(combat => {
     if (combat.isComplete) {
@@ -67,15 +68,18 @@ export function processCombats(
     }
 
     if (shouldProcessCombatRound(combat, currentDate)) {
-      const result = processCombatRound(
-        {
-          ...combat,
-          lastRoundTime: new Date(currentDate),
-        },
-        regions,
-        adjacency
-      );
+      eligibleCombats.push(combat);
+    } else {
+      updatedCombats.push(combat);
+    }
+  });
 
+  // Process eligible combats together so multi-directional attacks on the same
+  // defender region share aggregated damage
+  if (eligibleCombats.length > 0) {
+    const roundResults = processCombatRounds(eligibleCombats, regions, adjacency, currentDate);
+
+    roundResults.forEach(result => {
       const updatedCombat = result.combat;
       
       // Convert retreating divisions to movements
@@ -144,10 +148,8 @@ export function processCombats(
       } else {
         updatedCombats.push(updatedCombat);
       }
-    } else {
-      updatedCombats.push(combat);
-    }
-  });
+    });
+  }
 
   return { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements, retreatingDivisionUpdates };
 }
