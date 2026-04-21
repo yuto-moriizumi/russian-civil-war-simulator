@@ -80,10 +80,10 @@ export function applyCompletedMovements(
       };
     }
     // Use the up-to-date division objects from the region (HP may have regenerated during transit).
-    // Fall back to movement.divisions (e.g. retreat movements where region has stale HP).
-    const arrivingDivisions = fromRegionState
-      ? fromRegionState.divisions.filter(d => movingIds.has(d.id))
-      : movement.divisions;
+    // Fall back to movement.divisions when the division is not found in the region — this happens
+    // for retreat movements where the division lived in the combat arrays, not in the region.
+    const fromRegionDivisions = fromRegionState?.divisions.filter(d => movingIds.has(d.id)) ?? [];
+    const arrivingDivisions = fromRegionDivisions.length > 0 ? fromRegionDivisions : movement.divisions;
 
     // Re-read toRegion after the fromRegion removal so self-moves (fromRegion === toRegion)
     // don't operate on a stale snapshot that still contains the departing divisions.
