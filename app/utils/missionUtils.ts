@@ -26,6 +26,8 @@ export function formatCondition(condition: MissionCondition): string {
       return `Have at least ${condition.count} army groups`;
     case 'controlRegion':
       return `Control region: ${condition.regionId}`;
+    case 'controlRegionByOverlord':
+      return `Control region directly or by puppet: ${condition.regionId}`;
     default:
       return 'Unknown condition';
   }

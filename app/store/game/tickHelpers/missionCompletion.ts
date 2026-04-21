@@ -175,7 +175,7 @@ export function checkAndClaimAIMissions(
         relationships = rewards.updatedRelationships;
         armyGroups = rewards.updatedArmyGroups;
         aiStates = rewards.updatedAIStates;
-        newEvents.push(...rewards.puppetEvents);
+        newEvents.push(...rewards.rewardEvents);
         if (completedMission.rewards.gameVictory) {
           newEvents.push(createGameEvent(
             'game_victory',

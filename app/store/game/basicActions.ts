@@ -422,7 +422,7 @@ export const createBasicActions = (
         console.log(`[MISSION CLAIMED] ${mission.name} - Applied bonuses to ${countryId} divisions`);
         console.log(`[BONUSES] Attack: +${rewards.updatedCountryBonuses.attackBonus}, Defence: +${rewards.updatedCountryBonuses.defenceBonus}, HP: +${rewards.updatedCountryBonuses.hpBonus}, Command Power: +${rewards.updatedCountryBonuses.commandPowerBonus}, Prod Speed: ${rewards.updatedCountryBonuses.productionSpeedMultiplier.toFixed(2)}x`);
 
-        rewards.puppetEvents.forEach(e => {
+        rewards.rewardEvents.forEach(e => {
           events.push(e);
           notifs.push(createNotification(e, state.dateTime));
         });

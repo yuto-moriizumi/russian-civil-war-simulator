@@ -4,6 +4,7 @@ import { memo } from 'react';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import { Mission } from '../types/game';
 import { formatCondition } from '../utils/missionUtils';
+import { getCountryName } from '../data/countries';
 
 type MissionNodeData = {
   mission: Mission;
@@ -126,6 +127,11 @@ function MissionNode({ data }: NodeProps<MissionNodeType>) {
             {mission.rewards.gameVictory && (
               <span className={mission.claimed ? 'text-green-400 line-through' : 'text-amber-400'}>
                 👑 Victory!
+              </span>
+            )}
+            {mission.rewards.declareWar && (
+              <span className={mission.claimed ? 'text-green-400 line-through' : 'text-red-400'}>
+                ⚔️ War on {getCountryName(mission.rewards.declareWar.target)}
               </span>
             )}
           </div>
