@@ -1,17 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600">
-  <!-- Red field of the Ottoman flag -->
-  <rect width="900" height="600" fill="#C7002B"/>
-  
-  <!-- White crescent moon -->
-  <g fill="white">
-    <!-- Outer circle of crescent -->
-    <circle cx="350" cy="300" r="140"/>
-    <!-- Inner circle to create crescent shape -->
-    <circle cx="380" cy="300" r="140" fill="#C7002B"/>
-  </g>
-  
-  <!-- Five-pointed star -->
-  <g fill="white" transform="translate(550, 300)">
-    <polygon points="0,-60 18,-18 60,-18 30,15 45,60 0,30 -45,60 -30,15 -60,-18 -18,-18"/>
-  </g>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800">
+<rect width="1200" height="800" fill="#E30A17"/>
+<circle cx="425" cy="400" r="225" style="fill:#ffffff"/>
+<circle cx="500" cy="400" r="180" style="fill:#E30A17"/>
+<path fill="#FFFFFF" d="m 589.05959,400.5279 72.2995,-27.03457 3.36962,-77.11504 48.05317,60.40677 74.38203,-20.62517 -42.601,64.368 42.60101,64.368 -74.38204,-20.62516 -48.05316,60.40677 -3.36963,-77.11505 z" />
 </svg>
