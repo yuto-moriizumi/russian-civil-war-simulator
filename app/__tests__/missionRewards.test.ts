@@ -44,6 +44,118 @@ describe('Soviet Voronezh mission', () => {
   });
 });
 
+describe('Soviet Don Army subjugation mission', () => {
+  it('unlocks after securing Voronezh and requires Soviet or puppet control of Don regions', () => {
+    const mission = sovietMissions.find(m => m.id === 'soviet_subjugate_don_army');
+
+    expect(mission).toMatchObject({
+      country: 'soviet',
+      name: 'ドン軍の制圧',
+      prerequisites: ['soviet_secure_voronezh'],
+      rewards: {
+        liberatePuppet: {
+          country: 'donsoviets',
+          spawnRegionId: 'RU-ROS',
+          divisions: 2,
+        },
+      },
+      available: [
+        { type: 'controlRegionByOverlord', regionId: 'RU-ROS' },
+        { type: 'controlRegionByOverlord', regionId: 'RU-VGG' },
+      ],
+    });
+  });
+
+  it('accepts Don region control split between Soviet Russia and its puppet', () => {
+    const mission = sovietMissions.find(m => m.id === 'soviet_subjugate_don_army')!;
+    const regions: RegionState = {
+      'RU-ROS': {
+        id: 'RU-ROS',
+        name: 'Rostov',
+        countryIso3: 'RUS',
+        owner: 'soviet',
+        divisions: [],
+      },
+      'RU-VGG': {
+        id: 'RU-VGG',
+        name: 'Volgograd',
+        countryIso3: 'RUS',
+        owner: 'ukrainesoviet',
+        divisions: [],
+      },
+    };
+
+    expect(areMissionConditionsMet(mission, {
+      regions,
+      dateTime: new Date('1918-01-01T00:00:00Z'),
+      gameEvents: [],
+      countryId: 'soviet',
+      theaters: [],
+      armyGroups: [],
+      relationships: [
+        { fromCountry: 'soviet', toCountry: 'ukrainesoviet', type: 'autonomy' },
+      ],
+    })).toBe(true);
+  });
+
+  it('liberates the Don Soviet Republic as a Soviet puppet', () => {
+    const mission = sovietMissions.find(m => m.id === 'soviet_subjugate_don_army')!;
+    const regions: RegionState = {
+      'RU-ROS': {
+        id: 'RU-ROS',
+        name: 'Rostov',
+        countryIso3: 'RUS',
+        owner: 'soviet',
+        divisions: [],
+      },
+      'RU-VGG': {
+        id: 'RU-VGG',
+        name: 'Volgograd',
+        countryIso3: 'RUS',
+        owner: 'ukrainesoviet',
+        divisions: [],
+      },
+    };
+
+    const rewards = applyClaimedMissionRewards(
+      {
+        regions,
+        movingUnits: [],
+        relationships: [
+          { fromCountry: 'soviet', toCountry: 'ukrainesoviet', type: 'autonomy' },
+          { fromCountry: 'soviet', toCountry: 'don', type: 'war' },
+          { fromCountry: 'don', toCountry: 'soviet', type: 'war' },
+        ],
+        armyGroups: [],
+        aiStates: [],
+        selectedCountry: null,
+        countryBonuses: initialGameState.countryBonuses,
+        dateTime: new Date('1918-01-01T00:00:00Z'),
+      },
+      { ...mission, completed: true, claimed: true },
+      'soviet',
+      [{ ...mission, completed: true, claimed: true }],
+    );
+
+    expect(rewards.updatedRelationships).toEqual(expect.arrayContaining([
+      { fromCountry: 'soviet', toCountry: 'donsoviets', type: 'autonomy' },
+      { fromCountry: 'donsoviets', toCountry: 'don', type: 'war' },
+      { fromCountry: 'don', toCountry: 'donsoviets', type: 'war' },
+    ]));
+    expect(rewards.updatedRegions['RU-ROS'].owner).toBe('donsoviets');
+    expect(rewards.updatedRegions['RU-VGG'].owner).toBe('donsoviets');
+    expect(rewards.updatedRegions['RU-ROS'].divisions).toHaveLength(2);
+    expect(rewards.updatedAIStates.some(aiState => aiState.countryId === 'donsoviets')).toBe(true);
+    expect(rewards.rewardEvents).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        type: 'mission_claimed',
+        country: 'soviet',
+        title: 'Don Soviet Republic Liberated',
+      }),
+    ]));
+  });
+});
+
 describe('mission declare war rewards', () => {
   it('declares a mutual war and emits a war event when claimed', () => {
     const mission: Mission = {
@@ -90,5 +202,15 @@ describe('mission declare war rewards', () => {
   it('describes declare war rewards in claim text', () => {
     expect(buildMissionRewardDescription({ declareWar: { target: 'don' } }))
       .toBe('Declare war on Don Republic');
+  });
+
+  it('describes puppet liberation rewards with country names', () => {
+    expect(buildMissionRewardDescription({
+      liberatePuppet: {
+        country: 'donsoviets',
+        spawnRegionId: 'RU-ROS',
+        divisions: 2,
+      },
+    })).toBe('Liberate Don Soviet Republic as puppet');
   });
 });

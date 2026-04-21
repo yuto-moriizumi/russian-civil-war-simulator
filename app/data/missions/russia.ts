@@ -63,6 +63,26 @@ export const sovietMissions: Mission[] = [
     available: [{ type: 'controlRegionByOverlord', regionId: 'RU-VOR' }],
   },
   {
+    id: 'soviet_subjugate_don_army',
+    country: 'soviet',
+    name: 'ドン軍の制圧',
+    description: 'ロストフ（RU-ROS）とヴォルゴグラード（RU-VGG）をソビエトまたはその傀儡国の支配下に置き、ドン・ソビエト共和国を解放せよ',
+    completed: false,
+    claimed: false,
+    rewards: {
+      liberatePuppet: {
+        country: 'donsoviets',
+        spawnRegionId: 'RU-ROS',
+        divisions: 2,
+      },
+    },
+    prerequisites: ['soviet_secure_voronezh'],
+    available: [
+      { type: 'controlRegionByOverlord', regionId: 'RU-ROS' },
+      { type: 'controlRegionByOverlord', regionId: 'RU-VGG' },
+    ],
+  },
+  {
     id: 'soviet_taurida',
     country: 'soviet',
     name: 'クリミアの確保',

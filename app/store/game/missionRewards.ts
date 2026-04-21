@@ -28,7 +28,7 @@ export function buildMissionRewardDescription(rewards: MissionRewards): string {
     rewardParts.push(`+${percentReduction}% Production Speed`);
   }
   if (rewards.liberatePuppet) {
-    rewardParts.push(`Liberate ${rewards.liberatePuppet.country} as puppet`);
+    rewardParts.push(`Liberate ${getCountryName(rewards.liberatePuppet.country)} as puppet`);
   }
   if (rewards.declareWar) {
     rewardParts.push(`Declare war on ${getCountryName(rewards.declareWar.target)}`);
@@ -139,6 +139,9 @@ export function applyLiberatePuppet(
     };
   }
   const { country: puppetId, spawnRegionId, divisions: divisionCount } = reward;
+  const overlordPuppets = state.relationships
+    .filter(r => r.fromCountry === overlordId && r.type === 'autonomy')
+    .map(r => r.toCountry);
   let updatedRelationships: Relationship[] = [
     ...state.relationships.filter(r => !(r.fromCountry === overlordId && r.toCountry === puppetId)),
     { fromCountry: overlordId, toCountry: puppetId, type: 'autonomy' as const },
@@ -151,11 +154,11 @@ export function applyLiberatePuppet(
 
   const updatedRegions = { ...regions };
 
-  // Transfer core regions currently owned by the overlord to the puppet.
+  // Transfer core regions currently owned by the overlord or its puppets to the puppet.
   const puppetCoreRegions = COUNTRY_METADATA[puppetId as keyof typeof COUNTRY_METADATA]?.coreRegions ?? [];
   for (const regionId of puppetCoreRegions) {
     const region = updatedRegions[regionId];
-    if (region && region.owner === overlordId) {
+    if (region && (region.owner === overlordId || overlordPuppets.includes(region.owner))) {
       updatedRegions[regionId] = { ...region, owner: puppetId };
     }
   }
@@ -190,8 +193,8 @@ export function applyLiberatePuppet(
   const puppetEvents: GameEvent[] = [
     createGameEvent(
       'mission_claimed',
-      `${puppetId} Liberated`,
-      `The Ukrainian People's Republic of Soviets has been established as a puppet state!`,
+      `${getCountryName(puppetId)} Liberated`,
+      `${getCountryName(puppetId)} has been established as a puppet state!`,
       state.dateTime,
       overlordId,
     ),
