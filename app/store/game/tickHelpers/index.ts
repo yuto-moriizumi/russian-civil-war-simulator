@@ -5,6 +5,8 @@
  * Each module handles a specific responsibility within the game loop.
  */
 
+export { detectDivisionDuplicates, logDivisionDuplicates } from './duplicateDetection';
+export type { DuplicationCheckResult } from './duplicateDetection';
 export { validateDivisions } from './divisionValidation';
 export { processMovements } from './movementProcessing';
 export { processCombats } from './combatProcessing';

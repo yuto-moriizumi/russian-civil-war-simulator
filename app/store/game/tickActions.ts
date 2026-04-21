@@ -14,14 +14,28 @@ import {
   checkAndCompleteMissions,
   checkAndClaimAIMissions,
   processProductionQueue,
-  processScheduledEvents
+  processScheduledEvents,
+  detectDivisionDuplicates,
+  logDivisionDuplicates,
 } from './tickHelpers';
 import { discoverNewAIStates, getEffectiveAIStates, processAITick, hasOwnershipChangedForCountries } from './tickHelpers/aiTick';
 import { attackArmyGroup } from './armyGroupAttack';
 import { defendArmyGroup } from './armyGroupDefend';
 import { TickPerf } from './tickPerformance';
+import { RegionState } from '../../types/game';
 
 export { discoverNewAIStates, getEffectiveAIStates } from './tickHelpers/aiTick';
+
+let _tickCounter = 0;
+
+/** Helper: check for duplicates mid-tick and log with a source label */
+function _checkDuplicates(label: string, tickNum: number, regions: RegionState, movingUnits: import('../../types/game').Movement[], activeCombats: import('../../types/game').ActiveCombat[]) {
+  const result = detectDivisionDuplicates(regions, movingUnits, activeCombats);
+  if (result.hasDuplicates) {
+    logDivisionDuplicates(result.reports, tickNum);
+    console.error(`  [DUPLICATE] introduced during: ${label}`);
+  }
+}
 
 export const createTickActions = (
   set: StoreApi<GameStore>['setState'],
@@ -31,8 +45,21 @@ export const createTickActions = (
     const state = get();
     if (!state.isPlaying) return;
 
+    _tickCounter++;
+    const tickNum = _tickCounter;
+
     TickPerf.tickStart();
     TickPerf.start('[tick] total');
+
+    // ── Duplicate detection (start of tick) ──────────────────────────────────
+    TickPerf.start('[tick] 0-duplicates');
+    const preCheck = detectDivisionDuplicates(state.regions, state.movingUnits, state.activeCombats);
+    if (preCheck.hasDuplicates) {
+      logDivisionDuplicates(preCheck.reports, tickNum);
+      console.error('  [DUPLICATE] detected at TICK START — leftovers from previous tick');
+    }
+    TickPerf.end('[tick] 0-duplicates');
+    // ─────────────────────────────────────────────────────────────────────────
 
     const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, aiStates, gameEvents, notifications, armyGroups, productionQueues, relationships, regionCentroids, scheduledEvents } = state;
     
@@ -191,6 +218,10 @@ export const createTickActions = (
 
     TickPerf.end('[tick] 6b-merge-movements');
 
+    // ── Duplicate detection after movements/combats ──────────────────────────
+    _checkDuplicates('apply movements / combats', tickNum, nextRegions, nextMovingUnits, nextCombats);
+    // ─────────────────────────────────────────────────────────────────────────
+
     // Step 7: Regenerate HP for all stationary divisions
     TickPerf.start('[tick] 7-hp-regen');
     nextRegions = regenerateDivisionHP(nextRegions);
@@ -266,6 +297,10 @@ export const createTickActions = (
     }
     TickPerf.end('[tick] 8-ai');
 
+    // ── Duplicate detection after AI tick / army group sync ──────────────────
+    _checkDuplicates('AI tick / army group sync', tickNum, nextRegions, nextMovingUnits, nextActiveCombats);
+    // ─────────────────────────────────────────────────────────────────────────
+
     // Step 9: Sync army group territories with actual division locations
     TickPerf.start('[tick] 9-army-group-sync');
     nextArmyGroups = syncArmyGroupTerritories(nextArmyGroups, nextRegions, nextMovingUnits);
@@ -319,7 +354,12 @@ export const createTickActions = (
       set(finalPatch);
     }
     TickPerf.end('[tick] 11-army-group-actions');
-    
+
+    // ── Duplicate detection after army group actions ────────────────────────
+    const agState = get();
+    _checkDuplicates('army group actions', tickNum, agState.regions, agState.movingUnits, agState.activeCombats);
+    // ────────────────────────────────────────────────────────────────────────
+
     // Step 11: Check and auto-complete missions
     TickPerf.start('[tick] 12-missions');
     if (selectedCountry && !state.isPlayerAIEnabled) {
