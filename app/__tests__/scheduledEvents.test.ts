@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { scheduledEvents } from '../data/scheduledEvents';
 import { processScheduledEvents } from '../store/game/tickHelpers/scheduledEventProcessing';
-import type { RegionState } from '../types/game';
+import type { Relationship, RegionState } from '../types/game';
 
 describe('scheduled events', () => {
   it('establishes Moldavia as a White Army puppet on December 16, 1917', () => {
@@ -33,6 +33,39 @@ describe('scheduled events', () => {
     expect(result.updatedRelationships).toContainEqual({
       fromCountry: 'white',
       toCountry: 'moldavia',
+      type: 'autonomy',
+    });
+    expect(result.updatedScheduledEvents[0].triggered).toBe(true);
+  });
+
+  it('ends Moldavia puppet relationship with the White Army on February 6, 1918', () => {
+    const event = scheduledEvents.find(
+      scheduledEvent => scheduledEvent.id === 'moldavian-independence'
+    );
+    const relationships: Relationship[] = [
+      { fromCountry: 'white', toCountry: 'moldavia', type: 'autonomy' },
+      { fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy' },
+    ];
+
+    expect(event).toBeDefined();
+    expect(event?.date).toBe('1918-02-06');
+
+    const result = processScheduledEvents(
+      [event!],
+      new Date(1918, 1, 6),
+      {},
+      relationships,
+      []
+    );
+
+    expect(result.updatedRelationships).not.toContainEqual({
+      fromCountry: 'white',
+      toCountry: 'moldavia',
+      type: 'autonomy',
+    });
+    expect(result.updatedRelationships).toContainEqual({
+      fromCountry: 'white',
+      toCountry: 'ukraine',
       type: 'autonomy',
     });
     expect(result.updatedScheduledEvents[0].triggered).toBe(true);
