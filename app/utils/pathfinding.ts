@@ -1,4 +1,4 @@
-import { RegionState, Adjacency, CountryId, Movement, Relationship, ActiveCombat, Region } from '../types/game';
+import { RegionState, Adjacency, CountryId, Movement, Relationship, ActiveCombat } from '../types/game';
 
 /**
  * Build a predicate that returns true for regions that are hostile to the
