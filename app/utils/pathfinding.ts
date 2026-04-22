@@ -1,4 +1,4 @@
-import { RegionState, Adjacency, CountryId, Movement, Relationship, ActiveCombat } from '../types/game';
+import { RegionState, Adjacency, CountryId, Movement, Relationship, ActiveCombat, Region } from '../types/game';
 
 /**
  * Build a predicate that returns true for regions that are hostile to the
@@ -416,20 +416,26 @@ export function getArmyGroupUnitCount(
 
     // In-transit divisions are already counted in regions above.
 
-    // Count divisions currently in active combat (region.divisions is cleared during combat)
+    // Count divisions currently in active combat (region.divisions is cleared during combat).
+    // Use a Set to deduplicate IDs — multi-front attacks copy the same defender divisions
+    // into multiple combats, which would otherwise inflate the count.
     if (activeCombats) {
-      const inCombat = activeCombats
+      const seenCombatDivIds = new Set<string>();
+      activeCombats
         .filter(c => !c.isComplete)
-        .reduce((sum, combat) => {
-          const attackerMatches = combat.attackerCountry === playerCountry
-            ? combat.attackerDivisions.filter(d => d.armyGroupId === armyGroupId).length
-            : 0;
-          const defenderMatches = combat.defenderCountry === playerCountry
-            ? combat.defenderDivisions.filter(d => d.armyGroupId === armyGroupId).length
-            : 0;
-          return sum + attackerMatches + defenderMatches;
-        }, 0);
-      total += inCombat;
+        .forEach(combat => {
+          if (combat.attackerCountry === playerCountry) {
+            combat.attackerDivisions
+              .filter(d => d.armyGroupId === armyGroupId)
+              .forEach(d => seenCombatDivIds.add(d.id));
+          }
+          if (combat.defenderCountry === playerCountry) {
+            combat.defenderDivisions
+              .filter(d => d.armyGroupId === armyGroupId)
+              .forEach(d => seenCombatDivIds.add(d.id));
+          }
+        });
+      total += seenCombatDivIds.size;
     }
 
     return total;

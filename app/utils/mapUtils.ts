@@ -143,7 +143,7 @@ export function countCountryUnits(regions: RegionState, country: CountryId, _mov
  * @returns Total unit count for the army group
  */
 export function getArmyGroupUnitCount(
-  regionIds: string[],
+  _regionIds: string[],
   regions: RegionState,
   country: CountryId,
   armyGroupId: string,
@@ -160,21 +160,27 @@ export function getArmyGroupUnitCount(
     return count + groupDivisions;
   }, 0);
 
-  // Count divisions currently in active combat (region.divisions is cleared during combat)
-  const unitsInCombat = activeCombats
+  // Count divisions currently in active combat (region.divisions is cleared during combat).
+  // Use a Set to deduplicate IDs — multi-front attacks copy the same defender divisions
+  // into multiple combats, which would otherwise inflate the count.
+  const seenCombatDivIds = new Set<string>();
+  activeCombats
     .filter(c => !c.isComplete)
-    .reduce((count, combat) => {
-      const attackerMatches = combat.attackerCountry === country
-        ? combat.attackerDivisions.filter(d => d.armyGroupId === armyGroupId).length
-        : 0;
-      const defenderMatches = combat.defenderCountry === country
-        ? combat.defenderDivisions.filter(d => d.armyGroupId === armyGroupId).length
-        : 0;
-      return count + attackerMatches + defenderMatches;
-    }, 0);
+    .forEach(combat => {
+      if (combat.attackerCountry === country) {
+        combat.attackerDivisions
+          .filter(d => d.armyGroupId === armyGroupId)
+          .forEach(d => seenCombatDivIds.add(d.id));
+      }
+      if (combat.defenderCountry === country) {
+        combat.defenderDivisions
+          .filter(d => d.armyGroupId === armyGroupId)
+          .forEach(d => seenCombatDivIds.add(d.id));
+      }
+    });
 
   // In-transit divisions are already counted in unitsInRegions above.
-  return unitsInRegions + unitsInCombat;
+  return unitsInRegions + seenCombatDivIds.size;
 }
 
 // Calculate total income from regions controlled by a country (based on CP contribution per region)
