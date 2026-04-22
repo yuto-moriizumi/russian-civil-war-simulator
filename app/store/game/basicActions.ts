@@ -12,6 +12,7 @@ import { createDivision } from '../../utils/combat';
 import { getDivisionPrefix } from '../../data/countries';
 import { createDivisionSelectionActions } from './divisionSelectionActions';
 import { applyClaimedMissionRewards, applyLiberatePuppet, buildMissionRewardDescription } from './missionRewards';
+import { buildDivisionState } from '../../utils/divisionState';
 
 export { applyLiberatePuppet };
 
@@ -84,7 +85,7 @@ export const createBasicActions = (
   set: StoreApi<GameStore>['setState'],
   get: StoreApi<GameStore>['getState']
 ) => ({
-  setRegions: (regions: Record<string, Region>) => set({ regions }),
+  setRegions: (regions: Record<string, Region>) => set({ regions, divisions: buildDivisionState(regions) }),
   
   setAdjacency: (adjacency: Adjacency) => set({ adjacency }),
 
@@ -210,6 +211,7 @@ export const createBasicActions = (
       ...initialGameState,
       // Keep the loaded map geometry so the game doesn't need to re-fetch it.
       regions: currentState.regions,
+      divisions: buildDivisionState(currentState.regions),
       adjacency: currentState.adjacency,
       mapDataLoaded: currentState.mapDataLoaded,
       regionCentroids: currentState.regionCentroids,
@@ -238,6 +240,7 @@ export const createBasicActions = (
     // unit positions, army groups, and regions are not reset.
     let placementArmyGroups: ArmyGroup[] = currentState.placementArmyGroups ?? [];
     let regionsForState = currentRegions;
+    let divisionsForState = currentState.divisions;
     let armyGroupsForState = currentState.armyGroups;
 
     if (isInitial) {
@@ -326,6 +329,7 @@ export const createBasicActions = (
         });
 
       regionsForState = Object.keys(regionsWithUnits).length > 0 ? regionsWithUnits : currentRegions;
+      divisionsForState = buildDivisionState(regionsForState);
       armyGroupsForState = [...autoGroups, ...placementArmyGroups];
     } else {
       // Mid-game switch: preserve all army groups; only create ones for countries with none.
@@ -339,6 +343,12 @@ export const createBasicActions = (
           return g;
         });
       armyGroupsForState = [...currentState.armyGroups, ...missingGroups];
+      divisionsForState = buildDivisionState(
+        currentRegions,
+        currentState.movingUnits,
+        currentState.activeCombats,
+        currentState.divisions
+      );
     }
 
     // Reset all game state for a fresh start, but preserve live game state that
@@ -354,6 +364,7 @@ export const createBasicActions = (
       armyGroups: armyGroupsForState,
       placementArmyGroups,
       regions: regionsForState,
+      divisions: divisionsForState,
       adjacency: currentState.adjacency,
       mapDataLoaded: currentState.mapDataLoaded,
       regionCentroids: currentState.regionCentroids,
@@ -434,6 +445,7 @@ export const createBasicActions = (
             [countryId]: rewards.updatedCountryBonuses,
           },
           regions: rewards.updatedRegions,
+          divisions: rewards.updatedDivisions,
           movingUnits: rewards.updatedMovingUnits,
           relationships: rewards.updatedRelationships,
           armyGroups: rewards.updatedArmyGroups,
@@ -459,6 +471,12 @@ export const createBasicActions = (
       ...savedData.gameState,
       missions: mergeMissionsWithInitial(savedData.gameState.missions),
       regions: savedData.regions,
+      divisions: buildDivisionState(
+        savedData.regions,
+        savedData.gameState.movingUnits,
+        savedData.gameState.activeCombats,
+        savedData.gameState.divisions
+      ),
       aiStates: savedData.aiStates,
       isPlaying: false,
       currentScreen: 'main',

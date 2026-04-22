@@ -5,6 +5,7 @@ import { Movement, ActiveCombat, GameEvent, ProductionQueueItem, CountryId } fro
 // Internal imports
 import { GameStore } from './game/types';
 import { initialGameState } from './game/initialState';
+import { buildDivisionState } from '../utils/divisionState';
 
 // Action creators
 import { createBasicActions, mergeMissionsWithInitial } from './game/basicActions';
@@ -53,6 +54,7 @@ export const useGameStore = create<GameStore>()(
         currentScreen: state.currentScreen,
         selectedCountry: state.selectedCountry,
         dateTime: state.dateTime,
+        divisions: state.divisions,
         missions: state.missions,
         movingUnits: state.movingUnits,
         gameEvents: state.gameEvents,
@@ -114,6 +116,12 @@ export const useGameStore = create<GameStore>()(
               }
             }
           }
+          state.divisions = buildDivisionState(
+            state.regions ?? {},
+            state.movingUnits ?? [],
+            state.activeCombats ?? [],
+            state.divisions ?? {}
+          );
           
           // ALWAYS reset to title screen on rehydration so save data doesn't skip it
           state.currentScreen = 'title';

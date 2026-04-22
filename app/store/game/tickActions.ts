@@ -23,6 +23,7 @@ import { attackArmyGroup } from './armyGroupAttack';
 import { defendArmyGroup } from './armyGroupDefend';
 import { TickPerf } from './tickPerformance';
 import { RegionState } from '../../types/game';
+import { buildDivisionState } from '../../utils/divisionState';
 
 export { discoverNewAIStates, getEffectiveAIStates } from './tickHelpers/aiTick';
 
@@ -61,7 +62,7 @@ export const createTickActions = (
     TickPerf.end('[tick] 0-duplicates');
     // ─────────────────────────────────────────────────────────────────────────
 
-    const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, aiStates, gameEvents, notifications, armyGroups, productionQueues, relationships, regionCentroids, scheduledEvents } = state;
+    const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, aiStates, gameEvents, notifications, armyGroups, productionQueues, relationships, regionCentroids, scheduledEvents, divisions } = state;
     
     // Step 1: Validate divisions (development mode only)
     TickPerf.start('[tick] 1-validate');
@@ -75,7 +76,8 @@ export const createTickActions = (
       dateTime,
       updatedRegions,
       state.countryBonuses,
-      armyGroups
+      armyGroups,
+      divisions
     );
     TickPerf.end('[tick] 2-production');
     
@@ -317,6 +319,7 @@ export const createTickActions = (
       movingUnits: nextMovingUnits,
       activeCombats: nextActiveCombats,
       regions: nextRegions,
+      divisions: buildDivisionState(nextRegions, nextMovingUnits, nextActiveCombats, state.divisions),
       gameEvents: nextEvents,
       notifications: nextNotifications,
       aiStates: nextAIStates,
@@ -352,6 +355,8 @@ export const createTickActions = (
         (finalPatch as Record<string, unknown>)[key] = batchState[key];
       }
       set(finalPatch);
+      const syncedState = get();
+      set({ divisions: buildDivisionState(syncedState.regions, syncedState.movingUnits, syncedState.activeCombats, syncedState.divisions) });
     }
     TickPerf.end('[tick] 11-army-group-actions');
 
@@ -387,6 +392,7 @@ export const createTickActions = (
           missions: aiMissionResults.updatedMissions,
           countryBonuses: aiMissionResults.countryBonuses,
           regions: aiMissionResults.regions,
+          divisions: buildDivisionState(aiMissionResults.regions, aiMissionResults.movingUnits, get().activeCombats, get().divisions),
           movingUnits: aiMissionResults.movingUnits,
           relationships: aiMissionResults.relationships,
           armyGroups: aiMissionResults.armyGroups,

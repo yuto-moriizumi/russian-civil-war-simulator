@@ -67,6 +67,11 @@ describe('startNewGame — state must be reset to initial values before country 
     expect(resetState.activeCombats).toHaveLength(0);
   });
 
+  it('reset state has empty root divisions', () => {
+    const resetState = { ...initialGameState };
+    expect(Object.keys(resetState.divisions)).toHaveLength(0);
+  });
+
   it('reset state has empty productionQueues for all countries', () => {
     const resetState = { ...initialGameState };
     for (const queue of Object.values(resetState.productionQueues)) {

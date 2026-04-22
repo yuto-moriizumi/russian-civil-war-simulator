@@ -7,6 +7,7 @@ import { GameStore } from './types';
 import { StoreApi } from 'zustand';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { findPath, buildCanEnterPredicate } from '../../utils/pathfinding';
+import { addDivisionsToState } from '../../utils/divisionState';
 
 /**
  * Returns the effective defenderDivisions to use when starting a new combat,
@@ -150,6 +151,7 @@ export const createUnitActions = (
       };
 
       set({
+        divisions: addDivisionsToState(get().divisions, [newDivision]),
         regions: newRegions,
         gameEvents: [...gameEvents, newEvent],
         notifications: [...get().notifications, newNotification],

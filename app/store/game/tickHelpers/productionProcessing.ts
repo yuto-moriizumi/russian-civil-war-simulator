@@ -1,5 +1,6 @@
-import { ProductionQueueItem, RegionState, Division, CountryId, CountryBonuses, ArmyGroup } from '../../../types/game';
+import { ProductionQueueItem, RegionState, Division, CountryId, CountryBonuses, ArmyGroup, DivisionState } from '../../../types/game';
 import { getDivisionStats } from '../../../utils/bonusCalculator';
+import { addDivisionsToState } from '../../../utils/divisionState';
 
 /**
  * Process per-country production queues and complete the FIRST production from each country's queue.
@@ -16,14 +17,17 @@ export function processProductionQueue(
   currentTime: Date,
   regions: RegionState,
   countryBonuses: Record<CountryId, CountryBonuses>,
-  armyGroups: ArmyGroup[] = []
+  armyGroups: ArmyGroup[] = [],
+  divisions: DivisionState = {}
 ): {
   remainingProductions: Record<CountryId, ProductionQueueItem[]>;
   updatedRegions: RegionState;
+  updatedDivisions: DivisionState;
   completedProductions: ProductionQueueItem[];
 } {
   const completedProductions: ProductionQueueItem[] = [];
   let updatedRegions = { ...regions };
+  let updatedDivisions = { ...divisions };
   const remainingQueues: Record<CountryId, ProductionQueueItem[]> = {} as Record<CountryId, ProductionQueueItem[]>;
 
   // Process each country's queue independently
@@ -69,6 +73,7 @@ export function processProductionQueue(
         attack: divisionStats.attack,
         defence: divisionStats.defence,
       };
+      let deployed = false;
 
       // Deploy to target region if specified and valid
       if (production.targetRegionId) {
@@ -81,6 +86,7 @@ export function processProductionQueue(
               divisions: [...targetRegion.divisions, newDivision],
             },
           };
+          deployed = true;
         } else {
           // Target region invalid, find a valid region to deploy to
           const ownedRegions = Object.values(updatedRegions).filter(
@@ -95,6 +101,7 @@ export function processProductionQueue(
                 divisions: [...deployRegion.divisions, newDivision],
               },
             };
+            deployed = true;
           }
           // If no owned regions, division is lost (country was defeated)
         }
@@ -112,7 +119,11 @@ export function processProductionQueue(
               divisions: [...deployRegion.divisions, newDivision],
             },
           };
+          deployed = true;
         }
+      }
+      if (deployed) {
+        updatedDivisions = addDivisionsToState(updatedDivisions, [newDivision]);
       }
 
       // Store remaining queue for this country (without the first completed item)
@@ -142,6 +153,7 @@ export function processProductionQueue(
   return {
     remainingProductions: remainingQueues,
     updatedRegions,
+    updatedDivisions,
     completedProductions,
   };
 }

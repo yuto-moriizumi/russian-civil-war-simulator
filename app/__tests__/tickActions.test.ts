@@ -135,6 +135,7 @@ describe('tick mid-transit combat handling', () => {
     expect(state.activeCombats[0].defenderDivisions.map(d => d.id)).toEqual(['defender']);
     expect(state.regions.B.divisions).toHaveLength(0);
     expect(state.movingUnits[0].pendingCombatId).toBe(state.activeCombats[0].id);
+    expect(state.divisions.defender).toEqual(state.activeCombats[0].defenderDivisions[0]);
   });
 });
 

@@ -16,12 +16,14 @@ import {
   MapMode,
   ScheduledEvent,
   CountryBonuses,
+  DivisionState,
 } from '../types/game';
 import { getInitialCountryBonuses } from './bonusCalculator';
 import { countries } from '../data/countries';
+import { buildDivisionState } from './divisionState';
 
 const STORAGE_KEY = 'rcw-save';
-const SAVE_VERSION = 7; // Bumped version for border-combat model (attackerRegionId/defenderRegionId)
+const SAVE_VERSION = 8; // Bumped version for normalized root division state
 
 // Serialized types (Date objects converted to ISO strings)
 interface SerializedMovement {
@@ -97,6 +99,7 @@ interface SerializedGameState {
   isPlaying: boolean;
   gameSpeed: GameSpeed;
   isPlayerAIEnabled?: boolean;
+  divisions?: DivisionState;
   missions: Mission[];
   movingUnits: SerializedMovement[];
   gameEvents: SerializedGameEvent[];
@@ -251,6 +254,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
       startTime: new Date(c.startTime),
       lastRoundTime: new Date(c.lastRoundTime),
     })),
+    divisions: data.divisions ?? {},
     borderMidpoints: data.borderMidpoints ?? {}, // Will be re-loaded from map data
     productionQueues,
     relationships: data.relationships || [], // Default to empty array if not present
@@ -307,6 +311,7 @@ export function loadGame(): {
       // Version 4→5: production queue migration (handled in deserializeGameState)
       // Version 5→6: countryBonuses (handled in deserializeGameState)
       // Version 6→7: border-combat model (attackerRegionId/defenderRegionId migration in deserializeGameState)
+      // Version 7→8: root division state (rebuilt from regions/movements/combats)
     }
 
     // Validate required fields
@@ -315,8 +320,18 @@ export function loadGame(): {
       return null;
     }
 
+    const gameState = deserializeGameState(data.gameState);
+
     return {
-      gameState: deserializeGameState(data.gameState),
+      gameState: {
+        ...gameState,
+        divisions: buildDivisionState(
+          data.regions,
+          gameState.movingUnits,
+          gameState.activeCombats,
+          data.gameState.divisions ?? {}
+        ),
+      },
       regions: data.regions,
       aiState: data.aiState,
     };

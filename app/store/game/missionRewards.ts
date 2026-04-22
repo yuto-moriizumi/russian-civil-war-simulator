@@ -7,6 +7,7 @@ import {
   MissionRewards,
   RegionState,
   Relationship,
+  DivisionState,
 } from '../../types/game';
 import { createInitialAIArmyGroup, createInitialAIState } from '../../ai/cpuPlayer';
 import { createDivision } from '../../utils/combat';
@@ -16,6 +17,7 @@ import { calculateCountryBonuses, getDivisionStats } from '../../utils/bonusCalc
 import { createGameEvent } from '../../utils/eventUtils';
 import { applyRelationshipChange, getRelationshipStatus, joinPuppetToOverlordWars } from '../../utils/relationshipUtils';
 import type { GameStore } from './types';
+import { buildDivisionState } from '../../utils/divisionState';
 
 export function buildMissionRewardDescription(rewards: MissionRewards): string {
   const rewardParts: string[] = [];
@@ -125,6 +127,7 @@ export function applyLiberatePuppet(
 ): {
   updatedRelationships: Relationship[];
   updatedRegions: RegionState;
+  updatedDivisions: DivisionState;
   updatedArmyGroups: ArmyGroup[];
   updatedAIStates: AIState[];
   puppetEvents: GameEvent[];
@@ -133,6 +136,7 @@ export function applyLiberatePuppet(
     return {
       updatedRelationships: [...state.relationships],
       updatedRegions: regions,
+      updatedDivisions: buildDivisionState(regions),
       updatedArmyGroups: state.armyGroups,
       updatedAIStates: state.aiStates,
       puppetEvents: [],
@@ -200,11 +204,19 @@ export function applyLiberatePuppet(
     ),
   ];
 
-  return { updatedRelationships, updatedRegions, updatedArmyGroups, updatedAIStates, puppetEvents };
+  return {
+    updatedRelationships,
+    updatedRegions,
+    updatedDivisions: buildDivisionState(updatedRegions),
+    updatedArmyGroups,
+    updatedAIStates,
+    puppetEvents,
+  };
 }
 
 export function applyClaimedMissionRewards(
-  state: Pick<GameStore, 'regions' | 'movingUnits' | 'relationships' | 'armyGroups' | 'aiStates' | 'selectedCountry' | 'countryBonuses' | 'dateTime'>,
+  state: Pick<GameStore, 'regions' | 'movingUnits' | 'relationships' | 'armyGroups' | 'aiStates' | 'selectedCountry' | 'countryBonuses' | 'dateTime'> &
+    Partial<Pick<GameStore, 'activeCombats' | 'divisions'>>,
   mission: Mission,
   countryId: CountryId,
   updatedMissions: Mission[],
@@ -266,6 +278,12 @@ export function applyClaimedMissionRewards(
   return {
     updatedCountryBonuses: newCountryBonuses,
     updatedRegions: regionsAfterPuppet,
+    updatedDivisions: buildDivisionState(
+      regionsAfterPuppet,
+      updatedMovingUnits,
+      state.activeCombats ?? [],
+      state.divisions ?? {}
+    ),
     updatedMovingUnits,
     updatedRelationships: relationshipsAfterWar,
     updatedArmyGroups,

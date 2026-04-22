@@ -6,6 +6,7 @@ import { GameStore } from './types';
 import { StoreApi } from 'zustand';
 import { defendArmyGroup } from './armyGroupDefend';
 import { attackArmyGroup } from './armyGroupAttack';
+import { buildDivisionState } from '../../utils/divisionState';
 
 /**
  * Defines actions related to army group management:
@@ -136,6 +137,7 @@ export const createArmyGroupActions = (
       theaters: allUpdatedTheaters,
       armyGroups: updatedArmyGroups,
       regions: updatedRegions,
+      divisions: buildDivisionState(updatedRegions, updatedMovingUnits, updatedActiveCombats, get().divisions),
       movingUnits: updatedMovingUnits,
       activeCombats: updatedActiveCombats,
       productionQueues: updatedProductionQueues,
@@ -222,15 +224,48 @@ export const createArmyGroupActions = (
   },
 
   advanceArmyGroup: (groupId: string) => {
-    attackArmyGroup(groupId, get(), set);
+    const state = get();
+    attackArmyGroup(groupId, state, partial => {
+      set({
+        ...partial,
+        divisions: buildDivisionState(
+          partial.regions ?? state.regions,
+          partial.movingUnits ?? state.movingUnits,
+          partial.activeCombats ?? state.activeCombats,
+          state.divisions
+        ),
+      });
+    });
   },
 
   attackArmyGroup: (groupId: string) => {
-    attackArmyGroup(groupId, get(), set);
+    const state = get();
+    attackArmyGroup(groupId, state, partial => {
+      set({
+        ...partial,
+        divisions: buildDivisionState(
+          partial.regions ?? state.regions,
+          partial.movingUnits ?? state.movingUnits,
+          partial.activeCombats ?? state.activeCombats,
+          state.divisions
+        ),
+      });
+    });
   },
 
   defendArmyGroup: (groupId: string) => {
-    defendArmyGroup(groupId, get(), set);
+    const state = get();
+    defendArmyGroup(groupId, state, partial => {
+      set({
+        ...partial,
+        divisions: buildDivisionState(
+          partial.regions ?? state.regions,
+          partial.movingUnits ?? state.movingUnits,
+          partial.activeCombats ?? state.activeCombats,
+          state.divisions
+        ),
+      });
+    });
   },
 
   /**
@@ -266,6 +301,10 @@ export const createArmyGroupActions = (
       };
     });
 
-    set({ regions: updatedRegions, movingUnits: updatedMovingUnits });
+    set({
+      regions: updatedRegions,
+      divisions: buildDivisionState(updatedRegions, updatedMovingUnits, get().activeCombats, get().divisions),
+      movingUnits: updatedMovingUnits,
+    });
   },
 });

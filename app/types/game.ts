@@ -25,13 +25,16 @@ export interface Division {
   defence: number;      // Defence power (damage reduction)
 }
 
+// Normalized division state. Division objects are keyed by their stable ID.
+export type DivisionState = Record<string, Division>;
+
 // Map region types
 export interface Region {
   id: string;           // "RU-ALT", "UA-74" etc. (ISO format)
   name: string;         // "Altai Krai"
   countryIso3: string;  // "RUS", "UKR"
   owner: CountryId;     // Which country controls this region
-  divisions: Division[]; // Divisions stationed in this region
+  divisions: Division[]; // Regional location index; GameState.divisions is canonical
 }
 
 export interface Adjacency {
@@ -234,6 +237,7 @@ export interface GameState {
   isPlaying: boolean;
   gameSpeed: GameSpeed;
   isPlayerAIEnabled: boolean;
+  divisions: DivisionState; // Canonical division state, keyed by division ID
   missions: Mission[];
   movingUnits: Movement[];
   gameEvents: GameEvent[];

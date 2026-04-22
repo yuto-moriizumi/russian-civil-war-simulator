@@ -417,7 +417,7 @@ describe('processProductionQueue — stale armyGroupId after country switch', ()
       },
     ];
 
-    const { updatedRegions } = processProductionQueue(
+    const { updatedRegions, updatedDivisions } = processProductionQueue(
       productionQueues,
       currentTime,
       regions,
@@ -428,6 +428,7 @@ describe('processProductionQueue — stale armyGroupId after country switch', ()
     // The produced division must be in the region
     const divisions = updatedRegions['RU-A'].divisions;
     expect(divisions).toHaveLength(1);
+    expect(updatedDivisions[divisions[0].id]).toEqual(divisions[0]);
 
     // And it must reference the new (valid) army group, NOT the stale one
     expect(divisions[0].armyGroupId).toBe(newArmyGroupId);
