@@ -20,21 +20,21 @@ export function hasOwnershipChangedForCountries(
   return false;
 }
 
-export function discoverNewAIStates(
+export function initializeAIStatesForNewCountries(
   aiStates: AIState[],
   regions: RegionState,
   playerCountryId: CountryId | undefined
 ): AIState[] {
-  const known = new Set(aiStates.map(s => s.countryId));
   const excluded = new Set<CountryId>(['neutral' as CountryId, 'foreign' as CountryId]);
-  const result = [...aiStates];
+  const known = new Set(aiStates.map(s => s.countryId));
+  const newStates: AIState[] = [];
   Object.values(regions).forEach(region => {
     if (!known.has(region.owner) && region.owner !== playerCountryId && !excluded.has(region.owner)) {
       known.add(region.owner);
-      result.push(createInitialAIState(region.owner));
+      newStates.push(createInitialAIState(region.owner));
     }
   });
-  return result;
+  return newStates.length > 0 ? [...aiStates, ...newStates] : aiStates;
 }
 
 export function getEffectiveAIStates(
