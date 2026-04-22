@@ -249,11 +249,12 @@ export function applyCompletedMovements(
           const otherCombatsOnRegion = nextCombats.filter(
             c => c.defenderRegionId === toRegion && !c.isComplete
           );
+          // When other combats already exist on this region, defender divisions are already
+          // registered there. Using an empty array prevents the same defenders from appearing
+          // in multiple simultaneous combats (multi-combat duplication bug).
           const effectiveDefenderDivisions = totalDefenderDivisions.length > 0
             ? totalDefenderDivisions
-            : otherCombatsOnRegion.length > 0
-              ? otherCombatsOnRegion[0].defenderDivisions.map(d => ({ ...d }))
-              : [];
+            : [];
 
           if (effectiveDefenderDivisions.length === 0) {
             // Undefended capture

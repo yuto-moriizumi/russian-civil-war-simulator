@@ -314,8 +314,11 @@ export function attackArmyGroup(
           const otherCombatsOnRegion = [...activeCombats, ...newCombats].filter(
             c => c.defenderRegionId === attackTargetId && !c.isComplete
           );
+          // When other combats already exist on this region, defender divisions are already
+          // registered there. Using an empty array prevents the same defenders from appearing
+          // in multiple simultaneous combats (multi-combat duplication bug).
           const combatDefenderDivisions = otherCombatsOnRegion.length > 0
-            ? otherCombatsOnRegion[0].defenderDivisions.map(d => ({ ...d }))
+            ? []
             : defenderDivisions;
 
           const newCombat = createActiveCombat(
