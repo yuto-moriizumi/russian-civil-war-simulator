@@ -1,46 +1,19 @@
 import { NextResponse } from 'next/server';
+import { readGeneratedMapData } from '../generatedFileUtils';
+import type { GeneratedOwnershipData } from '../../../data/map/generatedTypes';
 
 /**
- * API endpoint to dynamically load ownership data without module caching
- * This prevents stale module cache issues when ownership files are updated
- * by using dynamic imports which are fresh on each request
- * 
  * GET /api/map-tool/load-ownership
- * Returns: { ownership: Record<string, CountryId> }
+ * Returns: { ownership: Record<string, CountryId>, notes?: MapDataNotes }
  */
 export async function GET() {
   try {
-    // Use dynamic imports to fetch fresh data on each request
-    // This bypasses Next.js module caching between saves
-    const [
-      { russiaOwnership },
-      { easternEuropeOwnership },
-      { centralEuropeOwnership },
-      { balkansOwnership },
-      { asiaOwnership },
-      { middleEastOwnership },
-      { otherOwnership }
-    ] = await Promise.all([
-      import('../../../data/map/ownership/russia'),
-      import('../../../data/map/ownership/easternEurope'),
-      import('../../../data/map/ownership/centralEurope'),
-      import('../../../data/map/ownership/balkans'),
-      import('../../../data/map/ownership/asia'),
-      import('../../../data/map/ownership/middleEast'),
-      import('../../../data/map/ownership/other')
-    ]);
+    const data = await readGeneratedMapData<GeneratedOwnershipData>('ownership.json');
 
-    const ownership = {
-      ...russiaOwnership,
-      ...easternEuropeOwnership,
-      ...centralEuropeOwnership,
-      ...balkansOwnership,
-      ...asiaOwnership,
-      ...middleEastOwnership,
-      ...otherOwnership
-    };
-
-    return NextResponse.json({ ownership });
+    return NextResponse.json({
+      ownership: data?.ownership ?? {},
+      notes: data?.notes,
+    });
   } catch (error) {
     console.error('Error loading ownership data:', error);
     return NextResponse.json(

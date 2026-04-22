@@ -1,24 +1,11 @@
-import { CountryId } from '../../types/game';
-import { russiaOwnership } from './ownership/russia';
-import { easternEuropeOwnership } from './ownership/easternEurope';
-import { centralEuropeOwnership } from './ownership/centralEurope';
-import { balkansOwnership } from './ownership/balkans';
-import { asiaOwnership } from './ownership/asia';
-import { middleEastOwnership } from './ownership/middleEast';
-import { otherOwnership } from './ownership/other';
+import generatedOwnership from './generated/ownership.json';
+import type { CountryId } from '../../types/game';
+import type { MapDataNotes } from './generatedTypes';
 
 /**
- * Initial region ownership at game start (November 20, 1917 - Ukrainian People's Republic declared)
- * 
- * Soviet: Moscow and surrounding core regions (Bolshevik control)
- * White: Peripheral Russian regions, Ukraine, Belarus, Finland, Baltics, Central Asia (anti-Bolshevik forces)
+ * Compatibility wrapper for map-tool generated ownership data.
+ * The editable source of truth is app/data/map/generated/ownership.json.
  */
-export const initialRegionOwnership: Record<string, CountryId> = {
-  ...russiaOwnership,
-  ...easternEuropeOwnership,
-  ...centralEuropeOwnership,
-  ...balkansOwnership,
-  ...asiaOwnership,
-  ...middleEastOwnership,
-  ...otherOwnership,
-};
+export const initialRegionOwnership = generatedOwnership.ownership as Record<string, CountryId>;
+
+export const initialRegionOwnershipNotes = generatedOwnership.notes as MapDataNotes | undefined;
