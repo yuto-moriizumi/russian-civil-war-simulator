@@ -9,7 +9,6 @@ import {
   CountryId,
   GameEventType,
   ProductionQueueItem,
-  Division,
   ArmyGroup,
   Theater,
   Relationship,
@@ -32,7 +31,7 @@ interface SerializedMovement {
   id: string;
   fromRegion: string;
   toRegion: string;
-  divisions: Division[];
+  divisionIds: string[];
   departureTime: string;
   arrivalTime: string;
   owner: CountryId;
@@ -70,8 +69,8 @@ interface SerializedActiveCombat {
   regionName?: string;
   attackerCountry: CountryId;
   defenderCountry: CountryId;
-  attackerDivisions: Division[];
-  defenderDivisions: Division[];
+  attackerDivisionIds: string[];
+  defenderDivisionIds: string[];
   initialAttackerCount: number;
   initialDefenderCount: number;
   initialAttackerHp: number;

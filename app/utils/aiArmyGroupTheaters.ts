@@ -102,7 +102,7 @@ function createAIArmyGroup(
   };
 }
 
-function replaceDivisionArmyGroupId<T extends { armyGroupId: string }>(
+function _replaceDivisionArmyGroupId<T extends { armyGroupId: string }>(
   division: T,
   fromGroupId: string,
   toGroupId: string
@@ -130,8 +130,8 @@ export function syncAIArmyGroupsToTheaters({
   let nextArmyGroups = [...armyGroups];
   const nextRegions = regions;
   let nextDivisions = { ...baseDivisions };
-  let nextMovingUnits = movingUnits;
-  let nextActiveCombats = activeCombats;
+  const nextMovingUnits = movingUnits;
+  const nextActiveCombats = activeCombats;
   let nextProductionQueues = productionQueues;
 
   const aiCountrySet = new Set(aiCountryIds);
@@ -146,10 +146,12 @@ export function syncAIArmyGroupsToTheaters({
     }
   }
 
-  // Reverse index: armyGroupId -> movement indices
+  // Reverse index: armyGroupId -> movement indices (via DivisionState)
   const groupToMovementIndices = new Map<string, number[]>();
   for (let i = 0; i < movingUnits.length; i++) {
-    for (const div of movingUnits[i].divisions) {
+    for (const divId of movingUnits[i].divisionIds) {
+      const div = nextDivisions[divId];
+      if (!div) continue;
       let arr = groupToMovementIndices.get(div.armyGroupId);
       if (!arr) { arr = []; groupToMovementIndices.set(div.armyGroupId, arr); }
       arr.push(i);
@@ -176,33 +178,14 @@ export function syncAIArmyGroupsToTheaters({
     // Update only affected movements via reverse index
     const affectedMovements = groupToMovementIndices.get(fromGroupId);
     if (affectedMovements && affectedMovements.length > 0) {
-      const newMovingUnits = [...nextMovingUnits];
-      const uniqueIndices = [...new Set(affectedMovements)];
-      for (const i of uniqueIndices) {
-        newMovingUnits[i] = {
-          ...newMovingUnits[i],
-          divisions: newMovingUnits[i].divisions.map(division =>
-            replaceDivisionArmyGroupId(division, fromGroupId, toGroupId)
-          ),
-        };
-      }
-      nextMovingUnits = newMovingUnits;
-      // Update index
+      // Movement divisionIds are stable; just update the index
       let toArr = groupToMovementIndices.get(toGroupId);
       if (!toArr) { toArr = []; groupToMovementIndices.set(toGroupId, toArr); }
       toArr.push(...affectedMovements);
       groupToMovementIndices.delete(fromGroupId);
     }
 
-    nextActiveCombats = nextActiveCombats.map(combat => ({
-      ...combat,
-      attackerDivisions: combat.attackerDivisions.map(division =>
-        replaceDivisionArmyGroupId(division, fromGroupId, toGroupId)
-      ),
-      defenderDivisions: combat.defenderDivisions.map(division =>
-        replaceDivisionArmyGroupId(division, fromGroupId, toGroupId)
-      ),
-    }));
+    // Combat division ownership is tracked via DivisionState — no need to update combat arrays
 
     nextProductionQueues = Object.fromEntries(
       Object.entries(nextProductionQueues).map(([countryId, queue]) => [
@@ -254,43 +237,20 @@ export function syncAIArmyGroupsToTheaters({
       }
     }
 
-    nextMovingUnits = nextMovingUnits.map(movement => {
-      if (movement.owner !== countryId) return movement;
+    // Update armyGroupId for divisions in transit based on their destination
+    for (const movement of nextMovingUnits) {
+      if (movement.owner !== countryId) continue;
       const groupId = regionToGroupId.get(movement.toRegion) ?? regionToGroupId.get(movement.fromRegion);
-      if (!groupId) return movement;
+      if (!groupId) continue;
+      for (const divId of movement.divisionIds) {
+        const div = nextDivisions[divId];
+        if (div && div.owner === countryId && div.armyGroupId !== groupId) {
+          nextDivisions = { ...nextDivisions, [divId]: { ...div, armyGroupId: groupId } };
+        }
+      }
+    }
 
-      return {
-        ...movement,
-        divisions: movement.divisions.map(division =>
-          division.owner === countryId ? { ...division, armyGroupId: groupId } : division
-        ),
-      };
-    });
-
-    nextActiveCombats = nextActiveCombats.map(combat => {
-      const attackerGroupId = combat.attackerCountry === countryId
-        ? regionToGroupId.get(combat.attackerRegionId)
-        : undefined;
-      const defenderGroupId = combat.defenderCountry === countryId
-        ? regionToGroupId.get(combat.defenderRegionId)
-        : undefined;
-
-      if (!attackerGroupId && !defenderGroupId) return combat;
-
-      return {
-        ...combat,
-        attackerDivisions: attackerGroupId
-          ? combat.attackerDivisions.map(division =>
-              division.owner === countryId ? { ...division, armyGroupId: attackerGroupId } : division
-            )
-          : combat.attackerDivisions,
-        defenderDivisions: defenderGroupId
-          ? combat.defenderDivisions.map(division =>
-              division.owner === countryId ? { ...division, armyGroupId: defenderGroupId } : division
-            )
-          : combat.defenderDivisions,
-      };
-    });
+    // Combat divisions: armyGroupId is tracked via DivisionState — no need to update combat arrays
   };
 
   for (const countryId of aiCountrySet) {

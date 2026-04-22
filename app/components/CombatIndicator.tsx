@@ -1,10 +1,11 @@
 'use client';
 
-import { ActiveCombat } from '../types/game';
+import { ActiveCombat, DivisionState } from '../types/game';
 import { COUNTRY_COLORS } from '../utils/mapUtils';
 
 interface CombatIndicatorProps {
   combat: ActiveCombat;
+  divisions: DivisionState;
   onClick: () => void;
   isSelected?: boolean;
 }
@@ -13,9 +14,9 @@ interface CombatIndicatorProps {
  * Combat indicator shown on the map during active battles
  * Displays attacker/defender strength bars similar to Hearts of Iron
  */
-export default function CombatIndicator({ combat, onClick, isSelected }: CombatIndicatorProps) {
-  const attackerHp = combat.attackerDivisions.reduce((sum, d) => sum + d.hp, 0);
-  const defenderHp = combat.defenderDivisions.reduce((sum, d) => sum + d.hp, 0);
+export default function CombatIndicator({ combat, divisions, onClick, isSelected }: CombatIndicatorProps) {
+  const attackerHp = combat.attackerDivisionIds.reduce((sum, id) => sum + (divisions[id]?.hp ?? 0), 0);
+  const defenderHp = combat.defenderDivisionIds.reduce((sum, id) => sum + (divisions[id]?.hp ?? 0), 0);
   
   // Calculate progress bars based on HP relative to initial
   const attackerProgress = Math.min(100, combat.initialAttackerHp > 0 
@@ -52,7 +53,7 @@ export default function CombatIndicator({ combat, onClick, isSelected }: CombatI
             <span className={`text-[10px] font-bold ${
               combat.attackerCountry === 'white' ? 'text-black' : 'text-white'
             }`}>
-              {combat.attackerDivisions.length}
+              {combat.attackerDivisionIds.length}
             </span>
           </div>
           {/* HP bar below */}
@@ -95,7 +96,7 @@ export default function CombatIndicator({ combat, onClick, isSelected }: CombatI
             <span className={`text-[10px] font-bold ${
               combat.defenderCountry === 'white' ? 'text-black' : 'text-white'
             }`}>
-              {combat.defenderDivisions.length}
+              {combat.defenderDivisionIds.length}
             </span>
           </div>
           {/* HP bar below */}

@@ -5,7 +5,7 @@ import {
   computeFrontline,
   assignDivisionsToFrontline,
 } from '../../utils/pathfinding';
-import { getDivisionsInRegion } from '../../utils/divisionState';
+import { getDivisionsInRegion, getCombatDefenders } from '../../utils/divisionState';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { createActiveCombat } from '../../utils/combat';
 import { createGameEvent } from '../../utils/eventUtils';
@@ -79,6 +79,7 @@ export function advanceArmyGroup(
   const newCombats: ActiveCombat[] = [];
   let newEvents = [...gameEvents];
   const newRegions = { ...regions };
+  const newDivisions = { ...divisions };
   const movedRegions = new Set<string>();
   const targetRegionIds = new Set<string>();
 
@@ -134,16 +135,15 @@ export function advanceArmyGroup(
         pendingCombatId = existingCombat.id;
       } else {
           const inTransitFromDest = new Set(
-          movingUnits.filter(m => m.fromRegion === toRegion).flatMap(m => m.divisions.map(d => d.id))
+          movingUnits.filter(m => m.fromRegion === toRegion).flatMap(m => m.divisionIds)
         );
         const defenderDivisions = getDivisionsInRegion(divisions, toRegion).filter(d => d.owner === destRegion.owner && !inTransitFromDest.has(d.id));
         if (defenderDivisions.length > 0) {
-          // Check for other combats on the same defender region (multi-front)
           const otherCombatsOnRegion = [...activeCombats, ...newCombats].filter(
             c => c.defenderRegionId === toRegion && !c.isComplete
           );
           const combatDefenderDivisions = otherCombatsOnRegion.length > 0
-            ? otherCombatsOnRegion[0].defenderDivisions.map(d => ({ ...d }))
+            ? getCombatDefenders(divisions, otherCombatsOnRegion[0])
             : defenderDivisions;
 
           const newCombat = createActiveCombat(
@@ -159,10 +159,14 @@ export function advanceArmyGroup(
           );
           pendingCombatId = newCombat.id;
           newCombats.push(newCombat);
-          // Only clear defender divisions on first combat on this region
           const isFirstCombatOnRegion = otherCombatsOnRegion.length === 0;
           if (isFirstCombatOnRegion) {
-            newRegions[toRegion] = { ...destRegion };
+            for (const d of combatDefenderDivisions) {
+              newDivisions[d.id] = { ...d, regionId: null };
+            }
+          }
+          for (const d of divsForMove) {
+            newDivisions[d.id] = { ...d, regionId: null };
           }
 
           const battleEvent = createGameEvent(
@@ -178,11 +182,18 @@ export function advanceArmyGroup(
       }
     }
 
+    // Set regionId=null for moving divisions if not already done in combat branch
+    if (!pendingCombatId || !newCombats.find(c => c.id === pendingCombatId)) {
+      for (const d of divsForMove) {
+        newDivisions[d.id] = { ...d, regionId: null };
+      }
+    }
+
     const newMovement: Movement = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${fromRegion}-${toRegion}`,
       fromRegion,
       toRegion,
-      divisions: divsForMove,
+      divisionIds: divsForMove.map(d => d.id),
       departureTime: new Date(dateTime),
       arrivalTime,
       owner: countryId,
@@ -191,8 +202,6 @@ export function advanceArmyGroup(
 
     newMovements.push(newMovement);
     targetRegionIds.add(toRegion);
-
-    // Divisions stay in the region; they are removed only when the movement completes.
     movedRegions.add(fromRegion);
   }
 
@@ -209,6 +218,7 @@ export function advanceArmyGroup(
 
     setState({
       regions: newRegions,
+      divisions: newDivisions,
       movingUnits: [...movingUnits, ...newMovements],
       armyGroups: updatedArmyGroups,
       activeCombats: [...activeCombats, ...newCombats],

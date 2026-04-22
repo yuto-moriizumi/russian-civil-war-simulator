@@ -82,13 +82,15 @@ export function defendArmyGroup(
   const inTransitDivisionIds = new Set<string>();
   movingUnits.forEach(m => {
     if (m.owner !== countryId) return;
-    m.divisions.forEach(d => { inTransitDivisionIds.add(d.id); });
+    const divIds = m.divisionIds ?? [];
+    divIds.forEach(id => { inTransitDivisionIds.add(id); });
   });
 
   // For divisions heading directly to a border, credit that border's committed count.
   movingUnits.forEach(m => {
     if (m.owner !== countryId) return;
-    const count = m.divisions.filter(d => d.armyGroupId === groupId).length;
+    const divIds = m.divisionIds ?? [];
+    const count = divIds.filter(id => divisions[id]?.armyGroupId === groupId).length;
     if (count > 0 && borderSet.has(m.toRegion)) {
       committedAtBorder.set(m.toRegion, (committedAtBorder.get(m.toRegion) ?? 0) + count);
     }
@@ -105,7 +107,8 @@ export function defendArmyGroup(
   });
   movingUnits.forEach(m => {
     if (m.owner !== countryId) return;
-    totalGroupDivisions += m.divisions.filter(d => d.armyGroupId === groupId).length;
+    const divIds = m.divisionIds ?? [];
+    totalGroupDivisions += divIds.filter(id => divisions[id]?.armyGroupId === groupId).length;
   });
 
   const targetPerBorder = Math.floor(totalGroupDivisions / allBorderRegions.length);
@@ -216,7 +219,7 @@ export function defendArmyGroup(
       const alreadyMovingFromSource = movingUnits.some(m =>
         m.fromRegion === sourceRegionId &&
         m.owner === countryId &&
-        m.divisions.some(d => d.armyGroupId === groupId && inTransitDivisionIds.has(d.id))
+        m.divisionIds.some(id => divisions[id]?.armyGroupId === groupId && inTransitDivisionIds.has(id))
       );
       if (alreadyMovingFromSource) continue;
 
@@ -257,21 +260,24 @@ export function defendArmyGroup(
       const arrivalTime = new Date(dateTime);
       arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
 
+      // Set regionId=null for moving divisions
+      for (const d of divsToSend) {
+        newDivisions[d.id] = { ...d, regionId: null };
+      }
+
       newMovements.push({
         id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${sourceRegionId}`,
         fromRegion: sourceRegionId,
         toRegion: nextStep,
-        divisions: divsToSend,
+        divisionIds: divsToSend.map(d => d.id),
         departureTime: new Date(dateTime),
         arrivalTime,
         owner: countryId,
       });
 
-      // Divisions stay in the region; they are removed only when the movement completes.
       movedRegions.add(sourceRegionId);
       targetRegionSet.add(nextStep);
       divsToSend.forEach(d => inTransitDivisionIds.add(d.id));
-      divsToSend.forEach(d => { delete newDivisions[d.id]; });
 
       committed += divsToSend.length;
     }

@@ -190,10 +190,10 @@ describe('attackArmyGroup – Phase 1 redistributes from stacked border region',
     // Divisions stay in region during transit; check dispatch count via movements.
     const reinforcementDispatched = (captured.movingUnits as Movement[])
       .filter(m => m.fromRegion === 'B1' && m.toRegion !== 'ENEMY_1')
-      .reduce((s, m) => s + m.divisions.length, 0);
+      .reduce((s, m) => s + m.divisionIds.length, 0);
     const advanced = (captured.movingUnits as Movement[])
       .filter(m => m.fromRegion === 'B1' && m.toRegion === 'ENEMY_1')
-      .reduce((s, m) => s + m.divisions.length, 0);
+      .reduce((s, m) => s + m.divisionIds.length, 0);
     expect(reinforcementDispatched).toBeGreaterThan(0);
     expect(reinforcementDispatched).toBeLessThan(15);
     expect(advanced).toBe(3);
@@ -210,10 +210,10 @@ describe('attackArmyGroup – Phase 1 redistributes from stacked border region',
     // single-enemy rule advances the remaining 3 to ENEMY_1.
     const reinforcementDispatched = (captured.movingUnits as Movement[])
       .filter(m => m.fromRegion === 'B1' && m.toRegion !== 'ENEMY_1')
-      .reduce((s, m) => s + m.divisions.length, 0);
+      .reduce((s, m) => s + m.divisionIds.length, 0);
     const advanced = (captured.movingUnits as Movement[])
       .filter(m => m.fromRegion === 'B1' && m.toRegion === 'ENEMY_1')
-      .reduce((s, m) => s + m.divisions.length, 0);
+      .reduce((s, m) => s + m.divisionIds.length, 0);
     expect(reinforcementDispatched).toBe(12);
     expect(advanced).toBe(3);
   });
@@ -259,7 +259,7 @@ describe('attackArmyGroup – single-enemy auto-advance when borders meet target
     const advances = movements.filter(m => m.toRegion === 'ENEMY');
     // Both B1 and B2 advance all stationary divisions to the single enemy target.
     expect(advances.length).toBe(2);
-    advances.forEach(adv => expect(adv.divisions.length).toBe(2));
+    advances.forEach(adv => expect(adv.divisionIds.length).toBe(2));
   });
 });
 
@@ -316,7 +316,7 @@ describe('attackArmyGroup – Phase 2 advances surplus into defended enemy regio
     id: 'mv-transit-to-b2',
     fromRegion: 'REAR',
     toRegion: 'B2',
-    divisions: transitDivs,
+    divisionIds: transitDivs.map(d => d.id),
     departureTime: new Date('1918-01-01T00:00:00Z'),
     arrivalTime: new Date('1918-01-01T12:00:00Z'),
     owner: 'soviet',
@@ -332,7 +332,7 @@ describe('attackArmyGroup – Phase 2 advances surplus into defended enemy regio
     const movements = (captured.movingUnits ?? []) as Movement[];
     const advance = movements.find(m => m.fromRegion === 'B1' && m.toRegion === 'ENEMY_1');
     expect(advance).toBeDefined();
-    expect(advance!.divisions.length).toBe(10);
+    expect(advance!.divisionIds.length).toBe(10);
   });
 
   it('creates an ActiveCombat when advancing into a defended region', () => {
@@ -408,7 +408,7 @@ describe('attackArmyGroup – Phase 2 advances into undefended enemy without cre
     id: 'mv-transit-to-b2',
     fromRegion: 'REAR',
     toRegion: 'B2',
-    divisions: transitDivs,
+    divisionIds: transitDivs.map(d => d.id),
     departureTime: new Date('1918-01-01T00:00:00Z'),
     arrivalTime: new Date('1918-01-01T12:00:00Z'),
     owner: 'soviet',
@@ -474,7 +474,7 @@ describe('attackArmyGroup – Phase 2 single-enemy auto-advance', () => {
     const movements = (captured.movingUnits ?? []) as Movement[];
     const advance = movements.find(m => m.fromRegion === 'BORDER' && m.toRegion === 'ENEMY');
     expect(advance).toBeDefined();
-    expect(advance!.divisions.length).toBe(1);
+    expect(advance!.divisionIds.length).toBe(1);
   });
 
   it('creates an ActiveCombat when auto-advancing into a defended enemy region', () => {
@@ -531,7 +531,7 @@ describe('attackArmyGroup – Phase 2 single-enemy auto-advance', () => {
     const movements = (captured.movingUnits ?? []) as Movement[];
     const advance = movements.find(m => m.fromRegion === 'BORDER' && m.toRegion === 'ENEMY');
     expect(advance).toBeDefined();
-    expect(advance!.divisions.length).toBe(2);
+    expect(advance!.divisionIds.length).toBe(2);
   });
 
   it('auto-advances stationary divisions even when Phase 1 also sends reinforcements to that border', () => {
@@ -556,6 +556,6 @@ describe('attackArmyGroup – Phase 2 single-enemy auto-advance', () => {
 
     expect(reinforcement).toBeDefined();
     expect(advance).toBeDefined();
-    expect(advance!.divisions.map(d => d.id)).toEqual(['b1-stationary']);
+    expect(advance!.divisionIds).toEqual(['b1-stationary']);
   });
 });

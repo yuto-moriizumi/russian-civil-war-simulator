@@ -9,6 +9,7 @@ export function MovingUnitInfoPanel() {
   const movingUnits = useGameStore(state => state.movingUnits);
   const regions = useGameStore(state => state.regions);
   const dateTime = useGameStore(state => state.dateTime);
+  const divisions = useGameStore(state => state.divisions);
 
   if (!selectedMovementId) return null;
   const movement = movingUnits.find(m => m.id === selectedMovementId);
@@ -85,13 +86,15 @@ export function MovingUnitInfoPanel() {
       </div>
 
       {/* Division stats */}
-      {movement.divisions.length > 0 && (
+      {movement.divisionIds.length > 0 && (() => {
+        const divObjs = movement.divisionIds.map(id => divisions[id]).filter(Boolean) as import('../../types/game').Division[];
+        return (
         <div className="mt-3 rounded bg-stone-800 p-2">
           <div className="text-xs font-semibold text-stone-300 mb-1">
-            Divisions ({movement.divisions.length}):
+            Divisions ({movement.divisionIds.length}):
           </div>
           <div className="space-y-1 max-h-32 overflow-y-auto">
-            {movement.divisions.map((div) => (
+            {divObjs.map((div) => (
               <div key={div.id} className="flex items-center justify-between text-xs">
                 <span className="text-stone-400 truncate max-w-[120px]" title={div.name}>
                   {div.name.length > 15 ? div.name.substring(0, 15) + '...' : div.name}
@@ -106,14 +109,15 @@ export function MovingUnitInfoPanel() {
             <div className="border-t border-stone-700 pt-1 mt-1 flex justify-between text-xs font-semibold">
               <span className="text-stone-300">Total:</span>
               <span className="flex items-center gap-2">
-                <span className="text-red-400">❤ {movement.divisions.reduce((s, d) => s + d.hp, 0)}</span>
-                <span className="text-orange-400">⚔ {movement.divisions.reduce((s, d) => s + d.attack, 0)}</span>
-                <span className="text-blue-400">🛡 {Math.round(movement.divisions.reduce((s, d) => s + d.defence, 0) / movement.divisions.length)}</span>
+                <span className="text-red-400">❤ {divObjs.reduce((s, d) => s + d.hp, 0)}</span>
+                <span className="text-orange-400">⚔ {divObjs.reduce((s, d) => s + d.attack, 0)}</span>
+                <span className="text-blue-400">🛡 {divObjs.length > 0 ? Math.round(divObjs.reduce((s, d) => s + d.defence, 0) / divObjs.length) : 0}</span>
               </span>
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       <button
         onClick={() => setSelectedMovementId(null)}

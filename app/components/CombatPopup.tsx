@@ -13,13 +13,16 @@ export default function CombatPopup() {
   const activeCombats = useGameStore(state => state.activeCombats);
   const setSelectedCombatId = useGameStore(state => state.setSelectedCombatId);
 
+  const divisions = useGameStore(state => state.divisions);
   const combat = activeCombats.find(c => c.id === selectedCombatId);
   const onClose = () => setSelectedCombatId(null);
 
   if (!combat) return null;
 
-  const attackerHp = combat.attackerDivisions.reduce((sum, d) => sum + d.hp, 0);
-  const defenderHp = combat.defenderDivisions.reduce((sum, d) => sum + d.hp, 0);
+  const attackerDivisions = combat.attackerDivisionIds.map(id => divisions[id]).filter(Boolean) as Division[];
+  const defenderDivisions = combat.defenderDivisionIds.map(id => divisions[id]).filter(Boolean) as Division[];
+  const attackerHp = attackerDivisions.reduce((sum, d) => sum + d.hp, 0);
+  const defenderHp = defenderDivisions.reduce((sum, d) => sum + d.hp, 0);
   
   // Calculate progress bars
   const attackerHpProgress = Math.min(100, combat.initialAttackerHp > 0 
@@ -149,10 +152,10 @@ export default function CombatPopup() {
             <div className="space-y-2">
               <div className="flex justify-between border-b border-stone-700 pb-1 text-stone-400 uppercase tracking-tighter">
                 <span>Attacker Divisions</span>
-                <span>{combat.attackerDivisions.length}</span>
+                <span>{attackerDivisions.length}</span>
               </div>
               <div className="max-h-32 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                {combat.attackerDivisions.map(div => (
+                {attackerDivisions.map(div => (
                   <DivisionRow key={div.id} division={div} country={combat.attackerCountry} />
                 ))}
               </div>
@@ -161,10 +164,10 @@ export default function CombatPopup() {
             <div className="space-y-2">
               <div className="flex justify-between border-b border-stone-700 pb-1 text-stone-400 uppercase tracking-tighter">
                 <span>Defender Divisions</span>
-                <span>{combat.defenderDivisions.length}</span>
+                <span>{defenderDivisions.length}</span>
               </div>
               <div className="max-h-32 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                {combat.defenderDivisions.map(div => (
+                {defenderDivisions.map(div => (
                   <DivisionRow key={div.id} division={div} country={combat.defenderCountry} />
                 ))}
               </div>

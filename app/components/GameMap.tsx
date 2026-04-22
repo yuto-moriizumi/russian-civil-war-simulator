@@ -237,7 +237,7 @@ export default function GameMap() {
               longitude={longitude}
               latitude={latitude}
               offset={offset}
-              isSelected={selectedMovementId === movement.id || (selectedDivisionIds.length > 0 && movement.divisions.some(d => selectedDivisionIds.includes(d.id)))}
+              isSelected={selectedMovementId === movement.id || (selectedDivisionIds.length > 0 && movement.divisionIds.some(id => selectedDivisionIds.includes(id)))}
               isPlayerUnit={movement.owner === playerCountry}
               onSelect={setSelectedMovementId}
             />
@@ -253,6 +253,7 @@ export default function GameMap() {
               combat={combat}
               centroid={centroid}
               onSelectCombat={setSelectedCombatId}
+              divisions={divisions}
             />
           );
         })}

@@ -6,39 +6,48 @@ function putDivision(target: DivisionState, division: Division): void {
 
 /**
  * Returns all divisions located in the given region.
- * In-transit divisions keep their fromRegion as regionId, so they appear here too.
+ * Divisions in movement or combat have regionId=null and are excluded.
  */
 export function getDivisionsInRegion(divisions: DivisionState, regionId: string): Division[] {
   return Object.values(divisions).filter(d => d.regionId === regionId);
 }
 
+/** Returns all divisions belonging to a movement, looked up from DivisionState. */
+export function getMovementDivisions(divisions: DivisionState, movement: Movement): Division[] {
+  return movement.divisionIds.flatMap(id => {
+    const d = divisions[id];
+    return d ? [d] : [];
+  });
+}
+
+/** Returns attacker divisions for a combat, looked up from DivisionState. */
+export function getCombatAttackers(divisions: DivisionState, combat: ActiveCombat): Division[] {
+  return combat.attackerDivisionIds.flatMap(id => {
+    const d = divisions[id];
+    return d ? [d] : [];
+  });
+}
+
+/** Returns defender divisions for a combat, looked up from DivisionState. */
+export function getCombatDefenders(divisions: DivisionState, combat: ActiveCombat): Division[] {
+  return combat.defenderDivisionIds.flatMap(id => {
+    const d = divisions[id];
+    return d ? [d] : [];
+  });
+}
+
 /**
- * Builds the normalized division map from the canonical base plus in-flight overrides.
- * Movement and combat copies win over the base so active HP/stat changes are applied.
+ * Returns the normalized division map.
+ * With DivisionState as the single source of truth this is now an identity
+ * function — kept for backwards-compatibility at call sites that are not yet
+ * fully migrated.
  */
 export function buildDivisionState(
-  movingUnits: Movement[] = [],
-  activeCombats: ActiveCombat[] = [],
+  _movingUnits: Movement[] = [],
+  _activeCombats: ActiveCombat[] = [],
   base: DivisionState = {},
 ): DivisionState {
-  const divisions: DivisionState = { ...base };
-
-  for (const movement of movingUnits) {
-    for (const division of movement.divisions) {
-      putDivision(divisions, division);
-    }
-  }
-
-  for (const combat of activeCombats) {
-    for (const division of combat.attackerDivisions) {
-      putDivision(divisions, { ...division, regionId: null });
-    }
-    for (const division of combat.defenderDivisions) {
-      putDivision(divisions, { ...division, regionId: null });
-    }
-  }
-
-  return divisions;
+  return base;
 }
 
 export function addDivisionsToState(
@@ -51,4 +60,3 @@ export function addDivisionsToState(
   }
   return next;
 }
-

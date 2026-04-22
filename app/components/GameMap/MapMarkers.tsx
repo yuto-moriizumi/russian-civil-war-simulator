@@ -181,7 +181,7 @@ export function MovingUnitMarker({
             color: movement.owner === 'white' ? '#000' : '#fff',
           }}
         >
-          {movement.divisions.length}
+          {movement.divisionIds.length}
         </span>
       </div>
     </Marker>
@@ -192,15 +192,17 @@ interface CombatMarkerProps {
   combat: ActiveCombat;
   centroid: [number, number];
   onSelectCombat: (combatId: string) => void;
+  divisions: DivisionState;
 }
 
 export function CombatMarker({
   combat,
   centroid,
   onSelectCombat,
+  divisions,
 }: CombatMarkerProps) {
-  const attackerHp = combat.attackerDivisions.reduce((sum, d) => sum + d.hp, 0);
-  const defenderHp = combat.defenderDivisions.reduce((sum, d) => sum + d.hp, 0);
+  const attackerHp = combat.attackerDivisionIds.reduce((sum, id) => sum + (divisions[id]?.hp ?? 0), 0);
+  const defenderHp = combat.defenderDivisionIds.reduce((sum, id) => sum + (divisions[id]?.hp ?? 0), 0);
   const attackerProgress = Math.min(100, combat.initialAttackerHp > 0 
     ? (attackerHp / combat.initialAttackerHp) * 100 
     : 0);
@@ -269,7 +271,7 @@ export function CombatMarker({
               fontWeight: 'bold',
               color: attackerTextColor,
             }}>
-              {combat.attackerDivisions.length}
+              {combat.attackerDivisionIds.length}
             </span>
           </div>
           <div style={{ height: '3px', width: '100%', background: 'rgba(0,0,0,0.5)', borderRadius: '0 0 0 2px', marginTop: '1px', overflow: 'hidden' }}>
@@ -312,7 +314,7 @@ export function CombatMarker({
               fontWeight: 'bold',
               color: defenderTextColor,
             }}>
-              {combat.defenderDivisions.length}
+              {combat.defenderDivisionIds.length}
             </span>
             {defenderFlagUrl ? (
               <img

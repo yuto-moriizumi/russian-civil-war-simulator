@@ -1,4 +1,4 @@
-import { Division, CombatResult, CountryId, ActiveCombat, ArmyGroup, RegionState, Adjacency, CountryBonuses } from '../types/game';
+import { Division, CombatResult, CountryId, ActiveCombat, ArmyGroup, RegionState, Adjacency, CountryBonuses, DivisionState } from '../types/game';
 import { getDivisionStats } from './bonusCalculator';
 import { GAME_CONFIG } from '../constants/gameConfig';
 
@@ -166,8 +166,6 @@ export function createActiveCombat(
   defenderDivisions: Division[],
   currentTime: Date
 ): ActiveCombat {
-  const attackerDivisionsCopy = attackerDivisions.map(d => ({ ...d }));
-  const defenderDivisionsCopy = defenderDivisions.map(d => ({ ...d }));
   const combatId = generateCombatId();
 
   return {
@@ -178,8 +176,8 @@ export function createActiveCombat(
     defenderRegionName,
     attackerCountry,
     defenderCountry,
-    attackerDivisions: attackerDivisionsCopy,
-    defenderDivisions: defenderDivisionsCopy,
+    attackerDivisionIds: attackerDivisions.map(d => d.id),
+    defenderDivisionIds: defenderDivisions.map(d => d.id),
     initialAttackerCount: attackerDivisions.length,
     initialDefenderCount: defenderDivisions.length,
     initialAttackerHp: getTotalHp(attackerDivisions),
@@ -195,20 +193,23 @@ export function createActiveCombat(
 
 /**
  * Process a single combat round for an active combat.
- * Returns the updated combat state and any divisions that retreated.
+ * Reads division data from DivisionState. Returns the updated combat state,
+ * updated DivisionState (with post-round HP), and retreating division IDs.
  * On the final round, winner-side divisions that reached HP=0 are restored
  * to HP=1 so they remain in the victorious region rather than retreating.
  */
 export function processCombatRound(
   combat: ActiveCombat,
+  divisions: DivisionState,
   regions: RegionState,
   adjacency: Adjacency
 ): {
   combat: ActiveCombat;
-  retreatingDivisions: { division: Division; toRegionId: string | null; fromRegionId: string }[]
+  updatedDivisions: DivisionState;
+  retreatingDivisions: { divisionId: string; toRegionId: string | null; fromRegionId: string }[];
 } {
   if (combat.isComplete) {
-    return { combat, retreatingDivisions: [] };
+    return { combat, updatedDivisions: divisions, retreatingDivisions: [] };
   }
 
   const defenderRegion = regions[combat.defenderRegionId];
@@ -218,14 +219,16 @@ export function processCombatRound(
       console.log('[COMBAT CANCELLED]', { combatId: combat.id, reason: 'defender region already captured by attacker' });
       return {
         combat: { ...combat, isComplete: true, victor: combat.attackerCountry },
+        updatedDivisions: divisions,
         retreatingDivisions: [],
       };
     } else {
       console.log('[COMBAT CANCELLED]', { combatId: combat.id, reason: 'defender region captured by third party' });
       return {
         combat: { ...combat, isComplete: true, victor: combat.defenderCountry },
-        retreatingDivisions: combat.attackerDivisions.map(d => ({
-          division: d,
+        updatedDivisions: divisions,
+        retreatingDivisions: combat.attackerDivisionIds.map(id => ({
+          divisionId: id,
           toRegionId: combat.attackerRegionId,
           fromRegionId: combat.attackerRegionId,
         })),
@@ -233,8 +236,9 @@ export function processCombatRound(
     }
   }
 
-  let attackerDivisions = combat.attackerDivisions.map(d => ({ ...d }));
-  let defenderDivisions = combat.defenderDivisions.map(d => ({ ...d }));
+  // Build local mutable arrays from DivisionState for damage computation
+  let attackerDivisions: Division[] = combat.attackerDivisionIds.map(id => ({ ...divisions[id] })).filter(d => d.id);
+  let defenderDivisions: Division[] = combat.defenderDivisionIds.map(id => ({ ...divisions[id] })).filter(d => d.id);
 
   if (attackerDivisions.length === 0 || defenderDivisions.length === 0) {
     return {
@@ -244,7 +248,8 @@ export function processCombatRound(
         victor: attackerDivisions.length > 0 ? combat.attackerCountry :
                 defenderDivisions.length > 0 ? combat.defenderCountry : null,
       },
-      retreatingDivisions: []
+      updatedDivisions: divisions,
+      retreatingDivisions: [],
     };
   }
 
@@ -258,7 +263,7 @@ export function processCombatRound(
     return sum + calculateDamage(defender, attackerDivisions[targetIndex]);
   }, 0);
 
-  const retreatingDivisions: { division: Division; toRegionId: string | null; fromRegionId: string }[] = [];
+  const retreatingDivisions: { divisionId: string; toRegionId: string | null; fromRegionId: string }[] = [];
 
   const damagePerAttacker = Math.ceil(defenderTotalDamage / attackerDivisions.length);
   const attackerResults = attackerDivisions.map(div => applyDamage(div, damagePerAttacker));
@@ -269,7 +274,7 @@ export function processCombatRound(
       attackerDivisions.push(result.division);
     } else {
       const retreatTarget = findRetreatDestination(combat.defenderRegionId, result.division.owner, regions, adjacency, true, combat.attackerRegionId);
-      retreatingDivisions.push({ division: result.division, toRegionId: retreatTarget, fromRegionId: combat.attackerRegionId });
+      retreatingDivisions.push({ divisionId: result.division.id, toRegionId: retreatTarget, fromRegionId: combat.attackerRegionId });
       if (retreatTarget) {
         console.log(`[RETREAT] ${result.division.name} (${result.division.owner}) retreating from border at ${combat.defenderRegionName} to ${regions[retreatTarget]?.name ?? retreatTarget}`);
       }
@@ -285,7 +290,7 @@ export function processCombatRound(
       defenderDivisions.push(result.division);
     } else {
       const retreatTarget = findRetreatDestination(combat.defenderRegionId, result.division.owner, regions, adjacency, false, combat.attackerRegionId);
-      retreatingDivisions.push({ division: result.division, toRegionId: retreatTarget, fromRegionId: combat.defenderRegionId });
+      retreatingDivisions.push({ divisionId: result.division.id, toRegionId: retreatTarget, fromRegionId: combat.defenderRegionId });
       if (retreatTarget) {
         console.log(`[RETREAT] ${result.division.name} (${result.division.owner}) retreating from ${combat.defenderRegionName} to ${regions[retreatTarget]?.name ?? retreatTarget}`);
       }
@@ -306,15 +311,16 @@ export function processCombatRound(
     const winnerCountry = victor;
     const winnerRetreatingIndices: number[] = [];
     retreatingDivisions.forEach((r, i) => {
-      if (r.division.owner === winnerCountry) {
+      const div = divisions[r.divisionId];
+      if (div && div.owner === winnerCountry) {
         winnerRetreatingIndices.push(i);
-        const restoredDivision = { ...r.division, hp: 1 };
+        const restoredDivision = { ...div, hp: 1 };
         if (winnerCountry === combat.attackerCountry) {
           attackerDivisions.push(restoredDivision);
         } else {
           defenderDivisions.push(restoredDivision);
         }
-        console.log(`[VICTORY RESTORE] ${r.division.name} (${r.division.owner}) restored to HP=1 after winning at border of ${combat.defenderRegionName}`);
+        console.log(`[VICTORY RESTORE] ${div.name} (${div.owner}) restored to HP=1 after winning at border of ${combat.defenderRegionName}`);
       }
     });
     for (let i = winnerRetreatingIndices.length - 1; i >= 0; i--) {
@@ -330,9 +336,24 @@ export function processCombatRound(
       defenderLosses: combat.initialDefenderCount - defenderDivisions.length,
     });
   }
+
+  // Apply HP changes to DivisionState
+  let updatedDivisions = { ...divisions };
+  for (const div of [...attackerDivisions, ...defenderDivisions]) {
+    updatedDivisions = { ...updatedDivisions, [div.id]: { ...updatedDivisions[div.id], hp: div.hp } };
+  }
+
   return {
-    combat: { ...combat, attackerDivisions, defenderDivisions, currentRound: newRound, isComplete: combatEnded, victor },
-    retreatingDivisions
+    combat: {
+      ...combat,
+      attackerDivisionIds: attackerDivisions.map(d => d.id),
+      defenderDivisionIds: defenderDivisions.map(d => d.id),
+      currentRound: newRound,
+      isComplete: combatEnded,
+      victor,
+    },
+    updatedDivisions,
+    retreatingDivisions,
   };
 }
 

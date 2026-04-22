@@ -18,7 +18,8 @@ function makeRegion(id: string, overrides: Partial<Region> = {}): Region {
 function makeMovement(overrides: Partial<Movement> = {}): Movement {
   const arr = new Date(D0);
   arr.setHours(arr.getHours() + 12);
-  return { id: 'mv-1', fromRegion: 'A', toRegion: 'B', divisions: [makeDiv()],
+  const div = makeDiv();
+  return { id: 'mv-1', fromRegion: 'A', toRegion: 'B', divisionIds: [div.id],
     departureTime: D0, arrivalTime: arr, owner: 'soviet', ...overrides };
 }
 
@@ -30,7 +31,7 @@ describe('applyCompletedMovements – self-move guard', () => {
     const selfMove = makeMovement({
       fromRegion: 'A',
       toRegion: 'A',
-      divisions: [div],
+      divisionIds: [div.id],
       arrivalTime: NOW,
     });
     const { nextDivisions } = applyCompletedMovements([selfMove], [selfMove], {

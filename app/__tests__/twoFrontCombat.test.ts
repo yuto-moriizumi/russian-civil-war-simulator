@@ -26,15 +26,18 @@ function makeRegion(id: string, overrides: Partial<Region> = {}): Region {
 function makeMovement(overrides: Partial<Movement> = {}): Movement {
   const arr = new Date(D0);
   arr.setHours(arr.getHours() + 12);
-  return { id: 'mv-1', fromRegion: 'A', toRegion: 'B', divisions: [makeDiv()],
+  const div = makeDiv();
+  return { id: 'mv-1', fromRegion: 'A', toRegion: 'B', divisionIds: [div.id],
     departureTime: D0, arrivalTime: arr, owner: 'soviet', ...overrides };
 }
 
 function makeCombat(overrides: Partial<ActiveCombat> = {}): ActiveCombat {
+  const atkDiv = makeDiv({ id: 'div-atk' });
+  const defDiv = makeDiv({ id: 'div-def', owner: 'white' });
   return { id: 'combat-1', attackerRegionId: 'A', attackerRegionName: 'A', defenderRegionId: 'B', defenderRegionName: 'B',
     attackerCountry: 'soviet', defenderCountry: 'white',
-    attackerDivisions: [makeDiv({ id: 'div-atk' })],
-    defenderDivisions: [makeDiv({ id: 'div-def', owner: 'white' })],
+    attackerDivisionIds: [atkDiv.id],
+    defenderDivisionIds: [defDiv.id],
     initialAttackerCount: 1, initialDefenderCount: 1,
     initialAttackerHp: 100, initialDefenderHp: 100,
     currentRound: 0, startTime: D0, lastRoundTime: D0,
@@ -86,8 +89,8 @@ describe('two-front combat: second attack on defender whose divisions are alread
       id: 'combat-a-c',
       attackerRegionId: 'A', defenderRegionId: 'C',
       attackerCountry: 'soviet', defenderCountry: 'white',
-      attackerDivisions: [makeDiv({ id: 'sov-a', owner: 'soviet' })],
-      defenderDivisions: [whiteDefC],
+      attackerDivisionIds: ['sov-a'],
+      defenderDivisionIds: ['wht-c'],
     });
     const adjacency = { A: ['B', 'C'], B: ['A', 'C'], C: ['A', 'B'] };
 
@@ -100,8 +103,8 @@ describe('two-front combat: second attack on defender whose divisions are alread
     expect(newCombat).toBeDefined();
     expect(newCombat!.attackerRegionId).toBe('B');
     expect(newCombat!.defenderRegionId).toBe('C');
-    expect(newCombat!.defenderDivisions).toHaveLength(1);
-    expect(newCombat!.defenderDivisions[0].id).toBe('wht-c');
+    expect(newCombat!.defenderDivisionIds).toHaveLength(1);
+    expect(newCombat!.defenderDivisionIds[0]).toBe('wht-c');
   });
 });
 
@@ -122,21 +125,21 @@ describe('two-front combat: enemy enters a region whose defender is attacking el
       defenderRegionId: 'B',
       attackerCountry: 'soviet',
       defenderCountry: 'white',
-      attackerDivisions: [sovietDiv],
-      defenderDivisions: [],
+      attackerDivisionIds: ['soviet-div'],
+      defenderDivisionIds: [],
     });
     const sovietAttackMovement = makeMovement({
       id: 'mv-soviet-attack',
       fromRegion: 'A', toRegion: 'B',
       owner: 'soviet',
-      divisions: [sovietDiv],
+      divisionIds: ['soviet-div'],
       pendingCombatId: 'combat-a-b',
     });
     const whiteMovement = makeMovement({
       id: 'mv-white-invade',
       fromRegion: 'C', toRegion: 'A',
       owner: 'white',
-      divisions: [whiteDiv],
+      divisionIds: ['white-div-c'],
     });
 
     const { nextCombats, nextRegions } = applyCompletedMovements(
@@ -151,6 +154,6 @@ describe('two-front combat: enemy enters a region whose defender is attacking el
     expect(newCombat).toBeDefined();
     expect(newCombat!.attackerCountry).toBe('white');
     expect(newCombat!.defenderCountry).toBe('soviet');
-    expect(newCombat!.defenderDivisions).toHaveLength(1);
+    expect(newCombat!.defenderDivisionIds).toHaveLength(1);
   });
 });

@@ -23,7 +23,8 @@ export function syncArmyGroupTerritories(
 
     // Include regions where units of this group are currently moving to
     movingUnits.forEach(m => {
-      if (m.divisions.some(d => d.armyGroupId === group.id)) {
+      const divIds = (m as { divisionIds?: string[] }).divisionIds ?? [];
+      if (divIds.some(id => divisions[id]?.armyGroupId === group.id)) {
         currentRegions.add(m.toRegion);
       }
     });

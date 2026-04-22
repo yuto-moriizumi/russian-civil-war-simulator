@@ -6,7 +6,6 @@ import { GameStore } from './types';
 import { StoreApi } from 'zustand';
 import { defendArmyGroup } from './armyGroupDefend';
 import { attackArmyGroup } from './armyGroupAttack';
-import { buildDivisionState } from '../../utils/divisionState';
 import { createRegionOwnersPatch } from '../../utils/regionState';
 
 /**
@@ -138,7 +137,7 @@ export const createArmyGroupActions = (
       theaters: allUpdatedTheaters,
       armyGroups: updatedArmyGroups,
       ...createRegionOwnersPatch(updatedRegions),
-      divisions: buildDivisionState(updatedMovingUnits, updatedActiveCombats, get().divisions),
+      divisions: get().divisions,
       movingUnits: updatedMovingUnits,
       activeCombats: updatedActiveCombats,
       productionQueues: updatedProductionQueues,
@@ -230,11 +229,7 @@ export const createArmyGroupActions = (
       const patch = partial.regions ? { ...partial, ...createRegionOwnersPatch(partial.regions) } : partial;
       set({
         ...patch,
-        divisions: buildDivisionState(
-          patch.movingUnits ?? state.movingUnits,
-          patch.activeCombats ?? state.activeCombats,
-          state.divisions
-        ),
+        divisions: partial.divisions ?? state.divisions,
       });
     });
   },
@@ -245,11 +240,7 @@ export const createArmyGroupActions = (
       const patch = partial.regions ? { ...partial, ...createRegionOwnersPatch(partial.regions) } : partial;
       set({
         ...patch,
-        divisions: buildDivisionState(
-          patch.movingUnits ?? state.movingUnits,
-          patch.activeCombats ?? state.activeCombats,
-          state.divisions
-        ),
+        divisions: partial.divisions ?? state.divisions,
       });
     });
   },
@@ -260,11 +251,7 @@ export const createArmyGroupActions = (
       const patch = partial.regions ? { ...partial, ...createRegionOwnersPatch(partial.regions) } : partial;
       set({
         ...patch,
-        divisions: buildDivisionState(
-          patch.movingUnits ?? state.movingUnits,
-          patch.activeCombats ?? state.activeCombats,
-          state.divisions
-        ),
+        divisions: partial.divisions ?? state.divisions,
       });
     });
   },
@@ -274,7 +261,7 @@ export const createArmyGroupActions = (
    * Divisions that already belong to the group are left unchanged.
    */
   addDivisionsToArmyGroup: (groupId: string, divisionIds: string[]) => {
-    const { divisions, movingUnits } = get();
+    const { divisions } = get();
 
     if (divisionIds.length === 0) return;
 
@@ -287,20 +274,9 @@ export const createArmyGroupActions = (
       }
     }
 
-    const updatedMovingUnits = movingUnits.map(movement => {
-      const hasMatch = movement.divisions.some(d => divisionIdSet.has(d.id));
-      if (!hasMatch) return movement;
-      return {
-        ...movement,
-        divisions: movement.divisions.map(d =>
-          divisionIdSet.has(d.id) ? { ...d, armyGroupId: groupId } : d
-        ),
-      };
-    });
-
+    // With DivisionState as source of truth, no need to update movingUnits
     set({
       divisions: updatedDivisions,
-      movingUnits: updatedMovingUnits,
     });
   },
 });

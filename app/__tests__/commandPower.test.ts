@@ -78,7 +78,7 @@ function makeMovement(
     owner,
     fromRegion,
     toRegion,
-    divisions: divisionIds.map(id => makeDiv(id, owner)),
+    divisionIds,
     departureTime: new Date(),
     arrivalTime: new Date(),
   };

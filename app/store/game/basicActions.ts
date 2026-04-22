@@ -13,7 +13,7 @@ import { createDivision } from '../../utils/combat';
 import { getDivisionPrefix } from '../../data/countries';
 import { createDivisionSelectionActions } from './divisionSelectionActions';
 import { applyClaimedMissionRewards, applyLiberatePuppet, buildMissionRewardDescription } from './missionRewards';
-import { buildDivisionState, getDivisionsInRegion } from '../../utils/divisionState';
+import { getDivisionsInRegion } from '../../utils/divisionState';
 import {
   composeRegionState,
   createRegionStatePatch,
@@ -22,6 +22,30 @@ import {
 } from '../../utils/regionState';
 
 export { applyLiberatePuppet };
+
+/**
+ * Compatibility path for save files created before the divisionIds migration.
+ * Old saves may have Movement objects with a `divisions` array instead of `divisionIds`.
+ * This function reconstructs a valid DivisionState from those legacy saves.
+ */
+function rehydrateDivisions(gameState: GameState): DivisionState {
+  const base: DivisionState = { ...gameState.divisions };
+
+  // Legacy compat: if movements have old `divisions` array, ensure those divisions
+  // are in DivisionState and have divisionIds populated.
+  for (const movement of gameState.movingUnits) {
+    const legacyMovement = movement as unknown as { divisions?: import('../../types/game').Division[] };
+    if (legacyMovement.divisions && legacyMovement.divisions.length > 0) {
+      for (const div of legacyMovement.divisions) {
+        if (!base[div.id]) {
+          base[div.id] = { ...div, regionId: null };
+        }
+      }
+    }
+  }
+
+  return base;
+}
 
 const DEFAULT_AI_COUNTRIES: CountryId[] = [
   'soviet',
@@ -157,7 +181,7 @@ export const createBasicActions = (
     }
     const { movingUnits } = get();
     const movement = movingUnits.find(m => m.id === movementId);
-    const divisionIds = movement ? movement.divisions.map(d => d.id) : [];
+    const divisionIds = movement ? movement.divisionIds : [];
     set({
       selectedMovementId: movementId,
       selectedDivisionIds: divisionIds,
@@ -359,11 +383,7 @@ export const createBasicActions = (
           return g;
         });
       armyGroupsForState = [...currentState.armyGroups, ...missingGroups];
-      divisionsForState = buildDivisionState(
-        currentState.movingUnits,
-        currentState.activeCombats,
-        currentState.divisions
-      );
+      divisionsForState = currentState.divisions;
     }
 
     // Reset all game state for a fresh start, but preserve live game state that
@@ -500,11 +520,7 @@ export const createBasicActions = (
       regions,
       regionDefinitions,
       regionOwners: savedRegionOwners,
-      divisions: buildDivisionState(
-        savedData.gameState.movingUnits,
-        savedData.gameState.activeCombats,
-        savedData.gameState.divisions
-      ),
+      divisions: rehydrateDivisions(savedData.gameState),
       aiStates: savedData.aiStates,
       isPlaying: false,
       currentScreen: 'main',

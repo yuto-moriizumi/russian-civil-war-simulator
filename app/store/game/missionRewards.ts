@@ -17,7 +17,6 @@ import { calculateCountryBonuses, getDivisionStats } from '../../utils/bonusCalc
 import { createGameEvent } from '../../utils/eventUtils';
 import { applyRelationshipChange, getRelationshipStatus, joinPuppetToOverlordWars } from '../../utils/relationshipUtils';
 import type { GameStore } from './types';
-import { buildDivisionState } from '../../utils/divisionState';
 
 export function buildMissionRewardDescription(rewards: MissionRewards): string {
   const rewardParts: string[] = [];
@@ -244,19 +243,8 @@ export function applyClaimedMissionRewards(
     }
   }
 
-  const updatedMovingUnits = state.movingUnits.map(movement => {
-    if (movement.owner !== countryId) return movement;
-    return {
-      ...movement,
-      divisions: movement.divisions.map(div => ({
-        ...div,
-        attack: newDivisionStats.attack,
-        defence: newDivisionStats.defence,
-        maxHp: newDivisionStats.maxHp,
-        hp: Math.min(div.hp, newDivisionStats.maxHp),
-      })),
-    };
-  });
+  // With DivisionState as source of truth, movingUnits don't carry division data
+  const updatedMovingUnits = state.movingUnits;
 
   const {
     updatedRelationships,
@@ -279,11 +267,7 @@ export function applyClaimedMissionRewards(
   return {
     updatedCountryBonuses: newCountryBonuses,
     updatedRegions: regionsAfterPuppet,
-    updatedDivisions: buildDivisionState(
-      updatedMovingUnits,
-      state.activeCombats ?? [],
-      divisionsAfterPuppet
-    ),
+    updatedDivisions: divisionsAfterPuppet,
     updatedMovingUnits,
     updatedRelationships: relationshipsAfterWar,
     updatedArmyGroups,

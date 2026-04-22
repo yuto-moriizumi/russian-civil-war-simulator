@@ -98,7 +98,7 @@ describe('tick mid-transit combat handling', () => {
       id: 'mv-1',
       fromRegion: 'A',
       toRegion: 'B',
-      divisions: [attacker],
+      divisionIds: ['attacker'],
       departureTime: new Date('1918-01-01T00:00:00Z'),
       arrivalTime: new Date('1918-01-01T12:00:00Z'),
       owner: 'soviet',
@@ -139,14 +139,14 @@ describe('tick mid-transit combat handling', () => {
     createTickActions(set, get).tick();
 
     expect(state.activeCombats).toHaveLength(1);
-    expect(state.activeCombats[0].defenderDivisions.map(d => d.id)).toEqual(['defender']);
+    expect(state.activeCombats[0].defenderDivisionIds).toEqual(['defender']);
     // Defender division is moved into combat, not in region
     const defenderInRegion = Object.values(state.divisions).filter(d => d.regionId === 'B' && d.id === 'defender');
     expect(defenderInRegion).toHaveLength(0);
     expect(state.movingUnits[0].pendingCombatId).toBe(state.activeCombats[0].id);
     // Division in state has regionId: null (in combat); combat snapshot preserves original regionId
     expect(state.divisions.defender.regionId).toBe(null);
-    expect(state.divisions.defender.id).toBe(state.activeCombats[0].defenderDivisions[0].id);
+    expect(state.divisions.defender.id).toBe(state.activeCombats[0].defenderDivisionIds[0]);
   });
 });
 
