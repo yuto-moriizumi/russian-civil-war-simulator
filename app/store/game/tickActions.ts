@@ -19,14 +19,14 @@ import {
   detectDivisionDuplicates,
   logDivisionDuplicates,
 } from './tickHelpers';
-import { discoverNewAIStates, getEffectiveAIStates, processAITick, hasOwnershipChangedForCountries } from './tickHelpers/aiTick';
+import { getEffectiveAIStates, processAITick, hasOwnershipChangedForCountries, initializeAIStatesForNewCountries } from './tickHelpers/aiTick';
 import { attackArmyGroup } from './armyGroupAttack';
 import { defendArmyGroup } from './armyGroupDefend';
 import { TickPerf } from './tickPerformance';
 import { RegionState } from '../../types/game';
 import { buildDivisionState } from '../../utils/divisionState';
 
-export { discoverNewAIStates, getEffectiveAIStates } from './tickHelpers/aiTick';
+export { getEffectiveAIStates } from './tickHelpers/aiTick';
 
 let _tickCounter = 0;
 
@@ -125,7 +125,10 @@ export const createTickActions = (
       divisionsAfterProduction
     );
     TickPerf.end('[tick] 3-scheduled-events');
-    
+
+    // Initialize AI states for any new countries that appeared via scheduled events
+    const aiStatesAfterEvents = initializeAIStatesForNewCountries(aiStates, regionsAfterEvents, selectedCountry?.id);
+
     // Step 4: Process unit movements
     TickPerf.start('[tick] 4-movements');
     const { remainingMovements, completedMovements, newMidTransitCombats } = processMovements(
@@ -232,7 +235,7 @@ export const createTickActions = (
     // Step 8: AI Tick - process AI actions and deployments for all AI countries
     TickPerf.start('[tick] 8-ai');
     const effectiveAIStates = getEffectiveAIStates(
-      discoverNewAIStates(aiStates, nextRegions, selectedCountry?.id),
+      aiStatesAfterEvents,
       selectedCountry?.id,
       state.isPlayerAIEnabled
     );
@@ -242,7 +245,7 @@ export const createTickActions = (
     let nextProductionQueues: Record<CountryId, ProductionQueueItem[]> = { ...remainingProductions };
     let nextActiveCombats = nextCombats;
 
-    const prevAIStateIds = new Set(aiStates.map(s => s.countryId));
+    const prevAIStateIds = new Set(aiStatesAfterEvents.map(s => s.countryId));
     const hasNewAICountries = effectiveAICountryIds.some(id => !prevAIStateIds.has(id));
     const theaterCountryIds = new Set([
       ...effectiveAICountryIds,
