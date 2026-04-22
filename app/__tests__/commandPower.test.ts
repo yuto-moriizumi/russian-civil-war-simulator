@@ -22,7 +22,7 @@ import {
   DIVISIONS_PER_STATE,
 } from '../utils/commandPower';
 import { countCountryUnits } from '../utils/mapUtils';
-import type { Division, Region, RegionState, Movement, CountryBonuses, ProductionQueueItem } from '../types/game';
+import type { Division, DivisionState, Region, RegionState, Movement, CountryBonuses, ProductionQueueItem } from '../types/game';
 import type { CountryId } from '../types/game';
 
 // ---------------------------------------------------------------------------
@@ -39,21 +39,19 @@ function makeDiv(id: string, owner: 'soviet' | 'white' | 'ukraine', armyGroupId 
     maxHp: 100,
     attack: 10,
     defence: 15,
+    regionId: null,
   };
 }
 
 function makeRegion(
   id: string,
   owner: 'soviet' | 'white' | 'ukraine' | 'neutral',
-  divisions: Division[] = [],
 ): Region {
   return {
     id,
     name: id,
     countryIso3: 'RUS',
     owner,
-    divisions,
-    
   };
 }
 
@@ -71,7 +69,7 @@ function makeQueueItem(id: string, owner: CountryId = 'soviet'): ProductionQueue
 
 function makeMovement(
   owner: 'soviet' | 'white' | 'ukraine',
-  divisions: Division[],
+  divisionIds: string[],
   fromRegion = 'RU-A',
   toRegion = 'RU-B',
 ): Movement {
@@ -80,7 +78,7 @@ function makeMovement(
     owner,
     fromRegion,
     toRegion,
-    divisions,
+    divisions: divisionIds.map(id => makeDiv(id, owner)),
     departureTime: new Date(),
     arrivalTime: new Date(),
   };
@@ -102,52 +100,39 @@ const emptyQueues = {} as Record<CountryId, ProductionQueueItem[]>;
 // ---------------------------------------------------------------------------
 
 describe('countCurrentDivisions', () => {
-  it('counts only own divisions in regions, ignoring allied divisions', () => {
+  it('counts only own divisions, ignoring allied divisions', () => {
     const sovietDiv = makeDiv('d-soviet', 'soviet');
     const allyDiv = makeDiv('d-ally', 'white'); // friendly ally's division
+    const divisions: DivisionState = { 'd-soviet': sovietDiv, 'd-ally': allyDiv };
 
-    // Both divisions are in a region owned by Soviet
-    const regions: RegionState = {
-      'RU-A': makeRegion('RU-A', 'soviet', [sovietDiv, allyDiv]),
-    };
-
-    // Should count only the Soviet division — not the ally's
-    const result = countCurrentDivisions('soviet', regions, []);
+    const result = countCurrentDivisions('soviet', divisions, []);
     expect(result).toBe(1 * COMMAND_POWER_PER_UNIT);
   });
 
-  it('counts own divisions stationed in an allied (non-owned) region', () => {
+  it('counts own divisions stationed anywhere', () => {
     const sovietDiv = makeDiv('d-soviet', 'soviet');
+    const divisions: DivisionState = { 'd-soviet': sovietDiv };
 
-    // Soviet division is in a region owned by Ukraine (military access scenario)
-    const regions: RegionState = {
-      'UA-A': makeRegion('UA-A', 'ukraine', [sovietDiv]),
-    };
-
-    const result = countCurrentDivisions('soviet', regions, []);
+    const result = countCurrentDivisions('soviet', divisions, []);
     expect(result).toBe(1 * COMMAND_POWER_PER_UNIT);
   });
 
   it('counts in-transit own divisions', () => {
-    // In-transit divisions are always present in their fromRegion.
     const d1 = makeDiv('d-1', 'soviet');
     const d2 = makeDiv('d-2', 'soviet');
-    const regions: RegionState = {
-      'RU-A': makeRegion('RU-A', 'soviet', [d1, d2]),
-    };
+    const divisions: DivisionState = { 'd-1': d1, 'd-2': d2 };
 
-    const movement = makeMovement('soviet', [d1, d2]);
+    const movement = makeMovement('soviet', ['d-1', 'd-2']);
 
-    const result = countCurrentDivisions('soviet', regions, [movement]);
+    const result = countCurrentDivisions('soviet', divisions, [movement]);
     expect(result).toBe(2 * COMMAND_POWER_PER_UNIT);
   });
 
   it('does not count in-transit divisions owned by another country', () => {
-    const regions: RegionState = {};
+    const divisions: DivisionState = {};
+    const movement = makeMovement('white', ['d-1']);
 
-    const movement = makeMovement('white', [makeDiv('d-1', 'white')]);
-
-    const result = countCurrentDivisions('soviet', regions, [movement]);
+    const result = countCurrentDivisions('soviet', divisions, [movement]);
     expect(result).toBe(0);
   });
 });
@@ -157,55 +142,31 @@ describe('countCurrentDivisions', () => {
 // ---------------------------------------------------------------------------
 
 describe('countCountryUnits', () => {
-  it('does not count allied divisions stationed in own regions', () => {
+  it('does not count allied divisions', () => {
     const sovietDiv = makeDiv('d-soviet', 'soviet');
     const allyDiv = makeDiv('d-ally', 'ukraine');
+    const divisions: DivisionState = { 'd-soviet': sovietDiv, 'd-ally': allyDiv };
 
-    const regions: RegionState = {
-      'RU-A': makeRegion('RU-A', 'soviet', [sovietDiv, allyDiv]),
-    };
-
-    // Should only count the 1 Soviet division, not the allied one
-    expect(countCountryUnits(regions, 'soviet')).toBe(1);
+    expect(countCountryUnits(divisions, 'soviet')).toBe(1);
   });
 
-  it('counts own divisions stationed in an allied region', () => {
+  it('counts own divisions stationed anywhere', () => {
     const sovietDiv = makeDiv('d-soviet', 'soviet');
+    const divisions: DivisionState = { 'd-soviet': sovietDiv };
 
-    const regions: RegionState = {
-      'UA-A': makeRegion('UA-A', 'ukraine', [sovietDiv]),
-    };
-
-    // Soviet division is in Ukraine-owned territory — should still count
-    expect(countCountryUnits(regions, 'soviet')).toBe(1);
+    expect(countCountryUnits(divisions, 'soviet')).toBe(1);
   });
 
-  it('includes in-transit divisions in the count', () => {
-    // In-transit divisions are in their fromRegion, so regions must include them.
-    const d1 = makeDiv('d-1', 'soviet');
-    const d2 = makeDiv('d-2', 'soviet');
-    const regions: RegionState = {
-      'RU-A': makeRegion('RU-A', 'soviet', [d1, d2]),
-    };
-
-    const movement = makeMovement('soviet', [d1, d2]);
-
-    expect(countCountryUnits(regions, 'soviet', [movement])).toBe(2);
-  });
-
-  it('returns stable count regardless of allied divisions entering or leaving own regions', () => {
+  it('returns stable count regardless of allied divisions', () => {
     const sovietDiv = makeDiv('d-soviet', 'soviet');
-    const regions: RegionState = {
-      'RU-A': makeRegion('RU-A', 'soviet', [sovietDiv]),
-    };
+    const divisions: DivisionState = { 'd-soviet': sovietDiv };
 
-    const countBefore = countCountryUnits(regions, 'soviet');
+    const countBefore = countCountryUnits(divisions, 'soviet');
 
-    // Simulate an allied division arriving in the Soviet-owned region
-    regions['RU-A'].divisions.push(makeDiv('d-ally', 'white'));
-    const countAfter = countCountryUnits(regions, 'soviet');
+    // Add an allied division to the state
+    divisions['d-ally'] = makeDiv('d-ally', 'white');
+    const countAfter = countCountryUnits(divisions, 'soviet');
 
-    // Soviet unit count must not change when allied divisions move through
     expect(countBefore).toBe(countAfter);
     expect(countAfter).toBe(1);
   });
@@ -218,7 +179,7 @@ describe('countCountryUnits', () => {
 describe('calculateCommandPower', () => {
   it('starts at BASE_COMMAND_POWER with no owned regions', () => {
     const regions: RegionState = {
-      'RU-A': makeRegion('RU-A', 'white'), // not owned by soviet
+      'RU-A': makeRegion('RU-A', 'white'),
     };
     expect(calculateCommandPower('soviet', regions, emptyBonuses)).toBe(BASE_COMMAND_POWER);
   });
@@ -227,7 +188,7 @@ describe('calculateCommandPower', () => {
     const regions: RegionState = {
       'RU-A': makeRegion('RU-A', 'soviet'),
       'RU-B': makeRegion('RU-B', 'soviet'),
-      'RU-C': makeRegion('RU-C', 'white'), // not owned
+      'RU-C': makeRegion('RU-C', 'white'),
     };
     const expected = BASE_COMMAND_POWER + 2 * DIVISIONS_PER_STATE;
     expect(calculateCommandPower('soviet', regions, emptyBonuses)).toBe(expected);
@@ -241,11 +202,9 @@ describe('calculateCommandPower', () => {
 
   it('doubles the per-region contribution for core regions (x2)', () => {
     const regions: RegionState = {
-      'RU-A': makeRegion('RU-A', 'soviet'), // non-core
-      'RU-B': makeRegion('RU-B', 'soviet'), // core
+      'RU-A': makeRegion('RU-A', 'soviet'),
+      'RU-B': makeRegion('RU-B', 'soviet'),
     };
-    // Without core bonus: BASE + 2 * DIVISIONS_PER_STATE
-    // With x2 core on RU-B: BASE + DIVISIONS_PER_STATE (non-core) + DIVISIONS_PER_STATE * 2 (core)
     const expected = BASE_COMMAND_POWER + DIVISIONS_PER_STATE + DIVISIONS_PER_STATE * 2;
     expect(calculateCommandPower('soviet', regions, emptyBonuses, ['RU-B'])).toBe(expected);
   });
@@ -254,7 +213,6 @@ describe('calculateCommandPower', () => {
     const regions: RegionState = {
       'RU-A': makeRegion('RU-A', 'soviet'),
     };
-    // RU-A is not in coreRegions, so contribution should be unchanged
     const expected = BASE_COMMAND_POWER + DIVISIONS_PER_STATE;
     expect(calculateCommandPower('soviet', regions, emptyBonuses, ['RU-B'])).toBe(expected);
   });
@@ -267,31 +225,26 @@ describe('calculateCommandPower', () => {
 describe('canProduceDivision', () => {
   it('requires enough CP for the full next division cost', () => {
     const bonuses: CountryBonuses = { ...emptyBonuses, commandPowerBonus: 6 };
+    const divisions: DivisionState = {
+      'd-1': makeDiv('d-1', 'soviet'),
+      'd-2': makeDiv('d-2', 'soviet'),
+    };
     const regions: RegionState = {
-      'RU-A': makeRegion('RU-A', 'white', [
-        makeDiv('d-1', 'soviet'),
-        makeDiv('d-2', 'soviet'),
-      ]),
+      'RU-A': makeRegion('RU-A', 'white'),
     };
 
-    // Cap = BASE(2) + bonus(6) = 8. Current usage = 2 divisions = 8 CP.
-    // There is no CP left, so another 4-CP division cannot be produced.
-    expect(canProduceDivision('soviet', regions, [], emptyQueues, bonuses)).toBe(false);
+    expect(canProduceDivision('soviet', divisions, regions, [], emptyQueues, bonuses)).toBe(false);
   });
 });
 
 describe('clampProductionQueueToCommandPower', () => {
   it('drops queued divisions that no longer fit after the cap decreases', () => {
+    const divisions: DivisionState = {};
+    for (let i = 1; i <= 7; i++) {
+      divisions[`d-${i}`] = makeDiv(`d-${i}`, 'soviet');
+    }
     const regions: RegionState = {
-      'RU-A': makeRegion('RU-A', 'soviet', [
-        makeDiv('d-1', 'soviet'),
-        makeDiv('d-2', 'soviet'),
-        makeDiv('d-3', 'soviet'),
-        makeDiv('d-4', 'soviet'),
-        makeDiv('d-5', 'soviet'),
-        makeDiv('d-6', 'soviet'),
-        makeDiv('d-7', 'soviet'),
-      ]),
+      'RU-A': makeRegion('RU-A', 'soviet'),
     };
 
     const queue = [
@@ -300,19 +253,18 @@ describe('clampProductionQueueToCommandPower', () => {
       makeQueueItem('q-3'),
     ];
 
-    // Cap = BASE(2) + 1 owned region = 3. Current usage = 7 divisions = 28 CP.
-    // The country is already over cap, so no queued items should remain.
-    expect(clampProductionQueueToCommandPower('soviet', queue, regions, [], emptyBonuses)).toEqual([]);
+    expect(clampProductionQueueToCommandPower('soviet', queue, divisions, regions, [], emptyBonuses)).toEqual([]);
   });
 
   it('keeps only the earliest queued divisions that still fit the current cap', () => {
     const bonuses: CountryBonuses = { ...emptyBonuses, commandPowerBonus: 10 };
+    const divisions: DivisionState = {
+      'd-1': makeDiv('d-1', 'soviet'),
+      'd-2': makeDiv('d-2', 'soviet'),
+      'd-3': makeDiv('d-3', 'soviet'),
+    };
     const regions: RegionState = {
-      'RU-A': makeRegion('RU-A', 'soviet', [
-        makeDiv('d-1', 'soviet'),
-        makeDiv('d-2', 'soviet'),
-        makeDiv('d-3', 'soviet'),
-      ]),
+      'RU-A': makeRegion('RU-A', 'soviet'),
     };
 
     const queue = [
@@ -322,17 +274,16 @@ describe('clampProductionQueueToCommandPower', () => {
       makeQueueItem('q-4'),
     ];
 
-    // Cap = BASE(2) + 1 owned region + bonus(10) = 13.
-    // Current usage = 3 divisions = 12 CP, so no queued divisions fit.
-    expect(clampProductionQueueToCommandPower('soviet', queue, regions, [], bonuses)).toEqual([]);
+    expect(clampProductionQueueToCommandPower('soviet', queue, divisions, regions, [], bonuses)).toEqual([]);
   });
 
   it('keeps only the earliest queued division when exactly one queued item still fits', () => {
+    const divisions: DivisionState = {
+      'd-1': makeDiv('d-1', 'soviet'),
+      'd-2': makeDiv('d-2', 'soviet'),
+    };
     const regions: RegionState = {
-      'RU-A': makeRegion('RU-A', 'soviet', [
-        makeDiv('d-1', 'soviet'),
-        makeDiv('d-2', 'soviet'),
-      ]),
+      'RU-A': makeRegion('RU-A', 'soviet'),
     };
 
     const queue = [
@@ -343,70 +294,44 @@ describe('clampProductionQueueToCommandPower', () => {
 
     const bonuses: CountryBonuses = { ...emptyBonuses, commandPowerBonus: 9 };
 
-    // Cap = BASE(2) + 1 owned region + bonus(9) = 12.
-    // Current usage = 2 divisions = 8 CP, so only 1 queued division fits.
-    expect(clampProductionQueueToCommandPower('soviet', queue, regions, [], bonuses)).toEqual([queue[0]]);
+    expect(clampProductionQueueToCommandPower('soviet', queue, divisions, regions, [], bonuses)).toEqual([queue[0]]);
   });
 });
 
 // ---------------------------------------------------------------------------
 // Country-switch accumulation regression (A → B → A)
 // ---------------------------------------------------------------------------
-//
-// Bug: selectCountry() used to deep-copy the current regions (preserving
-// existing divisions) before adding fresh initial placements on top.  After
-// switching A→B→A the player-country regions contained both the residual
-// divisions from the previous session *and* a full second set of initial
-// placements, doubling the Command Power usage displayed in the TopBar.
-//
-// Fix: selectCountry() now clears all divisions from the copied regions
-// before placing the initial units, so the count is always exactly the
-// initial set regardless of how many times the player switches.
-//
-// The regression test below exercises the pure computation layer:
-// countCurrentDivisions must return the same value when called against
-// a freshly-built region set as it does against a set that was previously
-// used and then rebuilt (simulating the cleared-divisions approach).
 
 describe('country-switch CP accumulation regression', () => {
   it('CP usage is identical after a simulated A→B→A switch sequence', () => {
     const country = 'soviet' as const;
 
-    // Helper: build regions with N soviet divisions (simulates selectCountry output)
-    function buildRegions(numDivisions: number): RegionState {
-      const divisions = Array.from({ length: numDivisions }, (_, i) =>
-        makeDiv(`div-${i}`, country),
-      );
-      return {
-        'RU-A': makeRegion('RU-A', country, divisions),
-      };
+    function buildDivisions(numDivisions: number, prefix = 'div'): DivisionState {
+      const result: DivisionState = {};
+      for (let i = 0; i < numDivisions; i++) {
+        result[`${prefix}-${i}`] = makeDiv(`${prefix}-${i}`, country);
+      }
+      return result;
     }
 
     const initialDivisionCount = 3;
 
-    // Step 1: Initial state for country A — 3 divisions
-    const regionsAfterFirstSelect = buildRegions(initialDivisionCount);
-    const usageAfterFirstSelect = countCurrentDivisions(country, regionsAfterFirstSelect, []);
+    const divisionsAfterFirstSelect = buildDivisions(initialDivisionCount);
+    const usageAfterFirstSelect = countCurrentDivisions(country, divisionsAfterFirstSelect, []);
 
-    // Step 2 (fixed behaviour): selectCountry clears divisions before re-placing.
-    // Simulate by building a fresh region set with exactly the initial count again.
-    const regionsAfterSecondSelect = buildRegions(initialDivisionCount);
-    const usageAfterSecondSelect = countCurrentDivisions(country, regionsAfterSecondSelect, []);
+    const divisionsAfterSecondSelect = buildDivisions(initialDivisionCount);
+    const usageAfterSecondSelect = countCurrentDivisions(country, divisionsAfterSecondSelect, []);
 
     expect(usageAfterSecondSelect).toBe(usageAfterFirstSelect);
     expect(usageAfterSecondSelect).toBe(initialDivisionCount * COMMAND_POWER_PER_UNIT);
 
-    // Step 3 (broken behaviour for contrast): what would happen if we had
-    // carried over the old divisions and pushed new ones on top.
-    const regionsWithAccumulation: RegionState = {
-      'RU-A': makeRegion('RU-A', country, [
-        // old divisions still present
-        ...regionsAfterFirstSelect['RU-A'].divisions,
-        // new placements added on top (the bug)
-        ...buildRegions(initialDivisionCount)['RU-A'].divisions,
-      ]),
+    // Broken behaviour: accumulating divisions with unique IDs (simulating the old bug
+    // where both sets of divisions were kept instead of overwritten).
+    const accumulatedDivisions: DivisionState = {
+      ...divisionsAfterFirstSelect,
+      ...buildDivisions(initialDivisionCount, 'dup'),
     };
-    const brokenUsage = countCurrentDivisions(country, regionsWithAccumulation, []);
+    const brokenUsage = countCurrentDivisions(country, accumulatedDivisions, []);
     expect(brokenUsage).toBe(2 * initialDivisionCount * COMMAND_POWER_PER_UNIT);
     expect(brokenUsage).toBeGreaterThan(usageAfterSecondSelect);
   });
@@ -417,31 +342,34 @@ describe('country-switch CP accumulation regression', () => {
 // ---------------------------------------------------------------------------
 
 describe('getCommandPowerInfo', () => {
-  it('current reflects only own divisions and is stable when allied divisions move in', () => {
+  it('current reflects only own divisions and is stable when allied divisions are added', () => {
     const sovietDiv = makeDiv('d-soviet', 'soviet');
+    const divisions: DivisionState = { 'd-soviet': sovietDiv };
     const regions: RegionState = {
-      'RU-A': makeRegion('RU-A', 'soviet', [sovietDiv]),
+      'RU-A': makeRegion('RU-A', 'soviet'),
     };
 
-    const infoBefore = getCommandPowerInfo('soviet', regions, [], emptyQueues, emptyBonuses);
+    const infoBefore = getCommandPowerInfo('soviet', divisions, regions, [], emptyQueues, emptyBonuses);
 
-    // Allied division enters Soviet-owned region
-    regions['RU-A'].divisions.push(makeDiv('d-ally', 'white'));
-    const infoAfter = getCommandPowerInfo('soviet', regions, [], emptyQueues, emptyBonuses);
+    // Add allied division to state
+    divisions['d-ally'] = makeDiv('d-ally', 'white');
+    const infoAfter = getCommandPowerInfo('soviet', divisions, regions, [], emptyQueues, emptyBonuses);
 
     expect(infoBefore.current).toBe(infoAfter.current);
     expect(infoBefore.current).toBe(1 * COMMAND_POWER_PER_UNIT);
   });
 
   it('cap reflects only owned regions, not regions with allied divisions', () => {
+    const divisions: DivisionState = {
+      'd-ally': makeDiv('d-ally', 'soviet'),
+    };
     const regions: RegionState = {
       'RU-A': makeRegion('RU-A', 'soviet'),
-      'RU-B': makeRegion('RU-B', 'white', [makeDiv('d-ally', 'soviet')]),
+      'RU-B': makeRegion('RU-B', 'white'),
     };
 
-    const info = getCommandPowerInfo('soviet', regions, [], emptyQueues, emptyBonuses);
+    const info = getCommandPowerInfo('soviet', divisions, regions, [], emptyQueues, emptyBonuses);
 
-    // Cap should only be based on the 1 Soviet-owned region
     const expectedCap = BASE_COMMAND_POWER + 1 * DIVISIONS_PER_STATE;
     expect(info.cap).toBe(expectedCap);
   });

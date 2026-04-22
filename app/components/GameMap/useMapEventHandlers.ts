@@ -4,7 +4,8 @@ import { useRef, useEffect, useCallback } from 'react';
 import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import { useGameStore } from '../../store/useGameStore';
 import { COUNTRY_METADATA } from '../../data/countryMetadata';
-import type { CountryId } from '../../types/game';
+import type { CountryId, DivisionState } from '../../types/game';
+import { getDivisionsInRegion } from '../../utils/divisionState';
 
 /**
  * Encapsulates all refs, ref-sync effects, and map event handlers for GameMap.
@@ -13,6 +14,7 @@ import type { CountryId } from '../../types/game';
 export function useMapEventHandlers(
   selectedRegion: string | null,
   regions: ReturnType<typeof useGameStore.getState>['regions'],
+  divisions: ReturnType<typeof useGameStore.getState>['divisions'],
   playerCountry: string | undefined,
   setSelectedRegion: (id: string | null) => void,
   setSelectedUnitRegion: (id: string | null) => void,
@@ -33,6 +35,7 @@ export function useMapEventHandlers(
   const selectedUnitRegionRef = useRef<string | null>(null);
   const selectedMovementIdRef = useRef<string | null>(null);
   const regionsRef = useRef(regions);
+  const divisionsRef = useRef(divisions);
   const adjacencyRef = useRef(useGameStore.getState().adjacency);
   const moveUnitsRef = useRef(moveUnits);
   const redirectMovementRef = useRef(redirectMovement);
@@ -56,6 +59,7 @@ export function useMapEventHandlers(
   useEffect(() => { selectedUnitRegionRef.current = selectedUnitRegion; }, [selectedUnitRegion]);
   useEffect(() => { selectedMovementIdRef.current = selectedMovementId; }, [selectedMovementId]);
   useEffect(() => { regionsRef.current = regions; }, [regions]);
+  useEffect(() => { divisionsRef.current = divisions; }, [divisions]);
   useEffect(() => { adjacencyRef.current = useGameStore.getState().adjacency; });
   useEffect(() => { moveUnitsRef.current = moveUnits; }, [moveUnits]);
   useEffect(() => { redirectMovementRef.current = redirectMovement; }, [redirectMovement]);
@@ -103,7 +107,7 @@ export function useMapEventHandlers(
             setSelectedRegion(regionId);
             setSelectedMovementId(null);
             const region = regions[regionId];
-            if (region && region.owner === playerCountry && region.divisions.length > 0) {
+            if (region && region.owner === playerCountry && getDivisionsInRegion(divisions, regionId).length > 0) {
               setSelectedUnitRegion(regionId);
             } else {
               setSelectedUnitRegion(null);
@@ -139,10 +143,11 @@ export function useMapEventHandlers(
 
         if (!moved && currentSelectedUnit && targetRegionId && targetRegionId !== currentSelectedUnit) {
           const sourceRegion = regionsRef.current[currentSelectedUnit];
-          if (sourceRegion && sourceRegion.divisions.length > 0) {
+          const sourceDivisions = sourceRegion ? getDivisionsInRegion(divisionsRef.current, currentSelectedUnit) : [];
+          if (sourceDivisions.length > 0) {
             // Use the number of explicitly selected divisions if any; otherwise move all.
             const selIds = selectedDivisionIdsRef.current;
-            const count = selIds.length > 0 ? selIds.length : sourceRegion.divisions.length;
+            const count = selIds.length > 0 ? selIds.length : sourceDivisions.length;
             moveUnitsRef.current(currentSelectedUnit, targetRegionId, count);
             // Clear division selection after initiating movement
             clearSelectedDivisionsRef.current();

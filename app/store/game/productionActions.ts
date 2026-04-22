@@ -30,6 +30,7 @@ export const createProductionActions = (
     // Calculate how many divisions we can actually produce based on cap
     const capInfo = getCommandPowerInfo(
       state.selectedCountry.id,
+      state.divisions,
       state.regions,
       state.movingUnits,
       state.productionQueues,
@@ -86,9 +87,7 @@ export const createProductionActions = (
     }
 
     // Count existing divisions to generate unique names
-    const existingDivisions = Object.values(state.regions).reduce((acc, region) => 
-      acc + region.divisions.filter(d => d.owner === state.selectedCountry!.id).length, 0
-    );
+    const existingDivisions = Object.values(state.divisions).filter(d => d.owner === state.selectedCountry!.id).length;
     const playerQueue = state.productionQueues[state.selectedCountry.id] || [];
     const existingQueueCount = playerQueue.length;
 

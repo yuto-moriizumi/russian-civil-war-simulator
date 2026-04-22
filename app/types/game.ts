@@ -23,9 +23,11 @@ export interface Division {
   maxHp: number;        // Maximum hit points
   attack: number;       // Attack power (damage dealt)
   defence: number;      // Defence power (damage reduction)
+  regionId: string | null; // Region where the division is located; null = in active combat
 }
 
 // Normalized division state. Division objects are keyed by their stable ID.
+// This is the single source of truth for all division data.
 export type DivisionState = Record<string, Division>;
 
 // Map region types
@@ -34,7 +36,6 @@ export interface Region {
   name: string;         // "Altai Krai"
   countryIso3: string;  // "RUS", "UKR"
   owner: CountryId;     // Which country controls this region
-  divisions: Division[]; // Regional location index; GameState.divisions is canonical
 }
 
 export interface Adjacency {

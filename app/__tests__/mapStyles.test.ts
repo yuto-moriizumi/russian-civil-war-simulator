@@ -9,7 +9,6 @@ function makeRegion(id: string, owner: Region['owner']): Region {
     name: id,
     countryIso3: 'TEST',
     owner,
-    divisions: [],
   };
 }
 

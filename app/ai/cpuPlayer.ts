@@ -1,4 +1,4 @@
-import { AIState, CountryId, RegionState, Region, ActiveCombat, Movement, ArmyGroup, ProductionQueueItem, CountryBonuses } from '../types/game';
+import { AIState, CountryId, RegionState, Region, ActiveCombat, Movement, ArmyGroup, ProductionQueueItem, CountryBonuses, DivisionState } from '../types/game';
 import { canProduceDivision } from '../utils/commandPower';
 import { getFirstArmyGroupName, getDivisionPrefix } from '../data/countries';
 
@@ -49,14 +49,11 @@ function pickRandomRegion(regionList: Region[]): Region | null {
 
 function countAssignedDivisions(
   groupId: string,
-  regions: RegionState,
+  divisions: DivisionState,
   movingUnits: Movement[],
   productionQueue: ProductionQueueItem[]
 ): number {
-  const onMap = Object.values(regions).reduce(
-    (count, region) => count + region.divisions.filter(division => division.armyGroupId === groupId).length,
-    0
-  );
+  const onMap = Object.values(divisions).filter(d => d.armyGroupId === groupId && d.regionId !== null).length;
   const inTransit = movingUnits.reduce(
     (count, movement) => count + movement.divisions.filter(division => division.armyGroupId === groupId).length,
     0
@@ -68,6 +65,7 @@ function countAssignedDivisions(
 
 function selectProductionArmyGroup(
   countryId: CountryId,
+  divisions: DivisionState,
   regions: RegionState,
   armyGroups: ArmyGroup[],
   movingUnits: Movement[],
@@ -76,23 +74,17 @@ function selectProductionArmyGroup(
   return armyGroups
     .filter(group => group.owner === countryId)
     .sort((a, b) =>
-      countAssignedDivisions(a.id, regions, movingUnits, productionQueue) -
-      countAssignedDivisions(b.id, regions, movingUnits, productionQueue)
+      countAssignedDivisions(a.id, divisions, movingUnits, productionQueue) -
+      countAssignedDivisions(b.id, divisions, movingUnits, productionQueue)
     )[0];
 }
 
 /**
  * Generate a unique division name for the AI
  */
-function generateAIDivisionName(countryId: CountryId, regions: RegionState, productionQueue: ProductionQueueItem[], offset: number = 0): string {
+function generateAIDivisionName(countryId: CountryId, divisions: DivisionState, productionQueue: ProductionQueueItem[], offset: number = 0): string {
   const prefix = getDivisionPrefix(countryId);
-  
-  // Count existing divisions owned by this country
-  const existingCount = Object.values(regions).reduce((acc, region) => 
-    acc + region.divisions.filter(d => d.owner === countryId).length, 0
-  );
-  
-  // Count divisions in production for this country
+  const existingCount = Object.values(divisions).filter(d => d.owner === countryId).length;
   const productionCount = productionQueue.filter(p => p.owner === countryId).length;
   
   const totalCount = existingCount + productionCount + offset;
@@ -136,6 +128,7 @@ export interface AIActions {
  */
 export function runAITick(
   aiState: AIState,
+  divisions: DivisionState,
   regions: RegionState,
   armyGroups: ArmyGroup[],
   activeCombats: ActiveCombat[] = [],
@@ -148,7 +141,7 @@ export function runAITick(
   const { countryId } = aiState;
   
   // 1. Find or create an army group for the AI
-  let aiArmyGroup = selectProductionArmyGroup(countryId, regions, armyGroups, movingUnits, productionQueue);
+  let aiArmyGroup = selectProductionArmyGroup(countryId, divisions, regions, armyGroups, movingUnits, productionQueue);
   let newArmyGroup: ArmyGroup | undefined = undefined;
   
   if (!aiArmyGroup) {
@@ -216,11 +209,11 @@ export function runAITick(
 
   while (divisionsCreated < 2) {
     // Check command power before producing (use the locally-updated queues)
-    if (!canProduceDivision(countryId, regions, movingUnits, localQueues, countryBonuses, coreRegions)) {
+    if (!canProduceDivision(countryId, divisions, regions, movingUnits, localQueues, countryBonuses, coreRegions)) {
       break;
     }
     
-    aiArmyGroup = selectProductionArmyGroup(countryId, regions, availableArmyGroups, movingUnits, localQueues[countryId] ?? []);
+    aiArmyGroup = selectProductionArmyGroup(countryId, divisions, regions, availableArmyGroups, movingUnits, localQueues[countryId] ?? []);
     if (!aiArmyGroup) break;
 
     const groupRegionIds = new Set(aiArmyGroup.regionIds);
@@ -232,7 +225,7 @@ export function runAITick(
     if (!targetRegion) break;
     
     productionRequests.push({
-      divisionName: generateAIDivisionName(countryId, regions, productionQueue, divisionsCreated),
+      divisionName: generateAIDivisionName(countryId, divisions, productionQueue, divisionsCreated),
       targetRegionId: targetRegion.id,
       armyGroupId: aiArmyGroup.id,
     });

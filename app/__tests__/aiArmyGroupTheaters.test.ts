@@ -4,6 +4,7 @@ import type {
   ArmyGroup,
   CountryId,
   Division,
+  DivisionState,
   ProductionQueueItem,
   Region,
   RegionState,
@@ -22,16 +23,16 @@ function makeDivision(id: string, armyGroupId: string): Division {
     maxHp: 100,
     attack: 10,
     defence: 15,
+    regionId: null,
   };
 }
 
-function makeRegion(id: string, divisions: Division[] = []): Region {
+function makeRegion(id: string): Region {
   return {
     id,
     name: id,
     countryIso3: 'TST',
     owner: AI_COUNTRY,
-    divisions,
   };
 }
 
@@ -80,6 +81,7 @@ describe('syncAIArmyGroupsToTheaters', () => {
       theaters: [],
       armyGroups: [],
       regions,
+      divisions: {},
       movingUnits: [],
       activeCombats: [],
       productionQueues: {} as Record<CountryId, ProductionQueueItem[]>,
@@ -105,6 +107,7 @@ describe('syncAIArmyGroupsToTheaters', () => {
       theaters,
       armyGroups: [],
       regions,
+      divisions: {},
       movingUnits: [],
       activeCombats: [],
       productionQueues: {} as Record<CountryId, ProductionQueueItem[]>,
@@ -117,8 +120,12 @@ describe('syncAIArmyGroupsToTheaters', () => {
 
   it('creates an AI army group when a new theater appears', () => {
     const regions: RegionState = {
-      'west-front': makeRegion('west-front', [makeDivision('west-1', 'ag-west')]),
-      'east-front': makeRegion('east-front', [makeDivision('east-1', 'ag-west')]),
+      'west-front': makeRegion('west-front'),
+      'east-front': makeRegion('east-front'),
+    };
+    const divisions: DivisionState = {
+      'west-1': { ...makeDivision('west-1', 'ag-west'), regionId: 'west-front' },
+      'east-1': { ...makeDivision('east-1', 'ag-west'), regionId: 'east-front' },
     };
     const theaters = [
       makeTheater('theater-west', ['west-front']),
@@ -130,6 +137,7 @@ describe('syncAIArmyGroupsToTheaters', () => {
       theaters,
       armyGroups: [makeGroup('ag-west', 'theater-west', ['west-front', 'east-front'])],
       regions,
+      divisions,
       movingUnits: [],
       activeCombats: [],
       productionQueues: {} as Record<CountryId, ProductionQueueItem[]>,
@@ -141,13 +149,18 @@ describe('syncAIArmyGroupsToTheaters', () => {
 
     const eastGroup = aiGroups.find(group => group.theaterId === 'theater-east');
     expect(eastGroup).toBeDefined();
-    expect(result.regions['east-front'].divisions[0].armyGroupId).toBe(eastGroup?.id);
+    const eastFrontDivs = Object.values(result.divisions).filter(d => d.regionId === 'east-front');
+    expect(eastFrontDivs[0].armyGroupId).toBe(eastGroup?.id);
   });
 
   it('merges AI army groups when their theaters disappear', () => {
     const regions: RegionState = {
-      'west-front': makeRegion('west-front', [makeDivision('west-1', 'ag-west')]),
-      'east-front': makeRegion('east-front', [makeDivision('east-1', 'ag-east')]),
+      'west-front': makeRegion('west-front'),
+      'east-front': makeRegion('east-front'),
+    };
+    const divisions: DivisionState = {
+      'west-1': { ...makeDivision('west-1', 'ag-west'), regionId: 'west-front' },
+      'east-1': { ...makeDivision('east-1', 'ag-east'), regionId: 'east-front' },
     };
 
     const result = syncAIArmyGroupsToTheaters({
@@ -158,6 +171,7 @@ describe('syncAIArmyGroupsToTheaters', () => {
         makeGroup('ag-east', 'theater-east', ['east-front']),
       ],
       regions,
+      divisions,
       movingUnits: [],
       activeCombats: [],
       productionQueues: {
@@ -170,7 +184,8 @@ describe('syncAIArmyGroupsToTheaters', () => {
     expect(aiGroups[0].id).toBe('ag-west');
     expect(aiGroups[0].theaterId).toBe('theater-west');
     expect(aiGroups[0].regionIds).toEqual(expect.arrayContaining(['west-front', 'east-front']));
-    expect(result.regions['east-front'].divisions[0].armyGroupId).toBe('ag-west');
+    const eastFrontDivs = Object.values(result.divisions).filter(d => d.regionId === 'east-front');
+    expect(eastFrontDivs[0].armyGroupId).toBe('ag-west');
     expect(result.productionQueues[AI_COUNTRY][0].armyGroupId).toBe('ag-west');
   });
 });

@@ -5,12 +5,6 @@ import { addDivisionsToState } from '../../../utils/divisionState';
 /**
  * Process per-country production queues and complete the FIRST production from each country's queue.
  * This allows all countries to produce divisions in parallel.
- * @param productionQueues - Per-country production queues
- * @param currentTime - Current game time
- * @param regions - Current region state
- * @param countryBonuses - Per-country bonuses from missions
- * @param armyGroups - All army groups (used to validate armyGroupId on completed divisions)
- * @returns Updated per-country queues, regions, and completed production events
  */
 export function processProductionQueue(
   productionQueues: Record<CountryId, ProductionQueueItem[]>,
@@ -21,12 +15,11 @@ export function processProductionQueue(
   divisions: DivisionState = {}
 ): {
   remainingProductions: Record<CountryId, ProductionQueueItem[]>;
-  updatedRegions: RegionState;
   updatedDivisions: DivisionState;
   completedProductions: ProductionQueueItem[];
 } {
   const completedProductions: ProductionQueueItem[] = [];
-  let updatedRegions = { ...regions };
+  const updatedRegions = { ...regions };
   let updatedDivisions = { ...divisions };
   const remainingQueues: Record<CountryId, ProductionQueueItem[]> = {} as Record<CountryId, ProductionQueueItem[]>;
 
@@ -62,67 +55,33 @@ export function processProductionQueue(
         // as a best-effort (divisionValidation will repair it in dev mode).
       }
 
-      // Create the division with bonuses
-      const newDivision: Division = {
-        id: `div-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        name: production.divisionName,
-        owner: production.owner,
-        armyGroupId: resolvedArmyGroupId,
-        hp: divisionStats.hp,
-        maxHp: divisionStats.maxHp,
-        attack: divisionStats.attack,
-        defence: divisionStats.defence,
-      };
-      let deployed = false;
-
-      // Deploy to target region if specified and valid
+      // Determine deploy region
+      let deployRegionId: string | null = null;
       if (production.targetRegionId) {
         const targetRegion = updatedRegions[production.targetRegionId];
         if (targetRegion && targetRegion.owner === production.owner) {
-          updatedRegions = {
-            ...updatedRegions,
-            [production.targetRegionId]: {
-              ...targetRegion,
-              divisions: [...targetRegion.divisions, newDivision],
-            },
-          };
-          deployed = true;
+          deployRegionId = production.targetRegionId;
         } else {
-          // Target region invalid, find a valid region to deploy to
-          const ownedRegions = Object.values(updatedRegions).filter(
-            r => r.owner === production.owner
-          );
-          if (ownedRegions.length > 0) {
-            const deployRegion = ownedRegions[0];
-            updatedRegions = {
-              ...updatedRegions,
-              [deployRegion.id]: {
-                ...deployRegion,
-                divisions: [...deployRegion.divisions, newDivision],
-              },
-            };
-            deployed = true;
-          }
-          // If no owned regions, division is lost (country was defeated)
+          const fallback = Object.values(updatedRegions).find(r => r.owner === production.owner);
+          if (fallback) deployRegionId = fallback.id;
         }
       } else {
-        // No target specified, deploy to first owned region
-        const ownedRegions = Object.values(updatedRegions).filter(
-          r => r.owner === production.owner
-        );
-        if (ownedRegions.length > 0) {
-          const deployRegion = ownedRegions[0];
-          updatedRegions = {
-            ...updatedRegions,
-            [deployRegion.id]: {
-              ...deployRegion,
-              divisions: [...deployRegion.divisions, newDivision],
-            },
-          };
-          deployed = true;
-        }
+        const fallback = Object.values(updatedRegions).find(r => r.owner === production.owner);
+        if (fallback) deployRegionId = fallback.id;
       }
-      if (deployed) {
+
+      if (deployRegionId) {
+        const newDivision: Division = {
+          id: `div-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          name: production.divisionName,
+          owner: production.owner,
+          armyGroupId: resolvedArmyGroupId,
+          hp: divisionStats.hp,
+          maxHp: divisionStats.maxHp,
+          attack: divisionStats.attack,
+          defence: divisionStats.defence,
+          regionId: deployRegionId,
+        };
         updatedDivisions = addDivisionsToState(updatedDivisions, [newDivision]);
       }
 
@@ -152,7 +111,6 @@ export function processProductionQueue(
 
   return {
     remainingProductions: remainingQueues,
-    updatedRegions,
     updatedDivisions,
     completedProductions,
   };

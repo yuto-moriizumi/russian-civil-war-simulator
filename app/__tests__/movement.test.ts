@@ -38,6 +38,7 @@ function makeDiv(overrides: Partial<Division> = {}): Division {
     maxHp: 100,
     attack: 10,
     defence: 15,
+    regionId: null,
     ...overrides,
   };
 }
@@ -360,7 +361,7 @@ describe('getNextStepToward', () => {
 // ---------------------------------------------------------------------------
 
 function makeRegion(id: string, owner: 'soviet' | 'white' | 'neutral' = 'soviet'): Region {
-  return { id, name: id, countryIso3: 'RUS', owner, divisions: [] };
+  return { id, name: id, countryIso3: 'RUS', owner };
 }
 
 describe('redirectMovement – path computation logic', () => {

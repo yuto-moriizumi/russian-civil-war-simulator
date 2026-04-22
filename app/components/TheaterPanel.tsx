@@ -12,6 +12,7 @@ export default function TheaterPanel() {
   const allTheaters = useGameStore(state => state.theaters);
   const armyGroups = useGameStore(state => state.armyGroups);
   const regions = useGameStore(state => state.regions);
+  const divisions = useGameStore(state => state.divisions);
   const playerCountry = useGameStore(state => state.selectedCountry?.id);
   const selectedGroupId = useGameStore(state => state.selectedGroupId);
   const movingUnits = useGameStore(state => state.movingUnits);
@@ -84,10 +85,10 @@ export default function TheaterPanel() {
     <div className="flex items-end gap-1 overflow-x-auto pb-4 px-4 scrollbar-hide select-none">
       {/* Group cards by theater if desired, but for now we'll just list them horizontally */}
       {playerGroups.map((group) => {
-        const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerCountry, group.id, movingUnits, activeCombats);
+        const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerCountry, group.id, movingUnits, activeCombats, divisions);
         const queueCount = (productionQueue[playerCountry] || []).filter(p => p.armyGroupId === group.id).length;
         const isGroupSelected = selectedGroupId === group.id;
-        const canProduce = canProduceDivision(playerCountry, regions, movingUnits, productionQueue, countryBonuses[playerCountry], coreRegions);
+        const canProduce = canProduceDivision(playerCountry, divisions, regions, movingUnits, productionQueue, countryBonuses[playerCountry], coreRegions);
         const assignedTheater = group.theaterId ? theaters.find(theater => theater.id === group.theaterId) : null;
         const theaterFlag = assignedTheater ? getCountryFlag(assignedTheater.enemyCountry) : '';
 

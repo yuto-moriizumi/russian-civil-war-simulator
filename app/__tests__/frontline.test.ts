@@ -19,20 +19,20 @@ import type {
   Region,
   RegionState,
   Relationship,
+  DivisionState,
 } from '../types/game';
+
 
 // ---------------------------------------------------------------------------
 // Shared fixtures
 // ---------------------------------------------------------------------------
 
-function makeRegion(id: string, owner: 'soviet' | 'white', divs: Division[] = []): Region {
+function makeRegion(id: string, owner: 'soviet' | 'white', _divs: Division[] = []): Region {
   return {
     id,
     name: id,
     countryIso3: 'TST',
     owner,
-    divisions: divs,
-    
   };
 }
 
@@ -46,7 +46,21 @@ function makeDiv(id: string, armyGroupId = 'ag-1'): Division {
     maxHp: 100,
     attack: 10,
     defence: 15,
+    regionId: null,
   };
+}
+
+/** Build a DivisionState by assigning divisions to their region locations */
+function buildDivState(
+  assignments: Record<string, Division[]>
+): DivisionState {
+  const state: DivisionState = {};
+  for (const [regionId, divs] of Object.entries(assignments)) {
+    for (const div of divs) {
+      state[div.id] = { ...div, regionId };
+    }
+  }
+  return state;
 }
 
 // ---------------------------------------------------------------------------
@@ -76,15 +90,18 @@ describe('computeFrontline', () => {
   const canEnter = () => true;
 
   it('identifies B as a frontline region and C as a target', () => {
+    const divA = { ...makeDiv('div-a'), regionId: 'A' as string | null };
+    const divB = { ...makeDiv('div-b'), regionId: 'B' as string | null };
     const regions: RegionState = {
-      A: makeRegion('A', 'soviet', [makeDiv('div-a')]),
-      B: makeRegion('B', 'soviet', [makeDiv('div-b')]),
+      A: makeRegion('A', 'soviet'),
+      B: makeRegion('B', 'soviet'),
       C: makeRegion('C', 'white'),
       D: makeRegion('D', 'white'),
     };
+    const divisions = buildDivState({ A: [divA], B: [divB] });
 
     const { frontlineRegions, targetRegions } = computeFrontline(
-      'ag-1', regions, adjacency, 'soviet', canEnter
+      'ag-1', regions, adjacency, 'soviet', canEnter, undefined, divisions
     );
 
     expect(frontlineRegions.has('B')).toBe(true);
@@ -103,7 +120,7 @@ describe('computeFrontline', () => {
     };
 
     const { frontlineRegions, targetRegions } = computeFrontline(
-      'ag-1', regions, adjacency, 'soviet', canEnter
+      'ag-1', regions, adjacency, 'soviet', canEnter, undefined, {}
     );
 
     expect(frontlineRegions.size).toBe(0);
@@ -111,9 +128,11 @@ describe('computeFrontline', () => {
   });
 
   it('respects canEnter — does not add blocked enemy regions', () => {
+    const divA = makeDiv('div-a');
+    const divB = makeDiv('div-b');
     const regions: RegionState = {
-      A: makeRegion('A', 'soviet', [makeDiv('div-a')]),
-      B: makeRegion('B', 'soviet', [makeDiv('div-b')]),
+      A: makeRegion('A', 'soviet'),
+      B: makeRegion('B', 'soviet'),
       C: makeRegion('C', 'white'),
       D: makeRegion('D', 'white'),
     };
@@ -122,7 +141,7 @@ describe('computeFrontline', () => {
     const blockC = (id: string) => id !== 'C';
 
     const { frontlineRegions, targetRegions } = computeFrontline(
-      'ag-1', regions, adjacency, 'soviet', blockC
+      'ag-1', regions, adjacency, 'soviet', blockC, undefined, buildDivState({ A: [{ ...divA, regionId: 'A' }], B: [{ ...divB, regionId: 'B' }] })
     );
 
     expect(frontlineRegions.has('B')).toBe(false);
@@ -135,9 +154,11 @@ describe('computeFrontline', () => {
      * buildIsHostilePredicate should return false for white regions.
      * computeFrontline with isHostile should produce empty sets.
      */
+    const divA = makeDiv('div-a');
+    const divB = makeDiv('div-b');
     const regions: RegionState = {
-      A: makeRegion('A', 'soviet', [makeDiv('div-a')]),
-      B: makeRegion('B', 'soviet', [makeDiv('div-b')]),
+      A: makeRegion('A', 'soviet'),
+      B: makeRegion('B', 'soviet'),
       C: makeRegion('C', 'white'),
       D: makeRegion('D', 'white'),
     };
@@ -151,7 +172,7 @@ describe('computeFrontline', () => {
     const canEnter = () => true; // access is granted, but hostility is separate
 
     const { frontlineRegions, targetRegions } = computeFrontline(
-      'ag-1', regions, adjacency, 'soviet', canEnter, isHostile
+      'ag-1', regions, adjacency, 'soviet', canEnter, isHostile, buildDivState({ A: [{ ...divA, regionId: 'A' }], B: [{ ...divB, regionId: 'B' }] })
     );
 
     // No war declared → no frontline, no targets
@@ -164,9 +185,11 @@ describe('computeFrontline', () => {
      * soviet has autonomy over 'white' (puppet). Without a war declaration,
      * divisions must not march into the puppet's territory.
      */
+    const divA = makeDiv('div-a');
+    const divB = makeDiv('div-b');
     const regions: RegionState = {
-      A: makeRegion('A', 'soviet', [makeDiv('div-a')]),
-      B: makeRegion('B', 'soviet', [makeDiv('div-b')]),
+      A: makeRegion('A', 'soviet'),
+      B: makeRegion('B', 'soviet'),
       C: makeRegion('C', 'white'),
       D: makeRegion('D', 'white'),
     };
@@ -179,7 +202,7 @@ describe('computeFrontline', () => {
     const canEnter = () => true;
 
     const { frontlineRegions, targetRegions } = computeFrontline(
-      'ag-1', regions, adjacency, 'soviet', canEnter, isHostile
+      'ag-1', regions, adjacency, 'soviet', canEnter, isHostile, buildDivState({ A: [{ ...divA, regionId: 'A' }], B: [{ ...divB, regionId: 'B' }] })
     );
 
     expect(frontlineRegions.size).toBe(0);
@@ -211,7 +234,7 @@ describe('assignDivisionsToFrontline', () => {
   it('Phase 1: routes a rear division one BFS step toward an empty frontline slot', () => {
     const rearDiv = makeDiv('div-rear');
     const regions: RegionState = {
-      A: makeRegion('A', 'soviet', [rearDiv]),
+      A: makeRegion('A', 'soviet'),
       B: makeRegion('B', 'soviet'),
       C: makeRegion('C', 'soviet'),       // frontline slot, currently empty
       E: makeRegion('E', 'white'),
@@ -223,7 +246,7 @@ describe('assignDivisionsToFrontline', () => {
     };
 
     const assignments = assignDivisionsToFrontline(
-      'ag-1', regions, adjacency, 'soviet', frontline, [], canEnter
+      'ag-1', regions, adjacency, 'soviet', frontline, [], canEnter, buildDivState({ A: [{ ...rearDiv, regionId: 'A' }] })
     );
 
     expect(assignments).toHaveLength(1);
@@ -239,7 +262,7 @@ describe('assignDivisionsToFrontline', () => {
     const regions: RegionState = {
       A: makeRegion('A', 'soviet'),
       B: makeRegion('B', 'soviet'),
-      C: makeRegion('C', 'soviet', [div1, div2]), // 2 divs — 1 surplus
+      C: makeRegion('C', 'soviet'),       // 2 divs — 1 surplus
       E: makeRegion('E', 'white'),
     };
 
@@ -249,7 +272,7 @@ describe('assignDivisionsToFrontline', () => {
     };
 
     const assignments = assignDivisionsToFrontline(
-      'ag-1', regions, adjacency, 'soviet', frontline, [], canEnter
+      'ag-1', regions, adjacency, 'soviet', frontline, [], canEnter, buildDivState({ C: [{ ...div1, regionId: 'C' }, { ...div2, regionId: 'C' }] })
     );
 
     // div1 holds the slot; div2 is the surplus that attacks E
@@ -263,7 +286,7 @@ describe('assignDivisionsToFrontline', () => {
   it('skips regions that already have a group movement in transit', () => {
     const div1 = makeDiv('div-1');
     const regions: RegionState = {
-      A: makeRegion('A', 'soviet', [div1]),
+      A: makeRegion('A', 'soviet'),
       B: makeRegion('B', 'soviet'),
       C: makeRegion('C', 'soviet'),
       E: makeRegion('E', 'white'),
@@ -285,7 +308,7 @@ describe('assignDivisionsToFrontline', () => {
     }];
 
     const assignments = assignDivisionsToFrontline(
-      'ag-1', regions, adjacency, 'soviet', frontline, inTransit, canEnter
+      'ag-1', regions, adjacency, 'soviet', frontline, inTransit, canEnter, buildDivState({ A: [div1] })
     );
 
     expect(assignments).toHaveLength(0);
@@ -296,7 +319,7 @@ describe('assignDivisionsToFrontline', () => {
     const regions: RegionState = {
       A: makeRegion('A', 'soviet'),
       B: makeRegion('B', 'soviet'),
-      C: makeRegion('C', 'soviet', [div1]),
+      C: makeRegion('C', 'soviet'),
       E: makeRegion('E', 'white'),
     };
 
@@ -306,7 +329,7 @@ describe('assignDivisionsToFrontline', () => {
     };
 
     const assignments = assignDivisionsToFrontline(
-      'ag-1', regions, adjacency, 'soviet', frontline, [], canEnter
+      'ag-1', regions, adjacency, 'soviet', frontline, [], canEnter, buildDivState({ C: [div1] })
     );
 
     expect(assignments).toHaveLength(1);
@@ -328,7 +351,7 @@ describe('assignDivisionsToFrontline', () => {
     const regions: RegionState = {
       A: makeRegion('A', 'soviet'),
       B: makeRegion('B', 'soviet'),
-      C: makeRegion('C', 'soviet', [div1]),
+      C: makeRegion('C', 'soviet'),
       E: makeRegion('E', 'white'),
       F: makeRegion('F', 'white'),
     };
@@ -339,7 +362,7 @@ describe('assignDivisionsToFrontline', () => {
     };
 
     const assignments = assignDivisionsToFrontline(
-      'ag-1', regions, multiTargetAdjacency, 'soviet', frontline, [], canEnter
+      'ag-1', regions, multiTargetAdjacency, 'soviet', frontline, [], canEnter, buildDivState({ C: [div1] })
     );
 
     expect(assignments).toHaveLength(0);
@@ -363,7 +386,7 @@ describe('assignDivisionsToFrontline', () => {
     const div = makeDiv('div-rear');
     const regions: RegionState = {
       A: makeRegion('A', 'soviet'),          // source — now empty
-      B: makeRegion('B', 'soviet', [div]),   // division just arrived here
+      B: makeRegion('B', 'soviet'),          // division just arrived here
       C: makeRegion('C', 'soviet'),          // frontline slot, still empty
       E: makeRegion('E', 'white'),
     };
@@ -385,7 +408,7 @@ describe('assignDivisionsToFrontline', () => {
     }];
 
     const assignments = assignDivisionsToFrontline(
-      'ag-1', regions, adjacency, 'soviet', frontline, inTransit, canEnter
+      'ag-1', regions, adjacency, 'soviet', frontline, inTransit, canEnter, buildDivState({ B: [div] })
     );
 
     // B is the destination of an in-transit movement — must not be dispatched again
@@ -400,7 +423,7 @@ describe('assignDivisionsToFrontline', () => {
     const div1 = makeDiv('div-1');
     const div2 = makeDiv('div-2');
     const regions: RegionState = {
-      A: makeRegion('A', 'soviet', [div2]), // second rear division
+      A: makeRegion('A', 'soviet'),
       B: makeRegion('B', 'soviet'),
       C: makeRegion('C', 'soviet'),          // frontline slot, empty in regions state
       E: makeRegion('E', 'white'),
@@ -423,7 +446,7 @@ describe('assignDivisionsToFrontline', () => {
     }];
 
     const assignments = assignDivisionsToFrontline(
-      'ag-1', regions, adjacency, 'soviet', frontline, inTransit, canEnter
+      'ag-1', regions, adjacency, 'soviet', frontline, inTransit, canEnter, buildDivState({ A: [div2] })
     );
 
     // C already has an inbound division → slot is covered → div-2 stays put

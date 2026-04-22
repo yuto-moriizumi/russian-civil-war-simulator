@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { CountryId, Screen, Region, Adjacency, Country, GameSpeed, GameState, RegionState, AIState, MapMode, ArmyGroup, Relationship, Mission } from '../../types/game';
+import { CountryId, Screen, Region, Adjacency, Country, GameSpeed, GameState, RegionState, AIState, MapMode, ArmyGroup, Relationship, Mission, DivisionState } from '../../types/game';
 import { initialMissions } from '../../data/gameData';
 import { createInitialAIState, createInitialAIArmyGroup } from '../../ai/cpuPlayer';
 import { createGameEvent, createNotification } from '../../utils/eventUtils';
@@ -12,7 +12,7 @@ import { createDivision } from '../../utils/combat';
 import { getDivisionPrefix } from '../../data/countries';
 import { createDivisionSelectionActions } from './divisionSelectionActions';
 import { applyClaimedMissionRewards, applyLiberatePuppet, buildMissionRewardDescription } from './missionRewards';
-import { buildDivisionState } from '../../utils/divisionState';
+import { buildDivisionState, getDivisionsInRegion } from '../../utils/divisionState';
 
 export { applyLiberatePuppet };
 
@@ -43,7 +43,6 @@ export function getAIControlledCountries(
 
   Object.values(regions).forEach(region => {
     countryIds.add(region.owner);
-    region.divisions.forEach(division => countryIds.add(division.owner));
   });
 
   Object.entries(productionQueues).forEach(([countryId, queue]) => {
@@ -85,7 +84,7 @@ export const createBasicActions = (
   set: StoreApi<GameStore>['setState'],
   get: StoreApi<GameStore>['getState']
 ) => ({
-  setRegions: (regions: Record<string, Region>) => set({ regions, divisions: buildDivisionState(regions) }),
+  setRegions: (regions: Record<string, Region>) => set({ regions }),
   
   setAdjacency: (adjacency: Adjacency) => set({ adjacency }),
 
@@ -103,10 +102,12 @@ export const createBasicActions = (
       // Allow selecting units in owned regions OR ally regions where the
       // player has their own divisions (military access / autonomy)
       const isOwnRegion = region.owner === selectedCountry?.id;
+      const { divisions } = get();
+      const regionDivisions = getDivisionsInRegion(divisions, regionId);
       const hasOwnDivisions = selectedCountry
-        ? region.divisions.some(d => d.owner === selectedCountry.id)
+        ? regionDivisions.some(d => d.owner === selectedCountry.id)
         : false;
-      if ((isOwnRegion || hasOwnDivisions) && region.divisions.length > 0) {
+      if ((isOwnRegion || hasOwnDivisions) && regionDivisions.length > 0) {
         set({ selectedUnitRegion: regionId });
       } else {
         set({ selectedUnitRegion: null });
@@ -127,18 +128,12 @@ export const createBasicActions = (
    * selectedUnitRegion is set to null because divisions span multiple regions.
    */
   selectDivisionsInArmyGroup: (groupId: string) => {
-    const { regions, armyGroups } = get();
+    const { armyGroups, divisions } = get();
     const group = armyGroups.find(g => g.id === groupId);
     if (!group) return;
-    const divisionIds: string[] = [];
-    for (const region of Object.values(regions)) {
-      for (const div of region.divisions) {
-        if (div.armyGroupId === groupId) {
-          divisionIds.push(div.id);
-        }
-      }
-    }
-    // No need to search movingUnits — all divisions (including in-transit) are in regions.
+    const divisionIds = Object.values(divisions)
+      .filter(d => d.armyGroupId === groupId)
+      .map(d => d.id);
     set({
       selectedDivisionIds: divisionIds,
       selectedUnitRegion: null,
@@ -211,7 +206,7 @@ export const createBasicActions = (
       ...initialGameState,
       // Keep the loaded map geometry so the game doesn't need to re-fetch it.
       regions: currentState.regions,
-      divisions: buildDivisionState(currentState.regions),
+      divisions: {},
       adjacency: currentState.adjacency,
       mapDataLoaded: currentState.mapDataLoaded,
       regionCentroids: currentState.regionCentroids,
@@ -264,15 +259,13 @@ export const createBasicActions = (
         }
       }
 
-      const initialPlacementRegions = new Set(Object.keys(initialUnitPlacement));
       const regionsWithUnits: RegionState = {};
       for (const [regionId, region] of Object.entries(currentRegions)) {
-        regionsWithUnits[regionId] = initialPlacementRegions.has(regionId)
-          ? { ...region, divisions: [] }
-          : { ...region };
+        regionsWithUnits[regionId] = { ...region };
       }
 
       const divCounters: Record<string, number> = {};
+      const initialDivisions: DivisionState = {};
 
       for (const [regionId, entries] of Object.entries(initialUnitPlacement)) {
         if (!regionsWithUnits[regionId]) continue;
@@ -309,7 +302,7 @@ export const createBasicActions = (
             const suffix = n === 1 ? '1st' : n === 2 ? '2nd' : n === 3 ? '3rd' : `${n}th`;
             const name = `${suffix} ${prefix}`;
             const division = createDivision(owner as CountryId, name, armyGroup.id, initialBonuses);
-            regionsWithUnits[regionId].divisions.push(division);
+            initialDivisions[division.id] = { ...division, regionId };
           }
         }
       }
@@ -328,8 +321,8 @@ export const createBasicActions = (
           return g;
         });
 
-      regionsForState = Object.keys(regionsWithUnits).length > 0 ? regionsWithUnits : currentRegions;
-      divisionsForState = buildDivisionState(regionsForState);
+      regionsForState = regionsWithUnits;
+      divisionsForState = initialDivisions;
       armyGroupsForState = [...autoGroups, ...placementArmyGroups];
     } else {
       // Mid-game switch: preserve all army groups; only create ones for countries with none.
@@ -344,7 +337,6 @@ export const createBasicActions = (
         });
       armyGroupsForState = [...currentState.armyGroups, ...missingGroups];
       divisionsForState = buildDivisionState(
-        currentRegions,
         currentState.movingUnits,
         currentState.activeCombats,
         currentState.divisions
@@ -472,7 +464,6 @@ export const createBasicActions = (
       missions: mergeMissionsWithInitial(savedData.gameState.missions),
       regions: savedData.regions,
       divisions: buildDivisionState(
-        savedData.regions,
         savedData.gameState.movingUnits,
         savedData.gameState.activeCombats,
         savedData.gameState.divisions

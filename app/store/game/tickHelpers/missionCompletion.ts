@@ -16,6 +16,7 @@ interface AIMissionCheckResult {
   updatedMissions: Mission[];
   countryBonuses: GameStore['countryBonuses'];
   regions: GameStore['regions'];
+  divisions: GameStore['divisions'];
   movingUnits: GameStore['movingUnits'];
   relationships: GameStore['relationships'];
   armyGroups: GameStore['armyGroups'];
@@ -70,6 +71,7 @@ export function checkAndCompleteMissions(
       armyGroups: currentState.armyGroups,
       adjacency: currentState.adjacency,
       relationships: currentState.relationships,
+      divisions: currentState.divisions,
     });
     
     if (conditionsMet) {
@@ -108,6 +110,7 @@ export function checkAndClaimAIMissions(
   let updatedMissions = state.missions;
   let countryBonuses = state.countryBonuses;
   let regions = state.regions;
+  let divisions = state.divisions;
   let movingUnits = state.movingUnits;
   let relationships = state.relationships;
   let armyGroups = state.armyGroups;
@@ -120,6 +123,7 @@ export function checkAndClaimAIMissions(
     missions: updatedMissions,
     countryBonuses,
     regions,
+    divisions,
     movingUnits,
     relationships,
     armyGroups,
@@ -150,6 +154,7 @@ export function checkAndClaimAIMissions(
             armyGroups,
             adjacency: state.adjacency,
             relationships,
+            divisions: state.divisions,
           });
           if (!conditionsMet) continue;
         }
@@ -171,6 +176,7 @@ export function checkAndClaimAIMissions(
           [countryId]: rewards.updatedCountryBonuses,
         };
         regions = rewards.updatedRegions;
+        divisions = rewards.updatedDivisions;
         movingUnits = rewards.updatedMovingUnits;
         relationships = rewards.updatedRelationships;
         armyGroups = rewards.updatedArmyGroups;
@@ -195,6 +201,7 @@ export function checkAndClaimAIMissions(
     updatedMissions,
     countryBonuses,
     regions,
+    divisions,
     movingUnits,
     relationships,
     armyGroups,

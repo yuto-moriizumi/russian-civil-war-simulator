@@ -3,7 +3,7 @@ import { buildIsHostilePredicate } from '../utils/pathfinding';
 import type { Adjacency, Region, RegionState, Relationship } from '../types/game';
 
 function makeRegionSimple(id: string, owner: 'soviet' | 'white' | 'germany'): Region {
-  return { id, name: id, countryIso3: 'TST', owner, divisions: [] };
+  return { id, name: id, countryIso3: 'TST', owner };
 }
 
 describe('buildIsHostilePredicate', () => {

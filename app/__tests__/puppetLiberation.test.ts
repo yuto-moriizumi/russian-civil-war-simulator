@@ -19,7 +19,6 @@ describe('liberated puppets - AI readiness', () => {
         name: 'Kharkiv',
         countryIso3: 'UKR',
         owner: 'ukrainesoviet' as CountryId,
-        divisions: [],
       },
     };
 
@@ -51,7 +50,6 @@ describe('liberated puppets - AI readiness', () => {
         name: 'Kharkiv',
         countryIso3: 'UKR',
         owner: 'soviet',
-        divisions: [],
       },
     };
 
@@ -72,8 +70,9 @@ describe('liberated puppets - AI readiness', () => {
 
     const kharkiv = result.updatedRegions['UA-63'];
     expect(kharkiv.owner).toBe('ukrainesoviet');
-    expect(kharkiv.divisions).toHaveLength(3);
-    expect(kharkiv.divisions.every(division => division.armyGroupId === puppetGroup!.id)).toBe(true);
+    const kharkivDivisions = Object.values(result.updatedDivisions).filter(d => d.regionId === 'UA-63');
+    expect(kharkivDivisions).toHaveLength(3);
+    expect(kharkivDivisions.every(division => division.armyGroupId === puppetGroup!.id)).toBe(true);
   });
 
   it('joins the overlord wars when a puppet is liberated while the overlord is defending', () => {
@@ -93,7 +92,6 @@ describe('liberated puppets - AI readiness', () => {
         name: 'Kharkiv',
         countryIso3: 'UKR',
         owner: 'soviet',
-        divisions: [],
       },
     };
 

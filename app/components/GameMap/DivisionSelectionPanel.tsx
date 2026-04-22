@@ -3,6 +3,7 @@
 import { useGameStore } from '../../store/useGameStore';
 import { COUNTRY_COLORS, getAdjacentRegions } from '../../utils/mapUtils';
 import { Division } from '../../types/game';
+import { getDivisionsInRegion } from '../../utils/divisionState';
 
 /**
  * DivisionSelectionPanel
@@ -18,6 +19,7 @@ export function DivisionSelectionPanel() {
   const selectedDivisionIds = useGameStore(state => state.selectedDivisionIds);
   const selectedUnitRegion = useGameStore(state => state.selectedUnitRegion);
   const regions = useGameStore(state => state.regions);
+  const divisions = useGameStore(state => state.divisions);
   const movingUnits = useGameStore(state => state.movingUnits);
   const adjacency = useGameStore(state => state.adjacency);
   const playerCountry = useGameStore(state => state.selectedCountry?.id);
@@ -36,7 +38,7 @@ export function DivisionSelectionPanel() {
   const divisionIdSet = new Set(selectedDivisionIds);
 
   if (sourceRegion) {
-    for (const div of sourceRegion.divisions) {
+    for (const div of getDivisionsInRegion(divisions, sourceRegion.id)) {
       if (divisionIdSet.has(div.id)) allDivisions.push(div);
     }
   }
@@ -44,7 +46,7 @@ export function DivisionSelectionPanel() {
   if (allDivisions.length < selectedDivisionIds.length) {
     const foundIds = new Set(allDivisions.map(d => d.id));
     for (const region of Object.values(regions)) {
-      for (const div of region.divisions) {
+      for (const div of getDivisionsInRegion(divisions, region.id)) {
         if (divisionIdSet.has(div.id) && !foundIds.has(div.id)) {
           allDivisions.push(div);
           foundIds.add(div.id);

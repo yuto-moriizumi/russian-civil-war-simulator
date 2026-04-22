@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { createTickActions } from '../store/game/tickActions';
 import { initialGameState } from '../store/game/initialState';
 import type { GameStore } from '../store/game/types';
-import type { Country, Division, Mission, Movement, RegionState } from '../types/game';
+import type { Country, Division, DivisionState, Mission, Movement, RegionState } from '../types/game';
 
 function makeDiv(overrides: Partial<Division> = {}): Division {
   return {
@@ -14,6 +14,7 @@ function makeDiv(overrides: Partial<Division> = {}): Division {
     maxHp: 100,
     attack: 10,
     defence: 15,
+    regionId: null,
     ...overrides,
   };
 }
@@ -53,6 +54,7 @@ function runSingleTick(initialState: Partial<GameStore>): GameStore {
     isPlaying: true,
     dateTime: new Date('1918-01-01T00:00:00Z'),
     regions: {},
+    divisions: {},
     adjacency: {},
     movingUnits: [],
     activeCombats: [],
@@ -82,11 +84,15 @@ function runSingleTick(initialState: Partial<GameStore>): GameStore {
 
 describe('tick mid-transit combat handling', () => {
   it('moves newly attacked defender divisions from the region into combat without duplicating them', () => {
-    const attacker = makeDiv({ id: 'attacker' });
-    const defender = makeDiv({ id: 'defender', owner: 'white', armyGroupId: 'ag-white' });
+    const attacker = makeDiv({ id: 'attacker', regionId: 'A' });
+    const defender = makeDiv({ id: 'defender', owner: 'white', armyGroupId: 'ag-white', regionId: 'B' });
+    const divisions: DivisionState = {
+      'attacker': attacker,
+      'defender': defender,
+    };
     const regions: RegionState = {
-      A: { id: 'A', name: 'A', countryIso3: 'RUS', owner: 'soviet', divisions: [attacker] },
-      B: { id: 'B', name: 'B', countryIso3: 'RUS', owner: 'white', divisions: [defender] },
+      A: { id: 'A', name: 'A', countryIso3: 'RUS', owner: 'soviet' },
+      B: { id: 'B', name: 'B', countryIso3: 'RUS', owner: 'white' },
     };
     const movement: Movement = {
       id: 'mv-1',
@@ -104,6 +110,7 @@ describe('tick mid-transit combat handling', () => {
       selectedCountry: null,
       dateTime: new Date('1918-01-01T00:00:00Z'),
       regions,
+      divisions,
       adjacency: { A: ['B'], B: ['A'] },
       movingUnits: [movement],
       activeCombats: [],
@@ -133,23 +140,29 @@ describe('tick mid-transit combat handling', () => {
 
     expect(state.activeCombats).toHaveLength(1);
     expect(state.activeCombats[0].defenderDivisions.map(d => d.id)).toEqual(['defender']);
-    expect(state.regions.B.divisions).toHaveLength(0);
+    // Defender division is moved into combat, not in region
+    const defenderInRegion = Object.values(state.divisions).filter(d => d.regionId === 'B' && d.id === 'defender');
+    expect(defenderInRegion).toHaveLength(0);
     expect(state.movingUnits[0].pendingCombatId).toBe(state.activeCombats[0].id);
-    expect(state.divisions.defender).toEqual(state.activeCombats[0].defenderDivisions[0]);
+    // Division in state has regionId: null (in combat); combat snapshot preserves original regionId
+    expect(state.divisions.defender.regionId).toBe(null);
+    expect(state.divisions.defender.id).toBe(state.activeCombats[0].defenderDivisions[0].id);
   });
 });
 
 describe('tick AI state for new countries from scheduled events', () => {
   it('creates an AI state and army group for a country that appears via scheduled events', () => {
     // 'crimea' appears in regions but has no aiState entry (simulates a scheduled event spawn)
-    const crimeaDivision = makeDiv({ id: 'crimea-1', owner: 'crimea' as never, armyGroupId: 'crimea-ag' });
+    const crimeaDivision = makeDiv({ id: 'crimea-1', owner: 'crimea' as never, armyGroupId: 'crimea-ag', regionId: 'UA-43' });
+    const divisions: DivisionState = { 'crimea-1': crimeaDivision };
     const regions: RegionState = {
-      'UA-43': { id: 'UA-43', name: 'Crimea', countryIso3: 'CRI', owner: 'crimea' as never, divisions: [crimeaDivision] },
+      'UA-43': { id: 'UA-43', name: 'Crimea', countryIso3: 'CRI', owner: 'crimea' as never },
     };
 
     const state = runSingleTick({
       selectedCountry: SOVIET_COUNTRY,
       regions,
+      divisions,
       aiStates: [], // 'crimea' is NOT in aiStates yet
       armyGroups: [
         { id: 'crimea-ag', name: 'Crimean Army', owner: 'crimea' as never, regionIds: ['UA-43'], color: '#CE1126', mode: 'none' as const, theaterId: null },
@@ -163,14 +176,16 @@ describe('tick AI state for new countries from scheduled events', () => {
 
 describe('tick mission completion', () => {
   it('auto-completes and claims available AI country missions', () => {
-    const whiteDivision = makeDiv({ id: 'white-1', owner: 'white', armyGroupId: 'ag-white' });
+    const whiteDivision = makeDiv({ id: 'white-1', owner: 'white', armyGroupId: 'ag-white', regionId: 'A' });
+    const divisions: DivisionState = { 'white-1': whiteDivision };
     const regions: RegionState = {
-      A: { id: 'A', name: 'A', countryIso3: 'RUS', owner: 'white', divisions: [whiteDivision] },
+      A: { id: 'A', name: 'A', countryIso3: 'RUS', owner: 'white' },
     };
 
     const state = runSingleTick({
       selectedCountry: SOVIET_COUNTRY,
       regions,
+      divisions,
       missions: [makeMission()],
       aiStates: [{ countryId: 'white' }],
       armyGroups: [
@@ -182,18 +197,20 @@ describe('tick mission completion', () => {
     expect(mission?.completed).toBe(true);
     expect(mission?.claimed).toBe(true);
     expect(state.countryBonuses.white.attackBonus).toBe(2);
-    expect(state.regions.A.divisions[0].attack).toBe(12);
+    expect(state.divisions['white-1'].attack).toBe(12);
   });
 
   it('leaves selected country missions ready to claim instead of claiming them automatically', () => {
-    const whiteDivision = makeDiv({ id: 'white-1', owner: 'white', armyGroupId: 'ag-white' });
+    const whiteDivision = makeDiv({ id: 'white-1', owner: 'white', armyGroupId: 'ag-white', regionId: 'A' });
+    const divisions: DivisionState = { 'white-1': whiteDivision };
     const regions: RegionState = {
-      A: { id: 'A', name: 'A', countryIso3: 'RUS', owner: 'white', divisions: [whiteDivision] },
+      A: { id: 'A', name: 'A', countryIso3: 'RUS', owner: 'white' },
     };
 
     const state = runSingleTick({
       selectedCountry: WHITE_COUNTRY,
       regions,
+      divisions,
       missions: [makeMission()],
       armyGroups: [
         { id: 'ag-white', name: 'White AG', owner: 'white', regionIds: ['A'], color: '#10B981', mode: 'none' as const, theaterId: null },
@@ -204,6 +221,6 @@ describe('tick mission completion', () => {
     expect(mission?.completed).toBe(true);
     expect(mission?.claimed).toBe(false);
     expect(state.countryBonuses.white.attackBonus).toBe(0);
-    expect(state.regions.A.divisions[0].attack).toBe(10);
+    expect(state.divisions['white-1'].attack).toBe(10);
   });
 });

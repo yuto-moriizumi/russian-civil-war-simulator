@@ -1,4 +1,5 @@
-import { RegionState, Adjacency, CountryId, Movement, Relationship, ActiveCombat } from '../types/game';
+import { RegionState, Adjacency, CountryId, Movement, Relationship, ActiveCombat, DivisionState } from '../types/game';
+import { getDivisionsInRegion } from './divisionState';
 
 /**
  * Build a predicate that returns true for regions that are hostile to the
@@ -403,14 +404,16 @@ export function getArmyGroupUnitCount(
   playerCountry: CountryId,
   armyGroupId?: string,
   movingUnits?: Movement[],
-  activeCombats?: ActiveCombat[]
+  activeCombats?: ActiveCombat[],
+  divisions: DivisionState = {}
 ): number {
   // If armyGroupId is provided, count only divisions with that armyGroupId
   if (armyGroupId) {
     // Count divisions in regions (regardless of owner — attacker divisions may be in enemy regions)
-    let total = Object.values(regions).reduce((sum, region) => {
+    let total = Object.entries(regions).reduce((sum, [regionId, region]) => {
       if (!region) return sum;
-      const matchingDivisions = region.divisions.filter(d => d.armyGroupId === armyGroupId && d.owner === playerCountry);
+      const regionDivs = getDivisionsInRegion(divisions, regionId);
+      const matchingDivisions = regionDivs.filter(d => d.armyGroupId === armyGroupId && d.owner === playerCountry);
       return sum + matchingDivisions.length;
     }, 0);
 
@@ -445,6 +448,7 @@ export function getArmyGroupUnitCount(
   return regionIds.reduce((total, regionId) => {
     const region = regions[regionId];
     if (!region || region.owner !== playerCountry) return total;
-    return total + region.divisions.length;
+    const regionDivs = getDivisionsInRegion(divisions, regionId);
+    return total + regionDivs.length;
   }, 0);
 }

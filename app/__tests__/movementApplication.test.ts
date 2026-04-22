@@ -8,7 +8,7 @@ import {
   applyCompletedMovements,
   applyFinishedCombats,
 } from '../store/game/tickHelpers/movementApplication';
-import type { Division, Movement, Region, RegionState, ActiveCombat, Relationship } from '../types/game';
+import type { Division, DivisionState, Movement, Region, RegionState, ActiveCombat, Relationship } from '../types/game';
 
 // ---------------------------------------------------------------------------
 // Shared test fixtures
@@ -20,11 +20,11 @@ const NO_REL: Relationship[] = [];
 
 function makeDiv(overrides: Partial<Division> = {}): Division {
   return { id: 'div-1', name: '1st', owner: 'soviet', armyGroupId: 'ag-1',
-    hp: 100, maxHp: 100, attack: 10, defence: 15, ...overrides };
+    hp: 100, maxHp: 100, attack: 10, defence: 15, regionId: null, ...overrides };
 }
 
 function makeRegion(id: string, overrides: Partial<Region> = {}): Region {
-  return { id, name: id, countryIso3: 'RUS', owner: 'soviet', divisions: [], ...overrides };
+  return { id, name: id, countryIso3: 'RUS', owner: 'soviet', ...overrides };
 }
 
 function makeMovement(overrides: Partial<Movement> = {}): Movement {
@@ -45,8 +45,8 @@ function makeCombat(overrides: Partial<ActiveCombat> = {}): ActiveCombat {
     roundIntervalHours: 1, isComplete: false, victor: null, ...overrides };
 }
 
-function ctx(regions: RegionState, combats: ActiveCombat[] = [], rel = NO_REL, finished: ActiveCombat[] = []) {
-  return { regions, combats, events: [], notifications: [], relationships: rel, finishedCombats: finished };
+function ctx(regions: RegionState, divisions: DivisionState, combats: ActiveCombat[] = [], rel = NO_REL, finished: ActiveCombat[] = []) {
+  return { regions, divisions, combats, events: [], notifications: [], relationships: rel, finishedCombats: finished };
 }
 
 // ---------------------------------------------------------------------------
@@ -55,76 +55,85 @@ function ctx(regions: RegionState, combats: ActiveCombat[] = [], rel = NO_REL, f
 
 describe('applyCompletedMovements', () => {
   it('adds divisions to friendly region without changing ownership', () => {
-    const arriving = makeDiv({ id: 'arriving' });
+    const arriving = makeDiv({ id: 'arriving', regionId: 'A' });
+    const existing = makeDiv({ id: 'existing', regionId: 'B' });
+    const divisions: DivisionState = { 'arriving': arriving, 'existing': existing };
     const regions: RegionState = {
-      A: makeRegion('A', { divisions: [arriving] }), // division in fromRegion
-      B: makeRegion('B', { divisions: [makeDiv({ id: 'existing' })] }),
+      A: makeRegion('A'),
+      B: makeRegion('B'),
     };
     const mv = makeMovement({ toRegion: 'B', divisions: [arriving] });
-    const { nextRegions } = applyCompletedMovements([mv], [mv], ctx(regions), NOW);
+    const { nextRegions, nextDivisions } = applyCompletedMovements([mv], [mv], ctx(regions, divisions), NOW);
     expect(nextRegions['B'].owner).toBe('soviet');
-    expect(nextRegions['B'].divisions).toHaveLength(2);
+    expect(Object.values(nextDivisions).filter(d => d.regionId === 'B')).toHaveLength(2);
   });
 
   it('captures an undefended enemy region', () => {
-    const attacker = makeDiv({ id: 'attacker' });
+    const attacker = makeDiv({ id: 'attacker', regionId: 'A' });
+    const divisions: DivisionState = { 'attacker': attacker };
     const regions: RegionState = {
-      A: makeRegion('A', { divisions: [attacker] }), // division in fromRegion
-      B: makeRegion('B', { owner: 'white', divisions: [] }),
+      A: makeRegion('A'),
+      B: makeRegion('B', { owner: 'white' }),
     };
     const mv = makeMovement({ toRegion: 'B', divisions: [attacker] });
-    const { nextRegions } = applyCompletedMovements([mv], [mv], ctx(regions), NOW);
+    const { nextRegions, nextDivisions } = applyCompletedMovements([mv], [mv], ctx(regions, divisions), NOW);
     expect(nextRegions['B'].owner).toBe('soviet');
-    expect(nextRegions['B'].divisions).toHaveLength(1);
+    expect(Object.values(nextDivisions).filter(d => d.regionId === 'B')).toHaveLength(1);
   });
 
   it('emits a region_captured event when capturing an undefended region', () => {
-    const div = makeDiv();
+    const div = makeDiv({ id: 'div-1', regionId: 'A' });
+    const divisions: DivisionState = { 'div-1': div };
     const regions: RegionState = {
-      A: makeRegion('A', { divisions: [div] }), // division in fromRegion
-      B: makeRegion('B', { owner: 'white', divisions: [] }),
+      A: makeRegion('A'),
+      B: makeRegion('B', { owner: 'white' }),
     };
     const mv = makeMovement({ toRegion: 'B', divisions: [div] });
-    const { nextEvents } = applyCompletedMovements([mv], [mv], ctx(regions), NOW);
+    const { nextEvents } = applyCompletedMovements([mv], [mv], ctx(regions, divisions), NOW);
     const ev = nextEvents.find(e => e.type === 'region_captured');
     expect(ev).toBeDefined();
     expect(ev?.country).toBe('soviet');
   });
 
   it('starts a new combat when moving into a defended enemy region', () => {
-    const attacker = makeDiv({ id: 'attacker' });
+    const attacker = makeDiv({ id: 'attacker', regionId: 'A' });
+    const defender = makeDiv({ id: 'defender', owner: 'white', regionId: 'B' });
+    const divisions: DivisionState = { 'attacker': attacker, 'defender': defender };
     const regions: RegionState = {
-      A: makeRegion('A', { divisions: [attacker] }), // division in fromRegion
-      B: makeRegion('B', { owner: 'white', divisions: [makeDiv({ id: 'defender', owner: 'white' })] }),
+      A: makeRegion('A'),
+      B: makeRegion('B', { owner: 'white' }),
     };
     const mv = makeMovement({ toRegion: 'B', divisions: [attacker] });
-    const { nextCombats, nextRegions } = applyCompletedMovements([mv], [mv], ctx(regions), NOW);
+    const { nextCombats, nextRegions } = applyCompletedMovements([mv], [mv], ctx(regions, divisions), NOW);
     expect(nextCombats).toHaveLength(1);
     expect(nextCombats[0].attackerCountry).toBe('soviet');
     expect(nextCombats[0].defenderCountry).toBe('white');
     expect(nextCombats[0].isComplete).toBe(false);
-    expect(nextRegions['B'].divisions).toHaveLength(0);
+    // Defender moved into combat, not in region
+    expect(Object.values(nextRegions).filter(() => false)).toHaveLength(0);
   });
 
   it('allows movement into region with military_access relationship', () => {
-    const transit = makeDiv({ id: 'transit' });
+    const transit = makeDiv({ id: 'transit', regionId: 'A' });
+    const divisions: DivisionState = { 'transit': transit };
     const regions: RegionState = {
-      A: makeRegion('A', { divisions: [transit] }), // division in fromRegion
-      B: makeRegion('B', { owner: 'white', divisions: [] }),
+      A: makeRegion('A'),
+      B: makeRegion('B', { owner: 'white' }),
     };
     const rel: Relationship[] = [{ fromCountry: 'white', toCountry: 'soviet', type: 'military_access' }];
     const mv = makeMovement({ toRegion: 'B', divisions: [transit] });
-    const { nextRegions, nextCombats } = applyCompletedMovements([mv], [mv], ctx(regions, [], rel), NOW);
+    const { nextRegions, nextCombats, nextDivisions } = applyCompletedMovements([mv], [mv], ctx(regions, divisions, [], rel), NOW);
     expect(nextCombats).toHaveLength(0);
     expect(nextRegions['B'].owner).toBe('white');
-    expect(nextRegions['B'].divisions).toHaveLength(1);
+    expect(Object.values(nextDivisions).filter(d => d.regionId === 'B')).toHaveLength(1);
   });
 
   it('reinforces the attacker side in an ongoing combat', () => {
-    const reinforcement = makeDiv({ id: 'reinforcement' });
+    const reinforcement = makeDiv({ id: 'reinforcement', regionId: 'A' });
+    const divisions: DivisionState = { 'reinforcement': reinforcement };
     const regions: RegionState = {
-      A: makeRegion('A', { divisions: [reinforcement] }), // division in fromRegion
-      B: makeRegion('B', { owner: 'white', divisions: [] }),
+      A: makeRegion('A'),
+      B: makeRegion('B', { owner: 'white' }),
     };
     const ongoing = makeCombat({
       defenderRegionId: 'B', attackerCountry: 'soviet', defenderCountry: 'white',
@@ -133,21 +142,22 @@ describe('applyCompletedMovements', () => {
       initialAttackerCount: 1,
     });
     const mv = makeMovement({ id: 'mv-reinforce', toRegion: 'B', divisions: [reinforcement] });
-    const { nextCombats } = applyCompletedMovements([mv], [mv], ctx(regions, [ongoing]), NOW);
+    const { nextCombats } = applyCompletedMovements([mv], [mv], ctx(regions, divisions, [ongoing]), NOW);
     expect(nextCombats).toHaveLength(1);
     expect(nextCombats[0].attackerDivisions).toHaveLength(2);
     expect(nextCombats[0].initialAttackerCount).toBe(2);
   });
 
   it('skips movement that has a pendingCombatId pointing to a known combat', () => {
-    const div = makeDiv();
+    const div = makeDiv({ id: 'div-1', regionId: 'A' });
+    const divisions: DivisionState = { 'div-1': div };
     const regions: RegionState = {
-      A: makeRegion('A', { divisions: [div] }), // division in fromRegion
-      B: makeRegion('B', { owner: 'white', divisions: [] }),
+      A: makeRegion('A'),
+      B: makeRegion('B', { owner: 'white' }),
     };
     const linked = makeCombat({ id: 'combat-linked', defenderRegionId: 'B', isComplete: true });
     const mv = makeMovement({ toRegion: 'B', pendingCombatId: 'combat-linked', divisions: [div] });
-    const { nextCombats } = applyCompletedMovements([mv], [mv], ctx(regions, [], NO_REL, [linked]), NOW);
+    const { nextCombats } = applyCompletedMovements([mv], [mv], ctx(regions, divisions, [], NO_REL, [linked]), NOW);
     expect(nextCombats).toHaveLength(0);
   });
 });
@@ -158,14 +168,13 @@ describe('applyCompletedMovements', () => {
 
 describe('multi-step movement (remainingPath)', () => {
   it('dispatches next hop instead of landing in an intermediate friendly region', () => {
-    // A → B (intermediate, friendly) → C (final, friendly)
-    const div = makeDiv({ id: 'div-traveller' });
+    const div = makeDiv({ id: 'div-traveller', regionId: 'A' });
+    const divisions: DivisionState = { 'div-traveller': div };
     const regions: RegionState = {
-      A: makeRegion('A', { divisions: [div] }), // division in fromRegion
-      B: makeRegion('B'), // friendly intermediate
-      C: makeRegion('C'), // friendly final
+      A: makeRegion('A'),
+      B: makeRegion('B'),
+      C: makeRegion('C'),
     };
-    // Movement arrives at B with C still remaining
     const mv = makeMovement({
       fromRegion: 'A',
       toRegion: 'B',
@@ -174,48 +183,44 @@ describe('multi-step movement (remainingPath)', () => {
       finalDestination: 'C',
     });
 
-    const { nextRegions, newHopMovements } = applyCompletedMovements(
-      [mv], [mv], ctx(regions), NOW
+    const { newHopMovements, nextDivisions } = applyCompletedMovements(
+      [mv], [mv], ctx(regions, divisions), NOW
     );
 
-    // B should have divisions (they transit through B before the next hop)
-    expect(nextRegions['B'].divisions).toHaveLength(1);
-    // A new movement for B → C should have been dispatched
+    expect(Object.values(nextDivisions).filter(d => d.regionId === 'B')).toHaveLength(1);
     expect(newHopMovements).toHaveLength(1);
     expect(newHopMovements[0].fromRegion).toBe('B');
     expect(newHopMovements[0].toRegion).toBe('C');
     expect(newHopMovements[0].divisions).toHaveLength(1);
-    // Next hop has no more remaining path (it's the last hop)
     expect(newHopMovements[0].remainingPath).toBeUndefined();
   });
 
   it('lands divisions at the final destination (no remainingPath)', () => {
-    const div = makeDiv({ id: 'div-final' });
+    const div = makeDiv({ id: 'div-final', regionId: 'B' });
+    const divisions: DivisionState = { 'div-final': div };
     const regions: RegionState = {
-      B: makeRegion('B', { divisions: [div] }), // division in fromRegion
+      B: makeRegion('B'),
       C: makeRegion('C'),
     };
-    // This is the last hop — no remainingPath
     const mv = makeMovement({
       fromRegion: 'B',
       toRegion: 'C',
       divisions: [div],
     });
 
-    const { nextRegions, newHopMovements } = applyCompletedMovements(
-      [mv], [mv], ctx(regions), NOW
+    const { newHopMovements, nextDivisions } = applyCompletedMovements(
+      [mv], [mv], ctx(regions, divisions), NOW
     );
 
-    // Divisions should land in C
-    expect(nextRegions['C'].divisions).toHaveLength(1);
+    expect(Object.values(nextDivisions).filter(d => d.regionId === 'C')).toHaveLength(1);
     expect(newHopMovements).toHaveLength(0);
   });
 
   it('dispatches a 3-hop chain, carrying remainingPath forward', () => {
-    // A → B → C → D  (all friendly)
-    const div = makeDiv({ id: 'div-multi' });
+    const div = makeDiv({ id: 'div-multi', regionId: 'A' });
+    const divisions: DivisionState = { 'div-multi': div };
     const regions: RegionState = {
-      A: makeRegion('A', { divisions: [div] }), // division in fromRegion
+      A: makeRegion('A'),
       B: makeRegion('B'),
       C: makeRegion('C'),
       D: makeRegion('D'),
@@ -228,28 +233,26 @@ describe('multi-step movement (remainingPath)', () => {
       finalDestination: 'D',
     });
 
-    const { nextRegions, newHopMovements } = applyCompletedMovements(
-      [mv], [mv], ctx(regions), NOW
+    const { newHopMovements, nextDivisions } = applyCompletedMovements(
+      [mv], [mv], ctx(regions, divisions), NOW
     );
 
-    // B should have the division (it transits through)
-    expect(nextRegions['B'].divisions).toHaveLength(1);
-    // One new hop dispatched: B → C
+    expect(Object.values(nextDivisions).filter(d => d.regionId === 'B')).toHaveLength(1);
     expect(newHopMovements).toHaveLength(1);
     const hop = newHopMovements[0];
     expect(hop.fromRegion).toBe('B');
     expect(hop.toRegion).toBe('C');
-    // Remaining path still contains D
     expect(hop.remainingPath).toEqual(['D']);
     expect(hop.finalDestination).toBe('D');
   });
 
   it('halts multi-step movement when an intermediate region is defended by the enemy', () => {
-    // A → B (enemy defended) → C  — should start combat at B, NOT continue to C
-    const div = makeDiv({ id: 'div-attacker' });
+    const div = makeDiv({ id: 'div-attacker', regionId: 'A' });
+    const defender = makeDiv({ id: 'defender', owner: 'white', regionId: 'B' });
+    const divisions: DivisionState = { 'div-attacker': div, 'defender': defender };
     const regions: RegionState = {
-      A: makeRegion('A', { divisions: [div] }), // division in fromRegion
-      B: makeRegion('B', { owner: 'white', divisions: [makeDiv({ id: 'defender', owner: 'white' })] }),
+      A: makeRegion('A'),
+      B: makeRegion('B', { owner: 'white' }),
       C: makeRegion('C'),
     };
     const mv = makeMovement({
@@ -261,22 +264,20 @@ describe('multi-step movement (remainingPath)', () => {
     });
 
     const { nextCombats, newHopMovements } = applyCompletedMovements(
-      [mv], [mv], ctx(regions), NOW
+      [mv], [mv], ctx(regions, divisions), NOW
     );
 
-    // Combat should have started at B
     expect(nextCombats).toHaveLength(1);
     expect(nextCombats[0].defenderRegionId).toBe('B');
-    // Multi-step should be halted — no next hop dispatched
     expect(newHopMovements).toHaveLength(0);
   });
 
   it('continues multi-step after capturing an undefended enemy region on the path', () => {
-    // A → B (undefended enemy) → C (friendly)
-    const div = makeDiv({ id: 'div-attacker' });
+    const div = makeDiv({ id: 'div-attacker', regionId: 'A' });
+    const divisions: DivisionState = { 'div-attacker': div };
     const regions: RegionState = {
-      A: makeRegion('A', { divisions: [div] }), // division in fromRegion
-      B: makeRegion('B', { owner: 'white', divisions: [] }), // undefended enemy
+      A: makeRegion('A'),
+      B: makeRegion('B', { owner: 'white' }),
       C: makeRegion('C'),
     };
     const mv = makeMovement({
@@ -288,25 +289,22 @@ describe('multi-step movement (remainingPath)', () => {
     });
 
     const { nextRegions, newHopMovements, nextEvents } = applyCompletedMovements(
-      [mv], [mv], ctx(regions), NOW
+      [mv], [mv], ctx(regions, divisions), NOW
     );
 
-    // B should have been captured
     expect(nextRegions['B'].owner).toBe('soviet');
-    // A capture event should exist
     expect(nextEvents.find(e => e.type === 'region_captured')).toBeDefined();
-    // And the next hop B → C should have been dispatched
     expect(newHopMovements).toHaveLength(1);
     expect(newHopMovements[0].fromRegion).toBe('B');
     expect(newHopMovements[0].toRegion).toBe('C');
   });
 
   it('passes through a military-access region and continues to next hop', () => {
-    // A → B (military access, foreign) → C (friendly)
-    const div = makeDiv({ id: 'div-transit' });
+    const div = makeDiv({ id: 'div-transit', regionId: 'A' });
+    const divisions: DivisionState = { 'div-transit': div };
     const regions: RegionState = {
-      A: makeRegion('A', { divisions: [div] }), // division in fromRegion
-      B: makeRegion('B', { owner: 'white', divisions: [] }),
+      A: makeRegion('A'),
+      B: makeRegion('B', { owner: 'white' }),
       C: makeRegion('C'),
     };
     const rel: Relationship[] = [{ fromCountry: 'white', toCountry: 'soviet', type: 'military_access' }];
@@ -318,15 +316,12 @@ describe('multi-step movement (remainingPath)', () => {
       finalDestination: 'C',
     });
 
-    const { nextRegions, newHopMovements } = applyCompletedMovements(
-      [mv], [mv], ctx(regions, [], rel), NOW
+    const { nextRegions, newHopMovements, nextDivisions } = applyCompletedMovements(
+      [mv], [mv], ctx(regions, divisions, [], rel), NOW
     );
 
-    // B should still be under white ownership (no capture)
     expect(nextRegions['B'].owner).toBe('white');
-    // Divisions transit through B (they land in B briefly before the next hop is dispatched)
-    expect(nextRegions['B'].divisions).toHaveLength(1);
-    // Next hop dispatched: B → C
+    expect(Object.values(nextDivisions).filter(d => d.regionId === 'B')).toHaveLength(1);
     expect(newHopMovements).toHaveLength(1);
     expect(newHopMovements[0].fromRegion).toBe('B');
     expect(newHopMovements[0].toRegion).toBe('C');
@@ -339,35 +334,40 @@ describe('multi-step movement (remainingPath)', () => {
 
 describe('applyFinishedCombats', () => {
   it('transfers region ownership to attacker on attacker victory', () => {
-    const regions: RegionState = { B: makeRegion('B', { owner: 'white', divisions: [] }) };
+    const winner = makeDiv({ id: 'winner' });
+    const divisions: DivisionState = { 'winner': winner };
+    const regions: RegionState = { B: makeRegion('B', { owner: 'white' }) };
     const combat = makeCombat({
       defenderRegionId: 'B', attackerDivisions: [makeDiv({ id: 'winner' })],
       defenderDivisions: [], isComplete: true, victor: 'soviet',
     });
-    const nextRegions = applyFinishedCombats([combat], regions);
+    const { nextRegions, nextDivisions } = applyFinishedCombats([combat], regions, divisions);
     expect(nextRegions['B'].owner).toBe('soviet');
-    expect(nextRegions['B'].divisions).toHaveLength(1);
-    expect(nextRegions['B'].divisions[0].id).toBe('winner');
+    expect(Object.values(nextDivisions).filter(d => d.regionId === 'B')).toHaveLength(1);
+    expect(nextDivisions['winner'].id).toBe('winner');
   });
 
   it('keeps region under defender ownership when defender wins', () => {
-    const regions: RegionState = { A: makeRegion('A'), B: makeRegion('B', { owner: 'white', divisions: [] }) };
+    const survivingDefender = makeDiv({ id: 'surviving-defender', owner: 'white' });
+    const divisions: DivisionState = { 'surviving-defender': survivingDefender };
+    const regions: RegionState = { A: makeRegion('A'), B: makeRegion('B', { owner: 'white' }) };
     const combat = makeCombat({
       defenderRegionId: 'B', attackerDivisions: [],
       defenderDivisions: [makeDiv({ id: 'surviving-defender', owner: 'white' })],
       isComplete: true, victor: 'white',
     });
-    const nextRegions = applyFinishedCombats([combat], regions);
+    const { nextRegions, nextDivisions } = applyFinishedCombats([combat], regions, divisions);
     expect(nextRegions['B'].owner).toBe('white');
-    expect(nextRegions['B'].divisions[0].id).toBe('surviving-defender');
+    expect(nextDivisions['surviving-defender'].id).toBe('surviving-defender');
   });
 
   it('does not duplicate victorious attacker divisions already present in the captured region', () => {
-    const staleWinner = makeDiv({ id: 'winner', hp: 100 });
+    const _staleWinner = makeDiv({ id: 'winner', hp: 100 });
     const postCombatWinner = makeDiv({ id: 'winner', hp: 42 });
+    const divisions: DivisionState = { 'winner': postCombatWinner };
     const regions: RegionState = {
-      A: makeRegion('A', { divisions: [staleWinner] }),
-      B: makeRegion('B', { owner: 'white', divisions: [staleWinner] }),
+      A: makeRegion('A'),
+      B: makeRegion('B', { owner: 'white' }),
     };
     const combat = makeCombat({
       attackerRegionId: 'A',
@@ -378,41 +378,39 @@ describe('applyFinishedCombats', () => {
       victor: 'soviet',
     });
 
-    const nextRegions = applyFinishedCombats([combat], regions);
+    const { nextRegions, nextDivisions } = applyFinishedCombats([combat], regions, divisions);
 
-    expect(nextRegions['A'].divisions).toHaveLength(0);
+    expect(Object.values(nextDivisions).filter(d => d.regionId === 'A')).toHaveLength(0);
     expect(nextRegions['B'].owner).toBe('soviet');
-    expect(nextRegions['B'].divisions).toHaveLength(1);
-    expect(nextRegions['B'].divisions[0].id).toBe('winner');
-    expect(nextRegions['B'].divisions[0].hp).toBe(42);
+    expect(Object.values(nextDivisions).filter(d => d.regionId === 'B')).toHaveLength(1);
+    expect(nextDivisions['winner'].id).toBe('winner');
+    expect(nextDivisions['winner'].hp).toBe(42);
   });
 
   it('does not mutate original regions object', () => {
     const regions: RegionState = { A: makeRegion('A'), B: makeRegion('B', { owner: 'white' }) };
     const combat = makeCombat({ defenderRegionId: 'B', isComplete: true, victor: 'soviet' });
-    applyFinishedCombats([combat], regions);
+    applyFinishedCombats([combat], regions, {});
     expect(regions['B'].owner).toBe('white');
   });
 
   it('handles an empty combats list without error', () => {
     const regions: RegionState = { B: makeRegion('B', { owner: 'white' }) };
-    expect(applyFinishedCombats([], regions)['B'].owner).toBe('white');
+    expect(applyFinishedCombats([], regions, {})['nextRegions']['B'].owner).toBe('white');
   });
 
   it('defender wins when both sides are eliminated simultaneously (attacker loses draw)', () => {
-    // Both sides reach 0 divisions in the same round — attacker is the loser.
-    // Region ownership must stay with the defender; no attacker divisions remain.
-    const regions: RegionState = { B: makeRegion('B', { owner: 'white', divisions: [] }) };
+    const divisions: DivisionState = {};
+    const regions: RegionState = { B: makeRegion('B', { owner: 'white' }) };
     const combat = makeCombat({
       defenderRegionId: 'B',
       attackerDivisions: [],
       defenderDivisions: [],
       isComplete: true,
-      victor: 'white', // defender wins the draw
+      victor: 'white',
     });
-    const nextRegions = applyFinishedCombats([combat], regions);
+    const { nextRegions, nextDivisions } = applyFinishedCombats([combat], regions, divisions);
     expect(nextRegions['B'].owner).toBe('white');
-    expect(nextRegions['B'].divisions).toHaveLength(0);
+    expect(Object.values(nextDivisions).filter(d => d.regionId === 'B')).toHaveLength(0);
   });
 });
-

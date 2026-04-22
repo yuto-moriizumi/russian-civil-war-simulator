@@ -124,6 +124,7 @@ export function applyLiberatePuppet(
   overlordId: CountryId,
   state: Pick<GameStore, 'relationships' | 'armyGroups' | 'aiStates' | 'selectedCountry' | 'countryBonuses' | 'dateTime'>,
   regions: RegionState,
+  baseDivisions: DivisionState = {},
 ): {
   updatedRelationships: Relationship[];
   updatedRegions: RegionState;
@@ -136,7 +137,7 @@ export function applyLiberatePuppet(
     return {
       updatedRelationships: [...state.relationships],
       updatedRegions: regions,
-      updatedDivisions: buildDivisionState(regions),
+      updatedDivisions: baseDivisions,
       updatedArmyGroups: state.armyGroups,
       updatedAIStates: state.aiStates,
       puppetEvents: [],
@@ -158,7 +159,6 @@ export function applyLiberatePuppet(
 
   const updatedRegions = { ...regions };
 
-  // Transfer core regions currently owned by the overlord or its puppets to the puppet.
   const puppetCoreRegions = COUNTRY_METADATA[puppetId as keyof typeof COUNTRY_METADATA]?.coreRegions ?? [];
   for (const regionId of puppetCoreRegions) {
     const region = updatedRegions[regionId];
@@ -179,6 +179,7 @@ export function applyLiberatePuppet(
     );
   }
 
+  const updatedDivisions = { ...baseDivisions };
   const puppetBonuses = state.countryBonuses[puppetId];
   const spawnRegion = updatedRegions[spawnRegionId];
   if (spawnRegion && puppetBonuses) {
@@ -186,7 +187,9 @@ export function applyLiberatePuppet(
     const newDivisions = Array.from({ length: divisionCount }, (_, i) =>
       createDivision(puppetId, `${prefix} ${i + 1}`, puppetArmyGroup.id, puppetBonuses)
     );
-    updatedRegions[spawnRegionId] = { ...spawnRegion, divisions: [...spawnRegion.divisions, ...newDivisions] };
+    for (const div of newDivisions) {
+      updatedDivisions[div.id] = { ...div, regionId: spawnRegionId };
+    }
   }
 
   const updatedAIStates = state.aiStates.some(aiState => aiState.countryId === puppetId) ||
@@ -207,7 +210,7 @@ export function applyLiberatePuppet(
   return {
     updatedRelationships,
     updatedRegions,
-    updatedDivisions: buildDivisionState(updatedRegions),
+    updatedDivisions,
     updatedArmyGroups,
     updatedAIStates,
     puppetEvents,
@@ -224,25 +227,22 @@ export function applyClaimedMissionRewards(
   const newCountryBonuses = calculateCountryBonuses(updatedMissions, countryId);
   const newDivisionStats = getDivisionStats(countryId, newCountryBonuses);
 
-  const updatedRegions: RegionState = {};
-  Object.keys(state.regions).forEach(regionId => {
-    const region = state.regions[regionId];
-    const updatedDivisions = region.divisions.map(div => {
-      if (div.owner !== countryId) return div;
-      return {
+  // Update all divisions owned by this country in the canonical DivisionState
+  const baseDivisions = state.divisions ?? {};
+  const updatedDivisionsBase: DivisionState = {};
+  for (const [id, div] of Object.entries(baseDivisions)) {
+    if (div.owner !== countryId) {
+      updatedDivisionsBase[id] = div;
+    } else {
+      updatedDivisionsBase[id] = {
         ...div,
         attack: newDivisionStats.attack,
         defence: newDivisionStats.defence,
         maxHp: newDivisionStats.maxHp,
         hp: Math.min(div.hp, newDivisionStats.maxHp),
       };
-    });
-
-    updatedRegions[regionId] = {
-      ...region,
-      divisions: updatedDivisions,
-    };
-  });
+    }
+  }
 
   const updatedMovingUnits = state.movingUnits.map(movement => {
     if (movement.owner !== countryId) return movement;
@@ -261,10 +261,11 @@ export function applyClaimedMissionRewards(
   const {
     updatedRelationships,
     updatedRegions: regionsAfterPuppet,
+    updatedDivisions: divisionsAfterPuppet,
     updatedArmyGroups,
     updatedAIStates,
     puppetEvents,
-  } = applyLiberatePuppet(mission.rewards.liberatePuppet, countryId, state, updatedRegions);
+  } = applyLiberatePuppet(mission.rewards.liberatePuppet, countryId, state, state.regions, updatedDivisionsBase);
   const {
     updatedRelationships: relationshipsAfterWar,
     warEvents,
@@ -279,10 +280,9 @@ export function applyClaimedMissionRewards(
     updatedCountryBonuses: newCountryBonuses,
     updatedRegions: regionsAfterPuppet,
     updatedDivisions: buildDivisionState(
-      regionsAfterPuppet,
       updatedMovingUnits,
       state.activeCombats ?? [],
-      state.divisions ?? {}
+      divisionsAfterPuppet
     ),
     updatedMovingUnits,
     updatedRelationships: relationshipsAfterWar,

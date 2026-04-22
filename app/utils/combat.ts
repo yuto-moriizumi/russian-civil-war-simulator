@@ -53,6 +53,7 @@ export function createDivision(
     name,
     owner,
     armyGroupId,
+    regionId: null,
     hp: options?.hp ?? maxHp,
     maxHp,
     attack: options?.attack ?? stats.attack,

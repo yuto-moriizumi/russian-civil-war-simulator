@@ -5,6 +5,7 @@ import { COUNTRY_COLORS, getAdjacentRegions } from '../../utils/mapUtils';
 import { DIVISIONS_PER_STATE } from '../../utils/commandPower';
 import { regionValues } from '../../data/map/regionValues';
 import { getCountriesWithCoreRegion, getCountryName, getCountryColor } from '../../data/countries';
+import { getDivisionsInRegion } from '../../utils/divisionState';
 
 export { MovingUnitInfoPanel } from './MovingUnitInfoPanel';
 export { DivisionSelectionPanel } from './DivisionSelectionPanel';
@@ -15,7 +16,8 @@ interface RegionTooltipProps {
 
 export function RegionTooltip({ hoveredRegion }: RegionTooltipProps) {
   const regions = useGameStore(state => state.regions);
-  
+  const divisions = useGameStore(state => state.divisions);
+
   const region = regions[hoveredRegion];
   if (!region) return null;
 
@@ -36,10 +38,10 @@ export function RegionTooltip({ hoveredRegion }: RegionTooltipProps) {
           {region.owner}
         </span>
       </div>
-      {region.divisions.length > 0 && (
+      {getDivisionsInRegion(divisions, hoveredRegion).length > 0 && (
         <div className="mt-1 text-xs text-amber-400">
-          Divisions: {region.divisions.length} | 
-          Total HP: {region.divisions.reduce((sum, d) => sum + d.hp, 0)}
+          Divisions: {getDivisionsInRegion(divisions, hoveredRegion).length} |
+          Total HP: {getDivisionsInRegion(divisions, hoveredRegion).reduce((sum, d) => sum + d.hp, 0)}
         </div>
       )}
     </div>
@@ -50,6 +52,7 @@ export function RegionInfoPanel() {
   const selectedRegion = useGameStore(state => state.selectedRegion);
   const regions = useGameStore(state => state.regions);
   const adjacency = useGameStore(state => state.adjacency);
+  const divisions = useGameStore(state => state.divisions);
   const playerCountry = useGameStore(state => state.selectedCountry?.id);
   const coreRegions = useGameStore(state => state.selectedCountry?.coreRegions);
   
@@ -144,13 +147,13 @@ export function RegionInfoPanel() {
         </div>
         
         <div className="text-stone-400 mt-2">
-          Divisions: {region.divisions.length}
+          Divisions: {getDivisionsInRegion(divisions, selectedRegion).length}
         </div>
         {/* Show division combat stats */}
-        {region.divisions.length > 0 && (
+        {getDivisionsInRegion(divisions, selectedRegion).length > 0 && (
           <div className="mt-2 space-y-1 rounded bg-stone-800 p-2">
             <div className="text-xs font-semibold text-stone-300 mb-1">Combat Stats:</div>
-            {region.divisions.map((div) => (
+            {getDivisionsInRegion(divisions, selectedRegion).map((div) => (
               <div key={div.id} className="flex items-center justify-between text-xs">
                 <span className="text-stone-400 truncate max-w-[120px]" title={div.name}>
                   {div.name.length > 15 ? div.name.substring(0, 15) + '...' : div.name}
@@ -165,9 +168,9 @@ export function RegionInfoPanel() {
             <div className="border-t border-stone-700 pt-1 mt-1 flex justify-between text-xs font-semibold">
               <span className="text-stone-300">Total:</span>
               <span className="flex items-center gap-2">
-                <span className="text-red-400">❤ {region.divisions.reduce((sum, d) => sum + d.hp, 0)}</span>
-                <span className="text-orange-400">⚔ {region.divisions.reduce((sum, d) => sum + d.attack, 0)}</span>
-                <span className="text-blue-400">🛡 {Math.round(region.divisions.reduce((sum, d) => sum + d.defence, 0) / region.divisions.length)}</span>
+                <span className="text-red-400">❤ {getDivisionsInRegion(divisions, selectedRegion).reduce((sum, d) => sum + d.hp, 0)}</span>
+                <span className="text-orange-400">⚔ {getDivisionsInRegion(divisions, selectedRegion).reduce((sum, d) => sum + d.attack, 0)}</span>
+                <span className="text-blue-400">🛡 {Math.round(getDivisionsInRegion(divisions, selectedRegion).reduce((sum, d) => sum + d.defence, 0) / getDivisionsInRegion(divisions, selectedRegion).length)}</span>
               </span>
             </div>
           </div>
@@ -178,14 +181,14 @@ export function RegionInfoPanel() {
       </div>
       
       {/* Actions for player-owned regions */}
-      {region.owner === playerCountry && region.divisions.length > 0 && (
+      {region.owner === playerCountry && getDivisionsInRegion(divisions, selectedRegion).length > 0 && (
         <div className="mt-3 space-y-2 border-t border-stone-700 pt-3">
           {/* Select Divisions button — opens the Division Selection Window (mutual exclusivity enforced) */}
           <button
             onClick={() => selectDivisionsInRegion(selectedRegion)}
             className="w-full rounded bg-blue-700 py-2 text-sm font-semibold text-white hover:bg-blue-600"
           >
-            Select Divisions ({region.divisions.length})
+            Select Divisions ({getDivisionsInRegion(divisions, selectedRegion).length})
           </button>
         </div>
       )}

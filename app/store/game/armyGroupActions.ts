@@ -6,7 +6,7 @@ import { GameStore } from './types';
 import { StoreApi } from 'zustand';
 import { defendArmyGroup } from './armyGroupDefend';
 import { attackArmyGroup } from './armyGroupAttack';
-import { buildDivisionState } from '../../utils/divisionState';
+import { buildDivisionState, getDivisionsInRegion } from '../../utils/divisionState';
 
 /**
  * Defines actions related to army group management:
@@ -21,7 +21,7 @@ export const createArmyGroupActions = (
 ) => ({
   // Theater Actions
   detectAndUpdateTheaters: () => {
-    const { regions, adjacency, selectedCountry, theaters, armyGroups, relationships, aiStates, movingUnits, activeCombats, productionQueues } = get();
+    const { regions, adjacency, selectedCountry, theaters, armyGroups, relationships, aiStates, movingUnits, activeCombats, productionQueues, divisions } = get();
     if (!selectedCountry) return;
 
     const aiCountryIds = aiStates.map(s => s.countryId).filter(id => id !== selectedCountry.id);
@@ -40,6 +40,7 @@ export const createArmyGroupActions = (
     let updatedMovingUnits = movingUnits;
     let updatedActiveCombats = activeCombats;
     let updatedProductionQueues = productionQueues;
+    let updatedDivisions = divisions;
 
     if (aiCountryIds.length > 0) {
       const aiSync = syncAIArmyGroupsToTheaters({
@@ -47,12 +48,14 @@ export const createArmyGroupActions = (
         theaters: allUpdatedTheaters,
         armyGroups,
         regions,
+        divisions,
         movingUnits,
         activeCombats,
         productionQueues,
       });
       updatedArmyGroups = aiSync.armyGroups;
       updatedRegions = aiSync.regions;
+      updatedDivisions = aiSync.divisions;
       updatedMovingUnits = aiSync.movingUnits;
       updatedActiveCombats = aiSync.activeCombats;
       updatedProductionQueues = aiSync.productionQueues;
@@ -137,7 +140,7 @@ export const createArmyGroupActions = (
       theaters: allUpdatedTheaters,
       armyGroups: updatedArmyGroups,
       regions: updatedRegions,
-      divisions: buildDivisionState(updatedRegions, updatedMovingUnits, updatedActiveCombats, get().divisions),
+      divisions: buildDivisionState(updatedMovingUnits, updatedActiveCombats, get().divisions),
       movingUnits: updatedMovingUnits,
       activeCombats: updatedActiveCombats,
       productionQueues: updatedProductionQueues,
@@ -229,7 +232,6 @@ export const createArmyGroupActions = (
       set({
         ...partial,
         divisions: buildDivisionState(
-          partial.regions ?? state.regions,
           partial.movingUnits ?? state.movingUnits,
           partial.activeCombats ?? state.activeCombats,
           state.divisions
@@ -244,7 +246,6 @@ export const createArmyGroupActions = (
       set({
         ...partial,
         divisions: buildDivisionState(
-          partial.regions ?? state.regions,
           partial.movingUnits ?? state.movingUnits,
           partial.activeCombats ?? state.activeCombats,
           state.divisions
@@ -259,7 +260,6 @@ export const createArmyGroupActions = (
       set({
         ...partial,
         divisions: buildDivisionState(
-          partial.regions ?? state.regions,
           partial.movingUnits ?? state.movingUnits,
           partial.activeCombats ?? state.activeCombats,
           state.divisions
@@ -273,22 +273,18 @@ export const createArmyGroupActions = (
    * Divisions that already belong to the group are left unchanged.
    */
   addDivisionsToArmyGroup: (groupId: string, divisionIds: string[]) => {
-    const { regions, movingUnits } = get();
+    const { divisions, movingUnits } = get();
 
     if (divisionIds.length === 0) return;
 
     const divisionIdSet = new Set(divisionIds);
 
-    const updatedRegions = Object.fromEntries(
-      Object.entries(regions).map(([regionId, region]) => {
-        const updatedDivisions = region.divisions.map(division => {
-          if (!divisionIdSet.has(division.id)) return division;
-          if (division.armyGroupId === groupId) return division;
-          return { ...division, armyGroupId: groupId };
-        });
-        return [regionId, { ...region, divisions: updatedDivisions }];
-      })
-    );
+    const updatedDivisions = { ...divisions };
+    for (const [id, div] of Object.entries(updatedDivisions)) {
+      if (divisionIdSet.has(id) && div.armyGroupId !== groupId) {
+        updatedDivisions[id] = { ...div, armyGroupId: groupId };
+      }
+    }
 
     const updatedMovingUnits = movingUnits.map(movement => {
       const hasMatch = movement.divisions.some(d => divisionIdSet.has(d.id));
@@ -302,8 +298,7 @@ export const createArmyGroupActions = (
     });
 
     set({
-      regions: updatedRegions,
-      divisions: buildDivisionState(updatedRegions, updatedMovingUnits, get().activeCombats, get().divisions),
+      divisions: updatedDivisions,
       movingUnits: updatedMovingUnits,
     });
   },

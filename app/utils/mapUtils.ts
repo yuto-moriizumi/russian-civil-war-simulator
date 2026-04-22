@@ -1,4 +1,4 @@
-import { Adjacency, CountryId, RegionState, Movement, ArmyGroup, Division, ActiveCombat } from '../types/game';
+import { Adjacency, CountryId, RegionState, Movement, ArmyGroup, Division, ActiveCombat, DivisionState } from '../types/game';
 import { DIVISIONS_PER_STATE } from './commandPower';
 import { regionValues } from '../data/map/regionValues';
 import { initialRegionOwnership } from '../data/map';
@@ -24,11 +24,9 @@ export function applyInitialUnitPlacement(
   regions: RegionState,
   placement: UnitPlacementData,
   armyGroupDefs: Record<string, ArmyGroupDef[]>
-): { regions: RegionState; armyGroups: ArmyGroup[] } {
-  // Build army group registry: (country, name) -> ArmyGroup
+): { regions: RegionState; armyGroups: ArmyGroup[]; divisions: DivisionState } {
   const armyGroupMap = new Map<string, ArmyGroup>();
 
-  // Create ArmyGroup objects from defs
   for (const [countryId, groups] of Object.entries(armyGroupDefs)) {
     for (const def of groups) {
       const key = `${countryId}::${def.name}`;
@@ -44,13 +42,13 @@ export function applyInitialUnitPlacement(
     }
   }
 
-  // Clone regions so we don't mutate the original
   const updatedRegions: RegionState = {};
   for (const [id, region] of Object.entries(regions)) {
-    updatedRegions[id] = { ...region, divisions: [] };
+    updatedRegions[id] = { ...region };
   }
 
-  // Apply placements
+  const divisions: DivisionState = {};
+
   for (const [regionId, entries] of Object.entries(placement)) {
     const region = updatedRegions[regionId];
     if (!region) continue;
@@ -59,7 +57,6 @@ export function applyInitialUnitPlacement(
       const owner = entry.owner as CountryId;
       const key = `${owner}::${entry.armyGroupName}`;
 
-      // Ensure army group exists (create on-the-fly if not in defs)
       if (!armyGroupMap.has(key)) {
         armyGroupMap.set(key, {
           id: `initial-${owner}-${entry.armyGroupName.replace(/\s+/g, '-').toLowerCase()}`,
@@ -74,95 +71,69 @@ export function applyInitialUnitPlacement(
 
       const armyGroup = armyGroupMap.get(key)!;
 
-      // Track the region in the army group
       if (!armyGroup.regionIds.includes(regionId)) {
         armyGroup.regionIds.push(regionId);
       }
 
-      // Build default stats for this country
       const initialBonuses = getInitialCountryBonuses();
       const stats = getDivisionStats(owner, initialBonuses);
       const meta = COUNTRY_METADATA[owner];
       const prefix = meta?.divisionPrefix ?? owner;
 
       for (let i = 0; i < entry.count; i++) {
-        const divIndex = region.divisions.length + 1;
         const division: Division = {
           id: generateDivisionId(),
-          name: `${prefix} ${divIndex}`,
+          name: `${prefix} ${i + 1}`,
           owner,
           armyGroupId: armyGroup.id,
           hp: stats.maxHp,
           maxHp: stats.maxHp,
           attack: stats.attack,
           defence: stats.defence,
+          regionId,
         };
-        region.divisions.push(division);
+        divisions[division.id] = division;
       }
     }
   }
 
   const armyGroups = Array.from(armyGroupMap.values());
-  return { regions: updatedRegions, armyGroups };
+  return { regions: updatedRegions, armyGroups, divisions };
 }
 
-// Re-export for backward compatibility
 export { COUNTRY_COLORS };
 
-// Check if movement between two regions is valid
 export function canMoveTo(adjacency: Adjacency, from: string, to: string): boolean {
   return adjacency[from]?.includes(to) ?? false;
 }
 
-// Get all adjacent regions
 export function getAdjacentRegions(adjacency: Adjacency, regionId: string): string[] {
   return adjacency[regionId] ?? [];
 }
 
-// Get regions controlled by a specific country
 export function getRegionsByCountry(regions: RegionState, country: CountryId): string[] {
   return Object.entries(regions)
     .filter(([, region]) => region.owner === country)
     .map(([id]) => id);
 }
 
-// Count total units owned by a country (divisions always live in regions)
-export function countCountryUnits(regions: RegionState, country: CountryId, _movingUnits: Movement[] = []): number {
-  // All divisions (including in-transit) are always present in region.divisions.
-  return Object.values(regions)
-    .reduce((total, region) => total + region.divisions.filter(d => d.owner === country).length, 0);
+export function countCountryUnits(divisions: DivisionState, country: CountryId): number {
+  return Object.values(divisions).filter(d => d.owner === country).length;
 }
 
-/**
- * Count units in a specific army group across regions and in transit
- * @param regionIds - Region IDs that belong to the army group
- * @param regions - Current region state
- * @param country - Country that owns the army group
- * @param armyGroupId - ID of the army group
- * @param movingUnits - Units currently in transit
- * @returns Total unit count for the army group
- */
 export function getArmyGroupUnitCount(
   _regionIds: string[],
-  regions: RegionState,
+  _regions: RegionState,
   country: CountryId,
   armyGroupId: string,
   _movingUnits: Movement[] = [],
-  activeCombats: ActiveCombat[] = []
+  activeCombats: ActiveCombat[] = [],
+  divisions: DivisionState = {}
 ): number {
-  // Count divisions in all regions that belong to this army group (by armyGroupId, not regionIds)
-  const unitsInRegions = Object.values(regions).reduce((count, region) => {
-    if (!region) return count;
+  const unitsInRegions = Object.values(divisions).filter(
+    d => d.armyGroupId === armyGroupId && d.owner === country && d.regionId !== null
+  ).length;
 
-    // Count divisions that belong to this army group regardless of region owner
-    // (attacker divisions may be in enemy regions during combat)
-    const groupDivisions = region.divisions.filter(d => d.armyGroupId === armyGroupId && d.owner === country).length;
-    return count + groupDivisions;
-  }, 0);
-
-  // Count divisions currently in active combat (region.divisions is cleared during combat).
-  // Use a Set to deduplicate IDs — multi-front attacks copy the same defender divisions
-  // into multiple combats, which would otherwise inflate the count.
   const seenCombatDivIds = new Set<string>();
   activeCombats
     .filter(c => !c.isComplete)
@@ -179,94 +150,82 @@ export function getArmyGroupUnitCount(
       }
     });
 
-  // In-transit divisions are already counted in unitsInRegions above.
   return unitsInRegions + seenCombatDivIds.size;
 }
 
-// Calculate total income from regions controlled by a country (based on CP contribution per region)
-// minus unit maintenance costs ($1 per unit per hour)
-export function calculateCountryIncome(regions: RegionState, country: CountryId, movingUnits: Movement[] = []): number {
+export function calculateCountryIncome(divisions: DivisionState, regions: RegionState, country: CountryId): number {
   const grossIncome = Object.entries(regions)
     .filter(([, region]) => region.owner === country)
     .reduce((total, [id, ]) => total + (regionValues[id] ?? DIVISIONS_PER_STATE), 0);
-  
-  const unitCount = countCountryUnits(regions, country, movingUnits);
-  const maintenanceCost = unitCount; // $1 per unit per hour
-  
+
+  const unitCount = Object.values(divisions).filter(d => d.owner === country).length;
+  const maintenanceCost = unitCount;
+
   return grossIncome - maintenanceCost;
 }
 
-// Initialize region state from GeoJSON features
 export function initializeRegionState(
   features: GeoJSON.Feature[],
   defaultOwner: CountryId = 'neutral'
 ): RegionState {
   const state: RegionState = {};
-  
+
   for (const feature of features) {
     const props = feature.properties;
     if (!props) continue;
-    
+
     const id = feature.id as string;
     if (!id) continue;
-    
+
     state[id] = {
       id,
       name: props.shapeName || props.name || id,
       countryIso3: props.countryIso3 || props.shapeGroup || 'UNK',
       owner: defaultOwner,
-      divisions: [],
     };
   }
-  
+
   return state;
 }
 
-// Create initial ownership based on master data
 export function createInitialOwnership(
   features: GeoJSON.Feature[]
 ): RegionState {
   const state: RegionState = {};
-  
+
   for (const feature of features) {
     const props = feature.properties;
     if (!props) continue;
-    
-    // Use feature.id as the region ID (set by build scripts)
+
     const id = feature.id as string;
     if (!id) continue;
-    
+
     const countryIso3 = props.countryIso3 || props.shapeGroup || 'UNK';
-    
-    // Get ownership from master data, default to neutral if not defined
     const owner = initialRegionOwnership[id] ?? 'neutral';
-    
+
     state[id] = {
       id,
       name: props.shapeName || props.name || id,
       countryIso3,
       owner,
-      divisions: [],
     };
   }
-  
+
   return state;
 }
 
-// Generate color expression for MapLibre based on region ownership
 export function generateOwnershipColorExpression(
   regions: RegionState
 ): unknown[] {
   const regionIdExpression = ['id'];
-  
+
   const expression: unknown[] = ['match', regionIdExpression];
-  
+
   for (const [id, region] of Object.entries(regions)) {
     expression.push(id, COUNTRY_COLORS[region.owner]);
   }
-  
-  // Default color for unmatched regions
+
   expression.push(COUNTRY_COLORS.neutral);
-  
+
   return expression;
 }

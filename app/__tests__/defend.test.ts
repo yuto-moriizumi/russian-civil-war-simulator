@@ -17,6 +17,7 @@ import type {
   RegionState,
   Adjacency,
   Relationship,
+  DivisionState,
 } from '../types/game';
 import type { GameStore } from '../store/game/types';
 
@@ -34,11 +35,25 @@ function makeDiv(id: string, armyGroupId = 'ag-1'): Division {
     maxHp: 100,
     attack: 10,
     defence: 15,
+    regionId: null,
   };
 }
 
-function makeRegion(id: string, owner: 'soviet' | 'white', divs: Division[] = []): Region {
-  return { id, name: id, countryIso3: 'TST', owner, divisions: divs };
+function makeRegion(id: string, owner: 'soviet' | 'white'): Region {
+  return { id, name: id, countryIso3: 'TST', owner };
+}
+
+/** Build a DivisionState by assigning divisions to their region locations */
+function buildDivState(
+  assignments: Record<string, Division[]>
+): DivisionState {
+  const state: DivisionState = {};
+  for (const [regionId, divs] of Object.entries(assignments)) {
+    for (const div of divs) {
+      state[div.id] = { ...div, regionId };
+    }
+  }
+  return state;
 }
 
 function makeGroup(overrides: Partial<ArmyGroup> = {}): ArmyGroup {
@@ -61,7 +76,8 @@ function makeState(
   armyGroups: ArmyGroup[],
   movingUnits: Movement[] = [],
   theaters: Theater[] = [],
-  relationships: Relationship[] = []
+  relationships: Relationship[] = [],
+  divisions: DivisionState = {},
 ): GameStore {
   return {
     regions,
@@ -70,6 +86,7 @@ function makeState(
     movingUnits,
     theaters,
     relationships,
+    divisions,
     dateTime: new Date('1918-01-01T00:00:00Z'),
     selectedUnitRegion: null,
     regionCentroids: {},
@@ -112,9 +129,10 @@ describe('defendArmyGroup – redistribution from stacked border region', () => 
 
   // 15 divisions all in B1
   const divs = Array.from({ length: 15 }, (_, i) => makeDiv(`div-${i + 1}`));
+  const divisions = buildDivState({ B1: divs });
 
   const regions: RegionState = {
-    B1: makeRegion('B1', 'soviet', divs),
+    B1: makeRegion('B1', 'soviet'),
     B2: makeRegion('B2', 'soviet'),
     B3: makeRegion('B3', 'soviet'),
     B4: makeRegion('B4', 'soviet'),
@@ -134,7 +152,7 @@ describe('defendArmyGroup – redistribution from stacked border region', () => 
   const group = makeGroup({ regionIds: ['B1', 'B2', 'B3', 'B4', 'B5'] });
 
   it('dispatches movements from the stacked border to needy borders', () => {
-    const state = makeState(regions, adjacency, [group], [], [], relationships);
+    const state = makeState(regions, adjacency, [group], [], [], relationships, divisions);
     let captured: Partial<GameStore> = {};
     defendArmyGroup('ag-1', state, (partial) => { captured = partial; });
 
@@ -154,7 +172,7 @@ describe('defendArmyGroup – redistribution from stacked border region', () => 
   });
 
   it('does not send more than the excess (keeps target count in B1)', () => {
-    const state = makeState(regions, adjacency, [group], [], [], relationships);
+    const state = makeState(regions, adjacency, [group], [], [], relationships, divisions);
     let captured: Partial<GameStore> = {};
     defendArmyGroup('ag-1', state, (partial) => { captured = partial; });
 
@@ -181,9 +199,13 @@ describe('defendArmyGroup – no movement when borders are adequately staffed', 
   };
 
   // 2 borders, 2 divisions each → target = 2 per border → already satisfied
+  const divisions = buildDivState({
+    B1: [makeDiv('d1'), makeDiv('d2')],
+    B2: [makeDiv('d3'), makeDiv('d4')],
+  });
   const regions: RegionState = {
-    B1: makeRegion('B1', 'soviet', [makeDiv('d1'), makeDiv('d2')]),
-    B2: makeRegion('B2', 'soviet', [makeDiv('d3'), makeDiv('d4')]),
+    B1: makeRegion('B1', 'soviet'),
+    B2: makeRegion('B2', 'soviet'),
     ENEMY: makeRegion('ENEMY', 'white'),
   };
 
@@ -194,7 +216,7 @@ describe('defendArmyGroup – no movement when borders are adequately staffed', 
   const group = makeGroup({ regionIds: ['B1', 'B2'] });
 
   it('does not dispatch any movements when all borders meet their target', () => {
-    const state = makeState(regions, adjacency, [group], [], [], relationships);
+    const state = makeState(regions, adjacency, [group], [], [], relationships, divisions);
     let called = false;
     defendArmyGroup('ag-1', state, () => { called = true; });
     expect(called).toBe(false);
@@ -215,9 +237,10 @@ describe('defendArmyGroup – in-transit divisions prevent duplicate dispatch', 
   // 1 border (B1), 1 division in REAR, 1 division already moving from REAR→B1
   const rearDiv = makeDiv('d-rear');
   const transitDiv = makeDiv('d-transit');
+  const divisions = buildDivState({ REAR: [rearDiv] });
 
   const regions: RegionState = {
-    REAR: makeRegion('REAR', 'soviet', [rearDiv]),
+    REAR: makeRegion('REAR', 'soviet'),
     B1: makeRegion('B1', 'soviet'),
     ENEMY: makeRegion('ENEMY', 'white'),
   };
@@ -242,7 +265,7 @@ describe('defendArmyGroup – in-transit divisions prevent duplicate dispatch', 
     // B1 needs 1 div (total 2 divs / 1 border = 2 target).
     // But 1 is already in transit → committed = 1. Need 1 more.
     // rearDiv should be dispatched.
-    const state = makeState(regions, adjacency, [group], [existingMovement], [], relationships);
+    const state = makeState(regions, adjacency, [group], [existingMovement], [], relationships, divisions);
     let captured: Partial<GameStore> = {};
     defendArmyGroup('ag-1', state, (partial) => { captured = partial; });
 
@@ -278,9 +301,10 @@ describe('defendArmyGroup – no invasion when only path goes through enemy terr
   };
 
   const rearDiv = makeDiv('d-rear');
+  const divisions = buildDivState({ REAR: [rearDiv] });
 
   const regions: RegionState = {
-    REAR: makeRegion('REAR', 'soviet', [rearDiv]),
+    REAR: makeRegion('REAR', 'soviet'),
     B1: makeRegion('B1', 'soviet'),
     ENEMY: makeRegion('ENEMY', 'white'),
   };
@@ -292,7 +316,7 @@ describe('defendArmyGroup – no invasion when only path goes through enemy terr
   const group = makeGroup({ regionIds: ['REAR', 'B1'] });
 
   it('does not dispatch any movement into enemy territory when there is no friendly path', () => {
-    const state = makeState(regions, adjacency, [group], [], [], relationships);
+    const state = makeState(regions, adjacency, [group], [], [], relationships, divisions);
     let captured: Partial<GameStore> = {};
     defendArmyGroup('ag-1', state, (partial) => { captured = partial; });
 
@@ -332,9 +356,10 @@ describe('defendArmyGroup – routes through friendly territory when a direct pa
   };
 
   const rearDiv = makeDiv('d-rear2');
+  const divisions = buildDivState({ REAR2: [rearDiv] });
 
   const regions: RegionState = {
-    REAR2: makeRegion('REAR2', 'soviet', [rearDiv]),
+    REAR2: makeRegion('REAR2', 'soviet'),
     MID: makeRegion('MID', 'soviet'),
     B1: makeRegion('B1', 'soviet'),
     ENEMY: makeRegion('ENEMY', 'white'),
@@ -347,7 +372,7 @@ describe('defendArmyGroup – routes through friendly territory when a direct pa
   const group = makeGroup({ regionIds: ['REAR2', 'MID', 'B1'] });
 
   it('dispatches a movement whose toRegion is friendly (never enemy)', () => {
-    const state = makeState(regions, adjacency, [group], [], [], relationships);
+    const state = makeState(regions, adjacency, [group], [], [], relationships, divisions);
     let captured: Partial<GameStore> = {};
     defendArmyGroup('ag-1', state, (partial) => { captured = partial; });
 

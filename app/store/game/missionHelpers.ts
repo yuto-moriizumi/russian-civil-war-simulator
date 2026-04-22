@@ -1,16 +1,18 @@
-import { 
-  RegionState, 
-  GameEvent, 
-  Country, 
-  Theater, 
-  ArmyGroup, 
-  Mission, 
+import {
+  RegionState,
+  GameEvent,
+  Country,
+  Theater,
+  ArmyGroup,
+  Mission,
   MissionCondition,
   CountryId,
   Adjacency,
   Relationship,
+  DivisionState,
 } from '../../types/game';
 import { detectTheaters } from '../../utils/theaterDetection';
+import { getDivisionsInRegion } from '../../utils/divisionState';
 
 interface MissionEvaluationState {
   regions: RegionState;
@@ -22,6 +24,7 @@ interface MissionEvaluationState {
   armyGroups: ArmyGroup[];
   adjacency?: Adjacency;
   relationships?: Relationship[];
+  divisions?: DivisionState;
 }
 
 function getMissionCountryId(state: MissionEvaluationState): CountryId | null {
@@ -61,9 +64,10 @@ export function evaluateMissionCondition(
     }
     
     case 'hasUnits': {
+      const divs = state.divisions ?? {};
       const totalUnits = Object.values(regions).reduce((acc, region) => {
         if (region.owner === missionCountry) {
-          return acc + region.divisions.filter(d => d.owner === missionCountry).length;
+          return acc + getDivisionsInRegion(divs, region.id).filter(d => d.owner === missionCountry).length;
         }
         return acc;
       }, 0);

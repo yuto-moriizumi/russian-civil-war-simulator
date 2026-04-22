@@ -14,6 +14,7 @@ import { runAITick } from '../ai/cpuPlayer';
 import type {
   AIState,
   Division,
+  DivisionState,
   Region,
   RegionState,
   ProductionQueueItem,
@@ -47,17 +48,16 @@ function makeDiv(id: string): Division {
     maxHp: 100,
     attack: 10,
     defence: 15,
+    regionId: null,
   };
 }
 
-function makeRegion(id: string, divisions: Division[] = []): Region {
+function makeRegion(id: string): Region {
   return {
     id,
     name: id,
     countryIso3: 'RUS',
     owner: COUNTRY,
-    divisions,
-    
   };
 }
 
@@ -90,20 +90,6 @@ function makeQueueItem(id: string): ProductionQueueItem {
 // ---------------------------------------------------------------------------
 
 describe('runAITick — CP limit enforcement', () => {
-  /**
-   * When there is exactly room for 1 more division (cap used up after 1 item)
-   * the AI should queue exactly 1 division, not 2.
-   *
-   * This is the core regression: before the fix, both loop iterations read the
-   * same stale productionQueues and each saw room for 1 more unit, resulting in
-   * 2 being queued despite the cap allowing only 1.
-   *
-   * Setup:
-   *   6 regions → cap = BASE(2) + 6 = 8 CP
-   *   1 item already in queue → inProduction = 1 * COMMAND_POWER_PER_UNIT(4) = 4 CP
-   *   remaining = 8 - 4 = 4 CP  (enough for exactly 1 more division)
-   *   so exactly 1 more division can be produced
-   */
   it('does not queue more than 1 division when only 1 CP slot remains', () => {
     const regions: RegionState = {
       'RU-A': makeRegion('RU-A'),
@@ -113,6 +99,7 @@ describe('runAITick — CP limit enforcement', () => {
       'RU-E': makeRegion('RU-E'),
       'RU-F': makeRegion('RU-F'),
     };
+    const divisions: DivisionState = {};
 
     // 1 item already in queue: uses 4 CP; cap is 8, so room for exactly 1 more
     const existingQueue: ProductionQueueItem[] = [makeQueueItem('existing-0')];
@@ -123,6 +110,7 @@ describe('runAITick — CP limit enforcement', () => {
 
     const result = runAITick(
       aiState,
+      divisions,
       regions,
       armyGroups,
       [],              // activeCombats
@@ -132,21 +120,17 @@ describe('runAITick — CP limit enforcement', () => {
       emptyBonuses,
     );
 
-    // Should produce exactly 1 (not 2) because the second loop iteration must
-    // see the first division already committed in localQueues.
     expect(result.productionRequests.length).toBe(1);
     expect(result.divisionsCreated).toBe(1);
   });
 
   it('queues 0 divisions when already at the CP cap', () => {
-    // 2 regions → cap = 4 CP; 1 item in queue = 4 CP used → exactly at cap
     const regions: RegionState = {
-      'RU-A': makeRegion('RU-A', []),
-      'RU-B': makeRegion('RU-B', []),
+      'RU-A': makeRegion('RU-A'),
+      'RU-B': makeRegion('RU-B'),
     };
+    const divisions: DivisionState = {};
 
-    // One item in the queue uses exactly COMMAND_POWER_PER_UNIT(4) CP, which equals
-    // the cap for 2 owned regions (BASE(2) + 2 = 4). No room to add more.
     const existingQueue: ProductionQueueItem[] = [makeQueueItem('full-0')];
 
     const productionQueues = { [COUNTRY]: existingQueue } as Record<CountryId, ProductionQueueItem[]>;
@@ -155,6 +139,7 @@ describe('runAITick — CP limit enforcement', () => {
 
     const result = runAITick(
       aiState,
+      divisions,
       regions,
       armyGroups,
       [],
@@ -169,7 +154,6 @@ describe('runAITick — CP limit enforcement', () => {
   });
 
   it('queues 2 divisions when there is room for 2 or more', () => {
-    // 8 regions → cap = 2 + 8 = 10; empty queue → room for 2 divisions
     const regions: RegionState = {
       'RU-A': makeRegion('RU-A'),
       'RU-B': makeRegion('RU-B'),
@@ -180,6 +164,7 @@ describe('runAITick — CP limit enforcement', () => {
       'RU-G': makeRegion('RU-G'),
       'RU-H': makeRegion('RU-H'),
     };
+    const divisions: DivisionState = {};
 
     const productionQueues = {} as Record<CountryId, ProductionQueueItem[]>;
     const aiState: AIState = { countryId: COUNTRY };
@@ -187,6 +172,7 @@ describe('runAITick — CP limit enforcement', () => {
 
     const result = runAITick(
       aiState,
+      divisions,
       regions,
       armyGroups,
       [],
@@ -196,7 +182,6 @@ describe('runAITick — CP limit enforcement', () => {
       emptyBonuses,
     );
 
-    // AI tries up to 2 per tick; there's plenty of room so both should succeed
     expect(result.productionRequests.length).toBe(2);
     expect(result.divisionsCreated).toBe(2);
   });
@@ -212,12 +197,14 @@ describe('runAITick — CP limit enforcement', () => {
       'RU-G': makeRegion('RU-G'),
       'RU-H': makeRegion('RU-H'),
     };
+    const divisions: DivisionState = {};
 
     const productionQueues = {} as Record<CountryId, ProductionQueueItem[]>;
     const aiState: AIState = { countryId: COUNTRY };
 
     const result = runAITick(
       aiState,
+      divisions,
       regions,
       [],
       [],
@@ -233,11 +220,11 @@ describe('runAITick — CP limit enforcement', () => {
   });
 
   it('counts existing on-map divisions against the CP cap', () => {
-    // 2 regions → cap = 4 CP; 1 division on map = 4 CP used → exactly at cap, no room
-    const divisions = [makeDiv('d-1')];
+    const d1 = makeDiv('d-1');
+    const divisions: DivisionState = { 'd-1': d1 };
     const regions: RegionState = {
-      'RU-A': makeRegion('RU-A', divisions),
-      'RU-B': makeRegion('RU-B', []),
+      'RU-A': makeRegion('RU-A'),
+      'RU-B': makeRegion('RU-B'),
     };
 
     const productionQueues = {} as Record<CountryId, ProductionQueueItem[]>;
@@ -246,6 +233,7 @@ describe('runAITick — CP limit enforcement', () => {
 
     const result = runAITick(
       aiState,
+      divisions,
       regions,
       armyGroups,
       [],

@@ -21,7 +21,7 @@ function makeDiv(
   attack = 10,
   defence = 10
 ): Division {
-  return { id, name: id, owner, armyGroupId: 'ag-test', hp, maxHp: 100, attack, defence };
+  return { id, name: id, owner, armyGroupId: 'ag-test', hp, maxHp: 100, attack, defence, regionId: null };
 }
 
 /** Build a minimal combat with lastRoundTime far in the past so it always processes. */
@@ -58,9 +58,9 @@ const adjacency: Adjacency = {
 };
 
 const regions: RegionState = {
-  REGION_A: { id: 'REGION_A', name: 'Region A', countryIso3: 'TST', owner: 'white', divisions: [] },
-  SOVIET_REAR: { id: 'SOVIET_REAR', name: 'Soviet Rear', countryIso3: 'TST', owner: 'soviet', divisions: [] },
-  WHITE_REAR: { id: 'WHITE_REAR', name: 'White Rear', countryIso3: 'TST', owner: 'white', divisions: [] },
+  REGION_A: { id: 'REGION_A', name: 'Region A', countryIso3: 'TST', owner: 'white' },
+  SOVIET_REAR: { id: 'SOVIET_REAR', name: 'Soviet Rear', countryIso3: 'TST', owner: 'soviet' },
+  WHITE_REAR: { id: 'WHITE_REAR', name: 'White Rear', countryIso3: 'TST', owner: 'white' },
 };
 
 // ---------------------------------------------------------------------------
@@ -184,9 +184,9 @@ describe('processCombats – attacker defeat notifications', () => {
     const defenders = [makeDiv('d1', 'white', 100, 50, 50)];
     const combat = makeCombat(attackers, defenders, 'TULA');
     const tulaRegions: RegionState = {
-      TULA: { id: 'TULA', name: 'Tula Oblast', countryIso3: 'RUS', owner: 'white', divisions: [] },
-      SOVIET_REAR: { id: 'SOVIET_REAR', name: 'Soviet Rear', countryIso3: 'RUS', owner: 'soviet', divisions: [] },
-      WHITE_REAR: { id: 'WHITE_REAR', name: 'White Rear', countryIso3: 'RUS', owner: 'white', divisions: [] },
+      TULA: { id: 'TULA', name: 'Tula Oblast', countryIso3: 'RUS', owner: 'white' },
+      SOVIET_REAR: { id: 'SOVIET_REAR', name: 'Soviet Rear', countryIso3: 'RUS', owner: 'soviet' },
+      WHITE_REAR: { id: 'WHITE_REAR', name: 'White Rear', countryIso3: 'RUS', owner: 'white' },
     };
     const tulaAdjacency: Adjacency = {
       TULA: ['SOVIET_REAR', 'WHITE_REAR'],
@@ -219,9 +219,9 @@ describe('processCombats – attacker defeat notifications', () => {
     const defenders = [makeDiv('d1', 'white', 100, 50, 50)];
     const combat = makeCombat(attackers, defenders, 'TULA');
     const tulaRegions: RegionState = {
-      TULA: { id: 'TULA', name: 'Tula Oblast', countryIso3: 'RUS', owner: 'white', divisions: [] },
-      SOVIET_REAR: { id: 'SOVIET_REAR', name: 'Soviet Rear', countryIso3: 'RUS', owner: 'soviet', divisions: [] },
-      WHITE_REAR: { id: 'WHITE_REAR', name: 'White Rear', countryIso3: 'RUS', owner: 'white', divisions: [] },
+      TULA: { id: 'TULA', name: 'Tula Oblast', countryIso3: 'RUS', owner: 'white' },
+      SOVIET_REAR: { id: 'SOVIET_REAR', name: 'Soviet Rear', countryIso3: 'RUS', owner: 'soviet' },
+      WHITE_REAR: { id: 'WHITE_REAR', name: 'White Rear', countryIso3: 'RUS', owner: 'white' },
     };
     const tulaAdjacency: Adjacency = {
       TULA: ['SOVIET_REAR', 'WHITE_REAR'],
@@ -256,8 +256,8 @@ describe('processCombats – division destruction logs', () => {
     const defenders = [makeDiv('d1', 'white', 100, 50, 50)];
     const combat = makeCombat(attackers, defenders, 'TULA');
     const noRetreatRegions: RegionState = {
-      TULA: { id: 'TULA', name: 'Tula Oblast', countryIso3: 'RUS', owner: 'white', divisions: [] },
-      SOVIET_REAR: { id: 'SOVIET_REAR', name: 'Soviet Rear', countryIso3: 'RUS', owner: 'white', divisions: [] },
+      TULA: { id: 'TULA', name: 'Tula Oblast', countryIso3: 'RUS', owner: 'white' },
+      SOVIET_REAR: { id: 'SOVIET_REAR', name: 'Soviet Rear', countryIso3: 'RUS', owner: 'white' },
     };
     const noRetreatAdjacency: Adjacency = {
       TULA: ['SOVIET_REAR'],
@@ -289,8 +289,8 @@ describe('processCombats – division destruction logs', () => {
     const defenders = [makeDiv('d1', 'white', 1, 10, 10)];
     const combat = makeCombat(attackers, defenders, 'TULA');
     const restoredDefenderRegions: RegionState = {
-      TULA: { id: 'TULA', name: 'Tula Oblast', countryIso3: 'RUS', owner: 'white', divisions: [] },
-      SOVIET_REAR: { id: 'SOVIET_REAR', name: 'Soviet Rear', countryIso3: 'RUS', owner: 'soviet', divisions: [] },
+      TULA: { id: 'TULA', name: 'Tula Oblast', countryIso3: 'RUS', owner: 'white' },
+      SOVIET_REAR: { id: 'SOVIET_REAR', name: 'Soviet Rear', countryIso3: 'RUS', owner: 'soviet' },
     };
     const restoredDefenderAdjacency: Adjacency = {
       TULA: ['SOVIET_REAR'],

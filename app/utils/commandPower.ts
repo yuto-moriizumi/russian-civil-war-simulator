@@ -1,4 +1,4 @@
-import { CountryId, RegionState, ProductionQueueItem, Movement, CountryBonuses } from '../types/game';
+import { CountryId, RegionState, ProductionQueueItem, Movement, CountryBonuses, DivisionState } from '../types/game';
 import { regionValues } from '../data/map/regionValues';
 
 /**
@@ -64,16 +64,11 @@ export function calculateCommandPower(
  */
 export function countCurrentDivisions(
   countryId: CountryId,
-  regions: RegionState,
+  divisions: import('../types/game').DivisionState,
   _movements: Movement[]
 ): number {
-  // Count divisions in regions
-  const divisionsInRegions = Object.values(regions).reduce((count, region) => {
-    return count + region.divisions.filter(d => d.owner === countryId).length;
-  }, 0);
-
-  // All divisions (including in-transit) are present in regions; no separate transit count.
-  return divisionsInRegions * COMMAND_POWER_PER_UNIT;
+  const divisionsCount = Object.values(divisions).filter(d => d.owner === countryId).length;
+  return divisionsCount * COMMAND_POWER_PER_UNIT;
 }
 
 /**
@@ -104,6 +99,7 @@ export function countDivisionsInProduction(
  */
 export function canProduceDivision(
   countryId: CountryId,
+  divisions: DivisionState,
   regions: RegionState,
   movements: Movement[],
   productionQueues: Record<CountryId, ProductionQueueItem[]>,
@@ -111,7 +107,7 @@ export function canProduceDivision(
   coreRegions?: string[]
 ): boolean {
   const cap = calculateCommandPower(countryId, regions, countryBonuses, coreRegions);
-  const current = countCurrentDivisions(countryId, regions, movements);
+  const current = countCurrentDivisions(countryId, divisions, movements);
   const inProduction = countDivisionsInProduction(countryId, productionQueues);
   
   // The next division must fully fit within the remaining CP budget.
@@ -125,13 +121,14 @@ export function canProduceDivision(
 export function clampProductionQueueToCommandPower(
   countryId: CountryId,
   queue: ProductionQueueItem[],
+  divisions: DivisionState,
   regions: RegionState,
   movements: Movement[],
   countryBonuses: CountryBonuses,
   coreRegions?: string[]
 ): ProductionQueueItem[] {
   const cap = calculateCommandPower(countryId, regions, countryBonuses, coreRegions);
-  const current = countCurrentDivisions(countryId, regions, movements);
+  const current = countCurrentDivisions(countryId, divisions, movements);
   const maxQueuedDivisions = Math.max(0, Math.floor((cap - current) / COMMAND_POWER_PER_UNIT));
 
   if (queue.length <= maxQueuedDivisions) {
@@ -153,6 +150,7 @@ export function clampProductionQueueToCommandPower(
  */
 export function getCommandPowerInfo(
   countryId: CountryId,
+  divisions: DivisionState,
   regions: RegionState,
   movements: Movement[],
   productionQueues: Record<CountryId, ProductionQueueItem[]>,
@@ -167,7 +165,7 @@ export function getCommandPowerInfo(
   controlledStates: number;
 } {
   const cap = calculateCommandPower(countryId, regions, countryBonuses, coreRegions);
-  const current = countCurrentDivisions(countryId, regions, movements);
+  const current = countCurrentDivisions(countryId, divisions, movements);
   const inProduction = countDivisionsInProduction(countryId, productionQueues);
   const total = current + inProduction;
   const available = Math.max(0, cap - total);

@@ -1,32 +1,21 @@
-import { Region } from '../../../types/game';
+import { Division, DivisionState, Movement } from '../../../types/game';
 
 /**
- * Regenerates HP for all divisions in regions
- * Divisions regenerate 10 HP per hour, up to their maximum HP
+ * Regenerates HP for all stationary divisions (not in transit, not in combat).
+ * In-transit divisions get HP regen in processMovements instead.
  */
 export function regenerateDivisionHP(
-  regions: Record<string, Region>
-): Record<string, Region> {
-  const nextRegions = { ...regions };
-
-  Object.keys(nextRegions).forEach(regionId => {
-    const region = nextRegions[regionId];
-    if (region.divisions.length > 0) {
-      const regeneratedDivisions = region.divisions.map(division => {
-        // Regenerate 10 HP per hour, but don't exceed maxHp
-        const newHp = Math.min(division.hp + 10, division.maxHp);
-
-        return {
-          ...division,
-          hp: newHp,
-        };
-      });
-      nextRegions[regionId] = {
-        ...region,
-        divisions: regeneratedDivisions,
-      };
+  divisions: DivisionState,
+  movingUnits: Movement[]
+): DivisionState {
+  const inTransitIds = new Set(movingUnits.flatMap(m => m.divisions.map((d: Division) => d.id)));
+  const result: DivisionState = {};
+  for (const [id, div] of Object.entries(divisions)) {
+    if (div.regionId !== null && !inTransitIds.has(id)) {
+      result[id] = { ...div, hp: Math.min(div.hp + 10, div.maxHp) };
+    } else {
+      result[id] = div;
     }
-  });
-
-  return nextRegions;
+  }
+  return result;
 }

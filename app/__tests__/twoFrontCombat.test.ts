@@ -8,7 +8,7 @@
 import { describe, it, expect } from 'vitest';
 import { applyCompletedMovements } from '../store/game/tickHelpers/movementApplication';
 import { createUnitActions } from '../store/game/unitActions';
-import type { Division, Movement, Region, RegionState, ActiveCombat, Relationship, CountryId } from '../types/game';
+import type { Division, DivisionState, Movement, Region, RegionState, ActiveCombat, Relationship, CountryId } from '../types/game';
 import type { GameStore } from '../store/game/types';
 
 const D0 = new Date('1918-01-01T00:00:00Z');
@@ -16,11 +16,11 @@ const NOW = new Date('1918-01-01T12:00:00Z');
 
 function makeDiv(overrides: Partial<Division> = {}): Division {
   return { id: 'div-1', name: '1st', owner: 'soviet', armyGroupId: 'ag-1',
-    hp: 100, maxHp: 100, attack: 10, defence: 15, ...overrides };
+    hp: 100, maxHp: 100, attack: 10, defence: 15, regionId: null, ...overrides };
 }
 
 function makeRegion(id: string, overrides: Partial<Region> = {}): Region {
-  return { id, name: id, countryIso3: 'RUS', owner: 'soviet', divisions: [], ...overrides };
+  return { id, name: id, countryIso3: 'RUS', owner: 'soviet', ...overrides };
 }
 
 function makeMovement(overrides: Partial<Movement> = {}): Movement {
@@ -54,6 +54,7 @@ function makeStoreStub(overrides: Partial<GameStore>): { get: () => GameStore; s
   const base: Partial<GameStore> = {
     adjacency: {},
     regions: {},
+    divisions: {},
     selectedCountry: { id: 'soviet' as CountryId } as GameStore['selectedCountry'],
     dateTime: D0,
     movingUnits: [],
@@ -72,15 +73,14 @@ function makeStoreStub(overrides: Partial<GameStore>): { get: () => GameStore; s
 
 describe('two-front combat: second attack on defender whose divisions are already cleared', () => {
   it('creates a new combat when attacking a region that is already defending (divisions cleared)', () => {
-    // Layout: A(own) adjacent to B(enemy) and C(enemy). B adjacent to C.
-    // A already attacked C → C's divisions cleared into combat-a-c.
-    // Player now attacks from B to C → should also create a new combat at C.
-    const sovietDivB = makeDiv({ id: 'sov-b', owner: 'soviet' });
-    const whiteDefC = makeDiv({ id: 'wht-c', owner: 'white' });
+    const sovA = makeDiv({ id: 'sov-a', owner: 'soviet', regionId: 'A' });
+    const sovietDivB = makeDiv({ id: 'sov-b', owner: 'soviet', regionId: 'B' });
+    const whiteDefC = makeDiv({ id: 'wht-c', owner: 'white', regionId: null });
+    const divisions: DivisionState = { 'sov-a': sovA, 'sov-b': sovietDivB, 'wht-c': whiteDefC };
     const regions: RegionState = {
-      A: makeRegion('A', { owner: 'soviet', divisions: [makeDiv({ id: 'sov-a', owner: 'soviet' })] }),
-      B: makeRegion('B', { owner: 'soviet', divisions: [sovietDivB] }),
-      C: makeRegion('C', { owner: 'white', divisions: [] }), // cleared by first combat
+      A: makeRegion('A', { owner: 'soviet' }),
+      B: makeRegion('B', { owner: 'soviet' }),
+      C: makeRegion('C', { owner: 'white' }),
     };
     const existingCombat = makeCombat({
       id: 'combat-a-c',
@@ -91,7 +91,7 @@ describe('two-front combat: second attack on defender whose divisions are alread
     });
     const adjacency = { A: ['B', 'C'], B: ['A', 'C'], C: ['A', 'B'] };
 
-    const { get, set, captured } = makeStoreStub({ regions, adjacency, activeCombats: [existingCombat] });
+    const { get, set, captured } = makeStoreStub({ regions, divisions, adjacency, activeCombats: [existingCombat] });
     const actions = createUnitActions(set as Parameters<typeof createUnitActions>[0], get as Parameters<typeof createUnitActions>[1]);
     actions.moveUnits('B', 'C', 1);
 
@@ -107,14 +107,13 @@ describe('two-front combat: second attack on defender whose divisions are alread
 
 describe('two-front combat: enemy enters a region whose defender is attacking elsewhere', () => {
   it('initiates combat rather than undefended capture when defender has pendingCombatId', () => {
-    // A (soviet) has 1 division attacking B (pendingCombatId). Division is still in A.
-    // C (white) moves into A this tick — should trigger combat, not a free capture.
-    const sovietDiv = makeDiv({ id: 'soviet-div', owner: 'soviet' });
-    const whiteDiv = makeDiv({ id: 'white-div-c', owner: 'white' });
+    const sovietDiv = makeDiv({ id: 'soviet-div', owner: 'soviet', regionId: 'A' });
+    const whiteDiv = makeDiv({ id: 'white-div-c', owner: 'white', regionId: 'C' });
+    const divisions: DivisionState = { 'soviet-div': sovietDiv, 'white-div-c': whiteDiv };
     const regions: RegionState = {
-      A: makeRegion('A', { owner: 'soviet', divisions: [sovietDiv] }),
-      B: makeRegion('B', { owner: 'white', divisions: [] }),
-      C: makeRegion('C', { owner: 'white', divisions: [whiteDiv] }),
+      A: makeRegion('A', { owner: 'soviet' }),
+      B: makeRegion('B', { owner: 'white' }),
+      C: makeRegion('C', { owner: 'white' }),
     };
 
     const attackCombat = makeCombat({
@@ -143,7 +142,7 @@ describe('two-front combat: enemy enters a region whose defender is attacking el
     const { nextCombats, nextRegions } = applyCompletedMovements(
       [whiteMovement],
       [sovietAttackMovement, whiteMovement],
-      { regions, combats: [attackCombat], events: [], notifications: [], relationships: WAR_REL },
+      { regions, divisions, combats: [attackCombat], events: [], notifications: [], relationships: WAR_REL },
       NOW
     );
 

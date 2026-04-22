@@ -19,6 +19,7 @@ export default function TopBar({ showSavedIndicator }: TopBarProps) {
   const productionQueue = useGameStore(state => state.productionQueues);
   const mapMode = useGameStore(state => state.mapMode);
   const regions = useGameStore(state => state.regions);
+  const divisions = useGameStore(state => state.divisions);
   const movingUnits = useGameStore(state => state.movingUnits);
   const countryBonuses = useGameStore(state => state.countryBonuses);
   const isPlayerAIEnabled = useGameStore(state => state.isPlayerAIEnabled);
@@ -38,13 +39,14 @@ export default function TopBar({ showSavedIndicator }: TopBarProps) {
   const commandPowerInfo = useMemo(() => 
     country ? getCommandPowerInfo(
       country.id,
+      divisions,
       regions,
       movingUnits,
       productionQueue,
       countryBonuses[country.id],
       country.coreRegions
     ) : { cap: 0, current: 0, inProduction: 0, total: 0, available: 0, controlledStates: 0 },
-    [country, regions, movingUnits, productionQueue, countryBonuses]
+    [country, regions, divisions, movingUnits, productionQueue, countryBonuses]
   );
   
   const divisionCap = commandPowerInfo.cap;

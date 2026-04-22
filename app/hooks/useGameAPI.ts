@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { CountryId } from '../types/game';
+import { getDivisionsInRegion } from '../utils/divisionState';
 
 export function useGameAPI() {
   const state = useGameStore();
@@ -23,11 +24,12 @@ export function useGameAPI() {
           console.warn(`[gameAPI] Cannot select units in region "${regionId}" - not found`);
           return;
         }
+        const divsInRegion = getDivisionsInRegion(state.divisions, regionId);
         // Allow selection from owned regions OR ally regions where the player
         // has their own divisions (military access / autonomy scenario)
-        const hasOwnDivisions = region.divisions.some(d => d.owner === state.selectedCountry!.id);
+        const hasOwnDivisions = divsInRegion.some(d => d.owner === state.selectedCountry!.id);
         const isOwnRegion = region.owner === state.selectedCountry.id;
-        if ((isOwnRegion || hasOwnDivisions) && region.divisions.length > 0) {
+        if ((isOwnRegion || hasOwnDivisions) && divsInRegion.length > 0) {
           state.setSelectedUnitRegion(regionId);
           state.setSelectedRegion(regionId);
         } else {
@@ -43,10 +45,10 @@ export function useGameAPI() {
           console.warn('[gameAPI] No units selected');
           return false;
         }
-        
+
         const selectedIds = state.selectedDivisionIds;
         const idsToMove = !count && selectedIds.length > 0 ? selectedIds : undefined;
-        const unitsToMove = count ?? (selectedIds.length > 0 ? selectedIds.length : state.regions[fromRegion]?.divisions.length ?? 0);
+        const unitsToMove = count ?? (selectedIds.length > 0 ? selectedIds.length : getDivisionsInRegion(state.divisions, fromRegion).length);
         if (unitsToMove <= 0) return false;
 
         state.moveUnits(fromRegion, toRegionId, unitsToMove, idsToMove);
@@ -113,7 +115,7 @@ export function useGameAPI() {
       getRelationships: () => state.relationships,
       setRelationship: (fromCountry, toCountry, type) => state.setRelationship(fromCountry, toCountry, type),
       getRelationship: (fromCountry, toCountry) => state.getRelationship(fromCountry, toCountry),
-      
+
       // Country sidebar
       openCountrySidebar: (countryId) => {
         state.setSelectedCountryId(countryId);

@@ -1,4 +1,4 @@
-import { Region, GameEvent, NotificationItem, CountryId, Relationship, ScheduledEvent, ScheduledEventAction, ScheduledEventCondition, ArmyGroup, Division } from '../../../types/game';
+import { Region, GameEvent, NotificationItem, CountryId, Relationship, ScheduledEvent, ScheduledEventAction, ScheduledEventCondition, ArmyGroup, Division, DivisionState } from '../../../types/game';
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 import { BASE_DIVISION_STATS } from '../../../utils/bonusCalculator';
 import { applyRelationshipChange, joinPuppetToOverlordWars } from '../../../utils/relationshipUtils';
@@ -13,12 +13,14 @@ export function processScheduledEvents(
   currentDate: Date,
   regions: Record<string, Region>,
   relationships: Relationship[],
-  armyGroups: ArmyGroup[]
+  armyGroups: ArmyGroup[],
+  divisions: DivisionState = {}
 ): {
   updatedScheduledEvents: ScheduledEvent[];
   updatedRegions: Record<string, Region>;
   updatedRelationships: Relationship[];
   updatedArmyGroups: ArmyGroup[];
+  updatedDivisions: DivisionState;
   newEvents: GameEvent[];
   newNotifications: NotificationItem[];
 } {
@@ -27,6 +29,7 @@ export function processScheduledEvents(
   const updatedRegions = { ...regions };
   let updatedRelationships = [...relationships];
   let updatedArmyGroups = [...armyGroups];
+  let updatedDivisions = { ...divisions };
   const newEvents: GameEvent[] = [];
   const newNotifications: NotificationItem[] = [];
 
@@ -51,20 +54,12 @@ export function processScheduledEvents(
       if (action.type === 'transferRegion' && action.regionId && action.newOwner) {
         const region = updatedRegions[action.regionId];
         if (region) {
-          updatedRegions[action.regionId] = {
-            ...region,
-            owner: action.newOwner,
-            divisions: [],
-          };
+          updatedRegions[action.regionId] = { ...region, owner: action.newOwner };
         }
       } else if (action.type === 'transferRegionIfOwnedByOrPuppetOf' && action.regionId && action.newOwner && action.overlordCountry) {
         const region = updatedRegions[action.regionId];
         if (region && isOwnedByOrPuppetOf(region.owner, action.overlordCountry, relationships)) {
-          updatedRegions[action.regionId] = {
-            ...region,
-            owner: action.newOwner,
-            divisions: [],
-          };
+          updatedRegions[action.regionId] = { ...region, owner: action.newOwner };
         }
       } else if (action.type === 'declareWar' && action.fromCountry && action.toCountry) {
         updatedRelationships = applyWarDeclaration(
@@ -123,26 +118,18 @@ export function processScheduledEvents(
           maxHp: BASE_DIVISION_STATS.maxHp,
           attack: BASE_DIVISION_STATS.attack,
           defence: BASE_DIVISION_STATS.defence,
+          regionId: action.regionId,
         };
-        const region = updatedRegions[action.regionId];
-        if (region) {
-          updatedRegions[action.regionId] = {
-            ...region,
-            divisions: [...region.divisions, division],
-          };
+        if (updatedRegions[action.regionId]) {
+          updatedDivisions = { ...updatedDivisions, [division.id]: division };
         }
       } else if (action.type === 'transferCoreRegionsFromCountry' && action.newOwner && action.fromCountry) {
-        // Transfer all core regions of newOwner that are currently owned by fromCountry
         const countryData = COUNTRY_METADATA[action.newOwner];
         if (countryData?.coreRegions) {
           for (const regionId of countryData.coreRegions) {
             const region = updatedRegions[regionId];
             if (region && region.owner === action.fromCountry) {
-              updatedRegions[regionId] = {
-                ...region,
-                owner: action.newOwner,
-                divisions: [],
-              };
+              updatedRegions[regionId] = { ...region, owner: action.newOwner };
             }
           }
         }
@@ -168,6 +155,7 @@ export function processScheduledEvents(
     updatedRegions,
     updatedRelationships,
     updatedArmyGroups,
+    updatedDivisions,
     newEvents,
     newNotifications,
   };

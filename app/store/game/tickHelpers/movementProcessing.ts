@@ -1,4 +1,5 @@
-import { Movement, ActiveCombat, Region, Relationship } from '../../../types/game';
+import { Movement, ActiveCombat, Region, Relationship, DivisionState } from '../../../types/game';
+import { getDivisionsInRegion } from '../../../utils/divisionState';
 import { createActiveCombat } from '../../../utils/combat';
 
 interface MovementProcessingResult {
@@ -26,7 +27,8 @@ export function processMovements(
   currentDate: Date,
   activeCombats: ActiveCombat[] = [],
   regions: Record<string, Region> = {},
-  relationships: Relationship[] = []
+  relationships: Relationship[] = [],
+  divisions: DivisionState = {}
 ): MovementProcessingResult {
   const remainingMovements: Movement[] = [];
   const completedMovements: Movement[] = [];
@@ -97,7 +99,7 @@ export function processMovements(
             const inTransitFromDest = new Set(
               movingUnits.filter(m => m.fromRegion === regeneratedMovement.toRegion).flatMap(m => m.divisions.map(d => d.id))
             );
-            const defenders = destRegion.divisions.filter(d => d.owner === destRegion.owner && !inTransitFromDest.has(d.id));
+            const defenders = getDivisionsInRegion(divisions, regeneratedMovement.toRegion).filter(d => d.owner === destRegion.owner && !inTransitFromDest.has(d.id));
             // Check for other combats on the same defender region (multi-front).
             // If defender divisions are absent from the region (already in another combat),
             // use those combat divisions as the effective defenders.

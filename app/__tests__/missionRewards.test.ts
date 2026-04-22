@@ -29,14 +29,12 @@ describe('Soviet Don Army preparation mission', () => {
         name: 'Voronezh',
         countryIso3: 'RUS',
         owner: 'ukrainesoviet',
-        divisions: [],
       },
       'UA-09': {
         id: 'UA-09',
         name: 'Donbass',
         countryIso3: 'UKR',
         owner: 'dkr',
-        divisions: [],
       },
     };
 
@@ -62,14 +60,12 @@ describe('Soviet Don Army preparation mission', () => {
         name: 'Voronezh',
         countryIso3: 'RUS',
         owner: 'soviet',
-        divisions: [],
       },
       'UA-09': {
         id: 'UA-09',
         name: 'Donbass',
         countryIso3: 'UKR',
         owner: 'ukraine',
-        divisions: [],
       },
     };
 
@@ -115,14 +111,12 @@ describe('Soviet Don Army subjugation mission', () => {
         name: 'Rostov',
         countryIso3: 'RUS',
         owner: 'soviet',
-        divisions: [],
       },
       'RU-VGG': {
         id: 'RU-VGG',
         name: 'Volgograd',
         countryIso3: 'RUS',
         owner: 'ukrainesoviet',
-        divisions: [],
       },
     };
 
@@ -147,14 +141,12 @@ describe('Soviet Don Army subjugation mission', () => {
         name: 'Rostov',
         countryIso3: 'RUS',
         owner: 'soviet',
-        divisions: [],
       },
       'RU-VGG': {
         id: 'RU-VGG',
         name: 'Volgograd',
         countryIso3: 'RUS',
         owner: 'ukrainesoviet',
-        divisions: [],
       },
     };
 
@@ -185,7 +177,7 @@ describe('Soviet Don Army subjugation mission', () => {
     ]));
     expect(rewards.updatedRegions['RU-ROS'].owner).toBe('donsoviets');
     expect(rewards.updatedRegions['RU-VGG'].owner).toBe('donsoviets');
-    expect(rewards.updatedRegions['RU-ROS'].divisions).toHaveLength(2);
+    expect(Object.values(rewards.updatedDivisions).filter(d => d.regionId === 'RU-ROS')).toHaveLength(2);
     expect(rewards.updatedAIStates.some(aiState => aiState.countryId === 'donsoviets')).toBe(true);
     expect(rewards.rewardEvents).toEqual(expect.arrayContaining([
       expect.objectContaining({

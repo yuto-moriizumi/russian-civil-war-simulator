@@ -326,7 +326,6 @@ export function loadGame(): {
       gameState: {
         ...gameState,
         divisions: buildDivisionState(
-          data.regions,
           gameState.movingUnits,
           gameState.activeCombats,
           data.gameState.divisions ?? {}

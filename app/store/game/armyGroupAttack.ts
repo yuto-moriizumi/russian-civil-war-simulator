@@ -3,6 +3,7 @@ import { getNextStepToward, buildCanEnterPredicate, buildIsHostilePredicate } fr
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { createActiveCombat } from '../../utils/combat';
 import { createGameEvent } from '../../utils/eventUtils';
+import { getDivisionsInRegion } from '../../utils/divisionState';
 import { GameStore } from './types';
 
 /**
@@ -30,13 +31,16 @@ export function attackArmyGroup(
   const {
     armyGroups, regions, adjacency, dateTime, movingUnits,
     selectedUnitRegion, theaters, relationships, activeCombats,
-    gameEvents, regionCentroids,
+    gameEvents, regionCentroids, divisions,
   } = state;
 
   const group = armyGroups.find(g => g.id === groupId);
   if (!group) return;
 
   const countryId = group.owner;
+
+  // Track DivisionState mutations (parallel to newRegions)
+  const newDivisions = { ...divisions };
 
   const canEnter = buildCanEnterPredicate(countryId, regions, relationships);
   const isHostile = buildIsHostilePredicate(countryId, regions, relationships);
@@ -65,7 +69,7 @@ export function attackArmyGroup(
   // ── Phase 1 Step 2: Committed counts (present + in-transit directly to border) ─
   const committedAtBorder = new Map<string, number>();
   allBorderRegions.forEach(id => {
-    const present = regions[id]?.divisions.filter(d => d.armyGroupId === groupId).length ?? 0;
+    const present = getDivisionsInRegion(divisions, id).filter(d => d.armyGroupId === groupId).length;
     committedAtBorder.set(id, present);
   });
 
@@ -91,7 +95,7 @@ export function attackArmyGroup(
   let totalGroupDivisions = 0;
   Object.values(regions).forEach(region => {
     if (!region) return;
-    totalGroupDivisions += region.divisions.filter(
+    totalGroupDivisions += getDivisionsInRegion(divisions, region.id).filter(
       d => d.armyGroupId === groupId && d.owner === countryId && !inTransitDivisionIds.has(d.id)
     ).length;
   });
@@ -119,7 +123,7 @@ export function attackArmyGroup(
   const availableDivisions: { divisionId: string; regionId: string }[] = [];
   Object.entries(regions).forEach(([regionId, region]) => {
     if (!region) return;
-    const groupDivs = region.divisions.filter(
+    const groupDivs = getDivisionsInRegion(divisions, regionId).filter(
       d => d.armyGroupId === groupId && d.owner === countryId && !inTransitDivisionIds.has(d.id)
     );
     if (groupDivs.length === 0) return;
@@ -198,7 +202,7 @@ export function attackArmyGroup(
           const divIdsToSend = divIds.splice(0, sendCount);
 
           const divsToSend = divIdsToSend
-            .map(id => newRegions[sourceRegionId]?.divisions.find(d => d.id === id))
+            .map(id => divisions[id])
             .filter((d): d is NonNullable<typeof d> => d !== undefined);
 
           if (divsToSend.length === 0) continue;
@@ -240,7 +244,7 @@ export function attackArmyGroup(
     const target = allocationTarget.get(borderRegionId) ?? 0;
 
     // Count stationary group divisions still present at this border after Phase 1
-    const stationaryDivs = (newRegions[borderRegionId]?.divisions ?? []).filter(
+    const stationaryDivs = getDivisionsInRegion(divisions, borderRegionId).filter(
       d => d.armyGroupId === groupId && d.owner === countryId && !inTransitDivisionIds.has(d.id)
     );
 
@@ -307,7 +311,7 @@ export function attackArmyGroup(
         const inTransitFromDest = new Set(
           movingUnits.filter(m => m.fromRegion === attackTargetId).flatMap(m => m.divisions.map(d => d.id))
         );
-        const defenderDivisions = destRegion.divisions.filter(d => d.owner === destRegion.owner && !inTransitFromDest.has(d.id));
+        const defenderDivisions = getDivisionsInRegion(divisions, attackTargetId).filter(d => d.owner === destRegion.owner && !inTransitFromDest.has(d.id));
         const hasActiveCombatAtDest = [...activeCombats, ...newCombats].some(c => c.defenderRegionId === attackTargetId && !c.isComplete);
         if (defenderDivisions.length > 0 || hasActiveCombatAtDest) {
           // Check for other combats on the same defender region (multi-front)
@@ -334,17 +338,19 @@ export function attackArmyGroup(
           // Only clear defender divisions on first combat on this region
           const isFirstCombatOnRegion = otherCombatsOnRegion.length === 0;
           if (isFirstCombatOnRegion) {
-            newRegions[attackTargetId] = { ...destRegion, divisions: [] };
+            // Clear all defender divisions from DivisionState
+            const defenderIdsToRemove = Object.entries(newDivisions)
+              .filter(([, d]) => d.regionId === attackTargetId && d.owner === destRegion.owner)
+              .map(([id]) => id);
+            defenderIdsToRemove.forEach(id => { delete newDivisions[id]; });
           }
           // Clear attacker divisions from source region to avoid double-counting
           // (they are tracked in the combat; applyFinishedCombats places them post-combat)
           const attackerDivIds = new Set(divsForAttack.map(d => d.id));
-          const srcRegion = newRegions[borderRegionId];
-          if (srcRegion) {
-            newRegions[borderRegionId] = {
-              ...srcRegion,
-              divisions: srcRegion.divisions.filter(d => !attackerDivIds.has(d.id)),
-            };
+          for (const id of attackerDivIds) {
+            if (newDivisions[id]) {
+              delete newDivisions[id];
+            }
           }
 
           const battleEvent = createGameEvent(
@@ -391,6 +397,7 @@ export function attackArmyGroup(
   });
 
   setState({
+    divisions: newDivisions,
     regions: newRegions,
     movingUnits: [...movingUnits, ...newMovements],
     armyGroups: updatedArmyGroups,

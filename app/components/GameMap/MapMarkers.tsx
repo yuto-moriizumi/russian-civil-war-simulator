@@ -2,13 +2,15 @@
 'use client';
 
 import { Marker } from 'react-map-gl/maplibre';
-import { Region, Movement, ActiveCombat } from '../../types/game';
+import { Region, Movement, ActiveCombat, DivisionState } from '../../types/game';
 import { COUNTRY_COLORS } from '../../utils/mapUtils';
 import { COUNTRY_FLAGS } from './mapConstants';
+import { getDivisionsInRegion } from '../../utils/divisionState';
 
 interface UnitMarkerProps {
   regionId: string;
   region: Region;
+  divisions: DivisionState;
   centroid: [number, number];
   isSelected: boolean;
   isPlayerUnit: boolean;
@@ -20,17 +22,19 @@ interface UnitMarkerProps {
 export function UnitMarker({
   regionId,
   region,
+  divisions,
   centroid,
   isSelected,
   isPlayerUnit,
   onRegionSelect,
   onDivisionSelect,
 }: UnitMarkerProps) {
+  const regionDivisions = getDivisionsInRegion(divisions, regionId);
   // Group divisions by owner so the marker reflects who actually controls the units,
   // not just who owns the territory. This is critical for military-access scenarios
   // where Soviet divisions sit in a Ukraine-owned region — they should show the
   // Soviet flag, not the Ukrainian one.
-  const ownerCounts = region.divisions.reduce<Record<string, number>>((acc, d) => {
+  const ownerCounts = regionDivisions.reduce<Record<string, number>>((acc, d) => {
     acc[d.owner] = (acc[d.owner] ?? 0) + 1;
     return acc;
   }, {});
@@ -98,7 +102,7 @@ export function UnitMarker({
         >
           {hasMixedOwners
             ? ownerEntries.map(([, count], i) => (i === 0 ? count : `+${count}`)).join(' ')
-            : region.divisions.length}
+            : regionDivisions.length}
         </span>
       </div>
     </Marker>

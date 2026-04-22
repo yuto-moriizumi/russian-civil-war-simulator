@@ -1,11 +1,13 @@
-import { Movement, ActiveCombat, Region, GameEvent, NotificationItem, Relationship, Country } from '../../../types/game';
+import { Movement, ActiveCombat, Region, GameEvent, NotificationItem, Relationship, Country, DivisionState, Division } from '../../../types/game';
 import { determineNewOwner } from '../../../utils/occupationUtils';
 import { createActiveCombat } from '../../../utils/combat';
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 import { calculateDistance, calculateTravelTime } from '../../../utils/distance';
+import { getDivisionsInRegion } from '../../../utils/divisionState';
 
 interface MovementApplicationContext {
   regions: Record<string, Region>;
+  divisions: DivisionState;
   combats: ActiveCombat[];
   /** Combats that completed this tick (their result is handled by applyFinishedCombats) */
   finishedCombats?: ActiveCombat[];
@@ -19,6 +21,7 @@ interface MovementApplicationContext {
 
 interface MovementApplicationResult {
   nextRegions: Record<string, Region>;
+  nextDivisions: DivisionState;
   nextCombats: ActiveCombat[];
   nextEvents: GameEvent[];
   nextNotifications: NotificationItem[];
@@ -43,6 +46,7 @@ export function applyCompletedMovements(
   currentDate: Date
 ): MovementApplicationResult {
   const nextRegions = { ...context.regions };
+  let nextDivisions = { ...context.divisions };
   const nextCombats = [...context.combats];
   const nextEvents = [...context.events];
   const nextNotifications = [...context.notifications];
@@ -59,7 +63,6 @@ export function applyCompletedMovements(
 
     // If this movement was linked to a combat it initiated, the combat result
     // is handled by applyFinishedCombats — skip normal movement application.
-    // Do NOT remove from fromRegion here; applyFinishedCombats handles placement.
     if (movement.pendingCombatId) {
       const allKnownCombats = [...context.combats, ...(context.finishedCombats ?? [])];
       const linkedCombat = allKnownCombats.find(c => c.id === movement.pendingCombatId);
@@ -69,43 +72,28 @@ export function applyCompletedMovements(
       // Combat not found — fall through to normal logic (shouldn't normally happen)
     }
 
-    // Remove moving divisions from the source region now that the movement completes.
-    // (Divisions were kept in fromRegion during transit; they leave only on arrival.)
-    const movingIds = new Set(movement.divisions.map(d => d.id));
-    const fromRegionState = nextRegions[movement.fromRegion];
-    if (fromRegionState) {
-      nextRegions[movement.fromRegion] = {
-        ...fromRegionState,
-        divisions: fromRegionState.divisions.filter(d => !movingIds.has(d.id)),
-      };
-    }
-    // Use the up-to-date division objects from the region (HP may have regenerated during transit).
-    // Fall back to movement.divisions when the division is not found in the region — this happens
-    // for retreat movements where the division lived in the combat arrays, not in the region.
-    const fromRegionDivisions = fromRegionState?.divisions.filter(d => movingIds.has(d.id)) ?? [];
-    const arrivingDivisions = fromRegionDivisions.length > 0 ? fromRegionDivisions : movement.divisions;
+    // Arriving divisions come from movement.divisions (they have the latest transit-regenerated HP).
+    // For retreat movements the divisions lived in combat arrays, not in the base DivisionState.
+    const arrivingDivisions = movement.divisions;
 
-    // Re-read toRegion after the fromRegion removal so self-moves (fromRegion === toRegion)
-    // don't operate on a stale snapshot that still contains the departing divisions.
+    // Re-read toRegion (self-moves: fromRegion === toRegion don't stale-snapshot)
     const dest = nextRegions[toRegion];
     if (!dest) return;
+
+    // Helper: land arrivingDivisions in a region by updating their regionId
+    const landDivisionsInRegion = (targetRegionId: string, divs: Division[]) => {
+      for (const d of divs) {
+        nextDivisions = { ...nextDivisions, [d.id]: { ...d, regionId: targetRegionId } };
+      }
+    };
 
     if (dest.owner === owner) {
       // Friendly region
       if (movement.remainingPath && movement.remainingPath.length > 0) {
-        // Multi-step: divisions were just placed into the intermediate region above;
-        // dispatch the next hop from there.
-        nextRegions[toRegion] = {
-          ...dest,
-          divisions: [...dest.divisions, ...arrivingDivisions],
-        };
-        _dispatchNextHop(movement, nextRegions, currentDate, newHopMovements, context);
+        landDivisionsInRegion(toRegion, arrivingDivisions);
+        _dispatchNextHop(movement, nextRegions, nextDivisions, currentDate, newHopMovements, context);
       } else {
-        // Final destination — land units
-        nextRegions[toRegion] = {
-          ...dest,
-          divisions: [...dest.divisions, ...arrivingDivisions],
-        };
+        landDivisionsInRegion(toRegion, arrivingDivisions);
       }
     } else {
       // Enemy region - check relationship type
@@ -129,16 +117,10 @@ export function applyCompletedMovements(
       if (effectiveRelationship === 'military_access' || effectiveRelationship === 'autonomy') {
         // Military access - units can move but no occupation or combat
         if (movement.remainingPath && movement.remainingPath.length > 0) {
-          nextRegions[toRegion] = {
-            ...dest,
-            divisions: [...dest.divisions, ...arrivingDivisions],
-          };
-          _dispatchNextHop(movement, nextRegions, currentDate, newHopMovements, context);
+          landDivisionsInRegion(toRegion, arrivingDivisions);
+          _dispatchNextHop(movement, nextRegions, nextDivisions, currentDate, newHopMovements, context);
         } else {
-          nextRegions[toRegion] = {
-            ...dest,
-            divisions: [...dest.divisions, ...arrivingDivisions],
-          };
+          landDivisionsInRegion(toRegion, arrivingDivisions);
         }
         console.log(`[MILITARY ACCESS] ${arrivingDivisions.length} ${owner} divisions moved to ${dest.name} with military access`);
 
@@ -146,8 +128,6 @@ export function applyCompletedMovements(
         // War state or neutral (hostile) - proceed with combat/occupation logic
 
         // INTERCEPTION LOGIC: enemy movements leaving the destination are intercepted.
-        // With divisions kept in fromRegion, intercepted enemy divisions are already present
-        // in dest.divisions and will be included in existingDefenderDivisions below.
         const counterMovements = allMovements.filter(m =>
           m.fromRegion === toRegion &&
           m.owner !== owner &&
@@ -162,18 +142,14 @@ export function applyCompletedMovements(
           });
         }
 
-        // Exclude divisions already in transit OUT of the destination (they are counted
-        // as defenders via interceptingDivisions below, avoiding double-count).
-        // Exclude divisions that are leaving the destination (truly in transit outward).
-        // Movements with pendingCombatId are attack movements whose divisions are still
-        // physically present in fromRegion, so they remain available as defenders.
+        // Exclude divisions already in transit OUT of the destination.
         const inTransitFromDest = new Set(
           allMovements
             .filter(m => m.fromRegion === toRegion && m.owner !== owner && !counterMovements.includes(m) && !m.pendingCombatId)
             .flatMap(m => m.divisions.map(d => d.id))
         );
 
-        // Check for ongoing combat (border-specific: same attacker origin AND same defender)
+        // Check for ongoing combat (border-specific)
         const ongoingCombat = nextCombats.find(c =>
           c.attackerRegionId === movement.fromRegion &&
           c.defenderRegionId === toRegion &&
@@ -240,8 +216,7 @@ export function applyCompletedMovements(
           }
         } else {
           // No ongoing combat - follow standard combat/occupation logic
-          // Exclude in-transit divisions (they are in the region but already committed to movement).
-          const existingDefenderDivisions = dest.divisions.filter(
+          const existingDefenderDivisions = getDivisionsInRegion(nextDivisions, toRegion).filter(
             d => d.owner === dest.owner && !inTransitFromDest.has(d.id)
           );
           const totalDefenderDivisions = [...existingDefenderDivisions, ...interceptingDivisions];
@@ -259,11 +234,8 @@ export function applyCompletedMovements(
             // Undefended capture
             const previousOwner = dest.owner;
             const newOwner = determineNewOwner(owner, toRegion, context.countries ?? [], context.relationships, dest.owner);
-            nextRegions[toRegion] = {
-              ...dest,
-              owner: newOwner,
-              divisions: arrivingDivisions,
-            };
+            nextRegions[toRegion] = { ...dest, owner: newOwner };
+            landDivisionsInRegion(toRegion, arrivingDivisions);
             const captureEvent = createGameEvent(
               'region_captured',
               `${dest.name} Captured!`,
@@ -282,10 +254,10 @@ export function applyCompletedMovements(
             nextNotifications.push(createNotification(lostEvent, currentDate));
 
             if (movement.remainingPath && movement.remainingPath.length > 0) {
-              _dispatchNextHop(movement, nextRegions, currentDate, newHopMovements, context);
+              _dispatchNextHop(movement, nextRegions, nextDivisions, currentDate, newHopMovements, context);
             }
           } else {
-            // Initiate new combat
+            // Initiate new combat — clear defenders from the region (regionId = null)
             const fromRegionStateForCombat = nextRegions[movement.fromRegion];
             const newCombat = createActiveCombat(
               movement.fromRegion,
@@ -299,10 +271,12 @@ export function applyCompletedMovements(
               currentDate
             );
             nextCombats.push(newCombat);
-            // Clear defender divisions on first combat — intercepted defenders are included
+            // Clear defender divisions from the region on first combat
             const isFirstCombatOnRegion = otherCombatsOnRegion.length === 0 && totalDefenderDivisions.length > 0;
             if (isFirstCombatOnRegion) {
-              nextRegions[toRegion] = { ...dest, divisions: [] };
+              for (const d of effectiveDefenderDivisions) {
+                nextDivisions = { ...nextDivisions, [d.id]: { ...d, regionId: null } };
+              }
             }
             const battleEvent = createGameEvent(
               'combat_victory',
@@ -317,17 +291,16 @@ export function applyCompletedMovements(
     }
   });
 
-  return { nextRegions, nextCombats, nextEvents, nextNotifications, interceptedMovementIds, newHopMovements };
+  return { nextRegions, nextDivisions, nextCombats, nextEvents, nextNotifications, interceptedMovementIds, newHopMovements };
 }
 
 /**
  * Helper: dispatch the next hop movement for a multi-step route.
- * Pops the first element from `movement.remainingPath` as the new `toRegion`
- * and creates a new Movement record with the rest as the new `remainingPath`.
  */
 function _dispatchNextHop(
   movement: Movement,
   regions: Record<string, Region>,
+  divisions: DivisionState,
   currentDate: Date,
   newHopMovements: Movement[],
   context: Pick<MovementApplicationContext, 'regionCentroids'>
@@ -335,7 +308,7 @@ function _dispatchNextHop(
   if (!movement.remainingPath || movement.remainingPath.length === 0) return;
 
   const [nextRegionId, ...restPath] = movement.remainingPath;
-  const fromRegionId = movement.toRegion; // Current arrival region becomes the new departure
+  const fromRegionId = movement.toRegion;
 
   const regionCentroids = context.regionCentroids ?? {};
   const distanceKm = calculateDistance(fromRegionId, nextRegionId, regionCentroids);
@@ -344,16 +317,16 @@ function _dispatchNextHop(
   const arrivalTime = new Date(currentDate);
   arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
 
-  // Divisions are now in regions[fromRegionId] (placed by the caller before this call).
-  // Build the division list from the region so the new hop carries up-to-date objects.
+  // Build the division list from the current DivisionState (has updated regionId and HP).
   const divIds = new Set(movement.divisions.map(d => d.id));
-  const regionDivisions = regions[fromRegionId]?.divisions.filter(d => divIds.has(d.id)) ?? movement.divisions;
+  const regionDivisions = Object.values(divisions).filter(d => divIds.has(d.id));
+  const nextHopDivisions = regionDivisions.length > 0 ? regionDivisions : movement.divisions;
 
   const nextHop: Movement = {
     id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     fromRegion: fromRegionId,
     toRegion: nextRegionId,
-    divisions: regionDivisions,
+    divisions: nextHopDivisions,
     departureTime: new Date(currentDate),
     arrivalTime,
     owner: movement.owner,
@@ -369,62 +342,54 @@ function _dispatchNextHop(
 export function applyFinishedCombats(
   finishedCombats: ActiveCombat[],
   regions: Record<string, Region>,
+  divisions: DivisionState,
   countries: Country[] = [],
   relationships: Relationship[] = []
-): Record<string, Region> {
+): { nextRegions: Record<string, Region>; nextDivisions: DivisionState } {
   const nextRegions = { ...regions };
+  let nextDivisions = { ...divisions };
 
   finishedCombats.forEach(combat => {
     const attackerIds = new Set(combat.attackerDivisions.map(d => d.id));
 
     if (combat.victor === combat.attackerCountry) {
-      // Attacker wins:
-      // 1. Remove attacker divisions from attackerRegion (they were kept there during transit).
-      const attackerRegion = nextRegions[combat.attackerRegionId];
-      if (attackerRegion) {
-        nextRegions[combat.attackerRegionId] = {
-          ...attackerRegion,
-          divisions: attackerRegion.divisions.filter(d => !attackerIds.has(d.id)),
-        };
-      }
-      // 2. Place attacker divisions (with post-combat HP) in defenderRegion.
+      // Attacker wins: move attacker divisions to defenderRegion
       const defenderRegion = nextRegions[combat.defenderRegionId];
       if (!defenderRegion) return;
-      const attackerDivisionIds = new Set(combat.attackerDivisions.map(d => d.id));
-      const preservedDivisions = defenderRegion.divisions.filter(d =>
-        d.owner !== combat.defenderCountry && !attackerDivisionIds.has(d.id)
-      );
+
       const newOwner = determineNewOwner(combat.attackerCountry, combat.defenderRegionId, countries, relationships, combat.defenderCountry);
-      nextRegions[combat.defenderRegionId] = {
-        ...defenderRegion,
-        owner: newOwner,
-        divisions: [...preservedDivisions, ...combat.attackerDivisions],
-      };
+      nextRegions[combat.defenderRegionId] = { ...defenderRegion, owner: newOwner };
+
+      // Place surviving attacker divisions in defender region
+      for (const d of combat.attackerDivisions) {
+        nextDivisions = { ...nextDivisions, [d.id]: { ...d, regionId: combat.defenderRegionId } };
+      }
+      // Remove defeated defender divisions from state
+      for (const [id, div] of Object.entries(nextDivisions)) {
+        if (div.regionId === null && combat.defenderDivisions.some(d => d.id === id)) {
+          // Already null (in combat) — delete them from state
+          const { [id]: _removed, ...rest } = nextDivisions;
+          nextDivisions = rest;
+        }
+      }
     } else {
       // Defender wins:
-      // Attacker divisions remain in attackerRegion; update them with post-combat HP.
-      const attackerRegion = nextRegions[combat.attackerRegionId];
-      if (attackerRegion) {
-        nextRegions[combat.attackerRegionId] = {
-          ...attackerRegion,
-          divisions: [
-            ...attackerRegion.divisions.filter(d => !attackerIds.has(d.id)),
-            ...combat.attackerDivisions,
-          ],
-        };
+      // Restore attacker divisions (with post-combat HP) to their origin region
+      for (const d of combat.attackerDivisions) {
+        if (attackerIds.has(d.id)) {
+          nextDivisions = { ...nextDivisions, [d.id]: { ...d, regionId: combat.attackerRegionId } };
+        }
       }
-      // Restore defender divisions (deduplicated) to defender region
-      const defenderRegion = nextRegions[combat.defenderRegionId];
-      if (defenderRegion) {
-        const existingIds = new Set(defenderRegion.divisions.map(d => d.id));
-        const newDefenderDivs = combat.defenderDivisions.filter(d => !existingIds.has(d.id));
-        nextRegions[combat.defenderRegionId] = {
-          ...defenderRegion,
-          divisions: [...defenderRegion.divisions, ...newDefenderDivs],
-        };
+      // Restore defender divisions to defender region (deduplicated)
+      const restoredDefenderIds = new Set<string>();
+      for (const d of combat.defenderDivisions) {
+        if (!restoredDefenderIds.has(d.id)) {
+          restoredDefenderIds.add(d.id);
+          nextDivisions = { ...nextDivisions, [d.id]: { ...d, regionId: combat.defenderRegionId } };
+        }
       }
     }
   });
 
-  return nextRegions;
+  return { nextRegions, nextDivisions };
 }

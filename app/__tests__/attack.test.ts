@@ -39,6 +39,7 @@ import type {
   RegionState,
   Adjacency,
   Relationship,
+  DivisionState,
 } from '../types/game';
 import type { GameStore } from '../store/game/types';
 
@@ -60,11 +61,25 @@ function makeDiv(
     maxHp: 100,
     attack: 10,
     defence: 15,
+    regionId: null,
   };
 }
 
-function makeRegion(id: string, owner: 'soviet' | 'white', divs: Division[] = []): Region {
-  return { id, name: id, countryIso3: 'TST', owner, divisions: divs };
+function makeRegion(id: string, owner: 'soviet' | 'white'): Region {
+  return { id, name: id, countryIso3: 'TST', owner };
+}
+
+/** Build a DivisionState by assigning divisions to their region locations */
+function buildDivState(
+  assignments: Record<string, Division[]>
+): DivisionState {
+  const state: DivisionState = {};
+  for (const [regionId, divs] of Object.entries(assignments)) {
+    for (const div of divs) {
+      state[div.id] = { ...div, regionId };
+    }
+  }
+  return state;
 }
 
 function makeGroup(overrides: Partial<ArmyGroup> = {}): ArmyGroup {
@@ -89,6 +104,7 @@ function makeState(
   theaters: Theater[] = [],
   relationships: Relationship[] = [],
   activeCombats: ActiveCombat[] = [],
+  divisions: DivisionState = {},
 ): GameStore {
   return {
     regions,
@@ -99,6 +115,7 @@ function makeState(
     relationships,
     activeCombats,
     gameEvents: [],
+    divisions,
     dateTime: new Date('1918-01-01T00:00:00Z'),
     selectedUnitRegion: null,
     regionCentroids: {},
@@ -137,9 +154,10 @@ describe('attackArmyGroup – Phase 1 redistributes from stacked border region',
   };
 
   const divs = Array.from({ length: 15 }, (_, i) => makeDiv(`div-${i + 1}`));
+  const divisions = buildDivState({ B1: divs });
 
   const regions: RegionState = {
-    B1: makeRegion('B1', 'soviet', divs),
+    B1: makeRegion('B1', 'soviet'),
     B2: makeRegion('B2', 'soviet'),
     B3: makeRegion('B3', 'soviet'),
     B4: makeRegion('B4', 'soviet'),
@@ -158,7 +176,7 @@ describe('attackArmyGroup – Phase 1 redistributes from stacked border region',
   const group = makeGroup({ regionIds: ['B1', 'B2', 'B3', 'B4', 'B5'] });
 
   it('dispatches movements from the stacked border to needy borders, then advances remaining divisions', () => {
-    const state = makeState(regions, adjacency, [group], [], [], relationships);
+    const state = makeState(regions, adjacency, [group], [], [], relationships, [], divisions);
     let captured: Partial<GameStore> = {};
     attackArmyGroup('ag-1', state, (partial) => { captured = partial; });
 
@@ -181,7 +199,7 @@ describe('attackArmyGroup – Phase 1 redistributes from stacked border region',
   });
 
   it('sends only the excess to needy borders before single-enemy auto-advance uses the remainder', () => {
-    const state = makeState(regions, adjacency, [group], [], [], relationships);
+    const state = makeState(regions, adjacency, [group], [], [], relationships, [], divisions);
     let captured: Partial<GameStore> = {};
     attackArmyGroup('ag-1', state, (partial) => { captured = partial; });
 
@@ -216,9 +234,13 @@ describe('attackArmyGroup – single-enemy auto-advance when borders meet target
     ENEMY: ['B1', 'B2'],
   };
 
+  const b1Divs = [makeDiv('d1'), makeDiv('d2')];
+  const b2Divs = [makeDiv('d3'), makeDiv('d4')];
+  const divisions = buildDivState({ B1: b1Divs, B2: b2Divs });
+
   const regions: RegionState = {
-    B1: makeRegion('B1', 'soviet', [makeDiv('d1'), makeDiv('d2')]),
-    B2: makeRegion('B2', 'soviet', [makeDiv('d3'), makeDiv('d4')]),
+    B1: makeRegion('B1', 'soviet'),
+    B2: makeRegion('B2', 'soviet'),
     ENEMY: makeRegion('ENEMY', 'white'),
   };
 
@@ -229,7 +251,7 @@ describe('attackArmyGroup – single-enemy auto-advance when borders meet target
   const group = makeGroup({ regionIds: ['B1', 'B2'] });
 
   it('advances all divisions per border even when surplus=0', () => {
-    const state = makeState(regions, adjacency, [group], [], [], relationships);
+    const state = makeState(regions, adjacency, [group], [], [], relationships, [], divisions);
     let captured: Partial<GameStore> = {};
     attackArmyGroup('ag-1', state, (partial) => { captured = partial; });
     const movements = (captured.movingUnits ?? []) as Movement[];
@@ -264,6 +286,7 @@ describe('attackArmyGroup – Phase 2 advances surplus into defended enemy regio
   const b2Divs = Array.from({ length: 3 }, (_, i) => makeDiv(`b2-${i + 1}`));
   const transitDivs = Array.from({ length: 4 }, (_, i) => makeDiv(`tr-${i + 1}`));
   const enemyDefender = makeDiv('e-def-1', 'ag-enemy', 'white');
+  const divisions = buildDivState({ B1: b1Divs, B2: b2Divs, ENEMY_1: [enemyDefender] });
 
   const adjacency: Adjacency = {
     B1: ['B2', 'ENEMY_1'],
@@ -274,9 +297,9 @@ describe('attackArmyGroup – Phase 2 advances surplus into defended enemy regio
   };
 
   const regions: RegionState = {
-    B1: makeRegion('B1', 'soviet', b1Divs),
-    B2: makeRegion('B2', 'soviet', b2Divs),
-    ENEMY_1: makeRegion('ENEMY_1', 'white', [enemyDefender]),
+    B1: makeRegion('B1', 'soviet'),
+    B2: makeRegion('B2', 'soviet'),
+    ENEMY_1: makeRegion('ENEMY_1', 'white'),
     ENEMY_2: makeRegion('ENEMY_2', 'white'),
     REAR: makeRegion('REAR', 'soviet'),
   };
@@ -301,7 +324,7 @@ describe('attackArmyGroup – Phase 2 advances surplus into defended enemy regio
   const group = makeGroup({ regionIds: ['B1', 'B2', 'REAR'] });
 
   it('creates a movement from the surplus border into the enemy region', () => {
-    const state = makeState(regions, adjacency, [group], [existingMovement], [], relationships);
+    const state = makeState(regions, adjacency, [group], [existingMovement], [], relationships, [], divisions);
     let captured: Partial<GameStore> = {};
     attackArmyGroup('ag-1', state, (partial) => { captured = partial; });
 
@@ -312,7 +335,7 @@ describe('attackArmyGroup – Phase 2 advances surplus into defended enemy regio
   });
 
   it('creates an ActiveCombat when advancing into a defended region', () => {
-    const state = makeState(regions, adjacency, [group], [existingMovement], [], relationships);
+    const state = makeState(regions, adjacency, [group], [existingMovement], [], relationships, [], divisions);
     let captured: Partial<GameStore> = {};
     attackArmyGroup('ag-1', state, (partial) => { captured = partial; });
 
@@ -322,7 +345,7 @@ describe('attackArmyGroup – Phase 2 advances surplus into defended enemy regio
   });
 
   it('sets pendingCombatId on the advance movement', () => {
-    const state = makeState(regions, adjacency, [group], [existingMovement], [], relationships);
+    const state = makeState(regions, adjacency, [group], [existingMovement], [], relationships, [], divisions);
     let captured: Partial<GameStore> = {};
     attackArmyGroup('ag-1', state, (partial) => { captured = partial; });
 
@@ -358,6 +381,7 @@ describe('attackArmyGroup – Phase 2 advances into undefended enemy without cre
   const b1Divs = Array.from({ length: 10 }, (_, i) => makeDiv(`b1-${i + 1}`));
   const b2Divs = Array.from({ length: 3 }, (_, i) => makeDiv(`b2-${i + 1}`));
   const transitDivs = Array.from({ length: 4 }, (_, i) => makeDiv(`tr-${i + 1}`));
+  const divisions = buildDivState({ B1: b1Divs, B2: b2Divs });
 
   const adjacency: Adjacency = {
     B1: ['B2', 'ENEMY_1'],
@@ -368,8 +392,8 @@ describe('attackArmyGroup – Phase 2 advances into undefended enemy without cre
   };
 
   const regions: RegionState = {
-    B1: makeRegion('B1', 'soviet', b1Divs),
-    B2: makeRegion('B2', 'soviet', b2Divs),
+    B1: makeRegion('B1', 'soviet'),
+    B2: makeRegion('B2', 'soviet'),
     ENEMY_1: makeRegion('ENEMY_1', 'white'),   // no defenders
     ENEMY_2: makeRegion('ENEMY_2', 'white'),
     REAR: makeRegion('REAR', 'soviet'),
@@ -392,7 +416,7 @@ describe('attackArmyGroup – Phase 2 advances into undefended enemy without cre
   const group = makeGroup({ regionIds: ['B1', 'B2', 'REAR'] });
 
   it('creates a movement from B1 into the undefended enemy region', () => {
-    const state = makeState(regions, adjacency, [group], [existingMovement], [], relationships);
+    const state = makeState(regions, adjacency, [group], [existingMovement], [], relationships, [], divisions);
     let captured: Partial<GameStore> = {};
     attackArmyGroup('ag-1', state, (partial) => { captured = partial; });
 
@@ -402,7 +426,7 @@ describe('attackArmyGroup – Phase 2 advances into undefended enemy without cre
   });
 
   it('does not create any combat when the target is undefended', () => {
-    const state = makeState(regions, adjacency, [group], [existingMovement], [], relationships);
+    const state = makeState(regions, adjacency, [group], [existingMovement], [], relationships, [], divisions);
     let captured: Partial<GameStore> = {};
     attackArmyGroup('ag-1', state, (partial) => { captured = partial; });
 
@@ -434,12 +458,15 @@ describe('attackArmyGroup – Phase 2 single-enemy auto-advance', () => {
   ];
 
   it('auto-advances the lone division when there is exactly 1 adjacent enemy', () => {
+    const loneDiv = makeDiv('lone-div');
+    const eDef = makeDiv('e-def', 'ag-enemy', 'white');
+    const divisions = buildDivState({ BORDER: [loneDiv], ENEMY: [eDef] });
     const regions: RegionState = {
-      BORDER: makeRegion('BORDER', 'soviet', [makeDiv('lone-div')]),
-      ENEMY: makeRegion('ENEMY', 'white', [makeDiv('e-def', 'ag-enemy', 'white')]),
+      BORDER: makeRegion('BORDER', 'soviet'),
+      ENEMY: makeRegion('ENEMY', 'white'),
     };
     const group = makeGroup({ regionIds: ['BORDER'] });
-    const state = makeState(regions, adjacency, [group], [], [], relationships);
+    const state = makeState(regions, adjacency, [group], [], [], relationships, [], divisions);
     let captured: Partial<GameStore> = {};
     attackArmyGroup('ag-1', state, (partial) => { captured = partial; });
 
@@ -450,12 +477,15 @@ describe('attackArmyGroup – Phase 2 single-enemy auto-advance', () => {
   });
 
   it('creates an ActiveCombat when auto-advancing into a defended enemy region', () => {
+    const loneDiv = makeDiv('lone-div');
+    const eDef = makeDiv('e-def', 'ag-enemy', 'white');
+    const divisions = buildDivState({ BORDER: [loneDiv], ENEMY: [eDef] });
     const regions: RegionState = {
-      BORDER: makeRegion('BORDER', 'soviet', [makeDiv('lone-div')]),
-      ENEMY: makeRegion('ENEMY', 'white', [makeDiv('e-def', 'ag-enemy', 'white')]),
+      BORDER: makeRegion('BORDER', 'soviet'),
+      ENEMY: makeRegion('ENEMY', 'white'),
     };
     const group = makeGroup({ regionIds: ['BORDER'] });
-    const state = makeState(regions, adjacency, [group], [], [], relationships);
+    const state = makeState(regions, adjacency, [group], [], [], relationships, [], divisions);
     let captured: Partial<GameStore> = {};
     attackArmyGroup('ag-1', state, (partial) => { captured = partial; });
 
@@ -470,13 +500,15 @@ describe('attackArmyGroup – Phase 2 single-enemy auto-advance', () => {
       ENEMY_1: ['BORDER'],
       ENEMY_2: ['BORDER'],
     };
+    const loneDiv = makeDiv('lone-div');
+    const divisions = buildDivState({ BORDER: [loneDiv] });
     const regions: RegionState = {
-      BORDER: makeRegion('BORDER', 'soviet', [makeDiv('lone-div')]),
+      BORDER: makeRegion('BORDER', 'soviet'),
       ENEMY_1: makeRegion('ENEMY_1', 'white'),
       ENEMY_2: makeRegion('ENEMY_2', 'white'),
     };
     const group = makeGroup({ regionIds: ['BORDER'] });
-    const state = makeState(regions, adjacency2, [group], [], [], relationships);
+    const state = makeState(regions, adjacency2, [group], [], [], relationships, [], divisions);
     let called = false;
     attackArmyGroup('ag-1', state, () => { called = true; });
     // surplus=0 and NOT single-enemy → no movement
@@ -484,12 +516,14 @@ describe('attackArmyGroup – Phase 2 single-enemy auto-advance', () => {
   });
 
   it('auto-advances all divisions when there are 2 stationary divisions and 1 adjacent enemy', () => {
+    const divs = [makeDiv('div-1'), makeDiv('div-2')];
+    const divisions = buildDivState({ BORDER: divs });
     const regions: RegionState = {
-      BORDER: makeRegion('BORDER', 'soviet', [makeDiv('div-1'), makeDiv('div-2')]),
+      BORDER: makeRegion('BORDER', 'soviet'),
       ENEMY: makeRegion('ENEMY', 'white'),
     };
     const group = makeGroup({ regionIds: ['BORDER'] });
-    const state = makeState(regions, adjacency, [group], [], [], relationships);
+    const state = makeState(regions, adjacency, [group], [], [], relationships, [], divisions);
     let captured: Partial<GameStore> = {};
     attackArmyGroup('ag-1', state, (partial) => { captured = partial; });
     // total=2, N=1 border → target=2 → surplus=0, but the single-enemy rule advances both.
@@ -501,14 +535,17 @@ describe('attackArmyGroup – Phase 2 single-enemy auto-advance', () => {
 
   it('auto-advances stationary divisions even when Phase 1 also sends reinforcements to that border', () => {
     const adjacency2: Adjacency = { B1: ['B2', 'ENEMY_1'], B2: ['B1', 'ENEMY_2'], ENEMY_1: ['B1'], ENEMY_2: ['B2'] };
+    const b1Div = makeDiv('b1-stationary');
+    const b2Divs = [makeDiv('b2-1'), makeDiv('b2-2'), makeDiv('b2-3')];
+    const divisions = buildDivState({ B1: [b1Div], B2: b2Divs });
     const regions: RegionState = {
-      B1: makeRegion('B1', 'soviet', [makeDiv('b1-stationary')]),
-      B2: makeRegion('B2', 'soviet', [makeDiv('b2-1'), makeDiv('b2-2'), makeDiv('b2-3')]),
+      B1: makeRegion('B1', 'soviet'),
+      B2: makeRegion('B2', 'soviet'),
       ENEMY_1: makeRegion('ENEMY_1', 'white'),
       ENEMY_2: makeRegion('ENEMY_2', 'white'),
     };
     const group = makeGroup({ regionIds: ['B1', 'B2'] });
-    const state = makeState(regions, adjacency2, [group], [], [], relationships);
+    const state = makeState(regions, adjacency2, [group], [], [], relationships, [], divisions);
     let captured: Partial<GameStore> = {};
     attackArmyGroup('ag-1', state, (partial) => { captured = partial; });
 

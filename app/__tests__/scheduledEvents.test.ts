@@ -14,7 +14,6 @@ describe('scheduled events', () => {
         name: 'Bessarabia',
         countryIso3: 'MDA',
         owner: 'white',
-        divisions: [],
       },
     };
 
@@ -48,14 +47,12 @@ describe('scheduled events', () => {
         name: 'Krasnodar Krai',
         countryIso3: 'RUS',
         owner: 'white',
-        divisions: [],
       },
       'RU-AD': {
         id: 'RU-AD',
         name: 'Adygea',
         countryIso3: 'RUS',
         owner: 'white',
-        divisions: [],
       },
     };
     const relationships: Relationship[] = [

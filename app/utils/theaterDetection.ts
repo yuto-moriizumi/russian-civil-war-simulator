@@ -1,6 +1,7 @@
-import { RegionState, Adjacency, CountryId, Theater, Region, Relationship } from '../types/game';
+import { RegionState, Adjacency, CountryId, Theater, Region, Relationship, DivisionState } from '../types/game';
 import { getCountryAdjective } from '../data/countries';
 import { buildIsHostilePredicate } from './pathfinding';
+import { getDivisionsInRegion } from './divisionState';
 
 /**
  * Detect theaters of operation by finding connected groups of frontline regions.
@@ -380,7 +381,8 @@ function getEnemyBasedName(enemyCountry: CountryId, index: number): string {
  */
 export function getTheaterStats(
   theater: Theater,
-  regions: RegionState
+  regions: RegionState,
+  divisions: DivisionState
 ): {
   totalDivisions: number;
   totalRegions: number;
@@ -392,7 +394,7 @@ export function getTheaterStats(
   theater.frontlineRegions.forEach(regionId => {
     const region = regions[regionId];
     if (region) {
-      const divCount = region.divisions.length;
+      const divCount = getDivisionsInRegion(divisions, regionId).length;
       totalDivisions += divCount;
       if (divCount > 0) regionsWithUnits++;
     }

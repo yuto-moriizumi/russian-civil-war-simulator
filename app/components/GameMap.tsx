@@ -27,6 +27,7 @@ import {
 export default function GameMap() {
   // Store selectors
   const regions = useGameStore(state => state.regions);
+  const divisions = useGameStore(state => state.divisions);
   const adjacency = useGameStore(state => state.adjacency);
   const selectedRegion = useGameStore(state => state.selectedRegion);
   const selectedUnitRegion = useGameStore(state => state.selectedUnitRegion);
@@ -74,6 +75,7 @@ export default function GameMap() {
   const { handleMapClick, handleContextMenu } = useMapEventHandlers(
     selectedRegion,
     regions,
+    divisions,
     playerCountry,
     setSelectedRegion,
     setSelectedUnitRegion,
@@ -111,8 +113,8 @@ export default function GameMap() {
 
   // Calculate markers
   const unitMarkers = useMemo(
-    () => playerCountry ? calculateUnitMarkers(regions, regionCentroids, selectedUnitRegion, playerCountry, selectedDivisionIds, activeCombats, movingUnits) : [],
-    [regions, regionCentroids, selectedUnitRegion, playerCountry, selectedDivisionIds, activeCombats, movingUnits]
+    () => playerCountry ? calculateUnitMarkers(regions, regionCentroids, selectedUnitRegion, playerCountry, selectedDivisionIds, activeCombats, movingUnits, divisions) : [],
+    [regions, regionCentroids, selectedUnitRegion, playerCountry, selectedDivisionIds, activeCombats, movingUnits, divisions]
   );
 
   const movingUnitMarkers = useMemo(
@@ -214,6 +216,7 @@ export default function GameMap() {
               key={regionId}
               regionId={regionId}
               region={region}
+              divisions={divisions}
               centroid={centroid}
               isSelected={isSelected}
               isPlayerUnit={isPlayerUnit}

@@ -4,7 +4,8 @@
  * Extracted from pathfinding.ts to keep file size within lint limits.
  * Re-exported via pathfinding.ts so callers have a single import path.
  */
-import { RegionState, Adjacency, CountryId, Movement } from '../types/game';
+import { RegionState, Adjacency, CountryId, Movement, DivisionState } from '../types/game';
+import { getDivisionsInRegion } from './divisionState';
 
 /**
  * Describes a single division-move assignment produced by
@@ -44,7 +45,8 @@ export function computeFrontline(
   adjacency: Adjacency,
   countryId: CountryId,
   canEnter: (regionId: string) => boolean,
-  isHostile?: (regionId: string) => boolean
+  isHostile: ((regionId: string) => boolean) | undefined,
+  divisions: DivisionState
 ): { frontlineRegions: Set<string>; targetRegions: Set<string> } {
   const frontlineRegions = new Set<string>();
   const targetRegions = new Set<string>();
@@ -55,7 +57,7 @@ export function computeFrontline(
 
   for (const [regionId, region] of Object.entries(regions)) {
     if (!region || region.owner !== countryId) continue;
-    if (groupId !== null && !region.divisions.some(d => d.armyGroupId === groupId)) continue;
+    if (groupId !== null && !getDivisionsInRegion(divisions, regionId).some(d => d.armyGroupId === groupId)) continue;
 
     const neighbors = adjacency[regionId] || [];
     for (const neighborId of neighbors) {
@@ -99,7 +101,8 @@ export function assignDivisionsToFrontline(
   countryId: CountryId,
   frontline: { frontlineRegions: Set<string>; targetRegions: Set<string> },
   movingUnits: Movement[],
-  canEnter: (regionId: string) => boolean
+  canEnter: (regionId: string) => boolean,
+  divisions: DivisionState
 ): FrontlineAssignment[] {
   const { frontlineRegions, targetRegions } = frontline;
   const assignments: FrontlineAssignment[] = [];
@@ -126,7 +129,7 @@ export function assignDivisionsToFrontline(
     const region = regions[flRegion];
     // Exclude in-transit divisions to avoid double-counting with inbound below.
     const stationed = region
-      ? region.divisions.filter(d => d.armyGroupId === groupId && !inTransitDivisionIds.has(d.id)).length
+      ? getDivisionsInRegion(divisions, flRegion).filter(d => d.armyGroupId === groupId && !inTransitDivisionIds.has(d.id)).length
       : 0;
     const inbound = groupMovements
       .filter(m => m.toRegion === flRegion)
@@ -143,7 +146,7 @@ export function assignDivisionsToFrontline(
     const r = regions[rId];
     if (!r) return false;
     // Only consider stationary (non-in-transit) divisions as available in rear regions.
-    return r.divisions.some(d => d.armyGroupId === groupId && d.owner === countryId && !inTransitDivisionIds.has(d.id));
+    return getDivisionsInRegion(divisions, rId).some(d => d.armyGroupId === groupId && d.owner === countryId && !inTransitDivisionIds.has(d.id));
   });
 
   const emptySlots = (): string[] =>
@@ -158,7 +161,7 @@ export function assignDivisionsToFrontline(
     const region = regions[rearRegionId];
     if (!region) continue;
 
-    const rearDivisions = region.divisions.filter(
+    const rearDivisions = getDivisionsInRegion(divisions, rearRegionId).filter(
       d => d.armyGroupId === groupId && d.owner === countryId
     );
     if (rearDivisions.length === 0) continue;
@@ -211,7 +214,7 @@ export function assignDivisionsToFrontline(
     const region = regions[flRegionId];
     if (!region) continue;
 
-    const flDivisions = region.divisions.filter(
+    const flDivisions = getDivisionsInRegion(divisions, flRegionId).filter(
       d => d.armyGroupId === groupId && d.owner === countryId
     );
 

@@ -117,7 +117,6 @@ export const useGameStore = create<GameStore>()(
             }
           }
           state.divisions = buildDivisionState(
-            state.regions ?? {},
             state.movingUnits ?? [],
             state.activeCombats ?? [],
             state.divisions ?? {}

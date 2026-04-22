@@ -54,6 +54,7 @@ interface ProcessAITickArgs {
   nextArmyGroups: ArmyGroup[];
   nextProductionQueues: Record<CountryId, ProductionQueueItem[]>;
   nextRegions: RegionState;
+  nextDivisions: import('../../../types/game').DivisionState;
   nextMovingUnits: Movement[];
   nextActiveCombats: ActiveCombat[];
   countryBonuses: GameStore['countryBonuses'];
@@ -72,6 +73,7 @@ export function processAITick({
   nextArmyGroups: initialArmyGroups,
   nextProductionQueues: initialQueues,
   nextRegions,
+  nextDivisions,
   nextMovingUnits,
   nextActiveCombats,
   countryBonuses,
@@ -87,6 +89,7 @@ export function processAITick({
     const trimmedQueue = clampProductionQueueToCommandPower(
       aiState.countryId,
       nextProductionQueues[aiState.countryId] || [],
+      nextDivisions,
       nextRegions,
       nextMovingUnits,
       bonuses,
@@ -98,6 +101,7 @@ export function processAITick({
 
     const aiActions = runAITick(
       aiState,
+      nextDivisions,
       nextRegions,
       nextArmyGroups,
       nextActiveCombats,

@@ -1,4 +1,5 @@
-import type { RegionState, Movement, ActiveCombat, CountryId, Region } from '../../types/game';
+import type { RegionState, Movement, ActiveCombat, CountryId, Region, DivisionState } from '../../types/game';
+import { getDivisionsInRegion } from '../../utils/divisionState';
 
 export interface UnitMarkerData {
   regionId: string;
@@ -34,7 +35,8 @@ export function calculateUnitMarkers(
   playerCountry: CountryId,
   selectedDivisionIds: string[] = [],
   activeCombats: ActiveCombat[] = [],
-  movingUnits: Movement[] = []
+  movingUnits: Movement[] = [],
+  divisions: DivisionState = {}
 ): (UnitMarkerData | null)[] {
   // Early return if centroids haven't loaded yet
   if (Object.keys(regionCentroids).length === 0) {
@@ -67,7 +69,7 @@ export function calculateUnitMarkers(
   // Collect all region IDs we need markers for: regions with divisions, plus
   // regions that only have combat defenders
   const regionIds = new Set([
-    ...Object.keys(regions).filter(id => regions[id].divisions.length > 0),
+    ...Object.keys(regions).filter(id => getDivisionsInRegion(divisions, id).length > 0),
     ...combatDefendersByRegion.keys(),
   ]);
 
@@ -84,7 +86,7 @@ export function calculateUnitMarkers(
     // Merge resident divisions with defender divisions from ongoing combats,
     // but exclude in-transit divisions (shown separately by MovingUnitMarker).
     const combatDivisions = combatDefendersByRegion.get(regionId) ?? [];
-    const allDivisions = [...region.divisions.filter(d => !inTransitDivisionIds.has(d.id)), ...combatDivisions];
+    const allDivisions = [...getDivisionsInRegion(divisions, regionId).filter(d => !inTransitDivisionIds.has(d.id)), ...combatDivisions];
     if (allDivisions.length === 0) return null;
 
     // Highlight the marker only when at least one division in this region is
@@ -98,14 +100,9 @@ export function calculateUnitMarkers(
     const isPlayerUnit = region.owner === playerCountry ||
       allDivisions.some(d => d.owner === playerCountry);
 
-    // Use the merged division list so the marker reflects all units present
-    const regionWithCombatDivisions: Region = combatDivisions.length > 0
-      ? { ...region, divisions: allDivisions }
-      : region;
-
     return {
       regionId,
-      region: regionWithCombatDivisions,
+      region,
       centroid,
       isSelected,
       isPlayerUnit,

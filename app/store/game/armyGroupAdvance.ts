@@ -1,10 +1,11 @@
-import { Movement, ActiveCombat } from '../../types/game';
+import { Movement, ActiveCombat, DivisionState } from '../../types/game';
 import {
   buildCanEnterPredicate,
   buildIsHostilePredicate,
   computeFrontline,
   assignDivisionsToFrontline,
 } from '../../utils/pathfinding';
+import { getDivisionsInRegion } from '../../utils/divisionState';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { createActiveCombat } from '../../utils/combat';
 import { createGameEvent } from '../../utils/eventUtils';
@@ -32,7 +33,7 @@ export function advanceArmyGroup(
   const {
     armyGroups, regions, adjacency, dateTime, movingUnits,
     selectedUnitRegion, relationships, activeCombats, gameEvents,
-    regionCentroids,
+    regionCentroids, divisions,
   } = state;
 
   const group = armyGroups.find(g => g.id === groupId);
@@ -49,7 +50,7 @@ export function advanceArmyGroup(
   // -------------------------------------------------------------------------
   // Step 1: Compute frontline and targets
   // -------------------------------------------------------------------------
-  const frontline = computeFrontline(groupId, regions, adjacency, countryId, canEnter, isHostile);
+  const frontline = computeFrontline(groupId, regions, adjacency, countryId, canEnter, isHostile, divisions);
   if (frontline.frontlineRegions.size === 0 && frontline.targetRegions.size === 0) {
     // No accessible enemy nearby — nothing to do this tick
     return;
@@ -66,6 +67,7 @@ export function advanceArmyGroup(
     frontline,
     movingUnits,
     canEnter,
+    divisions,
   );
 
   if (assignments.length === 0) return;
@@ -97,7 +99,7 @@ export function advanceArmyGroup(
     if (!sourceRegion || !destRegion) continue;
 
     // Collect the actual Division objects
-    const divsForMove = sourceRegion.divisions.filter(d => divIds.includes(d.id));
+    const divsForMove = getDivisionsInRegion(divisions, fromRegion).filter(d => divIds.includes(d.id));
     if (divsForMove.length === 0) continue;
 
     // Access check — canEnter already validated for advance targets but be
@@ -134,7 +136,7 @@ export function advanceArmyGroup(
           const inTransitFromDest = new Set(
           movingUnits.filter(m => m.fromRegion === toRegion).flatMap(m => m.divisions.map(d => d.id))
         );
-        const defenderDivisions = destRegion.divisions.filter(d => d.owner === destRegion.owner && !inTransitFromDest.has(d.id));
+        const defenderDivisions = getDivisionsInRegion(divisions, toRegion).filter(d => d.owner === destRegion.owner && !inTransitFromDest.has(d.id));
         if (defenderDivisions.length > 0) {
           // Check for other combats on the same defender region (multi-front)
           const otherCombatsOnRegion = [...activeCombats, ...newCombats].filter(
@@ -160,7 +162,7 @@ export function advanceArmyGroup(
           // Only clear defender divisions on first combat on this region
           const isFirstCombatOnRegion = otherCombatsOnRegion.length === 0;
           if (isFirstCombatOnRegion) {
-            newRegions[toRegion] = { ...destRegion, divisions: [] };
+            newRegions[toRegion] = { ...destRegion };
           }
 
           const battleEvent = createGameEvent(

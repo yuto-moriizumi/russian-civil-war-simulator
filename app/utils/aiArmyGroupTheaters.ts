@@ -8,6 +8,7 @@ import {
   RegionState,
   Relationship,
   Theater,
+  DivisionState,
 } from '../types/game';
 import { generateArmyGroupName } from './armyGroupNaming';
 import { detectTheaters } from './theaterDetection';
@@ -36,6 +37,7 @@ interface SyncAIArmyGroupsArgs {
   theaters: Theater[];
   armyGroups: ArmyGroup[];
   regions: RegionState;
+  divisions: DivisionState;
   movingUnits: Movement[];
   activeCombats: ActiveCombat[];
   productionQueues: Record<CountryId, ProductionQueueItem[]>;
@@ -44,6 +46,7 @@ interface SyncAIArmyGroupsArgs {
 export interface SyncAIArmyGroupsResult {
   armyGroups: ArmyGroup[];
   regions: RegionState;
+  divisions: DivisionState;
   movingUnits: Movement[];
   activeCombats: ActiveCombat[];
   productionQueues: Record<CountryId, ProductionQueueItem[]>;
@@ -119,25 +122,27 @@ export function syncAIArmyGroupsToTheaters({
   theaters,
   armyGroups,
   regions,
+  divisions: baseDivisions,
   movingUnits,
   activeCombats,
   productionQueues,
 }: SyncAIArmyGroupsArgs): SyncAIArmyGroupsResult {
   let nextArmyGroups = [...armyGroups];
-  let nextRegions = regions;
+  const nextRegions = regions;
+  let nextDivisions = { ...baseDivisions };
   let nextMovingUnits = movingUnits;
   let nextActiveCombats = activeCombats;
   let nextProductionQueues = productionQueues;
 
   const aiCountrySet = new Set(aiCountryIds);
 
-  // Reverse index: armyGroupId -> regionIds that contain divisions of that group
-  const groupToRegionIds = new Map<string, Set<string>>();
-  for (const [regionId, region] of Object.entries(regions)) {
-    for (const div of region.divisions) {
-      let set = groupToRegionIds.get(div.armyGroupId);
-      if (!set) { set = new Set(); groupToRegionIds.set(div.armyGroupId, set); }
-      set.add(regionId);
+  // Reverse index: armyGroupId -> division IDs in regions
+  const groupToRegionDivIds = new Map<string, Set<string>>();
+  for (const div of Object.values(baseDivisions)) {
+    if (div.regionId) {
+      let set = groupToRegionDivIds.get(div.armyGroupId);
+      if (!set) { set = new Set(); groupToRegionDivIds.set(div.armyGroupId, set); }
+      set.add(div.id);
     }
   }
 
@@ -161,24 +166,11 @@ export function syncAIArmyGroupsToTheaters({
   const replaceGroupId = (fromGroupId: string, toGroupId: string) => {
     if (fromGroupId === toGroupId) return;
 
-    // Update only affected regions via reverse index
-    const affectedRegions = groupToRegionIds.get(fromGroupId);
-    if (affectedRegions && affectedRegions.size > 0) {
-      nextRegions = { ...nextRegions };
-      for (const regionId of affectedRegions) {
-        const region = nextRegions[regionId];
-        nextRegions[regionId] = {
-          ...region,
-          divisions: region.divisions.map(division =>
-            replaceDivisionArmyGroupId(division, fromGroupId, toGroupId)
-          ),
-        };
+    // Update divisions in DivisionState
+    for (const [divId, div] of Object.entries(nextDivisions)) {
+      if (div.armyGroupId === fromGroupId) {
+        nextDivisions = { ...nextDivisions, [divId]: { ...div, armyGroupId: toGroupId } };
       }
-      // Update index
-      let toSet = groupToRegionIds.get(toGroupId);
-      if (!toSet) { toSet = new Set(); groupToRegionIds.set(toGroupId, toSet); }
-      for (const id of affectedRegions) toSet.add(id);
-      groupToRegionIds.delete(fromGroupId);
     }
 
     // Update only affected movements via reverse index
@@ -255,22 +247,12 @@ export function syncAIArmyGroupsToTheaters({
 
     if (regionToGroupId.size === 0) return;
 
-    nextRegions = Object.fromEntries(
-      Object.entries(nextRegions).map(([regionId, region]) => {
-        const groupId = regionToGroupId.get(regionId);
-        if (!groupId) return [regionId, region];
-
-        return [
-          regionId,
-          {
-            ...region,
-            divisions: region.divisions.map(division =>
-              division.owner === countryId ? { ...division, armyGroupId: groupId } : division
-            ),
-          },
-        ];
-      })
-    );
+    // Update divisions in DivisionState
+    for (const [divId, div] of Object.entries(nextDivisions)) {
+      if (div.owner === countryId && div.regionId && regionToGroupId.has(div.regionId)) {
+        nextDivisions = { ...nextDivisions, [divId]: { ...div, armyGroupId: regionToGroupId.get(div.regionId)! } };
+      }
+    }
 
     nextMovingUnits = nextMovingUnits.map(movement => {
       if (movement.owner !== countryId) return movement;
@@ -394,6 +376,7 @@ export function syncAIArmyGroupsToTheaters({
   return {
     armyGroups: nextArmyGroups,
     regions: nextRegions,
+    divisions: nextDivisions,
     movingUnits: nextMovingUnits,
     activeCombats: nextActiveCombats,
     productionQueues: nextProductionQueues,

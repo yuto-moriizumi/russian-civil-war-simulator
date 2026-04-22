@@ -1,29 +1,27 @@
-import type { ActiveCombat, Division, DivisionState, Movement, RegionState } from '../types/game';
+import type { ActiveCombat, Division, DivisionState, Movement } from '../types/game';
 
 function putDivision(target: DivisionState, division: Division): void {
   target[division.id] = division;
 }
 
 /**
- * Builds the normalized division map from every legacy location collection.
- *
- * Region divisions remain the compatibility/location index for now. Movement
- * and combat copies are merged afterwards so active HP/stat changes win over
- * older regional snapshots when the same division ID appears in multiple places.
+ * Returns all divisions located in the given region.
+ * In-transit divisions keep their fromRegion as regionId, so they appear here too.
+ */
+export function getDivisionsInRegion(divisions: DivisionState, regionId: string): Division[] {
+  return Object.values(divisions).filter(d => d.regionId === regionId);
+}
+
+/**
+ * Builds the normalized division map from the canonical base plus in-flight overrides.
+ * Movement and combat copies win over the base so active HP/stat changes are applied.
  */
 export function buildDivisionState(
-  regions: RegionState,
   movingUnits: Movement[] = [],
   activeCombats: ActiveCombat[] = [],
   base: DivisionState = {},
 ): DivisionState {
   const divisions: DivisionState = { ...base };
-
-  for (const region of Object.values(regions)) {
-    for (const division of region.divisions) {
-      putDivision(divisions, division);
-    }
-  }
 
   for (const movement of movingUnits) {
     for (const division of movement.divisions) {
@@ -33,10 +31,10 @@ export function buildDivisionState(
 
   for (const combat of activeCombats) {
     for (const division of combat.attackerDivisions) {
-      putDivision(divisions, division);
+      putDivision(divisions, { ...division, regionId: null });
     }
     for (const division of combat.defenderDivisions) {
-      putDivision(divisions, division);
+      putDivision(divisions, { ...division, regionId: null });
     }
   }
 

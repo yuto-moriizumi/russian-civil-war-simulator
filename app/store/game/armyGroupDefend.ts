@@ -1,3 +1,4 @@
+import { getDivisionsInRegion } from '../../utils/divisionState';
 import { Movement } from '../../types/game';
 import { getNextStepToward, buildIsHostilePredicate } from '../../utils/pathfinding';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
@@ -22,7 +23,7 @@ export function defendArmyGroup(
   state: GameStore,
   setState: (partial: Partial<GameStore>) => void
 ) {
-  const { armyGroups, regions, adjacency, dateTime, movingUnits, selectedUnitRegion, theaters, relationships } = state;
+  const { armyGroups, regions, adjacency, dateTime, movingUnits, selectedUnitRegion, theaters, relationships, divisions } = state;
   
   const group = armyGroups.find(g => g.id === groupId);
   if (!group) return;
@@ -70,7 +71,7 @@ export function defendArmyGroup(
   // region, etc.
   const committedAtBorder = new Map<string, number>();
   allBorderRegions.forEach(id => {
-    const present = regions[id]?.divisions.filter(d => d.armyGroupId === groupId).length ?? 0;
+    const present = getDivisionsInRegion(divisions, id).filter(d => d.armyGroupId === groupId).length;
     committedAtBorder.set(id, present);
   });
 
@@ -98,7 +99,7 @@ export function defendArmyGroup(
   let totalGroupDivisions = 0;
   Object.values(regions).forEach(region => {
     if (!region) return;
-    totalGroupDivisions += region.divisions.filter(
+    totalGroupDivisions += getDivisionsInRegion(divisions, region.id).filter(
       d => d.armyGroupId === groupId && d.owner === countryId && !inTransitDivisionIds.has(d.id)
     ).length;
   });
@@ -143,7 +144,7 @@ export function defendArmyGroup(
   const availableDivisions: { divisionId: string; regionId: string }[] = [];
   Object.entries(regions).forEach(([regionId, region]) => {
     if (!region) return;
-    const groupDivs = region.divisions.filter(
+    const groupDivs = getDivisionsInRegion(divisions, regionId).filter(
       d => d.armyGroupId === groupId && d.owner === countryId && !inTransitDivisionIds.has(d.id)
     );
     if (groupDivs.length === 0) return;
@@ -169,6 +170,7 @@ export function defendArmyGroup(
   // ── Step 6: Assign available divisions to needy borders and create movements ─
   const newMovements: Movement[] = [];
   const newRegions = { ...regions };
+  const newDivisions = { ...divisions };
   const movedRegions = new Set<string>();
   const targetRegionSet = new Set<string>();
 
@@ -243,7 +245,7 @@ export function defendArmyGroup(
       const divIdsToSend = divIds.splice(0, sendCount); // mutates availBySource entry
 
       const divsToSend = divIdsToSend
-        .map(id => newRegions[sourceRegionId]?.divisions.find(d => d.id === id))
+        .map(id => divisions[id])
         .filter((d): d is NonNullable<typeof d> => d !== undefined);
 
       if (divsToSend.length === 0) continue;
@@ -269,6 +271,7 @@ export function defendArmyGroup(
       movedRegions.add(sourceRegionId);
       targetRegionSet.add(nextStep);
       divsToSend.forEach(d => inTransitDivisionIds.add(d.id));
+      divsToSend.forEach(d => { delete newDivisions[d.id]; });
 
       committed += divsToSend.length;
     }
@@ -289,6 +292,7 @@ export function defendArmyGroup(
   });
 
   setState({
+    divisions: newDivisions,
     regions: newRegions,
     movingUnits: [...movingUnits, ...newMovements],
     armyGroups: updatedArmyGroups,

@@ -24,9 +24,9 @@ import type {
 function makeRegion(
   id: string,
   owner: CountryId,
-  divs: Division[] = []
+  _divs: Division[] = []
 ): Region {
-  return { id, name: id, countryIso3: 'TST', owner, divisions: divs };
+  return { id, name: id, countryIso3: 'TST', owner };
 }
 
 /**
