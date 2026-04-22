@@ -1,3 +1,4 @@
+import { GAME_CONFIG } from '../../constants/gameConfig';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
 import { ProductionQueueItem, CountryId } from '../../types/game';
@@ -98,7 +99,7 @@ export const createTickActions = (
       title: 'Production Complete',
       description: `${p.divisionName} has been produced and deployed.`,
       country: p.owner,
-      expiresAt: new Date(dateTime.getTime() + 6 * 60 * 60 * 1000),
+      expiresAt: new Date(dateTime.getTime() + GAME_CONFIG.NOTIFICATION.DURATION_HOURS * 60 * 60 * 1000),
     }));
     
     // Step 3: Advance time
