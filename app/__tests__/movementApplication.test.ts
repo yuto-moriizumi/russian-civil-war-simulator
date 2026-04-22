@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /**
  * Unit tests for applyCompletedMovements and applyFinishedCombats.
  * Pure logic — no browser or dev server needed.

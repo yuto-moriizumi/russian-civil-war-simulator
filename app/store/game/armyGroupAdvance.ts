@@ -1,4 +1,4 @@
-import { Movement, ActiveCombat, DivisionState } from '../../types/game';
+import { Movement, ActiveCombat } from '../../types/game';
 import {
   buildCanEnterPredicate,
   buildIsHostilePredicate,

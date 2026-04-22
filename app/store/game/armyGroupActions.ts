@@ -6,7 +6,7 @@ import { GameStore } from './types';
 import { StoreApi } from 'zustand';
 import { defendArmyGroup } from './armyGroupDefend';
 import { attackArmyGroup } from './armyGroupAttack';
-import { buildDivisionState, getDivisionsInRegion } from '../../utils/divisionState';
+import { buildDivisionState } from '../../utils/divisionState';
 
 /**
  * Defines actions related to army group management:
@@ -40,8 +40,6 @@ export const createArmyGroupActions = (
     let updatedMovingUnits = movingUnits;
     let updatedActiveCombats = activeCombats;
     let updatedProductionQueues = productionQueues;
-    let updatedDivisions = divisions;
-
     if (aiCountryIds.length > 0) {
       const aiSync = syncAIArmyGroupsToTheaters({
         aiCountryIds,
@@ -55,7 +53,6 @@ export const createArmyGroupActions = (
       });
       updatedArmyGroups = aiSync.armyGroups;
       updatedRegions = aiSync.regions;
-      updatedDivisions = aiSync.divisions;
       updatedMovingUnits = aiSync.movingUnits;
       updatedActiveCombats = aiSync.activeCombats;
       updatedProductionQueues = aiSync.productionQueues;

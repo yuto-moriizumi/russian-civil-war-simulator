@@ -4,7 +4,7 @@ import { useRef, useEffect, useCallback } from 'react';
 import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import { useGameStore } from '../../store/useGameStore';
 import { COUNTRY_METADATA } from '../../data/countryMetadata';
-import type { CountryId, DivisionState } from '../../types/game';
+import type { CountryId } from '../../types/game';
 import { getDivisionsInRegion } from '../../utils/divisionState';
 
 /**
@@ -107,7 +107,7 @@ export function useMapEventHandlers(
             setSelectedRegion(regionId);
             setSelectedMovementId(null);
             const region = regions[regionId];
-            if (region && region.owner === playerCountry && getDivisionsInRegion(divisions, regionId).length > 0) {
+            if (region && region.owner === playerCountry && getDivisionsInRegion(divisionsRef.current, regionId).length > 0) {
               setSelectedUnitRegion(regionId);
             } else {
               setSelectedUnitRegion(null);

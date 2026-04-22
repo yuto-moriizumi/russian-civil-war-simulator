@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /**
  * Unit tests for attackArmyGroup — the attack-mode two-phase strategy.
  *

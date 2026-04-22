@@ -1,4 +1,4 @@
-import { Movement, ArmyGroup, ActiveCombat, Region } from '../../types/game';
+import { Movement, ArmyGroup, ActiveCombat } from '../../types/game';
 import { createDivision, createActiveCombat } from '../../utils/combat';
 import { createGameEvent, createNotification, getOrdinalSuffix } from '../../utils/eventUtils';
 import { generateArmyGroupName } from '../../utils/armyGroupNaming';
