@@ -18,12 +18,12 @@ export function validateDivisions(
   divisions: DivisionState = {}
 ): ValidationResult {
   const updatedRegions = regions;
-  let updatedMovingUnits = movingUnits;
+  const updatedMovingUnits = movingUnits;
   let updatedDivisions = divisions;
   let needsUpdate = false;
 
   if (process.env.NODE_ENV === 'development') {
-    const movementFixes: { movementIndex: number; divisionIndex: number; newDivision: Division }[] = [];
+    const movementFixes: { movementIndex: number; divisionId: string; newDivision: Division }[] = [];
     const divisionFixes: { id: string; newDivision: Division }[] = [];
 
     // Validate divisions in the canonical DivisionState
@@ -35,12 +35,17 @@ export function validateDivisions(
       }
     }
 
+    // Validate divisions that are in transit
     movingUnits.forEach((movement, movIndex) => {
-      movement.divisions.forEach((division, divIndex) => {
-        const result = validateDivisionArmyGroup(division, armyGroups);
-        if (result.wasFixed) {
-          movementFixes.push({ movementIndex: movIndex, divisionIndex: divIndex, newDivision: result.division });
-          needsUpdate = true;
+      const divIds = movement.divisionIds ?? [];
+      divIds.forEach(divId => {
+        const division = updatedDivisions[divId];
+        if (division) {
+          const result = validateDivisionArmyGroup(division, armyGroups);
+          if (result.wasFixed) {
+            movementFixes.push({ movementIndex: movIndex, divisionId: divId, newDivision: result.division });
+            needsUpdate = true;
+          }
         }
       });
     });
@@ -54,14 +59,9 @@ export function validateDivisions(
       }
 
       if (movementFixes.length > 0) {
-        updatedMovingUnits = [...movingUnits];
+        // Apply fixes to DivisionState (movement just holds IDs)
         movementFixes.forEach(fix => {
-          const newDivisions = [...updatedMovingUnits[fix.movementIndex].divisions];
-          newDivisions[fix.divisionIndex] = fix.newDivision;
-          updatedMovingUnits[fix.movementIndex] = {
-            ...updatedMovingUnits[fix.movementIndex],
-            divisions: newDivisions
-          };
+          updatedDivisions = { ...updatedDivisions, [fix.divisionId]: fix.newDivision };
         });
       }
     }

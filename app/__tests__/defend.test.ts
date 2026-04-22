@@ -166,7 +166,7 @@ describe('defendArmyGroup – redistribution from stacked border region', () => 
     // Divisions stay in the region during transit; count dispatched via movements
     const dispatched = (captured.movingUnits as Movement[])
       .filter(m => m.fromRegion === 'B1')
-      .reduce((s, m) => s + m.divisions.length, 0);
+      .reduce((s, m) => s + m.divisionIds.length, 0);
     expect(dispatched).toBeGreaterThan(0);
     expect(dispatched).toBeLessThan(15);
   });
@@ -182,7 +182,7 @@ describe('defendArmyGroup – redistribution from stacked border region', () => 
     // Divisions stay in region during transit, so we check dispatch count only.
     const dispatched = (captured.movingUnits as Movement[])
       .filter(m => m.fromRegion === 'B1')
-      .reduce((s, m) => s + m.divisions.length, 0);
+      .reduce((s, m) => s + m.divisionIds.length, 0);
     expect(dispatched).toBe(12);
   });
 });
@@ -249,7 +249,7 @@ describe('defendArmyGroup – in-transit divisions prevent duplicate dispatch', 
     id: 'mv-existing',
     fromRegion: 'REAR',
     toRegion: 'B1',
-    divisions: [transitDiv],
+    divisionIds: [transitDiv.id],
     departureTime: new Date('1918-01-01T00:00:00Z'),
     arrivalTime: new Date('1918-01-01T12:00:00Z'),
     owner: 'soviet',

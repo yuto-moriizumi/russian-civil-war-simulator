@@ -428,14 +428,14 @@ export function getArmyGroupUnitCount(
         .filter(c => !c.isComplete)
         .forEach(combat => {
           if (combat.attackerCountry === playerCountry) {
-            combat.attackerDivisions
-              .filter(d => d.armyGroupId === armyGroupId)
-              .forEach(d => seenCombatDivIds.add(d.id));
+            combat.attackerDivisionIds
+              .filter(id => divisions[id]?.armyGroupId === armyGroupId)
+              .forEach(id => seenCombatDivIds.add(id));
           }
           if (combat.defenderCountry === playerCountry) {
-            combat.defenderDivisions
-              .filter(d => d.armyGroupId === armyGroupId)
-              .forEach(d => seenCombatDivIds.add(d.id));
+            combat.defenderDivisionIds
+              .filter(id => divisions[id]?.armyGroupId === armyGroupId)
+              .forEach(id => seenCombatDivIds.add(id));
           }
         });
       total += seenCombatDivIds.size;

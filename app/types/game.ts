@@ -103,7 +103,8 @@ export interface Movement {
   id: string;
   fromRegion: string;
   toRegion: string;
-  divisions: Division[]; // Divisions being moved
+  /** IDs of divisions being moved. Division data lives in DivisionState. */
+  divisionIds: string[];
   departureTime: Date;
   arrivalTime: Date;
   owner: CountryId;
@@ -286,8 +287,10 @@ export interface ActiveCombat {
   defenderRegionName: string;       // Display name of defender's region
   attackerCountry: CountryId;       // Who is attacking
   defenderCountry: CountryId;       // Who is defending
-  attackerDivisions: Division[];    // Current attacker divisions
-  defenderDivisions: Division[];    // Current defender divisions
+  /** IDs of current attacker divisions. HP and stats live in DivisionState. */
+  attackerDivisionIds: string[];
+  /** IDs of current defender divisions. HP and stats live in DivisionState. */
+  defenderDivisionIds: string[];
   initialAttackerCount: number;     // Starting attacker division count
   initialDefenderCount: number;     // Starting defender division count
   initialAttackerHp: number;        // Starting total HP of attackers

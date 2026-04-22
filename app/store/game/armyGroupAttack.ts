@@ -3,7 +3,7 @@ import { getNextStepToward, buildCanEnterPredicate, buildIsHostilePredicate } fr
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { createActiveCombat } from '../../utils/combat';
 import { createGameEvent } from '../../utils/eventUtils';
-import { getDivisionsInRegion } from '../../utils/divisionState';
+import { getDivisionsInRegion, getCombatDefenders } from '../../utils/divisionState';
 import { GameStore } from './types';
 
 /**
@@ -80,12 +80,14 @@ export function attackArmyGroup(
   const inTransitDivisionIds = new Set<string>();
   movingUnits.forEach(m => {
     if (m.owner !== countryId) return;
-    m.divisions.forEach(d => { inTransitDivisionIds.add(d.id); });
+    const divIds = m.divisionIds ?? [];
+    divIds.forEach(id => { inTransitDivisionIds.add(id); });
   });
 
   movingUnits.forEach(m => {
     if (m.owner !== countryId) return;
-    const count = m.divisions.filter(d => d.armyGroupId === groupId).length;
+    const divIds = m.divisionIds ?? [];
+    const count = divIds.filter(id => divisions[id]?.armyGroupId === groupId).length;
     if (count > 0 && borderSet.has(m.toRegion)) {
       committedAtBorder.set(m.toRegion, (committedAtBorder.get(m.toRegion) ?? 0) + count);
     }
@@ -102,7 +104,7 @@ export function attackArmyGroup(
   // Add in-transit divisions
   movingUnits.forEach(m => {
     if (m.owner !== countryId) return;
-    totalGroupDivisions += m.divisions.filter(d => d.armyGroupId === groupId).length;
+    totalGroupDivisions += m.divisionIds.filter(id => divisions[id]?.armyGroupId === groupId).length;
   });
 
   // ── Phase 1 Step 4: Allocation targets ───────────────────────────────────────
@@ -185,7 +187,7 @@ export function attackArmyGroup(
           const alreadyMovingFromSource = movingUnits.some(m =>
             m.fromRegion === sourceRegionId &&
             m.owner === countryId &&
-            m.divisions.some(d => d.armyGroupId === groupId && inTransitDivisionIds.has(d.id))
+            m.divisionIds.some(id => divisions[id]?.armyGroupId === groupId && inTransitDivisionIds.has(id))
           );
           if (alreadyMovingFromSource) continue;
 
@@ -212,17 +214,21 @@ export function attackArmyGroup(
           const arrivalTime = new Date(dateTime);
           arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
 
+          // Set regionId=null for moving divisions
+          for (const d of divsToSend) {
+            newDivisions[d.id] = { ...d, regionId: null };
+          }
+
           newMovements.push({
             id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${sourceRegionId}`,
             fromRegion: sourceRegionId,
             toRegion: nextStep,
-            divisions: divsToSend,
+            divisionIds: divsToSend.map(d => d.id),
             departureTime: new Date(dateTime),
             arrivalTime,
             owner: countryId,
           });
 
-          // Divisions stay in the region; they are removed only when the movement completes.
           movedRegions.add(sourceRegionId);
           targetRegionSet.add(nextStep);
           divsToSend.forEach(d => inTransitDivisionIds.add(d.id));
@@ -309,17 +315,16 @@ export function attackArmyGroup(
         pendingCombatId = existingCombat.id;
       } else {
         const inTransitFromDest = new Set(
-          movingUnits.filter(m => m.fromRegion === attackTargetId).flatMap(m => m.divisions.map(d => d.id))
+          movingUnits.filter(m => m.fromRegion === attackTargetId).flatMap(m => m.divisionIds)
         );
         const defenderDivisions = getDivisionsInRegion(divisions, attackTargetId).filter(d => d.owner === destRegion.owner && !inTransitFromDest.has(d.id));
         const hasActiveCombatAtDest = [...activeCombats, ...newCombats].some(c => c.defenderRegionId === attackTargetId && !c.isComplete);
         if (defenderDivisions.length > 0 || hasActiveCombatAtDest) {
-          // Check for other combats on the same defender region (multi-front)
           const otherCombatsOnRegion = [...activeCombats, ...newCombats].filter(
             c => c.defenderRegionId === attackTargetId && !c.isComplete
           );
           const combatDefenderDivisions = otherCombatsOnRegion.length > 0
-            ? otherCombatsOnRegion[0].defenderDivisions.map(d => ({ ...d }))
+            ? getCombatDefenders(newDivisions, otherCombatsOnRegion[0])
             : defenderDivisions;
 
           const newCombat = createActiveCombat(
@@ -335,22 +340,16 @@ export function attackArmyGroup(
           );
           pendingCombatId = newCombat.id;
           newCombats.push(newCombat);
-          // Only clear defender divisions on first combat on this region
           const isFirstCombatOnRegion = otherCombatsOnRegion.length === 0;
           if (isFirstCombatOnRegion) {
-            // Clear all defender divisions from DivisionState
-            const defenderIdsToRemove = Object.entries(newDivisions)
-              .filter(([, d]) => d.regionId === attackTargetId && d.owner === destRegion.owner)
-              .map(([id]) => id);
-            defenderIdsToRemove.forEach(id => { delete newDivisions[id]; });
-          }
-          // Clear attacker divisions from source region to avoid double-counting
-          // (they are tracked in the combat; applyFinishedCombats places them post-combat)
-          const attackerDivIds = new Set(divsForAttack.map(d => d.id));
-          for (const id of attackerDivIds) {
-            if (newDivisions[id]) {
-              delete newDivisions[id];
+            // Set regionId=null for defender divisions
+            for (const d of combatDefenderDivisions) {
+              newDivisions[d.id] = { ...d, regionId: null };
             }
+          }
+          // Set regionId=null for attacker divisions
+          for (const d of divsForAttack) {
+            newDivisions[d.id] = { ...d, regionId: null };
           }
 
           const battleEvent = createGameEvent(
@@ -365,11 +364,18 @@ export function attackArmyGroup(
         }
       }
 
+      // Set regionId=null for attacking divisions (if not already done in combat branch)
+      if (!pendingCombatId || !newCombats.find(c => c.id === pendingCombatId)) {
+        for (const d of divsForAttack) {
+          newDivisions[d.id] = { ...d, regionId: null };
+        }
+      }
+
       newMovements.push({
         id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${borderRegionId}-${attackTargetId}`,
         fromRegion: borderRegionId,
         toRegion: attackTargetId,
-        divisions: divsForAttack,
+        divisionIds: divsForAttack.map(d => d.id),
         departureTime: new Date(dateTime),
         arrivalTime,
         owner: countryId,
@@ -377,8 +383,6 @@ export function attackArmyGroup(
       });
 
       targetRegionSet.add(attackTargetId);
-
-      // Divisions stay in the region; they are removed only when the movement completes.
       movedRegions.add(borderRegionId);
       divsForAttack.forEach(d => inTransitDivisionIds.add(d.id));
     }

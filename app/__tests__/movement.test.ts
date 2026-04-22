@@ -22,6 +22,7 @@ import type {
   Region,
   RegionState,
   Relationship,
+  DivisionState,
 } from '../types/game';
 
 // ---------------------------------------------------------------------------
@@ -47,11 +48,12 @@ function makeMovement(overrides: Partial<Movement> = {}): Movement {
   const now = new Date('1918-01-01T00:00:00Z');
   const arrivalTime = new Date(now);
   arrivalTime.setHours(arrivalTime.getHours() + 12);
+  const div = makeDiv();
   return {
     id: 'mv-1',
     fromRegion: 'A',
     toRegion: 'B',
-    divisions: [makeDiv()],
+    divisionIds: [div.id],
     departureTime: now,
     arrivalTime,
     owner: 'soviet',
@@ -69,8 +71,8 @@ function makeCombat(overrides: Partial<ActiveCombat> = {}): ActiveCombat {
     defenderRegionName: 'B',
     attackerCountry: 'soviet',
     defenderCountry: 'white',
-    attackerDivisions: [makeDiv({ id: 'div-atk' })],
-    defenderDivisions: [makeDiv({ id: 'div-def', owner: 'white' })],
+    attackerDivisionIds: [makeDiv({ id: 'div-atk' }).id],
+    defenderDivisionIds: [makeDiv({ id: 'div-def', owner: 'white' }).id],
     initialAttackerCount: 1,
     initialDefenderCount: 1,
     initialAttackerHp: 100,
@@ -185,26 +187,32 @@ describe('processMovements', () => {
 
   it('regenerates HP for divisions in transit (+10 per tick, capped at maxHp)', () => {
     const now = new Date('1918-01-01T18:00:00Z');
+    const div = makeDiv({ hp: 80, maxHp: 100, regionId: null });
+    const divisions: DivisionState = { [div.id]: div };
     const mv = makeMovement({
       arrivalTime: new Date('1918-01-01T20:00:00Z'),
-      divisions: [makeDiv({ hp: 80, maxHp: 100 })],
+      divisionIds: [div.id],
     });
 
-    const { remainingMovements } = processMovements([mv], now);
+    const { remainingMovements, updatedDivisions } = processMovements([mv], now, [], {}, [], divisions);
 
-    expect(remainingMovements[0].divisions[0].hp).toBe(90);
+    expect(remainingMovements).toHaveLength(1);
+    expect(updatedDivisions[div.id].hp).toBe(90);
   });
 
   it('caps HP at maxHp when regen would overflow', () => {
     const now = new Date('1918-01-01T18:00:00Z');
+    const div = makeDiv({ hp: 95, maxHp: 100, regionId: null });
+    const divisions: DivisionState = { [div.id]: div };
     const mv = makeMovement({
       arrivalTime: new Date('1918-01-01T20:00:00Z'),
-      divisions: [makeDiv({ hp: 95, maxHp: 100 })],
+      divisionIds: [div.id],
     });
 
-    const { remainingMovements } = processMovements([mv], now);
+    const { remainingMovements, updatedDivisions } = processMovements([mv], now, [], {}, [], divisions);
 
-    expect(remainingMovements[0].divisions[0].hp).toBe(100);
+    expect(remainingMovements).toHaveLength(1);
+    expect(updatedDivisions[div.id].hp).toBe(100);
   });
 
   it('pauses movement and extends arrivalTime by 1h when linked combat is still active', () => {
@@ -443,7 +451,7 @@ describe('redirectMovement – path computation logic', () => {
       id: 'mv-test',
       fromRegion: 'A',
       toRegion: 'B',          // current in-flight hop
-      divisions: [],
+      divisionIds: [],
       departureTime: new Date('1918-01-01T00:00:00Z'),
       arrivalTime: new Date('1918-01-01T12:00:00Z'),
       owner: 'soviet',

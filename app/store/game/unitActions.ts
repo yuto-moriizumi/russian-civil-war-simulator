@@ -7,36 +7,25 @@ import { GameStore } from './types';
 import { StoreApi } from 'zustand';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { findPath, buildCanEnterPredicate } from '../../utils/pathfinding';
-import { getDivisionsInRegion } from '../../utils/divisionState';
+import { getDivisionsInRegion, getCombatDefenders } from '../../utils/divisionState';
 import { createRegionOwnersPatch } from '../../utils/regionState';
 
-/**
- * Returns the effective defenderDivisions to use when starting a new combat,
- * copying from an existing combat if there is already one on the same region
- * (multi-front: same defenders fight on multiple borders).
- * Also returns whether this is the first combat on the defender region.
- */
 function resolveMultiFrontDefenders(
   toRegion: string,
   activeCombats: ActiveCombat[],
   regionDivisions: ReturnType<typeof getDivisionsInRegion>,
-  destOwner: string
-): { combatDefenderDivisions: ActiveCombat['defenderDivisions']; isFirstCombat: boolean } {
+  destOwner: string,
+  divisionState: import('../../types/game').DivisionState
+) {
   const existing = activeCombats.filter(c => c.defenderRegionId === toRegion && !c.isComplete);
   return {
     combatDefenderDivisions: existing.length > 0
-      ? existing[0].defenderDivisions.map(d => ({ ...d }))
+      ? getCombatDefenders(divisionState, existing[0])
       : regionDivisions.filter(d => d.owner === destOwner),
     isFirstCombat: existing.length === 0,
   };
 }
 
-/**
- * Defines actions related to unit creation, deployment, and movement:
- * - Creating infantry divisions
- * - Moving units between regions
- * - Deploying units to army groups
- */
 export const createUnitActions = (
   set: StoreApi<GameStore>['setState'],
   get: StoreApi<GameStore>['getState']
@@ -108,7 +97,6 @@ export const createUnitActions = (
         return;
       }
 
-      // Count existing divisions to generate unique name
       const existingDivisions = Object.values(divisions).filter(d => d.owner === selectedCountry.id).length;
       const divisionNumber = existingDivisions + 1;
       const divisionName = `${selectedCountry.id === 'soviet' ? 'Red' : 'White'} Guard ${divisionNumber}${getOrdinalSuffix(divisionNumber)} Division`;
@@ -226,6 +214,11 @@ export const createUnitActions = (
     let nextGameEvents = gameEvents;
     let nextNotifications = notifications;
 
+    // Set regionId=null for moving divisions
+    for (const d of divisionsToMove) {
+      nextDivisions = { ...nextDivisions, [d.id]: { ...d, regionId: null } };
+    }
+
     if (isHostile) {
       const existingCombat = activeCombats.find(c =>
         c.attackerRegionId === fromRegion &&
@@ -238,7 +231,7 @@ export const createUnitActions = (
           if (selectedCountry.id === c.attackerCountry) {
             return {
               ...c,
-              attackerDivisions: [...c.attackerDivisions, ...divisionsToMove],
+              attackerDivisionIds: [...c.attackerDivisionIds, ...divisionsToMove.map(d => d.id)],
               initialAttackerCount: c.initialAttackerCount + divisionsToMove.length,
               initialAttackerHp: c.initialAttackerHp + divisionsToMove.reduce((s, d) => s + d.hp, 0),
             };
@@ -249,7 +242,7 @@ export const createUnitActions = (
           id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           fromRegion,
           toRegion: actualToRegion,
-          divisions: divisionsToMove,
+          divisionIds: divisionsToMove.map(d => d.id),
           departureTime: new Date(dateTime),
           arrivalTime,
           owner: selectedCountry.id,
@@ -257,6 +250,7 @@ export const createUnitActions = (
           ...(remainingPath && remainingPath.length > 0 ? { remainingPath, finalDestination } : {}),
         };
         set({
+          divisions: nextDivisions,
           movingUnits: [...movingUnits, newMovement],
           activeCombats: nextActiveCombats,
         });
@@ -264,19 +258,18 @@ export const createUnitActions = (
       }
 
       const inTransitFromDest = new Set(
-        movingUnits.filter(m => m.fromRegion === actualToRegion).flatMap(m => m.divisions.map(d => d.id))
+        movingUnits.filter(m => m.fromRegion === actualToRegion).flatMap(m => m.divisionIds)
       );
       const toDivisions = getDivisionsInRegion(divisions, actualToRegion);
       const defenderDivisions = toDivisions.filter(d => d.owner === to.owner && !inTransitFromDest.has(d.id));
       const hasActiveCombatAtDest = activeCombats.some(c => c.defenderRegionId === actualToRegion && !c.isComplete);
       if (defenderDivisions.length > 0 || hasActiveCombatAtDest) {
-        const { combatDefenderDivisions, isFirstCombat } = resolveMultiFrontDefenders(actualToRegion, activeCombats, toDivisions, to.owner);
+        const { combatDefenderDivisions, isFirstCombat } = resolveMultiFrontDefenders(actualToRegion, activeCombats, toDivisions, to.owner, nextDivisions);
 
         newCombat = createActiveCombat(
           fromRegion, from.name, actualToRegion, to.name,
           selectedCountry.id, to.owner, divisionsToMove, combatDefenderDivisions, dateTime
         );
-        // Clear defender divisions from DivisionState if this is the first combat on this region
         if (isFirstCombat) {
           for (const d of combatDefenderDivisions) {
             nextDivisions = { ...nextDivisions, [d.id]: { ...d, regionId: null } };
@@ -300,7 +293,7 @@ export const createUnitActions = (
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       fromRegion,
       toRegion: actualToRegion,
-      divisions: divisionsToMove,
+      divisionIds: divisionsToMove.map(d => d.id),
       departureTime: new Date(dateTime),
       arrivalTime,
       owner: selectedCountry.id,
@@ -319,10 +312,18 @@ export const createUnitActions = (
   },
 
   cancelMovement: (movementId: string) => {
-    const { selectedCountry, movingUnits } = get();
+    const { selectedCountry, movingUnits, divisions } = get();
     const movement = movingUnits.find(m => m.id === movementId);
     if (!movement || !selectedCountry || movement.owner !== selectedCountry.id || movement.pendingCombatId) return;
-    set({ movingUnits: movingUnits.filter(m => m.id !== movementId) });
+    // Restore divisions to fromRegion
+    let nextDivisions = { ...divisions };
+    for (const divId of movement.divisionIds) {
+      const div = nextDivisions[divId];
+      if (div) {
+        nextDivisions = { ...nextDivisions, [divId]: { ...div, regionId: movement.fromRegion } };
+      }
+    }
+    set({ movingUnits: movingUnits.filter(m => m.id !== movementId), divisions: nextDivisions });
   },
 
   redirectMovement: (movementId: string, newDestinationRegionId: string) => {

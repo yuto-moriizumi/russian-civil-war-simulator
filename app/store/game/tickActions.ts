@@ -24,14 +24,12 @@ import { attackArmyGroup } from './armyGroupAttack';
 import { defendArmyGroup } from './armyGroupDefend';
 import { TickPerf } from './tickPerformance';
 import { RegionState } from '../../types/game';
-import { buildDivisionState } from '../../utils/divisionState';
 import { createRegionOwnersPatch } from '../../utils/regionState';
 
 export { getEffectiveAIStates } from './tickHelpers/aiTick';
 
 let _tickCounter = 0;
 
-/** Helper: check for duplicates mid-tick and log with a source label */
 function _checkDuplicates(label: string, tickNum: number, regions: RegionState, movingUnits: import('../../types/game').Movement[], activeCombats: import('../../types/game').ActiveCombat[]) {
   const result = detectDivisionDuplicates(regions, movingUnits, activeCombats);
   if (result.hasDuplicates) {
@@ -54,7 +52,6 @@ export const createTickActions = (
     TickPerf.tickStart();
     TickPerf.start('[tick] total');
 
-    // ── Duplicate detection (start of tick) ──────────────────────────────────
     TickPerf.start('[tick] 0-duplicates');
     const preCheck = detectDivisionDuplicates(state.regions, state.movingUnits, state.activeCombats);
     if (preCheck.hasDuplicates) {
@@ -62,16 +59,13 @@ export const createTickActions = (
       console.error('  [DUPLICATE] detected at TICK START — leftovers from previous tick');
     }
     TickPerf.end('[tick] 0-duplicates');
-    // ─────────────────────────────────────────────────────────────────────────
 
     const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, aiStates, gameEvents, notifications, armyGroups, productionQueues, relationships, regionCentroids, scheduledEvents, divisions } = state;
-    
-    // Step 1: Validate divisions (development mode only)
+
     TickPerf.start('[tick] 1-validate');
     const { updatedRegions, updatedMovingUnits, updatedDivisions: divisionsAfterValidation } = validateDivisions(regions, movingUnits, armyGroups, divisions);
     TickPerf.end('[tick] 1-validate');
 
-    // Step 2: Process production queue
     TickPerf.start('[tick] 2-production');
     const { remainingProductions, updatedDivisions: divisionsAfterProduction, completedProductions } = processProductionQueue(
       productionQueues,
@@ -83,7 +77,7 @@ export const createTickActions = (
     );
     const regionsAfterProduction = updatedRegions;
     TickPerf.end('[tick] 2-production');
-    
+
     const playerProductions = completedProductions.filter(p => p.owner === selectedCountry?.id);
     const productionEvents = playerProductions.map(p => ({
       id: `event-${Date.now()}-${p.id}`,
@@ -102,12 +96,10 @@ export const createTickActions = (
       country: p.owner,
       expiresAt: new Date(dateTime.getTime() + GAME_CONFIG.NOTIFICATION.DURATION_HOURS * 60 * 60 * 1000),
     }));
-    
-    // Step 3: Advance time
+
     const newDate = new Date(dateTime);
     newDate.setHours(newDate.getHours() + 1);
-    
-    // Step 3.5: Process scheduled events (historical events that trigger on specific dates)
+
     TickPerf.start('[tick] 3-scheduled-events');
     const {
       updatedScheduledEvents,
@@ -127,12 +119,10 @@ export const createTickActions = (
     );
     TickPerf.end('[tick] 3-scheduled-events');
 
-    // Initialize AI states for any new countries that appeared via scheduled events
     const aiStatesAfterEvents = initializeAIStatesForNewCountries(aiStates, regionsAfterEvents, selectedCountry?.id);
 
-    // Step 4: Process unit movements
     TickPerf.start('[tick] 4-movements');
-    const { remainingMovements, completedMovements, newMidTransitCombats } = processMovements(
+    const { remainingMovements, completedMovements, newMidTransitCombats, updatedDivisions: divisionsAfterMovements } = processMovements(
       updatedMovingUnits,
       newDate,
       activeCombats,
@@ -142,57 +132,31 @@ export const createTickActions = (
     );
     TickPerf.end('[tick] 4-movements');
 
-    // Step 4.5: Incorporate mid-transit combats
     TickPerf.start('[tick] 4.5-mid-transit-combats');
     let combatsBeforeStep5 = activeCombats;
-    const regionsBeforeStep5 = regionsAfterEvents;
-    let divisionsBeforeStep5 = divisionsAfterEvents;
+    const divisionsBeforeStep5 = divisionsAfterMovements;
     if (newMidTransitCombats.length > 0) {
       combatsBeforeStep5 = [...activeCombats, ...newMidTransitCombats];
-      // Clear defender divisions from DivisionState (regionId = null) for new mid-transit combats
-      newMidTransitCombats.forEach(combat => {
-        const existingCombatsOnRegion = activeCombats.filter(
-          c => c.defenderRegionId === combat.defenderRegionId && !c.isComplete
-        );
-        if (existingCombatsOnRegion.length === 0) {
-          const defenderIds = new Set(combat.defenderDivisions.map(d => d.id));
-          for (const [id, div] of Object.entries(divisionsBeforeStep5)) {
-            if (defenderIds.has(id)) {
-              divisionsBeforeStep5 = { ...divisionsBeforeStep5, [id]: { ...div, regionId: null } };
-            }
-          }
-        }
-      });
+      // Defender divisions were already set to regionId=null in processMovements
     }
-
     TickPerf.end('[tick] 4.5-mid-transit-combats');
 
-    // Step 5: Process active combats
     TickPerf.start('[tick] 5-combats');
-    const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements, retreatingDivisionUpdates } = processCombats(combatsBeforeStep5, newDate, regionsBeforeStep5, adjacency, regionCentroids);
+    const { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements, updatedDivisions: divisionsAfterCombats } = processCombats(
+      combatsBeforeStep5, newDate, regionsAfterEvents, adjacency, regionCentroids, divisionsBeforeStep5
+    );
     TickPerf.end('[tick] 5-combats');
 
-    // Step 5.5: Apply retreating division HP updates
-    TickPerf.start('[tick] 5.5-retreating-hp');
-    if (retreatingDivisionUpdates.length > 0) {
-      retreatingDivisionUpdates.forEach(({ regionId, division }) => {
-        divisionsBeforeStep5 = { ...divisionsBeforeStep5, [division.id]: { ...division, regionId } };
-      });
-    }
-
-    TickPerf.end('[tick] 5.5-retreating-hp');
-
-    // Step 6: Apply completed movements to regions
     TickPerf.start('[tick] 6-apply-movements');
     let nextRegions: typeof regionsAfterEvents;
-    let nextDivisions = divisionsBeforeStep5;
+    let nextDivisions = divisionsAfterCombats;
     const { nextCombats, nextEvents, nextNotifications, interceptedMovementIds, newHopMovements } = (() => {
       const result = applyCompletedMovements(
         completedMovements,
         updatedMovingUnits,
         {
-          regions: regionsBeforeStep5,
-          divisions: divisionsBeforeStep5,
+          regions: regionsAfterEvents,
+          divisions: divisionsAfterCombats,
           combats: updatedCombats,
           finishedCombats,
           events: [...gameEvents, ...newCombatEvents, ...productionEvents, ...scheduledEventEvents],
@@ -208,32 +172,25 @@ export const createTickActions = (
       return result;
     })();
 
-    // Step 6: Apply finished combats to regions
     const combatResult = applyFinishedCombats(finishedCombats, nextRegions, nextDivisions, countries, relationshipsAfterEvents);
     nextRegions = combatResult.nextRegions;
     nextDivisions = combatResult.nextDivisions;
     TickPerf.end('[tick] 6-apply-movements');
 
-    // Step 6b: Merge retreat, intercepted, and new-hop movements
     TickPerf.start('[tick] 6b-merge-movements');
     const finishedCombatIds = new Set(finishedCombats.map(c => c.id));
     let nextMovingUnits = [...remainingMovements, ...retreatMovements, ...newHopMovements].filter(m =>
       !interceptedMovementIds.includes(m.id) &&
       !(m.pendingCombatId && finishedCombatIds.has(m.pendingCombatId))
     );
-
     TickPerf.end('[tick] 6b-merge-movements');
 
-    // ── Duplicate detection after movements/combats ──────────────────────────
     _checkDuplicates('apply movements / combats', tickNum, nextRegions, nextMovingUnits, nextCombats);
-    // ─────────────────────────────────────────────────────────────────────────
 
-    // Step 7: Regenerate HP for all stationary divisions
     TickPerf.start('[tick] 7-hp-regen');
-    nextDivisions = regenerateDivisionHP(nextDivisions, nextMovingUnits);
+    nextDivisions = regenerateDivisionHP(nextDivisions);
     TickPerf.end('[tick] 7-hp-regen');
 
-    // Step 8: AI Tick - process AI actions and deployments for all AI countries
     TickPerf.start('[tick] 8-ai');
     const effectiveAIStates = getEffectiveAIStates(
       aiStatesAfterEvents,
@@ -306,27 +263,21 @@ export const createTickActions = (
     }
     TickPerf.end('[tick] 8-ai');
 
-    // ── Duplicate detection after AI tick / army group sync ──────────────────
     _checkDuplicates('AI tick / army group sync', tickNum, nextRegions, nextMovingUnits, nextActiveCombats);
-    // ─────────────────────────────────────────────────────────────────────────
 
-    // Step 9: Sync army group territories with actual division locations
     TickPerf.start('[tick] 9-army-group-sync');
     nextArmyGroups = syncArmyGroupTerritories(nextArmyGroups, nextRegions, nextMovingUnits, nextDivisions);
     TickPerf.end('[tick] 9-army-group-sync');
 
-    // Step 9b: Process army group automatic modes (advance/defend)
-    // This needs to be done before updating state to ensure actions are queued
     const armyGroupActionsNeeded = nextArmyGroups.filter(g => g.mode !== 'none');
-    
-    // Update state first so actions have latest data
+
     TickPerf.start('[tick] 10-set-state');
     set({
       dateTime: newDate,
       movingUnits: nextMovingUnits,
       activeCombats: nextActiveCombats,
       ...createRegionOwnersPatch(nextRegions),
-      divisions: buildDivisionState(nextMovingUnits, nextActiveCombats, nextDivisions),
+      divisions: nextDivisions,
       gameEvents: nextEvents,
       notifications: nextNotifications,
       aiStates: nextAIStates,
@@ -365,22 +316,15 @@ export const createTickActions = (
         (finalPatch as Record<string, unknown>)[key] = batchState[key];
       }
       set(finalPatch);
-      const syncedState = get();
-      set({ divisions: buildDivisionState(syncedState.movingUnits, syncedState.activeCombats, syncedState.divisions) });
     }
     TickPerf.end('[tick] 11-army-group-actions');
 
-    // ── Duplicate detection after army group actions ────────────────────────
-    const agState = get();
-    _checkDuplicates('army group actions', tickNum, agState.regions, agState.movingUnits, agState.activeCombats);
-    // ────────────────────────────────────────────────────────────────────────
+    _checkDuplicates('army group actions', tickNum, get().regions, get().movingUnits, get().activeCombats);
 
-    // Step 11: Check and auto-complete missions
     TickPerf.start('[tick] 12-missions');
     if (selectedCountry && !state.isPlayerAIEnabled) {
       const missionResults = checkAndCompleteMissions(get, selectedCountry);
-      
-      // Only update if missions changed
+
       if (missionResults.updatedMissions.some((m, i) => m.completed !== get().missions[i].completed)) {
         set({
           missions: missionResults.updatedMissions,
@@ -390,7 +334,6 @@ export const createTickActions = (
       }
     }
 
-    // Include player country in AI mission processing when player AI mode is enabled
     const aiMissionCountryIds = effectiveAIStates
       .map(aiState => aiState.countryId)
       .filter(countryId => countryId !== selectedCountry?.id || state.isPlayerAIEnabled);
@@ -402,7 +345,7 @@ export const createTickActions = (
           missions: aiMissionResults.updatedMissions,
           countryBonuses: aiMissionResults.countryBonuses,
           ...createRegionOwnersPatch(aiMissionResults.regions),
-          divisions: buildDivisionState(aiMissionResults.movingUnits, get().activeCombats, aiMissionResults.divisions),
+          divisions: aiMissionResults.divisions,
           movingUnits: aiMissionResults.movingUnits,
           relationships: aiMissionResults.relationships,
           armyGroups: aiMissionResults.armyGroups,
@@ -412,8 +355,7 @@ export const createTickActions = (
       }
     }
     TickPerf.end('[tick] 12-missions');
-    
-    // Step 12: Update theaters after regions change
+
     TickPerf.start('[tick] 13-theaters');
     get().detectAndUpdateTheaters();
     TickPerf.end('[tick] 13-theaters');

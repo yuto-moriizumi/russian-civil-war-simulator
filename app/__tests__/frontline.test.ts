@@ -57,7 +57,7 @@ function buildDivState(
   const state: DivisionState = {};
   for (const [regionId, divs] of Object.entries(assignments)) {
     for (const div of divs) {
-      state[div.id] = { ...div, regionId };
+      state[div.id] = { ...div, regionId: regionId === 'null' ? null : regionId };
     }
   }
   return state;
@@ -301,7 +301,7 @@ describe('assignDivisionsToFrontline', () => {
       id: 'mv-existing',
       fromRegion: 'A',
       toRegion: 'B',
-      divisions: [div1],
+      divisionIds: [div1.id],
       departureTime: new Date(),
       arrivalTime: new Date(),
       owner: 'soviet',
@@ -401,7 +401,7 @@ describe('assignDivisionsToFrontline', () => {
       id: 'mv-a-to-b',
       fromRegion: 'A',
       toRegion: 'B',
-      divisions: [div],
+      divisionIds: [div.id],
       departureTime: new Date(),
       arrivalTime: new Date(),
       owner: 'soviet',
@@ -439,14 +439,14 @@ describe('assignDivisionsToFrontline', () => {
       id: 'mv-b-to-c',
       fromRegion: 'B',
       toRegion: 'C',
-      divisions: [div1],
+      divisionIds: [div1.id],
       departureTime: new Date(),
       arrivalTime: new Date(),
       owner: 'soviet',
     }];
 
     const assignments = assignDivisionsToFrontline(
-      'ag-1', regions, adjacency, 'soviet', frontline, inTransit, canEnter, buildDivState({ A: [div2] })
+      'ag-1', regions, adjacency, 'soviet', frontline, inTransit, canEnter, buildDivState({ A: [div2], null: [div1] })
     );
 
     // C already has an inbound division → slot is covered → div-2 stays put

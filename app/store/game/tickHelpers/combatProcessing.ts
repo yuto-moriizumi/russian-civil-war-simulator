@@ -1,4 +1,4 @@
-import { ActiveCombat, Division, GameEvent, NotificationItem, RegionState, Adjacency, Movement } from '../../../types/game';
+import { ActiveCombat, GameEvent, NotificationItem, RegionState, Adjacency, Movement, DivisionState, Division } from '../../../types/game';
 import { processCombatRounds, shouldProcessCombatRound } from '../../../utils/combat';
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 import { calculateDistance, calculateTravelTime } from '../../../utils/distance';
@@ -9,9 +9,7 @@ interface CombatProcessingResult {
   newCombatEvents: GameEvent[];
   newCombatNotifications: NotificationItem[];
   retreatMovements: Movement[];
-  /** Divisions that have retreated with their post-combat HP, keyed by fromRegion.
-   *  tickActions applies these to regions so retreat movements find correct HP. */
-  retreatingDivisionUpdates: { regionId: string; division: import('../../../types/game').Division }[];
+  updatedDivisions: DivisionState;
 }
 
 function getDivisionDestructionLocation(combat: ActiveCombat, fromRegionId: string): string {
@@ -44,22 +42,25 @@ function createDivisionDestroyedEvent(
 }
 
 /**
- * Processes active combats, running combat rounds and generating events
+ * Processes active combats, running combat rounds and generating events.
+ * HP updates are applied directly to the returned DivisionState.
  */
 export function processCombats(
   activeCombats: ActiveCombat[],
   currentDate: Date,
   regions: RegionState,
   adjacency: Adjacency,
-  regionCentroids: Record<string, [number, number]>
+  regionCentroids: Record<string, [number, number]>,
+  divisions: DivisionState
 ): CombatProcessingResult {
   const updatedCombats: ActiveCombat[] = [];
   const finishedCombats: ActiveCombat[] = [];
   const newCombatEvents: GameEvent[] = [];
   const newCombatNotifications: NotificationItem[] = [];
   const retreatMovements: Movement[] = [];
-  const retreatingDivisionUpdates: CombatProcessingResult['retreatingDivisionUpdates'] = [];
   const eligibleCombats: ActiveCombat[] = [];
+
+  let runningDivisions = divisions;
 
   activeCombats.forEach(combat => {
     if (combat.isComplete) {
@@ -74,19 +75,15 @@ export function processCombats(
     }
   });
 
-  // Process eligible combats together so multi-directional attacks on the same
-  // defender region share aggregated damage
   if (eligibleCombats.length > 0) {
-    const roundResults = processCombatRounds(eligibleCombats, regions, adjacency, currentDate);
+    const roundResults = processCombatRounds(eligibleCombats, regions, adjacency, currentDate, runningDivisions);
 
     roundResults.forEach(result => {
       const updatedCombat = result.combat;
-      
-      // Convert retreating divisions to movements
-      result.retreatingDivisions.forEach(({ division, toRegionId, fromRegionId }) => {
-        // Record the post-combat division state so tickActions can update the region.
-        // This ensures the region has the correct HP when the retreat movement resolves.
-        retreatingDivisionUpdates.push({ regionId: fromRegionId, division });
+      runningDivisions = result.updatedDivisions;
+
+      result.retreatingDivisions.forEach(({ divisionId, toRegionId, fromRegionId }) => {
+        const division = runningDivisions[divisionId];
 
         if (toRegionId && toRegionId !== fromRegionId) {
           const distanceKm = calculateDistance(fromRegionId, toRegionId, regionCentroids);
@@ -99,26 +96,26 @@ export function processCombats(
             id: `retreat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             fromRegion: fromRegionId,
             toRegion: toRegionId,
-            divisions: [division],
+            divisionIds: [divisionId],
             departureTime: new Date(currentDate),
             arrivalTime,
-            owner: division.owner,
+            owner: division?.owner ?? updatedCombat.attackerCountry,
           };
 
           retreatMovements.push(retreatMovement);
         }
-        if (toRegionId === null) {
+        if (toRegionId === null && division) {
           newCombatEvents.push(createDivisionDestroyedEvent(division, updatedCombat, fromRegionId, currentDate));
         }
       });
 
       if (updatedCombat.isComplete) {
         finishedCombats.push(updatedCombat);
-        
+
         const attackerWon = updatedCombat.victor === updatedCombat.attackerCountry;
-        const attackerLosses = updatedCombat.initialAttackerCount - updatedCombat.attackerDivisions.length;
-        const defenderLosses = updatedCombat.initialDefenderCount - updatedCombat.defenderDivisions.length;
-        
+        const attackerLosses = updatedCombat.initialAttackerCount - updatedCombat.attackerDivisionIds.length;
+        const defenderLosses = updatedCombat.initialDefenderCount - updatedCombat.defenderDivisionIds.length;
+
         if (attackerWon) {
           const combatEvent = createGameEvent(
             'region_captured',
@@ -128,12 +125,9 @@ export function processCombats(
             updatedCombat.attackerCountry,
             updatedCombat.defenderRegionId
           );
-
           newCombatEvents.push(combatEvent);
           newCombatNotifications.push(createNotification(combatEvent, currentDate));
-        }
 
-        if (attackerWon) {
           const defenderLostEvent = createGameEvent(
             'region_lost',
             `${updatedCombat.defenderRegionName} Lost!`,
@@ -151,5 +145,5 @@ export function processCombats(
     });
   }
 
-  return { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements, retreatingDivisionUpdates };
+  return { updatedCombats, finishedCombats, newCombatEvents, newCombatNotifications, retreatMovements, updatedDivisions: runningDivisions };
 }

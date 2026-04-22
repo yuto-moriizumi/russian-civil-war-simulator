@@ -107,13 +107,14 @@ export function assignDivisionsToFrontline(
   const { frontlineRegions, targetRegions } = frontline;
   const assignments: FrontlineAssignment[] = [];
 
-  const groupMovements = movingUnits.filter(m =>
-    m.divisions.some(d => d.armyGroupId === groupId)
-  );
+  const groupMovements = movingUnits.filter(m => {
+    const divIds = m.divisionIds ?? [];
+    return divIds.some(id => divisions[id]?.armyGroupId === groupId);
+  });
 
   // IDs of all in-transit group divisions (present in regions but committed to movement).
   const inTransitDivisionIds = new Set<string>(
-    groupMovements.flatMap(m => m.divisions.filter(d => d.armyGroupId === groupId).map(d => d.id))
+    groupMovements.flatMap(m => m.divisionIds.filter(id => divisions[id]?.armyGroupId === groupId))
   );
 
   // Source regions already dispatching — skip to avoid double-dispatch.
@@ -133,7 +134,7 @@ export function assignDivisionsToFrontline(
       : 0;
     const inbound = groupMovements
       .filter(m => m.toRegion === flRegion)
-      .reduce((sum, m) => sum + m.divisions.filter(d => d.armyGroupId === groupId).length, 0);
+      .reduce((sum, m) => sum + m.divisionIds.filter(id => divisions[id]?.armyGroupId === groupId).length, 0);
     frontlineCoverage.set(flRegion, stationed + inbound);
   }
 

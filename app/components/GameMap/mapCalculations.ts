@@ -1,5 +1,5 @@
-import type { RegionState, Movement, ActiveCombat, CountryId, Region, DivisionState } from '../../types/game';
-import { getDivisionsInRegion } from '../../utils/divisionState';
+import type { RegionState, Movement, ActiveCombat, CountryId, Region, DivisionState, Division } from '../../types/game';
+import { getDivisionsInRegion, getCombatDefenders } from '../../utils/divisionState';
 
 export interface UnitMarkerData {
   regionId: string;
@@ -46,24 +46,22 @@ export function calculateUnitMarkers(
 
   const selectedDivisionSet = new Set(selectedDivisionIds);
 
-  // Divisions currently in transit stay in region.divisions (design intent) but
-  // should not be shown on the static region marker — they are rendered separately
-  // by the MovingUnitMarker. Exclude them from the region display.
+  // Moving divisions have regionId=null in DivisionState so they're already excluded
+  // from getDivisionsInRegion. Still build the set for explicit filtering below.
   const inTransitDivisionIds = new Set<string>(
-    movingUnits.flatMap(m => m.divisions.map(d => d.id))
+    movingUnits.flatMap(m => m.divisionIds)
   );
 
   // Build a map of extra divisions to overlay per region from active combats.
-  // Defender divisions are pulled out of region.divisions when combat starts,
-  // so we re-inject them here so they remain visible.
-  const combatDefendersByRegion = new Map<string, typeof activeCombats[0]['defenderDivisions']>();
+  // Defender divisions have regionId=null; re-inject them at the defending region.
+  const combatDefendersByRegion = new Map<string, Division[]>();
   for (const combat of activeCombats) {
     if (combat.isComplete) continue;
     const regionId = combat.defenderRegionId;
     const existing = combatDefendersByRegion.get(regionId) ?? [];
     const existingIds = new Set(existing.map(d => d.id));
-    const newDivisions = combat.defenderDivisions.filter(d => !existingIds.has(d.id));
-    combatDefendersByRegion.set(regionId, [...existing, ...newDivisions]);
+    const newDivs = getCombatDefenders(divisions, combat).filter(d => !existingIds.has(d.id));
+    combatDefendersByRegion.set(regionId, [...existing, ...newDivs]);
   }
 
   // Collect all region IDs we need markers for: regions with divisions, plus

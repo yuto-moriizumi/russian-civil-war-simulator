@@ -56,10 +56,13 @@ export function DivisionSelectionPanel() {
     }
     // Also search moving units
     for (const movement of movingUnits) {
-      for (const div of movement.divisions) {
-        if (divisionIdSet.has(div.id) && !foundIds.has(div.id)) {
-          allDivisions.push(div);
-          foundIds.add(div.id);
+      for (const divId of movement.divisionIds) {
+        if (divisionIdSet.has(divId) && !foundIds.has(divId)) {
+          const div = divisions[divId];
+          if (div) {
+            allDivisions.push(div);
+            foundIds.add(divId);
+          }
         }
       }
       if (allDivisions.length >= selectedDivisionIds.length) break;
