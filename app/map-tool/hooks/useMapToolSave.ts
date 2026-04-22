@@ -47,7 +47,7 @@ export function useMapToolSave({
         fetch('/api/map-tool/save-ownership', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ownership, format: 'typescript' }),
+          body: JSON.stringify({ ownership }),
         }),
         fetch('/api/map-tool/save-core-regions', {
           method: 'POST',

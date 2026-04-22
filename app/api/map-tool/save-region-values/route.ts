@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
-import path from 'path';
+import { buildGeneratedRegionValuesData } from '../../../data/map/generatedDataUtils';
+import type {
+  GeneratedRegionValuesData,
+  MapDataNotes,
+} from '../../../data/map/generatedTypes';
+import { readGeneratedMapData, writeGeneratedMapData } from '../generatedFileUtils';
 
 export async function POST(request: NextRequest) {
   // Only allow in development mode
@@ -12,8 +16,11 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { regionValues } = body;
+    const body = await request.json() as {
+      regionValues: Record<string, number>;
+      notes?: MapDataNotes;
+    };
+    const { regionValues, notes } = body;
 
     if (!regionValues || typeof regionValues !== 'object') {
       return NextResponse.json(
@@ -22,39 +29,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Only persist regions whose value differs from the default (1)
-    const nonDefaultEntries = Object.entries(regionValues as Record<string, number>).filter(
-      ([, v]) => typeof v === 'number' && v !== 1
-    );
-
-    // Sort by region ID for consistency
-    nonDefaultEntries.sort(([a], [b]) => a.localeCompare(b));
-
-    let content = `/**\n`;
-    content += ` * Region economic values/weights for income generation.\n`;
-    content += ` * Default value is 1, major cities and industrial centers have higher values.\n`;
-    content += ` *\n`;
-    content += ` * Moscow: 5 (capital, political center)\n`;
-    content += ` * St. Petersburg: 4 (former capital, major industrial city)\n`;
-    content += ` * Kyiv: 3 (major city, strategic importance)\n`;
-    content += ` * Other major cities: 2 (significant economic centers)\n`;
-    content += ` * Standard regions: 1 (default)\n`;
-    content += ` */\n`;
-    content += `export const regionValues: Record<string, number> = {\n`;
-
-    for (const [regionId, value] of nonDefaultEntries) {
-      content += `  '${regionId}': ${value},\n`;
-    }
-
-    content += `\n  // All other regions default to value 1\n`;
-    content += `};\n`;
-
-    const filePath = path.join(process.cwd(), 'app', 'data', 'map', 'regionValues.ts');
-    await writeFile(filePath, content, 'utf-8');
+    const previous = await readGeneratedMapData<GeneratedRegionValuesData>('regionValues.json');
+    const data = buildGeneratedRegionValuesData(regionValues, previous?.notes, notes);
+    await writeGeneratedMapData('regionValues.json', data);
 
     return NextResponse.json({
       success: true,
-      message: `Saved ${nonDefaultEntries.length} non-default region values`,
+      message: `Saved ${Object.keys(data.values).length} non-default region values`,
     });
   } catch (error) {
     console.error('Error saving region values:', error);
