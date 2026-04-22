@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
 import { Movement, ActiveCombat, GameEvent, ProductionQueueItem, CountryId } from '../types/game';
 
 // Internal imports
@@ -17,7 +18,7 @@ import { createRelationshipActions } from './game/relationshipActions';
 
 export const useGameStore = create<GameStore>()(
   persist(
-    (set, get) => ({
+    immer((set, get) => ({
       // Initial state
       ...initialGameState,
       regions: {},
@@ -45,7 +46,7 @@ export const useGameStore = create<GameStore>()(
       ...createArmyGroupActions(set, get),
       ...createProductionActions(set, get),
       ...createRelationshipActions(set, get),
-    }),
+    })),
     {
       name: 'russian-civil-war-save',
       storage: createJSONStorage(() => localStorage),
