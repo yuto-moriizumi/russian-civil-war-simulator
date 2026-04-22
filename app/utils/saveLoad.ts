@@ -17,13 +17,15 @@ import {
   ScheduledEvent,
   CountryBonuses,
   DivisionState,
+  RegionOwnershipState,
 } from '../types/game';
 import { getInitialCountryBonuses } from './bonusCalculator';
 import { countries } from '../data/countries';
 import { buildDivisionState } from './divisionState';
+import { extractRegionOwners } from './regionState';
 
 const STORAGE_KEY = 'rcw-save';
-const SAVE_VERSION = 8; // Bumped version for normalized root division state
+const SAVE_VERSION = 9; // Bumped version for split region ownership state
 
 // Serialized types (Date objects converted to ISO strings)
 interface SerializedMovement {
@@ -99,6 +101,7 @@ interface SerializedGameState {
   isPlaying: boolean;
   gameSpeed: GameSpeed;
   isPlayerAIEnabled?: boolean;
+  regionOwners?: RegionOwnershipState;
   divisions?: DivisionState;
   missions: Mission[];
   movingUnits: SerializedMovement[];
@@ -257,6 +260,7 @@ function deserializeGameState(data: SerializedGameState): GameState {
     divisions: data.divisions ?? {},
     borderMidpoints: data.borderMidpoints ?? {}, // Will be re-loaded from map data
     productionQueues,
+    regionOwners: data.regionOwners ?? {},
     relationships: data.relationships || [], // Default to empty array if not present
     mapMode: data.mapMode || 'country', // Default to country map mode
      regionCentroids: {}, // Will be re-loaded from map data
@@ -312,6 +316,7 @@ export function loadGame(): {
       // Version 5→6: countryBonuses (handled in deserializeGameState)
       // Version 6→7: border-combat model (attackerRegionId/defenderRegionId migration in deserializeGameState)
       // Version 7→8: root division state (rebuilt from regions/movements/combats)
+      // Version 8→9: region owner state split from map runtime state
     }
 
     // Validate required fields
@@ -321,10 +326,14 @@ export function loadGame(): {
     }
 
     const gameState = deserializeGameState(data.gameState);
+    const regionOwners = Object.keys(gameState.regionOwners ?? {}).length > 0
+      ? gameState.regionOwners
+      : extractRegionOwners(data.regions);
 
     return {
       gameState: {
         ...gameState,
+        regionOwners,
         divisions: buildDivisionState(
           gameState.movingUnits,
           gameState.activeCombats,

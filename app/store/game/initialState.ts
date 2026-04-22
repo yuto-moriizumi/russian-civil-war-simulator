@@ -47,6 +47,7 @@ export const initialGameState: GameState = {
   isPlaying: false,
   gameSpeed: 1,
   isPlayerAIEnabled: false,
+  regionOwners: {},
   divisions: {},
   missions: initialMissions,
   movingUnits: [],
