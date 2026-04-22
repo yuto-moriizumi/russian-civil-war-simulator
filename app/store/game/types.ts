@@ -11,9 +11,19 @@ import {
   RelationshipType,
   MapMode
 } from '../../types/game';
+import {
+  ClientPreferencesState,
+  GameUiState,
+  MapRuntimeState,
+  SimulationState,
+} from './stateTypes';
 
-export interface GameStore extends GameState {
-  // Additional UI State
+export interface GameStore
+  extends SimulationState,
+    GameUiState,
+    ClientPreferencesState,
+    MapRuntimeState {
+  // Compatibility state while callers migrate to regionDefinitions + regionOwners.
   regions: RegionState;
   adjacency: Adjacency;
   selectedRegion: string | null;

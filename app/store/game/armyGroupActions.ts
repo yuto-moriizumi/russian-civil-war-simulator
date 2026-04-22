@@ -7,6 +7,7 @@ import { StoreApi } from 'zustand';
 import { defendArmyGroup } from './armyGroupDefend';
 import { attackArmyGroup } from './armyGroupAttack';
 import { buildDivisionState } from '../../utils/divisionState';
+import { createRegionOwnersPatch } from '../../utils/regionState';
 
 /**
  * Defines actions related to army group management:
@@ -136,7 +137,7 @@ export const createArmyGroupActions = (
     set({
       theaters: allUpdatedTheaters,
       armyGroups: updatedArmyGroups,
-      regions: updatedRegions,
+      ...createRegionOwnersPatch(updatedRegions),
       divisions: buildDivisionState(updatedMovingUnits, updatedActiveCombats, get().divisions),
       movingUnits: updatedMovingUnits,
       activeCombats: updatedActiveCombats,
@@ -226,11 +227,12 @@ export const createArmyGroupActions = (
   advanceArmyGroup: (groupId: string) => {
     const state = get();
     attackArmyGroup(groupId, state, partial => {
+      const patch = partial.regions ? { ...partial, ...createRegionOwnersPatch(partial.regions) } : partial;
       set({
-        ...partial,
+        ...patch,
         divisions: buildDivisionState(
-          partial.movingUnits ?? state.movingUnits,
-          partial.activeCombats ?? state.activeCombats,
+          patch.movingUnits ?? state.movingUnits,
+          patch.activeCombats ?? state.activeCombats,
           state.divisions
         ),
       });
@@ -240,11 +242,12 @@ export const createArmyGroupActions = (
   attackArmyGroup: (groupId: string) => {
     const state = get();
     attackArmyGroup(groupId, state, partial => {
+      const patch = partial.regions ? { ...partial, ...createRegionOwnersPatch(partial.regions) } : partial;
       set({
-        ...partial,
+        ...patch,
         divisions: buildDivisionState(
-          partial.movingUnits ?? state.movingUnits,
-          partial.activeCombats ?? state.activeCombats,
+          patch.movingUnits ?? state.movingUnits,
+          patch.activeCombats ?? state.activeCombats,
           state.divisions
         ),
       });
@@ -254,11 +257,12 @@ export const createArmyGroupActions = (
   defendArmyGroup: (groupId: string) => {
     const state = get();
     defendArmyGroup(groupId, state, partial => {
+      const patch = partial.regions ? { ...partial, ...createRegionOwnersPatch(partial.regions) } : partial;
       set({
-        ...partial,
+        ...patch,
         divisions: buildDivisionState(
-          partial.movingUnits ?? state.movingUnits,
-          partial.activeCombats ?? state.activeCombats,
+          patch.movingUnits ?? state.movingUnits,
+          patch.activeCombats ?? state.activeCombats,
           state.divisions
         ),
       });

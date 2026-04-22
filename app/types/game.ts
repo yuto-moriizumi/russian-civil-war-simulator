@@ -38,6 +38,12 @@ export interface Region {
   owner: CountryId;     // Which country controls this region
 }
 
+export type RegionDefinition = Omit<Region, 'owner'>;
+
+export type RegionDefinitions = Record<string, RegionDefinition>;
+
+export type RegionOwnershipState = Record<string, CountryId>;
+
 export interface Adjacency {
   [regionId: string]: string[];
 }
@@ -238,6 +244,7 @@ export interface GameState {
   isPlaying: boolean;
   gameSpeed: GameSpeed;
   isPlayerAIEnabled: boolean;
+  regionOwners: RegionOwnershipState; // Canonical dynamic region ownership, keyed by region ID
   divisions: DivisionState; // Canonical division state, keyed by division ID
   missions: Mission[];
   movingUnits: Movement[];

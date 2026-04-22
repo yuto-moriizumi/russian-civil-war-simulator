@@ -8,6 +8,7 @@ import { StoreApi } from 'zustand';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { findPath, buildCanEnterPredicate } from '../../utils/pathfinding';
 import { getDivisionsInRegion } from '../../utils/divisionState';
+import { createRegionOwnersPatch } from '../../utils/regionState';
 
 /**
  * Returns the effective defenderDivisions to use when starting a new combat,
@@ -308,7 +309,7 @@ export const createUnitActions = (
     };
 
     set({
-      regions: nextRegions,
+      ...createRegionOwnersPatch(nextRegions),
       divisions: nextDivisions,
       movingUnits: [...movingUnits, newMovement],
       activeCombats: nextActiveCombats,

@@ -10,7 +10,7 @@ export function useMapData() {
   const mapDataLoaded = useGameStore(state => state.mapDataLoaded);
   const initializeCentroids = useGameStore(state => state.initializeCentroids);
   const detectAndUpdateTheaters = useGameStore(state => state.detectAndUpdateTheaters);
-  const persistedRegions = useGameStore(state => state.regions);
+  const persistedRegionOwners = useGameStore(state => state.regionOwners);
 
   useEffect(() => {
     if (mapDataLoaded) return;
@@ -29,19 +29,14 @@ export function useMapData() {
 
         const freshRegions = createInitialOwnership(geoData.features);
 
-        // If the store already has persisted region data (from a saved game),
-        // merge only the GeoJSON-derived metadata (name, countryIso3) into
-        // the persisted regions so that gameplay ownership and divisions are preserved.
-        const hasSavedRegions = Object.keys(persistedRegions).length > 0;
-        const regions = hasSavedRegions
+        // If the store already has persisted ownership data (from a saved game),
+        // merge GeoJSON-derived metadata with saved owners so gameplay ownership is preserved.
+        const hasSavedRegionOwners = Object.keys(persistedRegionOwners).length > 0;
+        const regions = hasSavedRegionOwners
           ? Object.fromEntries(
               Object.entries(freshRegions).map(([id, fresh]) => {
-                const saved = persistedRegions[id];
-                if (saved) {
-                  return [id, { ...saved, name: fresh.name, countryIso3: fresh.countryIso3 }];
-                }
-                // Region exists in GeoJSON but not in save — use fresh data
-                return [id, fresh];
+                const savedOwner = persistedRegionOwners[id];
+                return [id, savedOwner ? { ...fresh, owner: savedOwner } : fresh];
               })
             )
           : freshRegions;
@@ -64,6 +59,5 @@ export function useMapData() {
     };
 
     loadMapData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setRegions, setAdjacency, setBorderMidpoints, setMapDataLoaded, mapDataLoaded, initializeCentroids, detectAndUpdateTheaters]);
+  }, [setRegions, setAdjacency, setBorderMidpoints, setMapDataLoaded, mapDataLoaded, initializeCentroids, detectAndUpdateTheaters, persistedRegionOwners]);
 }

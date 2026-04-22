@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { CountryId, Screen, Region, Adjacency, Country, GameSpeed, GameState, RegionState, AIState, MapMode, ArmyGroup, Relationship, Mission, DivisionState } from '../../types/game';
+import { CountryId, Screen, Region, Adjacency, Country, GameSpeed, GameState, RegionState, AIState, MapMode, ArmyGroup, Relationship, Mission, DivisionState, RegionOwnershipState } from '../../types/game';
 import { initialMissions } from '../../data/gameData';
 import { createInitialAIState, createInitialAIArmyGroup } from '../../ai/cpuPlayer';
 import { createGameEvent, createNotification } from '../../utils/eventUtils';
@@ -7,12 +7,19 @@ import { initialGameState } from './initialState';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
 import * as turf from '@turf/turf';
+import { initialRegionOwnership } from '../../data/map';
 import { initialUnitPlacement, initialArmyGroupDefs } from '../../data/map/initialUnitPlacement';
 import { createDivision } from '../../utils/combat';
 import { getDivisionPrefix } from '../../data/countries';
 import { createDivisionSelectionActions } from './divisionSelectionActions';
 import { applyClaimedMissionRewards, applyLiberatePuppet, buildMissionRewardDescription } from './missionRewards';
 import { buildDivisionState, getDivisionsInRegion } from '../../utils/divisionState';
+import {
+  composeRegionState,
+  createRegionStatePatch,
+  extractRegionDefinitions,
+  extractRegionOwners,
+} from '../../utils/regionState';
 
 export { applyLiberatePuppet };
 
@@ -84,7 +91,7 @@ export const createBasicActions = (
   set: StoreApi<GameStore>['setState'],
   get: StoreApi<GameStore>['getState']
 ) => ({
-  setRegions: (regions: Record<string, Region>) => set({ regions }),
+  setRegions: (regions: Record<string, Region>) => set(createRegionStatePatch(regions)),
   
   setAdjacency: (adjacency: Adjacency) => set({ adjacency }),
 
@@ -202,14 +209,30 @@ export const createBasicActions = (
     // Reset in-memory store to initial state while preserving non-persisted
     // map data that was loaded asynchronously (regions, adjacency, centroids).
     const currentState = get();
+    const regionIds = new Set([
+      ...Object.keys(currentState.regionDefinitions),
+      ...Object.keys(currentState.regions),
+    ]);
+    const resetRegionOwners: RegionOwnershipState = {};
+    for (const regionId of regionIds) {
+      resetRegionOwners[regionId] = initialRegionOwnership[regionId] ?? 'neutral';
+    }
+    const resetRegions = composeRegionState(
+      currentState.regionDefinitions,
+      resetRegionOwners,
+      currentState.regions
+    );
     set({
       ...initialGameState,
       // Keep the loaded map geometry so the game doesn't need to re-fetch it.
-      regions: currentState.regions,
+      regions: resetRegions,
+      regionDefinitions: currentState.regionDefinitions,
+      regionOwners: resetRegionOwners,
       divisions: {},
       adjacency: currentState.adjacency,
       mapDataLoaded: currentState.mapDataLoaded,
       regionCentroids: currentState.regionCentroids,
+      borderMidpoints: currentState.borderMidpoints,
       // Navigate to country selection for a fresh start.
       currentScreen: 'countrySelect',
     });
@@ -356,10 +379,13 @@ export const createBasicActions = (
       armyGroups: armyGroupsForState,
       placementArmyGroups,
       regions: regionsForState,
+      regionDefinitions: currentState.regionDefinitions,
+      regionOwners: extractRegionOwners(regionsForState),
       divisions: divisionsForState,
       adjacency: currentState.adjacency,
       mapDataLoaded: currentState.mapDataLoaded,
       regionCentroids: currentState.regionCentroids,
+      borderMidpoints: currentState.borderMidpoints,
       // Preserve live game state across country switch
       productionQueues: currentState.productionQueues,
       dateTime: currentState.dateTime,
@@ -437,6 +463,7 @@ export const createBasicActions = (
             [countryId]: rewards.updatedCountryBonuses,
           },
           regions: rewards.updatedRegions,
+          regionOwners: extractRegionOwners(rewards.updatedRegions),
           divisions: rewards.updatedDivisions,
           movingUnits: rewards.updatedMovingUnits,
           relationships: rewards.updatedRelationships,
@@ -459,10 +486,20 @@ export const createBasicActions = (
   },
 
   loadGame: (savedData: { gameState: GameState; regions: RegionState; aiStates: AIState[] }) => {
+    const currentState = get();
+    const savedRegionOwners = Object.keys(savedData.gameState.regionOwners ?? {}).length > 0
+      ? savedData.gameState.regionOwners
+      : extractRegionOwners(savedData.regions);
+    const regionDefinitions = Object.keys(currentState.regionDefinitions).length > 0
+      ? currentState.regionDefinitions
+      : extractRegionDefinitions(savedData.regions);
+    const regions = composeRegionState(regionDefinitions, savedRegionOwners, savedData.regions);
     set({
       ...savedData.gameState,
       missions: mergeMissionsWithInitial(savedData.gameState.missions),
-      regions: savedData.regions,
+      regions,
+      regionDefinitions,
+      regionOwners: savedRegionOwners,
       divisions: buildDivisionState(
         savedData.gameState.movingUnits,
         savedData.gameState.activeCombats,

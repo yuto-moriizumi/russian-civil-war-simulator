@@ -25,6 +25,7 @@ import { defendArmyGroup } from './armyGroupDefend';
 import { TickPerf } from './tickPerformance';
 import { RegionState } from '../../types/game';
 import { buildDivisionState } from '../../utils/divisionState';
+import { createRegionOwnersPatch } from '../../utils/regionState';
 
 export { getEffectiveAIStates } from './tickHelpers/aiTick';
 
@@ -324,7 +325,7 @@ export const createTickActions = (
       dateTime: newDate,
       movingUnits: nextMovingUnits,
       activeCombats: nextActiveCombats,
-      regions: nextRegions,
+      ...createRegionOwnersPatch(nextRegions),
       divisions: buildDivisionState(nextMovingUnits, nextActiveCombats, nextDivisions),
       gameEvents: nextEvents,
       notifications: nextNotifications,
@@ -342,8 +343,11 @@ export const createTickActions = (
     let batchState = get();
     armyGroupActionsNeeded.forEach(group => {
       const collectPatch = (partial: Partial<GameStore>) => {
-        armyGroupPatches.push(partial);
-        batchState = { ...batchState, ...partial };
+        const patch = partial.regions
+          ? { ...partial, ...createRegionOwnersPatch(partial.regions) }
+          : partial;
+        armyGroupPatches.push(patch);
+        batchState = { ...batchState, ...patch };
       };
 
       if (group.mode === 'advance') {
@@ -397,7 +401,7 @@ export const createTickActions = (
         set({
           missions: aiMissionResults.updatedMissions,
           countryBonuses: aiMissionResults.countryBonuses,
-          regions: aiMissionResults.regions,
+          ...createRegionOwnersPatch(aiMissionResults.regions),
           divisions: buildDivisionState(aiMissionResults.movingUnits, get().activeCombats, aiMissionResults.divisions),
           movingUnits: aiMissionResults.movingUnits,
           relationships: aiMissionResults.relationships,
