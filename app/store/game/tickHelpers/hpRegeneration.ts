@@ -1,4 +1,5 @@
 import { Division, DivisionState, Movement } from '../../../types/game';
+import { GAME_CONFIG } from '../../../constants/gameConfig';
 
 /**
  * Regenerates HP for all stationary divisions (not in transit, not in combat).
@@ -12,7 +13,7 @@ export function regenerateDivisionHP(
   const result: DivisionState = {};
   for (const [id, div] of Object.entries(divisions)) {
     if (div.regionId !== null && !inTransitIds.has(id)) {
-      result[id] = { ...div, hp: Math.min(div.hp + 10, div.maxHp) };
+      result[id] = { ...div, hp: Math.min(div.hp + GAME_CONFIG.HP.REGEN_PER_TICK, div.maxHp) };
     } else {
       result[id] = div;
     }

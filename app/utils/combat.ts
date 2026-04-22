@@ -1,5 +1,6 @@
 import { Division, CombatResult, CountryId, ActiveCombat, ArmyGroup, RegionState, Adjacency, CountryBonuses } from '../types/game';
 import { getDivisionStats } from './bonusCalculator';
+import { GAME_CONFIG } from '../constants/gameConfig';
 
 export function generateDivisionId(): string {
   return `div_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -186,7 +187,7 @@ export function createActiveCombat(
     currentRound: 0,
     startTime: new Date(currentTime),
     lastRoundTime: new Date(currentTime),
-    roundIntervalHours: 1,
+    roundIntervalHours: GAME_CONFIG.COMBAT.ROUND_INTERVAL_HOURS,
     isComplete: false,
     victor: null,
   };

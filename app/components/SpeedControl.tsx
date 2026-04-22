@@ -1,6 +1,7 @@
 'use client';
 
 import { GameSpeed } from '../types/game';
+import { GAME_CONFIG } from '../constants/gameConfig';
 
 interface SpeedControlProps {
   isPlaying: boolean;
@@ -33,7 +34,7 @@ export default function SpeedControl({
 
       {/* Speed Buttons */}
       <div className="flex gap-1">
-        {([1, 2, 8, 32, 1000] as GameSpeed[]).map((speed) => (
+        {(Object.values(GAME_CONFIG.SPEEDS) as GameSpeed[]).map((speed) => (
           <button
             key={speed}
             onClick={() => onChangeSpeed(speed)}
@@ -43,7 +44,7 @@ export default function SpeedControl({
                 : 'bg-stone-700 text-stone-400 hover:bg-stone-600'
             }`}
           >
-            {speed === 1000 ? '∞' : `${speed}x`}
+            {speed === GAME_CONFIG.SPEEDS.MAX ? '∞' : `${speed}x`}
           </button>
         ))}
       </div>

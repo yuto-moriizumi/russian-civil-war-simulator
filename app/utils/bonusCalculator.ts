@@ -1,4 +1,5 @@
 import { Mission, CountryBonuses, CountryId } from '../types/game';
+import { GAME_CONFIG } from '../constants/gameConfig';
 
 /**
  * Base stats for divisions
@@ -10,10 +11,8 @@ export const BASE_DIVISION_STATS = {
   maxHp: 100,
 } as const;
 
-/**
- * Base production time in hours
- */
-export const BASE_PRODUCTION_TIME_HOURS = 336;
+/** @deprecated Use GAME_CONFIG.PRODUCTION.BASE_HOURS */
+export const BASE_PRODUCTION_TIME_HOURS = GAME_CONFIG.PRODUCTION.BASE_HOURS;
 
 /**
  * Calculate country bonuses from all claimed missions
