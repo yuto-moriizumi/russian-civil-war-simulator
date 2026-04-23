@@ -9,6 +9,7 @@ import {
   buildSimulationPatchFromEngineState,
   toEngineState,
 } from './services/engineStateAdapter';
+import { SimulationStep } from '../../domain/game/engine/types';
 
 export { getEffectiveAIStates } from '../../domain/game/logic/aiTick';
 
@@ -29,7 +30,17 @@ export const createTickActions = (
       warn: (...a) => console.warn(...a),
       error: (...a) => console.error(...a),
     };
-    const { state: next } = advanceSimulation(engineState, { countries, gameConfig: GAME_CONFIG }, simLogger);
+
+    const wrapStep = (step: SimulationStep, name: string): SimulationStep => {
+      return (ctx, deps, logger) => {
+        TickPerf.start(`[tick] ${name}`);
+        const result = step(ctx, deps, logger);
+        TickPerf.end(`[tick] ${name}`);
+        return result;
+      };
+    };
+
+    const { state: next } = advanceSimulation(engineState, { countries, gameConfig: GAME_CONFIG }, simLogger, { wrapStep });
 
     set(buildSimulationPatchFromEngineState(next));
 
