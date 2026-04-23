@@ -1,0 +1,714 @@
+{
+  "soviet": {
+    "id": "soviet",
+    "name": "Soviet Russia",
+    "combatName": "Red Army",
+    "flag": "/images/flags/soviet.svg",
+    "color": "#CC0000",
+    "adjective": "Soviet",
+    "firstArmyGroupName": "Red Army Group",
+    "divisionPrefix": "Red Guard",
+    "coreRegions": [
+      "RU-AD", "RU-AL", "RU-ALT", "RU-AMU", "RU-ARK", "RU-AST", "RU-BA", "RU-BEL",
+      "RU-BRY", "RU-BU", "RU-CE", "RU-CHE", "RU-CHU", "RU-CU", "RU-DA", "RU-IN",
+      "RU-IRK", "RU-IVA", "RU-KAM", "RU-KB", "RU-KC", "RU-KDA", "RU-KEM", "RU-KGN",
+      "RU-KHA", "RU-KHM", "RU-KIR", "RU-KK", "RU-KL", "RU-KLU", "RU-KO", "RU-KOS",
+      "RU-KR", "RU-KRS", "RU-KYA", "RU-LEN", "RU-LIP", "RU-MAG", "RU-ME", "RU-MO",
+      "RU-MOS", "RU-MOW", "RU-MUR", "RU-NEN", "RU-NGR", "RU-NIZ", "RU-NVS", "RU-OMS",
+      "RU-ORE", "RU-ORL", "RU-PER", "RU-PNZ", "RU-PSK", "RU-ROS", "RU-RYA", "RU-SA",
+      "RU-SAM", "RU-SAR", "RU-SE", "RU-SMO", "RU-SPE", "RU-STA", "RU-SVE", "RU-TA",
+      "RU-TAM", "RU-TOM", "RU-TUL", "RU-TVE", "RU-TYU", "RU-UD", "RU-ULY", "RU-VGG",
+      "RU-VLA", "RU-VLG", "RU-VOR", "RU-YAN", "RU-YAR", "RU-ZAB"
+    ]
+  },
+  "white": {
+    "id": "white",
+    "name": "White Army",
+    "combatName": "White Army",
+    "flag": "/images/flags/white.svg",
+    "color": "#0d3b0d",
+    "adjective": "White",
+    "firstArmyGroupName": "Volunteer Army",
+    "divisionPrefix": "White Guard",
+    "coreRegions": [
+      "RU-AD", "RU-AL", "RU-ALT", "RU-AMU", "RU-ARK", "RU-AST", "RU-BA", "RU-BEL",
+      "RU-BRY", "RU-BU", "RU-CE", "RU-CHE", "RU-CHU", "RU-CU", "RU-DA", "RU-IN",
+      "RU-IRK", "RU-IVA", "RU-KAM", "RU-KB", "RU-KC", "RU-KDA", "RU-KEM", "RU-KGN",
+      "RU-KHA", "RU-KHM", "RU-KIR", "RU-KK", "RU-KL", "RU-KLU", "RU-KO", "RU-KOS",
+      "RU-KR", "RU-KRS", "RU-KYA", "RU-LEN", "RU-LIP", "RU-MAG", "RU-ME", "RU-MO",
+      "RU-MOS", "RU-MOW", "RU-MUR", "RU-NEN", "RU-NGR", "RU-NIZ", "RU-NVS", "RU-OMS",
+      "RU-ORE", "RU-ORL", "RU-PER", "RU-PNZ", "RU-PRI", "RU-PSK", "RU-ROS", "RU-RYA",
+      "RU-SA", "RU-SAM", "RU-SAR", "RU-SE", "RU-SMO", "RU-STA", "RU-SVE", "RU-TA",
+      "RU-TAM", "RU-TOM", "RU-TUL", "RU-TVE", "RU-TYU", "RU-UD", "RU-ULY", "RU-VGG",
+      "RU-VLA", "RU-VLG", "RU-VOR", "RU-YAN", "RU-YAR", "RU-ZAB"
+    ]
+  },
+  "siberian": {
+    "id": "siberian",
+    "comment": "Siberian Republic (July-November 1918). Historical Context: Short-lived regionalist state formed by the Provisional Siberian Government after the July 4, 1918 Declaration of Independence in Omsk. Intended to secure Siberian autonomy while coordinating anti-Bolshevik forces, it merged into the Provisional All-Russian Government on September 23, 1918 and formally disestablished on November 3, 1918.\n\nKey Historical Events:\n- July 4, 1918: Declaration of Independence of Siberia (Omsk)\n- July 1918: Provisional Siberian Government consolidates control\n- September 23, 1918: Joins Provisional All-Russian Government (Ufa Directory)\n- November 3, 1918: Formal self-liquidation, absorbed into White Russian State\n\nDiplomatic & Military Context:\n- Core anti-Bolshevik state, aligned with White Movement\n- Conflict with Soviet Russia and Red partisan forces in Siberia\n- Allied/merged with White Russian State under Kolchak\n- Relied on Siberian Army (tens of thousands of troops) and regional militias\n\nGame Configuration Notes:\n- Recommended appearance: mid-1918 via event (July 4, 1918)\n- Suggested war: 'soviet' (primary), neutral/ally with 'white' (merge event)\n- Suggested units: 6-10 divisions, moderate strength (reflecting Siberian Army)\n- Core regions: West and Central Siberia (Omsk, Tomsk, Novosibirsk, Krasnoyarsk, etc.)",
+    "name": "Siberian Republic",
+    "combatName": "Siberian Army",
+    "flag": "/images/flags/siberian.svg",
+    "color": "#14604E",
+    "adjective": "Siberian",
+    "firstArmyGroupName": "Siberian Army Group",
+    "divisionPrefix": "Siberian",
+    "selectable": false,
+    "coreRegions": [
+      "RU-AL", "RU-ALT", "RU-IRK", "RU-KEM", "RU-KGN", "RU-KK", "RU-KYA", "RU-NVS",
+      "RU-OMS", "RU-TOM", "RU-TYU"
+    ]
+  },
+  "finland": {
+    "id": "finland",
+    "name": "Finland",
+    "combatName": "Finnish Army",
+    "flag": "/images/flags/finland.svg",
+    "color": "#FFFFFF",
+    "adjective": "Finnish",
+    "firstArmyGroupName": "Finnish Defense Forces",
+    "divisionPrefix": "Finnish Guard",
+    "coreRegions": [
+      "FI-01", "FI-02", "FI-03", "FI-04", "FI-05", "FI-06", "FI-07", "FI-08",
+      "FI-09", "FI-10", "FI-11", "FI-12", "FI-13", "FI-14", "FI-15", "FI-16",
+      "FI-17", "FI-18", "FI-19", "RU-KR", "RU-MUR"
+    ]
+  },
+  "ukraine": {
+    "id": "ukraine",
+    "name": "Ukraine",
+    "combatName": "Ukrainian Army",
+    "flag": "/images/flags/ukraine.svg",
+    "color": "#0057B7",
+    "adjective": "Ukrainian",
+    "firstArmyGroupName": "Ukrainian Army",
+    "divisionPrefix": "Ukrainian Guard",
+    "coreRegions": [
+      "BY-BR", "BY-HO", "RU-KDA", "RU-ROS", "UA-05", "UA-07", "UA-09", "UA-12",
+      "UA-14", "UA-18", "UA-21", "UA-23", "UA-26", "UA-30", "UA-32", "UA-35",
+      "UA-40", "UA-43", "UA-46", "UA-48", "UA-51", "UA-53", "UA-56", "UA-59",
+      "UA-61", "UA-63", "UA-65", "UA-68", "UA-71", "UA-74", "UA-77"
+    ]
+  },
+  "don": {
+    "id": "don",
+    "name": "Don Republic",
+    "combatName": "Don Cossacks",
+    "flag": "/images/flags/don.svg",
+    "color": "#FFD700",
+    "adjective": "Don",
+    "firstArmyGroupName": "Don Cossack Host",
+    "divisionPrefix": "Don Cossack",
+    "selectable": false,
+    "coreRegions": [
+      "RU-ROS", "RU-VGG"
+    ]
+  },
+  "fswr": {
+    "id": "fswr",
+    "name": "Finnish Socialist Workers' Republic",
+    "combatName": "Red Guards",
+    "flag": "/images/flags/fswr.svg",
+    "color": "#CC0000",
+    "adjective": "Red Guard",
+    "firstArmyGroupName": "Red Guard Army Group",
+    "divisionPrefix": "Red Guard",
+    "selectable": false,
+    "coreRegions": [
+      "FI-01", "FI-02", "FI-03", "FI-04", "FI-05", "FI-06", "FI-07", "FI-08",
+      "FI-09", "FI-10", "FI-11", "FI-12", "FI-13", "FI-14", "FI-15", "FI-16",
+      "FI-17", "FI-18", "FI-19", "RU-KR", "RU-MUR"
+    ]
+  },
+  "iskolat": {
+    "id": "iskolat",
+    "name": "Iskolat (Latvian Soviet Republic)",
+    "combatName": "Red Latvian Riflemen",
+    "flag": "/images/flags/iskolat.svg",
+    "color": "#8B0000",
+    "adjective": "Iskolat",
+    "firstArmyGroupName": "Red Latvian Riflemen",
+    "divisionPrefix": "Latvian Guard",
+    "selectable": false,
+    "coreRegions": [
+      "LV-002", "LV-007", "LV-011", "LV-015", "LV-016", "LV-022", "LV-026", "LV-033",
+      "LV-041", "LV-042", "LV-047", "LV-050", "LV-052", "LV-054", "LV-056", "LV-058",
+      "LV-059", "LV-062", "LV-067", "LV-068", "LV-073", "LV-080", "LV-087", "LV-088",
+      "LV-089", "LV-091", "LV-094", "LV-097", "LV-099", "LV-101", "LV-102", "LV-106",
+      "LV-111", "LV-112", "LV-113", "LV-DGV", "LV-JEL", "LV-JUR", "LV-LPX", "LV-REZ",
+      "LV-RIX", "LV-VEN", "LVA"
+    ]
+  },
+  "dkr": {
+    "id": "dkr",
+    "name": "Donetsk–Krivoy Rog Soviet Republic",
+    "combatName": "Donetsk-Krivoy Rog Red Guards",
+    "flag": "/images/flags/dkr.svg",
+    "color": "#A52A2A",
+    "adjective": "DKR",
+    "firstArmyGroupName": "Southern Red Guard",
+    "divisionPrefix": "Industrial Guard",
+    "selectable": false,
+    "coreRegions": [
+      "UA-09", "UA-12", "UA-14", "UA-23", "UA-59", "UA-63", "UA-65"
+    ]
+  },
+  "neutral": {
+    "id": "neutral",
+    "name": "Neutral",
+    "combatName": "Neutral Forces",
+    "flag": "",
+    "color": "#808080",
+    "adjective": "Independent",
+    "firstArmyGroupName": "1st Army",
+    "divisionPrefix": "Militia",
+    "selectable": false,
+    "coreRegions": []
+  },
+  "foreign": {
+    "id": "foreign",
+    "name": "Foreign",
+    "combatName": "Foreign Forces",
+    "flag": "",
+    "color": "#4A90D9",
+    "adjective": "Foreign",
+    "firstArmyGroupName": "Expeditionary Force",
+    "divisionPrefix": "Foreign Legion",
+    "selectable": false,
+    "coreRegions": []
+  },
+  "germany": {
+    "id": "germany",
+    "name": "German Empire",
+    "combatName": "Imperial German Army",
+    "flag": "/images/flags/germany.svg",
+    "color": "#555555",
+    "adjective": "German",
+    "firstArmyGroupName": "Imperial German Army",
+    "divisionPrefix": "German Guard",
+    "selectable": false,
+    "coreRegions": [
+      "DE-BB", "DE-BE", "DE-BW", "DE-BY", "DE-HB", "DE-HE", "DE-HH", "DE-MV",
+      "DE-NI", "DE-NW", "DE-RP", "DE-SH", "DE-SL", "DE-SN", "DE-ST", "DE-TH",
+      "PL-DS", "PL-LB", "PL-OP", "PL-PM", "PL-SL", "PL-WN", "PL-ZP", "RU-KGD"
+    ]
+  },
+  "bulgaria": {
+    "id": "bulgaria",
+    "name": "Tsardom of Bulgaria",
+    "combatName": "Bulgarian Army",
+    "flag": "/images/flags/bulgaria.svg",
+    "color": "#00966E",
+    "adjective": "Bulgarian",
+    "firstArmyGroupName": "Bulgarian Army",
+    "divisionPrefix": "Bulgarian Guard",
+    "selectable": false,
+    "coreRegions": [
+      "19869673B18425588006505", "19869673B2276524487216", "19869673B25367051519859", "19869673B29343041094723", "19869673B59759079390778", "19869673B93268339583324", "BG-01", "BG-02",
+      "BG-03", "BG-04", "BG-05", "BG-06", "BG-07", "BG-08", "BG-09", "BG-10",
+      "BG-11", "BG-12", "BG-13", "BG-14", "BG-15", "BG-16", "BG-17", "BG-18",
+      "BG-19", "BG-20", "BG-21", "BG-22", "BG-23", "BG-24", "BG-25", "BG-26",
+      "BG-27", "BG-28", "RS-22", "RS-24"
+    ]
+  },
+  "poland": {
+    "id": "poland",
+    "name": "Kingdom of Poland",
+    "combatName": "Polnische Wehrmacht",
+    "flag": "/images/flags/poland.svg",
+    "color": "#DC143C",
+    "adjective": "Polish",
+    "firstArmyGroupName": "Polnische Wehrmacht",
+    "divisionPrefix": "Polish Guard",
+    "selectable": false,
+    "coreRegions": [
+      "PL-KP", "PL-LD", "PL-LU", "PL-MA", "PL-MZ", "PL-OP", "PL-PD", "PL-PK",
+      "PL-PM", "PL-SK", "PL-SL", "PL-WP"
+    ]
+  },
+  "austriahungary": {
+    "id": "austriahungary",
+    "name": "Austria-Hungary",
+    "combatName": "Austro-Hungarian Army",
+    "flag": "/images/flags/austriahungary.svg",
+    "color": "#B8860B",
+    "adjective": "Austro-Hungarian",
+    "firstArmyGroupName": "k.u.k. Armee",
+    "divisionPrefix": "Imperial Division",
+    "selectable": false,
+    "coreRegions": [
+      "AT-1", "AT-2", "AT-3", "AT-4", "AT-5", "AT-6", "AT-7", "AT-8",
+      "AT-9", "BA-BIH*", "BA-BRC*", "BA-SRP*", "CZ-10", "CZ-20", "CZ-31", "CZ-32",
+      "CZ-41", "CZ-42", "CZ-51", "CZ-52", "CZ-53", "CZ-63", "CZ-64", "CZ-71",
+      "CZ-72", "CZ-80", "HR-01", "HR-02", "HR-03", "HR-04", "HR-05", "HR-06",
+      "HR-07", "HR-08", "HR-09", "HR-10", "HR-11", "HR-12", "HR-13", "HR-14",
+      "HR-15", "HR-16", "HR-17", "HR-18", "HR-19", "HR-20", "HR-21", "HU-BA",
+      "HU-BE", "HU-BK", "HU-BZ", "HU-CS", "HU-FE", "HU-GS", "HU-HB", "HU-HE",
+      "HU-JN", "HU-KE", "HU-NO", "HU-PE", "HU-SO", "HU-SZ", "HU-TO", "HU-VA",
+      "HU-VE", "HU-ZA", "PL-MA", "PL-PK", "RO-AB", "RO-AR", "RO-BH", "RO-BN",
+      "RO-BV", "RO-CJ", "RO-CS", "RO-CV", "RO-HD", "RO-HR", "RO-MM", "RO-MS",
+      "RO-SB", "RO-SJ", "RO-SM", "RO-TM", "RS-01", "RS-02", "RS-03", "RS-04",
+      "RS-05", "RS-06", "RS-07", "SI03", "SI04", "SK-BC", "SK-BL", "SK-KI",
+      "SK-NI", "SK-PV", "SK-TA", "SK-TC", "SK-ZI", "UA-21", "UA-26", "UA-46",
+      "UA-61", "UA-77"
+    ]
+  },
+  "romania": {
+    "id": "romania",
+    "name": "Kingdom of Romania",
+    "combatName": "Romanian Army",
+    "flag": "/images/flags/romania.svg",
+    "color": "#FCD115",
+    "adjective": "Romanian",
+    "firstArmyGroupName": "1st Romanian Army",
+    "divisionPrefix": "Romanian",
+    "selectable": false,
+    "coreRegions": [
+      "MD-BA", "MD-CU", "MDA", "RO-AB", "RO-AG", "RO-AR", "RO-B", "RO-BC",
+      "RO-BH", "RO-BN", "RO-BR", "RO-BT", "RO-BV", "RO-BZ", "RO-CJ", "RO-CL",
+      "RO-CS", "RO-CT", "RO-CV", "RO-DB", "RO-DJ", "RO-GJ", "RO-GL", "RO-GR",
+      "RO-HD", "RO-HR", "RO-IF", "RO-IL", "RO-IS", "RO-MH", "RO-MM", "RO-MS",
+      "RO-NT", "RO-OT", "RO-PH", "RO-SB", "RO-SJ", "RO-SM", "RO-SV", "RO-TL",
+      "RO-TM", "RO-TR", "RO-VL", "RO-VN", "RO-VS", "UA-77"
+    ]
+  },
+  "greece": {
+    "id": "greece",
+    "name": "Kingdom of Greece",
+    "combatName": "Greek Army",
+    "flag": "/images/flags/greece.svg",
+    "color": "#0D5EAF",
+    "adjective": "Greek",
+    "firstArmyGroupName": "Hellenic Army",
+    "divisionPrefix": "Greek",
+    "selectable": false,
+    "coreRegions": [
+      "AL-05", "AL-06", "AL-12", "GR-AI", "GR-AT", "GR-CR", "GR-EM", "GR-MA",
+      "GR-MH", "GR-PW", "GR-TC", "TR-09", "TR-10", "TR-16", "TR-17", "TR-22",
+      "TR-34", "TR-35", "TR-39", "TR-41", "TR-48", "TR-59", "TR-77"
+    ]
+  },
+  "lithuania": {
+    "id": "lithuania",
+    "name": "Kingdom of Lithuania",
+    "combatName": "Lithuanian Army",
+    "flag": "/images/flags/lithuania.svg",
+    "color": "#FFCC00",
+    "adjective": "Lithuanian",
+    "firstArmyGroupName": "Lithuanian Defense Forces",
+    "divisionPrefix": "Lithuanian Guard",
+    "selectable": false,
+    "coreRegions": [
+      "BY-HR", "LT-AL", "LT-KL", "LT-KU", "LT-MR", "LT-PN", "LT-SA", "LT-TA",
+      "LT-TE", "LT-UT", "LT-VL"
+    ]
+  },
+  "ottoman": {
+    "id": "ottoman",
+    "name": "Ottoman Empire",
+    "combatName": "Ottoman Army",
+    "flag": "/images/flags/ottoman.svg",
+    "color": "#C7002B",
+    "adjective": "Ottoman",
+    "firstArmyGroupName": "Ottoman Army",
+    "divisionPrefix": "Ottoman",
+    "selectable": false,
+    "coreRegions": [
+      "TR-01", "TR-02", "TR-03", "TR-04", "TR-05", "TR-06", "TR-07", "TR-08",
+      "TR-09", "TR-10", "TR-11", "TR-12", "TR-13", "TR-14", "TR-15", "TR-16",
+      "TR-17", "TR-18", "TR-19", "TR-20", "TR-21", "TR-22", "TR-23", "TR-24",
+      "TR-25", "TR-26", "TR-27", "TR-28", "TR-29", "TR-30", "TR-31", "TR-32",
+      "TR-33", "TR-34", "TR-35", "TR-36", "TR-37", "TR-38", "TR-39", "TR-40",
+      "TR-41", "TR-42", "TR-43", "TR-44", "TR-45", "TR-46", "TR-47", "TR-48",
+      "TR-49", "TR-50", "TR-51", "TR-52", "TR-53", "TR-54", "TR-55", "TR-56",
+      "TR-57", "TR-58", "TR-59", "TR-60", "TR-61", "TR-62", "TR-63", "TR-64",
+      "TR-65", "TR-66", "TR-67", "TR-68", "TR-69", "TR-70", "TR-71", "TR-72",
+      "TR-73", "TR-74", "TR-75", "TR-76", "TR-77", "TR-78", "TR-79", "TR-80",
+      "TR-81"
+    ]
+  },
+  "serbia": {
+    "id": "serbia",
+    "name": "Kingdom of Serbia",
+    "combatName": "Serbian Army",
+    "flag": "/images/flags/serbia.svg",
+    "color": "#ED4135",
+    "adjective": "Serbian",
+    "firstArmyGroupName": "Serbian Army Group",
+    "divisionPrefix": "Serbian Guard",
+    "selectable": false,
+    "coreRegions": [
+      "19869673B18118429348634", "19869673B18425588006505", "19869673B2276524487216", "19869673B24262378327284", "19869673B25367051519859", "19869673B29343041094723", "19869673B59759079390778", "19869673B93268339583324",
+      "RS-00", "RS-01", "RS-02", "RS-03", "RS-04", "RS-05", "RS-06", "RS-07",
+      "RS-08", "RS-09", "RS-10", "RS-11", "RS-12", "RS-13", "RS-14", "RS-15",
+      "RS-16", "RS-17", "RS-18", "RS-19", "RS-20", "RS-21", "RS-22", "RS-23",
+      "RS-24", "XKX"
+    ]
+  },
+  "albania": {
+    "id": "albania",
+    "name": "Principality of Albania",
+    "combatName": "Albanian Forces",
+    "flag": "/images/flags/albania.svg",
+    "color": "#E41E20",
+    "adjective": "Albanian",
+    "firstArmyGroupName": "Albanian Army Group",
+    "divisionPrefix": "Albanian Guard",
+    "selectable": false,
+    "coreRegions": []
+  },
+  "persia": {
+    "id": "persia",
+    "name": "Qajar Iran (Persia)",
+    "combatName": "Persian Gendarmerie",
+    "flag": "/images/flags/persia.svg",
+    "color": "#239f40",
+    "adjective": "Persian",
+    "firstArmyGroupName": "Persian Cossack Brigade",
+    "divisionPrefix": "Persian",
+    "selectable": false,
+    "coreRegions": [
+      "17685810B10287014873220", "17685810B13889842409055", "17685810B1629292304739", "17685810B16876171097638", "17685810B1706611058442", "17685810B18940918043543", "17685810B20487167396081", "17685810B23440170667410",
+      "17685810B3064942505232", "17685810B30738859401369", "17685810B38369866596405", "17685810B43663780619119", "17685810B5034457967489", "17685810B50760377364469", "17685810B57153227405324", "17685810B58703616021829",
+      "17685810B60472007491578", "17685810B6126582797818", "17685810B64585898126645", "17685810B64963005891064", "17685810B65996934059620", "17685810B67379877863322", "17685810B68217123081047", "17685810B7382218659393",
+      "17685810B76974127550435", "17685810B81741200709170", "17685810B83340129779815", "17685810B84447356108506", "17685810B90334917415902", "17685810B90918579754309", "17685810B98247647047819", "17685810B99097995033086",
+      "IR-01", "IR-02", "IR-03", "IR-04", "IR-05", "IR-06", "IR-08", "IR-09",
+      "IR-10", "IR-11", "IR-12", "IR-13", "IR-14", "IR-15", "IR-16", "IR-17",
+      "IR-18", "IR-19", "IR-20", "IR-21", "IR-22", "IR-23", "IR-24", "IR-25",
+      "IR-26", "IR-27", "IR-28", "IR-29", "IR-30", "IR-31"
+    ]
+  },
+  "ukrainesoviet": {
+    "id": "ukrainesoviet",
+    "name": "Ukrainian People's Republic of Soviets",
+    "combatName": "Red Ukrainian Forces",
+    "flag": "/images/flags/ukrainesoviet.svg",
+    "color": "#8B0000",
+    "adjective": "Soviet Ukrainian",
+    "firstArmyGroupName": "Soviet Ukrainian Army",
+    "divisionPrefix": "Red Ukrainian Guard",
+    "selectable": false,
+    "coreRegions": [
+      "UA-05", "UA-07", "UA-09", "UA-12", "UA-14", "UA-18", "UA-21", "UA-23",
+      "UA-26", "UA-30", "UA-32", "UA-35", "UA-40", "UA-43", "UA-46", "UA-48",
+      "UA-51", "UA-53", "UA-56", "UA-59", "UA-61", "UA-63", "UA-65", "UA-68",
+      "UA-71", "UA-74", "UA-77"
+    ]
+  },
+  "balticdutchy": {
+    "id": "balticdutchy",
+    "name": "United Baltic Duchy",
+    "combatName": "Baltische Landeswehr",
+    "flag": "/images/flags/balticdutchy.svg",
+    "color": "#4B7BA7",
+    "adjective": "Baltic",
+    "firstArmyGroupName": "Baltische Landeswehr",
+    "divisionPrefix": "Baltic Guard",
+    "selectable": false,
+    "coreRegions": [
+      "EE-01", "EE-02", "EE-03", "EE-37", "EE-39", "EE-44", "EE-49", "EE-51",
+      "EE-57", "EE-59", "EE-65", "EE-67", "EE-70", "EE-74", "EE-78", "EE-82",
+      "EE-84", "EE-86", "LV-002", "LV-007", "LV-011", "LV-015", "LV-016", "LV-022",
+      "LV-026", "LV-033", "LV-041", "LV-042", "LV-047", "LV-050", "LV-052", "LV-054",
+      "LV-056", "LV-058", "LV-059", "LV-062", "LV-067", "LV-068", "LV-073", "LV-080",
+      "LV-087", "LV-088", "LV-089", "LV-091", "LV-094", "LV-097", "LV-099", "LV-101",
+      "LV-102", "LV-106", "LV-111", "LV-112", "LV-113", "LV-DGV", "LV-JEL", "LV-JUR",
+      "LV-LPX", "LV-REZ", "LV-RIX", "LV-VEN", "LVA"
+    ]
+  },
+  "stavropol": {
+    "id": "stavropol",
+    "name": "Stavropol Soviet Republic",
+    "combatName": "Stavropol Red Guards",
+    "flag": "/images/flags/stavropol.svg",
+    "color": "#CE1126",
+    "adjective": "Stavropol Soviet",
+    "firstArmyGroupName": "Stavropol Red Guard",
+    "divisionPrefix": "Stavropol Guard",
+    "selectable": false,
+    "coreRegions": [
+      "RU-STA"
+    ]
+  },
+  "odessa": {
+    "id": "odessa",
+    "name": "Odessa Soviet Republic",
+    "combatName": "Odessa Red Guards",
+    "flag": "/images/flags/odessa.svg",
+    "color": "#DC143C",
+    "adjective": "Odessa Soviet",
+    "firstArmyGroupName": "Odessa Red Guard",
+    "divisionPrefix": "Odessa Guard",
+    "selectable": false,
+    "coreRegions": [
+      "MD-01", "UA-51"
+    ]
+  },
+  "terek": {
+    "id": "terek",
+    "name": "Terek Soviet Republic",
+    "combatName": "Terek Red Guards",
+    "flag": "/images/flags/terek.svg",
+    "color": "#B22222",
+    "adjective": "Terek Soviet",
+    "firstArmyGroupName": "Terek Red Army",
+    "divisionPrefix": "Terek Guard",
+    "selectable": false,
+    "coreRegions": [
+      "RU-CE", "RU-DA", "RU-IN", "RU-KB", "RU-SE"
+    ]
+  },
+  "taurida": {
+    "id": "taurida",
+    "name": "Taurida Soviet Socialist Republic",
+    "combatName": "Taurida Red Guards",
+    "flag": "/images/flags/taurida.svg",
+    "color": "#8B0000",
+    "adjective": "Taurida Soviet",
+    "firstArmyGroupName": "Taurida Red Army",
+    "divisionPrefix": "Taurida Guard",
+    "selectable": false,
+    "coreRegions": [
+      "RU-Cr", "UA-23", "UA-40", "UA-43", "UA-65"
+    ]
+  },
+  "donsoviets": {
+    "id": "donsoviets",
+    "comment": "Don Soviet Republic (March-May 1918). Historical Context: Proclaimed after the retreat of the Volunteer Army from Rostov. Controlled the Don region until overthrown by the Don Cossack revolt and German advance.\nRelationships:\n- War with 'white' (Volunteer Army) and 'don' (Don Republic/Don Cossacks).\n- Opposed by 'germany' (historical German intervention in May 1918).\nInitial State Suggestion:\n- Appears around March 1918.\n- Core regions: RU-ROS, RU-VGG, RU-AST.\n- Starting units: Moderate Red Guard strength in Rostov and surrounding areas.",
+    "name": "Don Soviet Republic",
+    "combatName": "Don Red Army",
+    "flag": "/images/flags/donsoviets.svg",
+    "color": "#DC143C",
+    "adjective": "Don Soviet",
+    "firstArmyGroupName": "Don Soviet Army",
+    "divisionPrefix": "Don Soviet Guard",
+    "selectable": false,
+    "coreRegions": [
+      "RU-ROS", "RU-VGG"
+    ]
+  },
+  "kuban": {
+    "id": "kuban",
+    "comment": "Kuban People's Republic (January 1918 - March 1920). Historical Context: Anti-Bolshevik Cossack state in the Kuban region, proclaimed on January 28, 1918. Led by the Kuban Rada (parliament), it sought independence from Russia and briefly attempted union with Ukraine.\n\nKey Historical Events:\n- February 16, 1918: Declared independence from Bolshevik Russia\n- March 1918: Placed itself under Lavr Kornilov's authority after his successful offensive\n- June 1918: Growing friction between leadership and Cossacks (Chernomortsy vs Lineitsy factions)\n- December 1918: Sent delegation to Paris Peace Conference seeking international recognition\n- April 1919: Announced break from Denikin and refusal to further cooperate with White Movement\n- November 6, 1919: De facto occupied by Anton Denikin's forces; government members arrested\n- March 17, 1920: Fully occupied and dissolved by Soviet forces\n\nDiplomatic Recognition:\n- De jure recognized by: Ukrainian People's Republic, Azerbaijan Democratic Republic, Germany, Ottoman Empire, Democratic Republic of Georgia, and the Mountainous Republic of the Northern Caucasus\n- Not recognized by: French Third Republic, British Empire, or White Russian government\n\nMilitary Characteristics:\n- Primarily consisted of Kuban Cossack regiments (cavalry-heavy, mobile units)\n- Limited artillery and logistics compared to Volunteer Army\n- Skilled in mounted warfare and irregular tactics\n- Estimated combat strength: 15,000-25,000 combatants at peak\n\nGame Configuration Recommendations:\n- Should appear at game start or be manifested as playable/NPC starting in January 1918\n- Core Regions: RU-KDA (Krasnodar), RU-STA (Stavropol), RU-AD (Adygea) - Kuban heartland\n- Starting Relationships (January 1918):\n  * War with 'soviet' (Bolsheviks) and 'fswr' (Finnish Socialist Workers)\n  * Military access from 'ukraine' and 'don' (temporary Cossack alliance)\n  * Neutral with 'white', but joins White cause by June 1918 → war change recommended by June\n  * Neutral/Trade with 'ottoman' and 'germany' (some arms smuggling in early 1918)\n- Suggested Historical Events (via scheduledEvents):\n  * November 6, 1919: Submit to 'white' control (Denikin occupation) - AI becomes subordinate to White\n  * December 1919: Attempt to re-establish independence (AI returns to autonomous status)\n  * March 17, 1920: Dissolution and Soviet annexation - transfer all territory to 'kuban_soviet'\n\nAI Strategy Notes:\n- Early Game (Jan-June 1918): Defend homeland, resist Soviet expansion, build alliances with Don Cossacks\n- Mid Game (June 1918-Nov 1919): Shift to supporting White Army against Reds, maintain territorial control\n- Late Game (Nov 1919-Mar 1920): Historical defeat is inevitable; preserve forces, consider evacuation\n- Victory Conditions: Control Kuban core regions + resist Soviet control until Nov 1919 (historical survival)\n- Alternative Victory: Build alliances to resist Soviet pressure\n\nMilitary Unit Recommendations:\n- Style: Professional national army (similar to Polish or Scandinavian armies)\n- Division types: Infantry, Mountain Infantry (Caucasus terrain), Artillery\n- Starting deployment: Distributed across major regions for defense\n- Notable units: Georgian National Guard (elite), Tbilisi garrison, frontier defense forces",
+    "name": "Kuban People's Republic",
+    "combatName": "Kuban Cossacks",
+    "flag": "/images/flags/kuban.svg",
+    "color": "#FF0066",
+    "adjective": "Kuban",
+    "firstArmyGroupName": "Kuban Cossack Host",
+    "divisionPrefix": "Kuban Cossack",
+    "selectable": false,
+    "coreRegions": [
+      "RU-AD", "RU-KDA", "RU-STA"
+    ]
+  },
+  "kuban_soviet": {
+    "id": "kuban_soviet",
+    "name": "Kuban Soviet Republic",
+    "combatName": "Kuban Red Army",
+    "flag": "/images/flags/kuban_soviet.svg",
+    "color": "#D32F2F",
+    "adjective": "Kuban Soviet",
+    "firstArmyGroupName": "Kuban Revolutionary Army",
+    "divisionPrefix": "Kuban Red Guard",
+    "selectable": false,
+    "coreRegions": [
+      "RU-AD", "RU-KC", "RU-KDA"
+    ]
+  },
+  "moldavia": {
+    "id": "moldavia",
+    "comment": "Moldavian Democratic Republic (December 1917 - April 1918). Historical Context: Proclaimed by Sfatul Țării (National Council) on December 2/15, 1917, following the February Revolution and collapse of the Russian Empire. Initially autonomous within Russia, briefly independent (January-April 1918), then united with Romania.\n\nTerritories: Controlled Bessarabia (modern-day Moldova) with capital in Chișinău.\n\nHistorical Facts:\n- Founded: December 15, 1917 (OS: December 2, 1917)\n- Independence declared: February 6, 1918 (OS: January 24, 1918)\n- Union with Romania: April 9, 1918 (OS: March 27, 1918)\n- Key leader: Ion Inculeț (President of Sfatul Țării)\n- Anthem: \"Deșteaptă-te, române!\" (Awaken thee, Romanian!)\n\nMilitary Strength: Weak, relied on Romanian military intervention; internal conflicts between nationalist and Bolshevik factions.\n\nDiplomatic Relations:\n- War with: Soviet Russia (Bolshevik forces), briefly with Odessa Soviet Republic\n- Allied with: Romania (after invasion in January 1918)\n- Hostile to: Bolshevik forces under Rumcherod\n\nGame Configuration Notes:\n- Appears mid-game around January 1918\n- Weak starting units to reflect historical weak military\n- Should be AI-controlled (NPC) as a minor state\n- Can be conquered by Soviet or Romanian forces\n- Good for narrative missions about small states caught between powers",
+    "name": "Moldavian Democratic Republic",
+    "combatName": "Moldavian Militia",
+    "flag": "/images/flags/moldavia.svg",
+    "color": "#003399",
+    "adjective": "Moldavian",
+    "firstArmyGroupName": "Moldavian National Guard",
+    "divisionPrefix": "Moldavian Guard",
+    "selectable": false,
+    "coreRegions": [
+      "MD-01", "MD-02", "MDA"
+    ]
+  },
+  "tdfr": {
+    "id": "tdfr",
+    "comment": "Transcaucasian Democratic Federative Republic (April 22 - May 28, 1918). Historical Context: The first and only attempt at a unified Transcaucasian state. A coalition government representing Armenians, Azerbaijanis, and Georgians formed to negotiate with the Ottoman Empire and maintain territorial integrity. Lasted only one month before ethnic tensions and Ottoman military pressure led to its dissolution.\n\nTerritories: Encompassed modern-day Georgia, Armenia, and Azerbaijan plus parts of eastern Turkey (Kars, Batum) and southern Russia.\n\nHistorical Facts:\n- Founded: April 22, 1918 (Declaration of independence)\n- Dissolved: May 28, 1918 (After Georgia's independence declaration on May 26)\n- Capital: Tiflis (Tbilisi)\n- Key leaders: Nikolay Chkheidze (Seim Chairman), Akaki Chkhenkeli (PM)\n- Duration: 36 days - the shortest-lived independent state in the region\n- Reason for dissolution: Ottoman invasion, internal ethnic conflicts, diverging goals\n\nMilitary Strength: Weak to moderate. Faced overwhelming Ottoman military superiority. Some Armenian units showed competence (defended Kars, Sardarapat), but overall lacked coordination and suffered from ethnic tensions (Azerbaijanis reluctant to fight Ottomans).\n\nDiplomatic Relations:\n- War with: Ottoman Empire (from April 14, 1918)\n- Initially negotiated with: Germans (General von Lossow mediated)\n- Opposed by: Bolshevik government (refused to recognize TDFR)\n- Internal conflicts: Between Armenian nationalists, Azerbaijani moderates, and Georgian interests\n\nGame Configuration Notes:\n- NPC-controlled (non-playable) to represent historical weakness and short existence\n- Appears: Should emerge around April 1918 (recommend event-driven start)\n- Starting position: Weak military force, reliant on defensive operations\n- Core regions: Georgia (GE-01+), Armenia (AM-01, AM-02), Azerbaijan proper (AZ-BA)\n- Should face war declarations from Ottoman Empire shortly after formation\n- Good for scenario: Representing fragile coalitions and ethnic tensions\n- Can be conquered by Soviet forces (historically absorbed into Soviet Union in 1922)",
+    "name": "Transcaucasian Democratic Federative Republic",
+    "combatName": "Transcaucasian Federative Forces",
+    "flag": "/images/flags/tdfr.svg",
+    "color": "#FFD700",
+    "adjective": "Transcaucasian",
+    "firstArmyGroupName": "Transcaucasian Defense Force",
+    "divisionPrefix": "Transcaucasian Guard",
+    "selectable": false,
+    "coreRegions": [
+      "AM-01", "AM-02", "AM-03", "AM-04", "ARM", "AZ-BA", "AZ-GA", "AZ-LA",
+      "AZ-SH", "AZE", "GE-01", "GE-02", "GE-03", "GE-04", "GE-05", "GE-06",
+      "GE-07", "GE-08", "GE-09", "GE-10", "GE-11", "GE-12", "GE-13", "GE-14",
+      "GE-15", "GE-16", "GE-17", "GE-18", "GE-19", "GE-20", "GEO", "TR-04",
+      "TR-08", "TR-12", "TR-13", "TR-24", "TR-25", "TR-28", "TR-29", "TR-36",
+      "TR-49", "TR-53", "TR-61", "TR-62", "TR-65", "TR-69", "TR-75", "TR-76"
+    ]
+  },
+  "bpr": {
+    "id": "bpr",
+    "comment": "Belarusian People's Republic (1918-1919). Historical Context: Proclaimed March 6, 1918 (Second Charter), independence declared March 25, 1918 (Third Charter). Short-lived state during Russian Civil War that attempted to establish an independent Belarus.\n\nTerritories: Claimed Mogilev, Minsk, Grodno, Vilna, Vitebsk Governorates, and parts of Smolensk Governorate. Capital: Minsk (until December 1918 when captured by Red Army), then Vilnius and Hrodna.\n\nHistorical Facts:\n- Proclaimed: March 6, 1918 (Second Charter as autonomous)\n- Independence: March 25, 1918 (Third Charter, under German occupation)\n- Fall: December 10, 1918 (Red Army captured Minsk)\n- Went into exile in spring 1919, continued as government-in-exile for decades\n- Key figures: Jan Sierada, Jazep Losik, Anton Łuckievič, Stanisław Bułak-Bałachowicz\n\nMilitary Strength: Modest - approximately 11,000 volunteers attempted to establish armed forces. Notable military action: Slutsk defence action (late 1920) against Bolsheviks.\n\nDiplomatic Relations:\n- War with: Soviet Russia/RSFSR (primary enemy), briefly aligned against Bolsheviks\n- Recognition by: Estonia (October 1919), Finland (December 1919), Lithuania (November 1920)\n- Negotiated with: Soviet Russia (seeking recognition), Germany (under occupation)\n- Allied with: Ukrainian People's Republic (food supplies), anti-communist forces\n\nGame Configuration Notes:\n- Should appear at game start (March 1918) or via historical event\n- Weak starting units reflecting historical weakness (mostly volunteer militia)\n- Should be AI-controlled (NPC) as a minor state\n- Likely to be crushed by Soviet forces historically\n- Core regions based on historically claimed territories during 1918\n- Flag: White-red-white tricolor (historically accurate for 1918-1919 period)",
+    "name": "Belarusian People's Republic",
+    "combatName": "Belarusian National Guard",
+    "flag": "/images/flags/bpr.svg",
+    "color": "#E63946",
+    "adjective": "Belarusian",
+    "firstArmyGroupName": "Belarusian National Army",
+    "divisionPrefix": "Belarusian Guard",
+    "selectable": false,
+    "coreRegions": [
+      "BY-BR", "BY-HM", "BY-HO", "BY-HR", "BY-MA", "BY-MI", "BY-VI", "PL-PD",
+      "RU-OR"
+    ]
+  },
+  "georgia": {
+    "id": "georgia",
+    "comment": "Democratic Republic of Georgia (1918-1921). Historical Context: The first independent Georgian state in the modern era, established after the collapse of the Russian Empire. Known for its democratic government led by the Mensheviks, it was recognized by major European powers but fell to Soviet invasion in 1921.\n\nTerritories: Encompassed all major Georgian regions including Tbilisi (capital), plus disputed territories with Armenia and Azerbaijan. Briefly controlled more territory (1919-1920).\n\nHistorical Facts:\n- Independence declared: May 26, 1918\n- Government type: Democratic parliamentary republic (unique in the region)\n- First woman suffrage in the Caucasus (and among first in Europe)\n- Capital: Tbilisi (Tiflis in Russian)\n- Key leaders: Noe Zhordania (PM), Nikolay Chkheidze (early leader), Noe Ramishvili\n- International recognition: Recognized by all major European powers and USA\n- Fall: Soviet invasion February 11 - March 17, 1921; became Georgian SSR\n- Government-in-exile: Continued in France until 1930s\n\nMilitary Strength: Moderate - approximately 40,000-60,000 troops at peak strength. Well-organized national army with competent officer corps. Defended successfully against Ottoman and White Russian threats but unable to resist Soviet invasion (isolated after British withdrawal in 1920).\n\nDiplomatic Relations & Historical Conflicts:\n- Initial allies/neutrals: Germany (1918), Britain (1918-1920) provided military support\n- War with: Ottoman Empire (1918 - Treaty of Batum), internally: Abkhazian and Ossetian rebels\n- Territorial disputes: Armenia (1918-1920 over Lori region), Azerbaijan (1918-1920 over Zaqatala)\n- Eventual enemy: Soviet Russia (after German withdrawal, escalated to invasion in 1921)\n- Neutral policy: Tried to remain neutral during Russian Civil War; signed Moscow Treaty (May 7, 1920)\n\nGame Configuration Notes:\n- Should appear at game start (May 26, 1918) or as startup nation\n- Can be playable by advanced players for interesting diplomatic scenario, or NPC for historical accuracy\n- Recommended as NPC (selectable: false) for historical narrative preservation\n- Moderate military starting strength (well-trained but not numerous forces)\n- Core regions: All Georgian regions (GE-01 through GE-20) representing historical territories\n- Starting Relationships (May 1918):\n  * War with 'ottoman' (Treaty of Batum conflict - defensive)\n  * Neutral with 'soviet' (initially neutral, escalates after German withdrawal)\n  * Neutral with 'white' (shared anti-Bolshevik interest but competing territorial claims)\n  * Military access or alliance with 'germany' initially (protection under German occupation)\n- Starting war with: Ottoman Empire (defensive war over southern territories)\n\nSuggested Historical Events (via scheduledEvents):\n  * June 4, 1918: Treaty of Batum - forced to cede southern territories to Ottoman Empire\n  * December 1918: British occupation of Tbilisi begins\n  * May 7, 1920: Moscow Treaty - Soviet recognition of independence (fragile peace)\n  * August 1920: Kars Treaty - Ottoman defeat, Georgia gains some territory back\n  * February 11, 1921: Soviet invasion begins - change to 'war' status with 'soviet'\n  * March 17, 1921: Full Soviet occupation - dissolution event (transfer territories to Soviet)\n\nAI Strategy Notes:\n- Early Game (May-Dec 1918): Secure against Ottoman threat, defend from internal rebels\n- Mid Game (1919-1920): Consolidate democratic institutions, expand influence in Caucasus\n- Late Game (1920-1921): Prepare for inevitable Soviet invasion, maintain independence as long as possible\n- Victory Condition (Historical): Survive until March 1921 with territorial integrity (nearly impossible in reality)\n- Alternative Victory: Build alliances to resist Soviet pressure\n\nMilitary Unit Recommendations:\n- Style: Professional national army (similar to Polish or Scandinavian armies)\n- Division types: Infantry, Mountain Infantry (Caucasus terrain), Artillery\n- Starting deployment: Distributed across major regions for defense\n- Notable units: Georgian National Guard (elite), Tbilisi garrison, frontier defense forces",
+    "name": "Democratic Republic of Georgia",
+    "combatName": "Georgian Army",
+    "flag": "/images/flags/georgia.svg",
+    "color": "#ED1C24",
+    "adjective": "Georgian",
+    "firstArmyGroupName": "Georgian National Army",
+    "divisionPrefix": "Georgian Guard",
+    "selectable": false,
+    "coreRegions": [
+      "GE-01", "GE-02", "GE-03", "GE-04", "GE-05", "GE-06", "GE-07", "GE-08",
+      "GE-09", "GE-10", "GE-11", "GE-12", "GE-13", "GE-14", "GE-15", "GE-16",
+      "GE-17", "GE-18", "GE-19", "GE-20", "GEO", "TR-08", "TR-75"
+    ]
+  },
+  "armenia": {
+    "id": "armenia",
+    "comment": "First Republic of Armenia (1918-1920)",
+    "name": "First Republic of Armenia",
+    "combatName": "Armenian Army",
+    "flag": "/images/flags/armenia.svg",
+    "color": "#F2A800",
+    "adjective": "Armenian",
+    "firstArmyGroupName": "Armenian Army Group",
+    "divisionPrefix": "Armenian Guard",
+    "selectable": false,
+    "coreRegions": [
+      "AM-01", "AM-02", "AM-03", "AM-04", "ARM", "TR-04", "TR-12", "TR-13",
+      "TR-24", "TR-25", "TR-28", "TR-29", "TR-36", "TR-49", "TR-53", "TR-61",
+      "TR-62", "TR-65", "TR-69", "TR-76"
+    ]
+  },
+  "mrnc": {
+    "id": "mrnc",
+    "comment": "Mountainous Republic of the Northern Caucasus (1918-1919). Historical Context: Short-lived independent state representing various North Caucasian ethnic groups during the Russian Civil War. Declared independence on May 11, 1918, and existed until 1919.\n\nTerritories: Encompassed Terek Oblast and Dagestan Oblast regions, including lands of:\n- Chechens, Circassians, Ossetians, Dagestanis, Ingush, Abazins, Balkars, Karachays, Kumyks\n\nHistorical Facts:\n- Founded: May 11, 1918\n- Capital: Initially Vladikavkaz, relocated to Temir-Khan-Shura (Buynaksk)\n- Recognized by: Ottoman Empire, Germany, Austria-Hungary, Bulgaria, Georgia, Azerbaijan, Ukrainian People's Republic, Kuban People's Republic, UK (briefly)\n- Collapsed: 1919 when Russian Volunteer Army (White Army) captured the territory\n- Legacy: Succeeded by North Caucasian Emirate (September 1919), then absorbed into Soviet Union\n\nMilitary Strength: Moderate cavalry-based forces, primarily irregular units and local militia. Featured Caucasian cavalry regiments and Ottoman support (Ottoman pashas arrived with forces). Estimated fighting strength: 10,000-20,000 combatants at peak (1918).\n\nDiplomatic Relations:\n- War with: Soviet Russia (Red Army), Russian White Army (Volunteer Army), internal conflicts\n- Allied with: Ottoman Empire (primary supporter until WW1 end), Germany, Austria-Hungary, Central Powers during early period\n- Neutral/Trade with: Georgian Democratic Republic, Azerbaijan Democratic Republic\n- Leadership: Tapa Tchermoeff (Chairman), Rashid Khan Kaplanov (Second Chairman), Pshemakho Kotsev (Second PM after late 1918)\n\nGame Configuration Notes:\n- Should appear mid-game (around May 1918) or via historical event\n- Moderate starting units reflecting historical strength (cavalry-heavy composition)\n- Should be AI-controlled (NPC) representing North Caucasian confederation\n- Historically captured by White Army in May 1919 - should be conquered or transformed\n- Core regions: Caucasus territories (Chechnya, Dagestan, North Ossetia areas)\n- Flag: Green and white horizontal stripes with 7 yellow stars (Islamic star symbols)\n\nStrategic Notes for AI:\n- Early Game (May-Nov 1918): Consolidate control, resist Red expansion from north, Ottoman support\n- Mid Game (Dec 1918-May 1919): Struggle against White Army invasion, seek alliances\n- Late Game (May 1919+): Historical defeat inevitable; focus on survival/negotiation\n- Victory Condition: Maintain independence and control core regions through 1918-1919",
+    "name": "Mountainous Republic of the Northern Caucasus",
+    "combatName": "Caucasian Mountain Forces",
+    "flag": "/images/flags/mrnc.svg",
+    "color": "#228B22",
+    "adjective": "North Caucasian",
+    "firstArmyGroupName": "Caucasian Defense Force",
+    "divisionPrefix": "Mountain Guard",
+    "selectable": false,
+    "coreRegions": [
+      "RU-CE", "RU-IN", "RU-KB", "RU-SE"
+    ]
+  },
+  "adr": {
+    "id": "adr",
+    "comment": "Azerbaijan Democratic Republic (1918-1920). Historical Context: The first secular democratic republic in the Turkic and Muslim worlds. Proclaimed on May 28, 1918, after the collapse of the Transcaucasian Democratic Federative Republic. Lasted until April 28, 1920, when invaded by the Red Army.\n\nHistorical Facts:\n- Founded: May 28, 1918 (Independence declaration)\n- Capital: Ganja (1918-September), then Baku\n- Fall: April 28, 1920 (Soviet invasion)\n- Population: ~3 million\n- First country to grant women's suffrage (1918)\n- Area: ~99,909 km²\n\nKey Historical Events:\n- May 28, 1918: Declaration of independence\n- June-July 1918: Armed conflict with Armenia over territorial disputes\n- July 1918: Ottoman intervention and alliance\n- 1918-1919: Conflict with First Republic of Armenia\n- April 28, 1920: Red Army invasion and occupation\n\nDiplomatic Recognition:\n- Recognized by: Ottoman Empire, German Empire, Georgia, Ukraine, Kuban People's Republic\n- Opposed by: Soviet Russia, First Republic of Armenia\n- Neutral/Trade relations: Persia, other Caucasian states\n\nMilitary Characteristics:\n- Mixed Ottoman and modern European-style forces\n- Limited military resources initially\n- Estimated 20,000-30,000 combatants at peak\n- Relied heavily on Ottoman support against Armenian forces (1918-1919)\n\nTerritorial Disputes:\n- Claimed regions: Baku, Ganja, Shaki, Lenkoran (Southern Azerbaijan proper)\n- Disputed with Armenia: Karabakh, Zangezur regions\n- Border with Ottoman Empire: Treaty of Batum (June 4, 1918)\n\nGame Configuration Recommendations:\n- Appears: At game start (May 28, 1918) or via historical event\n- Core Regions: AZ-BA (Baku), AZ-GA (Ganja), AZ-SH (Shaki), AZ-LA (Lenkoran)\n- Starting Relationships (May 1918):\n  * War with 'armenia' (First Republic of Armenia) over Karabakh\n  * Military access/alliance with 'ottoman' (Treaty of Batum)\n  * Opposed by 'soviet' (Bolshevik forces)\n  * Good relations with 'ukraine', 'kuban', 'don' (anti-Bolshevik allies)\n- Suggested Historical Events (via scheduledEvents):\n  * June 4, 1918: Alliance with Ottoman Empire formalized (Treaty of Batum)\n  * June-September 1918: War escalates with Armenia\n  * September 1918: Capital moves to Baku (Ganja lost/secured)\n  * April 28, 1920: Soviet invasion begins - transfer territory to Soviet Azerbaijan\n\nAI Strategy Notes:\n- Early Game (May-June 1918): Seek Ottoman alliance, defend borders\n- Mid Game (June 1918-1919): Hold Baku oil fields, contest Armenian territories\n- Late Game (1919-April 1920): Prepare for inevitable Soviet invasion\n- Victory Conditions: Control oil-rich Baku region + maintain independence until late 1919",
+    "name": "Azerbaijan Democratic Republic",
+    "combatName": "Azerbaijani Forces",
+    "flag": "/images/flags/adr.svg",
+    "color": "#13A538",
+    "adjective": "Azerbaijani",
+    "firstArmyGroupName": "Azerbaijani National Army",
+    "divisionPrefix": "Azerbaijani Guard",
+    "selectable": false,
+    "coreRegions": [
+      "AZ-BA", "AZ-GA", "AZ-LA", "AZ-SH", "AZE"
+    ]
+  },
+  "crimea": {
+    "id": "crimea",
+    "comment": "Crimean People's Republic (1917-1918). Historical Context: A short-lived independent republic declared by the Crimean Tatars in the wake of the Russian Revolution. It was one of the first attempts to create a secular democratic state in the Muslim world.\n\nHistorical Facts:\n- Founded: December 13, 1917 (Proclamation)\n- Capital: Bakhchysarai (initially), then Simferopol\n- President: Noman Çelebicihan (executed by Bolsheviks in Feb 1918)\n- Disestablished: January 1918 (captured by Bolshevik Black Sea Fleet)\n- Population: ~800,000 (Multi-ethnic: Tatar, Russian, Ukrainian, Jewish, Greek)\n\nKey Historical Events:\n- Nov-Dec 1917: Formation of the Kurultai (National Assembly)\n- Dec 13, 1917: Declaration of the Crimean People's Republic\n- Jan 1918: Bolshevik uprising in Sevastopol and Simferopol\n- Feb 23, 1918: Execution of Noman Çelebicihan in Sevastopol\n- April 1918: Crimea liberated by Ukrainian and German forces (Crimean Offensive)\n\nDiplomatic Relationships:\n- Allied with: Ukrainian People's Republic (mutual recognition)\n- Opposed by: Soviet Russia (Bolsheviks), Black Sea Fleet sailors\n- Supported by: Ottoman Empire (ideologically/culturally)\n\nMilitary Strength:\n- Small, cavalry-based force: \"Escadron\" (primarily Crimean Tatar cavalry)\n- Estimated strength: 2,000-5,000 men\n- Heavy reliance on local militia and support from Ukrainian units\n\nGame Configuration Recommendations:\n- Appears: December 1917 (historical start)\n- Core Regions: UA-43 (Crimea), UA-40 (Sevastopol)\n- Starting Relationships:\n  * War with 'soviet' (Bolsheviks)\n  * Military access/alliance with 'ukraine'\n- Suggested Historical Events:\n  * Jan 1918: Bolshevik takeover - transfer regions to 'soviet' or 'taurida'\n  * April 1918: German-Ukrainian offensive - transfer regions to 'ukraine' or 'germany'\n\nAI Strategy Notes:\n- Early Game: Defend the peninsula, secure Simferopol, resist Sevastopol-based Bolsheviks\n- Victory Conditions: Maintain independence throughout 1918 (ahistorical)",
+    "name": "Crimean People's Republic",
+    "combatName": "Crimean Tatar Forces",
+    "flag": "/images/flags/crimea.svg",
+    "color": "#00AEEF",
+    "adjective": "Crimean",
+    "firstArmyGroupName": "Crimean National Army",
+    "divisionPrefix": "Crimean Guard",
+    "selectable": false,
+    "coreRegions": [
+      "UA-40", "UA-43"
+    ]
+  },
+  "crimean": {
+    "id": "crimean",
+    "comment": "Crimean Regional Government (1918-1919). Historical Context: An anti-Bolshevik government in the Crimean Peninsula. The first government (June-November 1918) was led by General Maciej Sulkiewicz, pro-German and seeking independence. The second (November 1918-April 1919) was led by Solomon Crimea, pro-Entente and aligned with the White movement.\n\nTerritories: Crimean Peninsula.\n\nMilitary Characteristics: Modest forces, initially supported by the German Empire, later by the Volunteer Army and Entente forces.\n\nGame Configuration Recommendations:\n- Should appear around June 1918 (Sulkiewicz government).\n- Core Regions: RU-Cr (Crimea).\n- Starting Relationships:\n  * Allied with 'germany' (initially).\n  * War with 'soviet' (Bolsheviks).\n  * War with 'taurida' (Soviet Crimea).\n  * Later neutral/allied with 'white'.",
+    "name": "Crimean Regional Government",
+    "combatName": "Crimean Forces",
+    "flag": "/images/flags/crimean.svg",
+    "color": "#4169E1",
+    "adjective": "Crimean",
+    "firstArmyGroupName": "Crimean Army Group",
+    "divisionPrefix": "Crimean",
+    "selectable": false,
+    "coreRegions": [
+      "RU-Cr", "UA-40", "UA-43"
+    ]
+  },
+  "northcaucasian": {
+    "id": "northcaucasian",
+    "comment": "North Caucasian Soviet Republic (July 1918 - January 1919). Historical Context: Short-lived Soviet republic created by merging the Kuban-Black Sea, Stavropol, and Terek Soviet republics to consolidate Bolshevik rule in the North Caucasus. Its capital moved from Yekaterinodar (Krasnodar) to Pyatigorsk after White advances.\n\nTerritories: Northern Caucasus including Kuban, Stavropol, and Terek regions.\n\nKey Historical Events:\n- July 7, 1918: Established as part of the Russian SFSR\n- August 1918: Yekaterinodar captured by White forces, capital moved to Pyatigorsk\n- Late 1918: White Army advances capture most territory\n- January 11, 1919: Republic abolished by All-Russian Central Executive Committee\n\nDiplomatic & Military Context:\n- Aligned with Soviet Russia as an RSFSR republic\n- War with White Volunteer Army (Denikin) and anti-Bolshevik Cossack forces\n- Hostile to the Mountainous Republic of the Northern Caucasus\n\nGame Configuration Notes:\n- Should appear around July 1918 via event or mid-game start\n- War with 'white', 'kuban', 'don', and 'mrnc' recommended\n- Suggested units: 4-7 divisions of Red Guards with modest strength\n- Core regions: Kuban, Stavropol, and Terek Soviet territories",
+    "name": "North Caucasian Soviet Republic",
+    "combatName": "North Caucasian Reds",
+    "flag": "/images/flags/northcaucasian.svg",
+    "color": "#DD0000",
+    "adjective": "North Caucasian Soviet",
+    "firstArmyGroupName": "North Caucasian Red Army",
+    "divisionPrefix": "Caucasian Red Guard",
+    "selectable": false,
+    "coreRegions": [
+      "RU-AD", "RU-CE", "RU-DA", "RU-IN", "RU-KB", "RU-KC", "RU-KDA", "RU-SE",
+      "RU-STA"
+    ]
+  },
+  "transcaspia": {
+    "id": "transcaspia",
+    "comment": "Transcaspian Provisional Government (1918-1920). Historical Context: Anti-Bolshevik administration formed in Ashgabat on July 14, 1918, following a revolt by railway workers on the Trans-Caspian Railway. Initially led by Mensheviks and Socialist-Revolutionaries, it was supported by the British Malleson Mission.\n\nKey Historical Events:\n- July 14, 1918: Formation of the Ashkhabad Executive Committee after anti-Bolshevik revolt.\n- September 20, 1918: Execution of the 26 Baku Commissars under Fyodor Funtikov's leadership.\n- November 1918: Formally took the name Transcaspian Provisional Government.\n- January 1919: Merged with Denikin's forces to form the White Turkestan Army.\n- February 1920: Final collapse after British withdrawal and Red Army offensive.\n\nTerritories: Controlled the Transcaspian Oblast (modern Turkmenistan), including Ashgabat (capital), Krasnovodsk, and Merv.\n\nDiplomatic Relations:\n- War with: Soviet Russia (Bolsheviks in Tashkent).\n- Allied with: British Empire (Malleson Mission), White Army (Armed Forces of South Russia).\n- Recognition: Supported by the British, later integrated into the wider White movement.\n\nMilitary Strength: Initially weak (around 1000 armed men), bolstered by British Anglo-Indian troops and later by Denikin's officers.\n\nGame Configuration Recommendations:\n- Should appear around July 1918.\n- Core Regions: TM-A (Ahal/Ashgabat), TM-B (Balkan/Krasnovodsk), TM-M (Mary/Merv).\n- Starting Relationships:\n  * War with 'soviet'.\n  * Allied with 'foreign' (British support).\n  * Later allied/subordinate to 'white'.",
+    "name": "Transcaspian Provisional Government",
+    "combatName": "Transcaspian Army",
+    "flag": "/images/flags/transcaspia.svg",
+    "color": "#D2B48C",
+    "adjective": "Transcaspian",
+    "firstArmyGroupName": "Transcaspian Army Group",
+    "divisionPrefix": "Transcaspian",
+    "selectable": false,
+    "coreRegions": [
+      "TM-A", "TM-B", "TM-M"
+    ]
+  },
+  "shs": {
+    "id": "shs",
+    "comment": "State of Slovenes, Croats and Serbs (October - December 1918). Historical Context: A short-lived unrecognized state formed from the southernmost territories of the Austro-Hungarian Empire as it collapsed at the end of WWI. It was governed by the National Council of Slovenes, Croats and Serbs. On December 1, 1918, it united with the Kingdom of Serbia to form the Kingdom of Serbs, Croats and Slovenes.\n\nTerritories: Included Slovenia (Carniola, Styria, Carinthia), Croatia-Slavonia, Dalmatia, Bosnia and Herzegovina, and Vojvodina (Syrmia, Banat, Bačka).\n\nHistorical Facts:\n- Founded: October 29, 1918\n- Capital: Zagreb\n- Disestablished: December 1, 1918 (Merger with Serbia)\n- Key leader: Anton Korošec (President of National Council)\n- Recognition: Only recognized by the Kingdom of Serbia and the Kingdom of Hungary.\n\nMilitary Strength: Weak and disorganized. Primarily consisted of former Austro-Hungarian soldiers of South Slavic ethnicity who deserted or were demobilized. Relied on local militias (National Guard) to maintain order and resist Italian advances in Dalmatia.\n\nDiplomatic Relations:\n- Seeking recognition from the Entente.\n- Conflict with Italy over territorial claims in Dalmatia and the Julian March.\n- Allied with the Kingdom of Serbia for eventual unification.\n\nGame Configuration Notes:\n- Should appear around October 1918 via event.\n- NPC-controlled (selectable: false).\n- Core regions: Slovenia, Croatia, Bosnia, and parts of Vojvodina.",
+    "name": "State of Slovenes, Croats and Serbs",
+    "combatName": "National Council Forces",
+    "flag": "/images/flags/shs.svg",
+    "color": "#3182CE",
+    "adjective": "South Slavic",
+    "firstArmyGroupName": "Army of the National Council",
+    "divisionPrefix": "National Guard",
+    "selectable": false,
+    "coreRegions": [
+      "BA-BIH*", "BA-BRC*", "BA-SRP*", "HR-01", "HR-02", "HR-03", "HR-04", "HR-05",
+      "HR-06", "HR-07", "HR-08", "HR-09", "HR-10", "HR-11", "HR-12", "HR-13",
+      "HR-14", "HR-15", "HR-16", "HR-17", "HR-18", "HR-19", "HR-20", "HR-21",
+      "RS-01", "RS-02", "RS-03", "RS-04", "RS-05", "RS-06", "RS-07", "SI03",
+      "SI04"
+    ]
+  }
+}

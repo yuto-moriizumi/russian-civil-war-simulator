@@ -1,23 +1,22 @@
 import { NextResponse } from 'next/server';
+import path from 'path';
+import fs from 'fs';
 import { CountryId } from '../../../types/game';
 
 /**
- * API endpoint to dynamically load core regions data without module caching
- * This prevents stale module cache issues when country metadata is updated
- * 
+ * API endpoint to load core regions data
+ *
  * GET /api/map-tool/load-core-regions
  * Returns: { coreRegions: Record<CountryId, string[]> }
  */
 export async function GET() {
   try {
-    // Use dynamic imports to fetch fresh data on each request
-    const { COUNTRY_METADATA } = await import('../../../data/countryMetadata');
+    const jsonPath = path.join(process.cwd(), 'app', 'data', 'countryMetadata.json');
+    const raw = JSON.parse(fs.readFileSync(jsonPath, 'utf-8')) as Record<string, { coreRegions?: string[] }>;
 
-    // Extract core regions from country metadata
     const coreRegions: Record<CountryId, string[]> = {} as Record<CountryId, string[]>;
-    
-    for (const [countryId, metadata] of Object.entries(COUNTRY_METADATA)) {
-      coreRegions[countryId as CountryId] = metadata.coreRegions || [];
+    for (const [countryId, metadata] of Object.entries(raw)) {
+      coreRegions[countryId as CountryId] = metadata.coreRegions ?? [];
     }
 
     return NextResponse.json({ coreRegions });
