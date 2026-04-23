@@ -80,7 +80,7 @@ export function processCombats(
   });
 
   if (eligibleCombats.length > 0) {
-    const roundResults = processCombatRounds(eligibleCombats, regions, adjacency, currentDate, runningDivisions);
+    const roundResults = processCombatRounds(eligibleCombats, regions, adjacency, currentDate, runningDivisions, logger);
 
     roundResults.forEach(result => {
       const updatedCombat = result.combat;
