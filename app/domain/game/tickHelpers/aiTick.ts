@@ -1,8 +1,186 @@
-import { AIState, ArmyGroup, CountryId, CountryBonuses, ProductionQueueItem, RegionState, ActiveCombat, Movement } from '../../../types/game';
-import { createInitialAIState, runAITick } from '../../../ai/cpuPlayer';
-import { clampProductionQueueToCommandPower } from '../../../utils/commandPower';
+import {
+  AIState,
+  ArmyGroup,
+  CountryBonuses,
+  CountryId,
+  DivisionState,
+  Movement,
+  ProductionQueueItem,
+  RegionState,
+  ActiveCombat,
+} from '../../../types/game';
+import { canProduceDivision, clampProductionQueueToCommandPower } from '../../../utils/commandPower';
 import { getBaseProductionTime } from '../../../utils/bonusCalculator';
-import { countries } from '../../../data/gameData';
+import { countries } from '../../../data/countries';
+import { createInitialAIState } from '../aiInitialization';
+import { generateAIDivisionName } from '../divisionNaming';
+
+export interface AIProductionRequest {
+  divisionName: string;
+  targetRegionId: string;
+  armyGroupId: string;
+}
+
+export interface AIActions {
+  divisionsCreated: number;
+  productionRequests: AIProductionRequest[];
+  updatedAIState: AIState;
+  newArmyGroup?: ArmyGroup;
+}
+
+function countAssignedDivisions(
+  groupId: string,
+  divisions: DivisionState,
+  movingUnits: Movement[],
+  productionQueue: ProductionQueueItem[]
+): number {
+  const onMap = Object.values(divisions).filter(d => d.armyGroupId === groupId && d.regionId !== null).length;
+  const inTransit = movingUnits.reduce(
+    (count, movement) => count + movement.divisionIds.filter(id => divisions[id]?.armyGroupId === groupId).length,
+    0
+  );
+  const queued = productionQueue.filter(item => item.armyGroupId === groupId).length;
+
+  return onMap + inTransit + queued;
+}
+
+function selectProductionArmyGroup(
+  countryId: CountryId,
+  divisions: DivisionState,
+  regions: RegionState,
+  armyGroups: ArmyGroup[],
+  movingUnits: Movement[],
+  productionQueue: ProductionQueueItem[]
+): ArmyGroup | undefined {
+  return armyGroups
+    .filter(group => group.owner === countryId)
+    .sort(
+      (a, b) =>
+        countAssignedDivisions(a.id, divisions, movingUnits, productionQueue) -
+        countAssignedDivisions(b.id, divisions, movingUnits, productionQueue)
+    )[0];
+}
+
+function pickRandomRegion<T extends { id: string }>(regionList: T[]): T | null {
+  if (regionList.length === 0) return null;
+  const index = Math.floor(Math.random() * regionList.length);
+  return regionList[index];
+}
+
+export function runAITick(
+  aiState: AIState,
+  divisions: DivisionState,
+  regions: RegionState,
+  armyGroups: ArmyGroup[],
+  activeCombats: ActiveCombat[] = [],
+  movingUnits: Movement[] = [],
+  productionQueue: ProductionQueueItem[] = [],
+  productionQueues: Record<CountryId, ProductionQueueItem[]> = {} as Record<CountryId, ProductionQueueItem[]>,
+  countryBonuses: CountryBonuses,
+  coreRegions?: string[]
+): AIActions {
+  const { countryId } = aiState;
+
+  let aiArmyGroup = selectProductionArmyGroup(countryId, divisions, regions, armyGroups, movingUnits, productionQueue);
+  let newArmyGroup: ArmyGroup | undefined = undefined;
+
+  if (!aiArmyGroup) {
+    const ownedRegionIds = Object.values(regions)
+      .filter(region => region.owner === countryId)
+      .map(r => r.id);
+
+    const nameMap: Record<string, string> = {
+      soviet: 'Soviet Army Group',
+      white: 'White Army Group',
+      finland: 'Finnish Army Group',
+      ukraine: 'Ukrainian Army Group',
+      fswr: 'Red Guard Army Group',
+      romania: 'Romanian Army Group',
+      bulgaria: 'Bulgarian Army Group',
+    };
+    const name = nameMap[countryId] || 'Army Group';
+
+    newArmyGroup = {
+      id: `ai-army-group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      name,
+      regionIds: ownedRegionIds,
+      color: '#6B7280',
+      owner: countryId,
+      theaterId: null,
+      mode: 'advance',
+    };
+
+    aiArmyGroup = newArmyGroup;
+  }
+
+  const availableArmyGroups = newArmyGroup ? [...armyGroups, newArmyGroup] : armyGroups;
+
+  const productionRequests: AIProductionRequest[] = [];
+  const ownedRegions = Object.values(regions).filter(region => region.owner === countryId);
+
+  const regionsWithActiveCombat = new Set(
+    activeCombats.filter(c => !c.isComplete).map(c => c.defenderRegionId)
+  );
+  const availableRegions = ownedRegions.filter(r => !regionsWithActiveCombat.has(r.id));
+
+  let divisionsCreated = 0;
+
+  if (availableRegions.length === 0) {
+    return {
+      divisionsCreated: 0,
+      productionRequests: [],
+      updatedAIState: { countryId },
+      newArmyGroup,
+    };
+  }
+
+  let localQueues: Record<CountryId, ProductionQueueItem[]> = { ...productionQueues };
+
+  while (divisionsCreated < 2) {
+    if (!canProduceDivision(countryId, divisions, regions, movingUnits, localQueues, countryBonuses, coreRegions)) {
+      break;
+    }
+
+    aiArmyGroup = selectProductionArmyGroup(countryId, divisions, regions, availableArmyGroups, movingUnits, localQueues[countryId] ?? []);
+    if (!aiArmyGroup) break;
+
+    const groupRegionIds = new Set(aiArmyGroup.regionIds);
+    const groupAvailableRegions = availableRegions.filter(region => groupRegionIds.has(region.id));
+    const deploymentRegions = groupAvailableRegions.length > 0 ? groupAvailableRegions : availableRegions;
+
+    const targetRegion = pickRandomRegion(deploymentRegions);
+    if (!targetRegion) break;
+
+    productionRequests.push({
+      divisionName: generateAIDivisionName(countryId, divisions, productionQueue, divisionsCreated),
+      targetRegionId: targetRegion.id,
+      armyGroupId: aiArmyGroup.id,
+    });
+
+    divisionsCreated += 1;
+
+    const placeholder: ProductionQueueItem = {
+      id: `ai-pending-${divisionsCreated}`,
+      divisionName: '',
+      owner: countryId,
+      startTime: new Date(),
+      completionTime: new Date(),
+      targetRegionId: null,
+      armyGroupId: aiArmyGroup.id,
+    };
+    localQueues = {
+      ...localQueues,
+      [countryId]: [...(localQueues[countryId] ?? []), placeholder],
+    };
+  }
+
+  return {
+    divisionsCreated,
+    productionRequests,
+    updatedAIState: { countryId },
+    newArmyGroup,
+  };
+}
 
 export function hasOwnershipChangedForCountries(
   countryIds: Set<CountryId>,
@@ -53,7 +231,7 @@ interface ProcessAITickArgs {
   nextArmyGroups: ArmyGroup[];
   nextProductionQueues: Record<CountryId, ProductionQueueItem[]>;
   nextRegions: RegionState;
-  nextDivisions: import('../../../types/game').DivisionState;
+  nextDivisions: DivisionState;
   nextMovingUnits: Movement[];
   nextActiveCombats: ActiveCombat[];
   countryBonuses: Record<CountryId, CountryBonuses>;
@@ -138,3 +316,4 @@ export function processAITick({
 
   return { nextAIStates, nextArmyGroups, nextProductionQueues };
 }
+

@@ -8,7 +8,7 @@ import { initialGameState } from '../initialState';
 import { initialUnitPlacement, initialArmyGroupDefs } from '../../../data/map/initialUnitPlacement';
 import { createDivision } from '../../../utils/combat';
 import { getDivisionPrefix } from '../../../data/countries';
-import { createInitialAIState, createInitialAIArmyGroup } from '../../../ai/cpuPlayer';
+import { createInitialAIState, createInitialAIArmyGroup } from '../../../domain/game/aiInitialization';
 import { mergeMissionsWithInitial } from '../../../utils/missionUtils';
 import { buildRegionUpdate, extractRegionOwners } from '../../../utils/regionState';
 import type { GameStore } from '../types';

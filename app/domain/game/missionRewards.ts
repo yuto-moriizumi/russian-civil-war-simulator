@@ -12,7 +12,7 @@ import {
   Relationship,
   DivisionState,
 } from '../../types/game';
-import { createInitialAIArmyGroup, createInitialAIState } from '../../ai/cpuPlayer';
+import { createInitialAIArmyGroup, createInitialAIState } from './aiInitialization';
 import { createDivision } from '../../utils/combat';
 import { getCountryName, getDivisionPrefix } from '../../data/countries';
 import { COUNTRY_METADATA } from '../../data/countryMetadata';
