@@ -1,5 +1,5 @@
 import { RegionState, Adjacency, CountryId, Movement, Relationship, ActiveCombat, DivisionState } from '../types/game';
-import { getDivisionsInRegion } from './divisionState';
+import { getDivisionsInRegion } from '../domain/game/divisionState';
 
 /**
  * Build a predicate that returns true for regions that are hostile to the

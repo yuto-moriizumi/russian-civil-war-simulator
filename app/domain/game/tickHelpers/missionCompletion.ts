@@ -1,6 +1,6 @@
 import { Mission, GameEvent, NotificationItem, Country, CountryId, CountryBonuses, RegionState, Movement, Relationship, ArmyGroup, AIState, DivisionState } from '../../../types/game';
 import { areMissionConditionsMet } from '../missionHelpers';
-import { createGameEvent, createNotification } from '../../../utils/eventUtils';
+import { createGameEvent, createNotification } from '../eventUtils';
 import { applyClaimedMissionRewards } from '../missionRewards';
 import { getCountryName } from '../../../data/countries';
 

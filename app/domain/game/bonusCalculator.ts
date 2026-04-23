@@ -1,5 +1,5 @@
-import { Mission, CountryBonuses, CountryId } from '../types/game';
-import { GAME_CONFIG } from '../constants/gameConfig';
+import { Mission, CountryBonuses, CountryId } from '../../types/game';
+import { GAME_CONFIG } from '../../constants/gameConfig';
 
 /**
  * Base stats for divisions

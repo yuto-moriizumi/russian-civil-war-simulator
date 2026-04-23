@@ -1,6 +1,6 @@
 import { ArmyGroup } from '../../types/game';
-import { createDivision } from '../../utils/combat';
-import { createGameEvent, createNotification, getOrdinalSuffix } from '../../utils/eventUtils';
+import { createDivision } from '../../domain/game/combat';
+import { createGameEvent, createNotification, getOrdinalSuffix } from '../../domain/game/eventUtils';
 import { generateArmyGroupName } from '../../utils/armyGroupNaming';
 import { ARMY_GROUP_COLORS } from './initialState';
 import { ActionsState } from './types';

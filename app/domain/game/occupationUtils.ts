@@ -1,4 +1,4 @@
-import { CountryId, Country, Relationship } from '../types/game';
+import { CountryId, Country, Relationship } from '../../types/game';
 
 export function determineNewOwner(
   attackerCountry: CountryId,

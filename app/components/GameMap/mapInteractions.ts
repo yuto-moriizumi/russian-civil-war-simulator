@@ -1,6 +1,6 @@
 import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import type { RegionState, Adjacency, CountryId, DivisionState } from '../../types/game';
-import { getDivisionsInRegion } from '../../utils/divisionState';
+import { getDivisionsInRegion } from '../../domain/game/divisionState';
 
 interface MapClickHandlerProps {
   selectedRegion: string | null;

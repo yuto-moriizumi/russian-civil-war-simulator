@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { processCombatRound } from '../utils/sharedDefenseProcessing';
-import { createActiveCombat } from '../utils/combat';
+import { processCombatRound } from '../domain/game/sharedDefenseProcessing';
+import { createActiveCombat } from '../domain/game/combat';
 import { processCombats } from '../domain/game/tickHelpers/combatProcessing';
 import type { Division, DivisionState, RegionState, Adjacency } from '../types/game';
 

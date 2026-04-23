@@ -1,6 +1,6 @@
 import { Movement, ActiveCombat, Region, Relationship, DivisionState } from '../../../types/game';
-import { getDivisionsInRegion } from '../../../utils/divisionState';
-import { createActiveCombat } from '../../../utils/combat';
+import { getDivisionsInRegion } from '../divisionState';
+import { createActiveCombat } from '../combat';
 import { GAME_CONFIG } from '../../../constants/gameConfig';
 import { SimulationLogger, noOpLogger } from '../engine/types';
 

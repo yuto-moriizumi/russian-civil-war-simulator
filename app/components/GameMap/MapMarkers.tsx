@@ -5,7 +5,7 @@ import { Marker } from 'react-map-gl/maplibre';
 import { Region, Movement, ActiveCombat, DivisionState } from '../../types/game';
 import { COUNTRY_COLORS } from '../../utils/mapUtils';
 import { COUNTRY_FLAGS } from './mapConstants';
-import { getDivisionsInRegion } from '../../utils/divisionState';
+import { getDivisionsInRegion } from '../../domain/game/divisionState';
 
 interface UnitMarkerProps {
   regionId: string;

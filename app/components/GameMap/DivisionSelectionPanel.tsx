@@ -4,7 +4,7 @@ import { useSimulationStore } from '../../store/useSimulationStore';
 import { useGameUiStore } from '../../store/useGameUiStore';
 import { COUNTRY_COLORS, getAdjacentRegions } from '../../utils/mapUtils';
 import { Division } from '../../types/game';
-import { getDivisionsInRegion } from '../../utils/divisionState';
+import { getDivisionsInRegion } from '../../domain/game/divisionState';
 
 /**
  * DivisionSelectionPanel

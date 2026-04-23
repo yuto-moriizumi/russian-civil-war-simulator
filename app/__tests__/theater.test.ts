@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { detectTheaters } from '../utils/theaterDetection';
+import { detectTheaters } from '../domain/game/theaterDetection';
 import type {
   CountryId,
   Division,

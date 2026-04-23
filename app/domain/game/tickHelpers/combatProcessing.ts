@@ -1,7 +1,7 @@
 import { ActiveCombat, GameEvent, NotificationItem, RegionState, Adjacency, Movement, DivisionState, Division } from '../../../types/game';
-import { processCombatRounds } from '../../../utils/sharedDefenseProcessing';
-import { shouldProcessCombatRound } from '../../../utils/combat';
-import { createGameEvent, createNotification } from '../../../utils/eventUtils';
+import { processCombatRounds } from '../sharedDefenseProcessing';
+import { shouldProcessCombatRound } from '../combat';
+import { createGameEvent, createNotification } from '../eventUtils';
 import { calculateDistance, calculateTravelTime } from '../../../utils/distance';
 import { SimulationLogger, noOpLogger } from '../engine/types';
 

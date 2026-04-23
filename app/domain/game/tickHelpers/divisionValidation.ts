@@ -1,5 +1,5 @@
 import { Division, Movement, Region, ArmyGroup, DivisionState } from '../../../types/game';
-import { validateDivisionArmyGroup } from '../../../utils/combat';
+import { validateDivisionArmyGroup } from '../combat';
 
 interface ValidationResult {
   updatedRegions: Record<string, Region>;

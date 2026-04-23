@@ -1,5 +1,5 @@
 import { ArmyGroup, Region, Movement, DivisionState } from '../../../types/game';
-import { getDivisionsInRegion } from '../../../utils/divisionState';
+import { getDivisionsInRegion } from '../divisionState';
 
 /**
  * Synchronizes army group regionIds with actual division locations

@@ -1,4 +1,4 @@
-import type { CountryId, Relationship, RelationshipType } from '../types/game';
+import type { CountryId, Relationship, RelationshipType } from '../../types/game';
 
 export function getRelationshipStatus(
   relationships: Relationship[],

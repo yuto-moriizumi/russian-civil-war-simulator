@@ -1,4 +1,4 @@
-import { ActiveCombat, Division, CountryId, RegionState, Adjacency, DivisionState } from '../types/game';
+import { ActiveCombat, Division, CountryId, RegionState, Adjacency, DivisionState } from '../../types/game';
 import { calculateDamage, applyDamage, DamageResult, findRetreatDestination } from './combat';
 
 export function processCombatRound(

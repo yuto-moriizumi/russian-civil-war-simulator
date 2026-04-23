@@ -1,7 +1,7 @@
 import { Region, GameEvent, NotificationItem, CountryId, Relationship, ScheduledEvent, ScheduledEventAction, ScheduledEventCondition, ArmyGroup, Division, DivisionState } from '../../../types/game';
-import { createGameEvent, createNotification } from '../../../utils/eventUtils';
-import { BASE_DIVISION_STATS } from '../../../utils/bonusCalculator';
-import { applyRelationshipChange, joinPuppetToOverlordWars } from '../../../utils/relationshipUtils';
+import { createGameEvent, createNotification } from '../eventUtils';
+import { BASE_DIVISION_STATS } from '../bonusCalculator';
+import { applyRelationshipChange, joinPuppetToOverlordWars } from '../relationshipUtils';
 import { COUNTRY_METADATA } from '../../../data/countryMetadata';
 
 /**

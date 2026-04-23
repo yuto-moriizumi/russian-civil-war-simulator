@@ -1,7 +1,7 @@
 import { AIState, ArmyGroup, CountryId, CountryBonuses, ProductionQueueItem, RegionState, ActiveCombat, Movement } from '../../../types/game';
 import { createInitialAIState, runAITick } from '../../../ai/cpuPlayer';
 import { clampProductionQueueToCommandPower } from '../../../utils/commandPower';
-import { getBaseProductionTime } from '../../../utils/bonusCalculator';
+import { getBaseProductionTime } from '../bonusCalculator';
 import { countries } from '../../../data/gameData';
 
 export function hasOwnershipChangedForCountries(

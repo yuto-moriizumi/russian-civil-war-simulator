@@ -1,6 +1,6 @@
 import { Mission, GameEvent, NotificationItem, Country, CountryId } from '../../../types/game';
 import { areMissionConditionsMet } from '../missionHelpers';
-import { createGameEvent, createNotification } from '../../../utils/eventUtils';
+import { createGameEvent, createNotification } from '../../../domain/game/eventUtils';
 import { StoreApi } from 'zustand';
 import { ActionsState } from '../types';
 import { applyClaimedMissionRewards } from '../missionRewards';

@@ -1,9 +1,9 @@
 import { Movement, ActiveCombat, Region, GameEvent, NotificationItem, Relationship, Country, DivisionState, Division } from '../../../types/game';
-import { determineNewOwner } from '../../../utils/occupationUtils';
-import { createActiveCombat } from '../../../utils/combat';
-import { createGameEvent, createNotification } from '../../../utils/eventUtils';
+import { determineNewOwner } from '../occupationUtils';
+import { createActiveCombat } from '../combat';
+import { createGameEvent, createNotification } from '../eventUtils';
 import { calculateDistance, calculateTravelTime } from '../../../utils/distance';
-import { getDivisionsInRegion, getMovementDivisions, getCombatDefenders } from '../../../utils/divisionState';
+import { getDivisionsInRegion, getMovementDivisions, getCombatDefenders } from '../divisionState';
 import { SimulationLogger, noOpLogger } from '../engine/types';
 
 interface MovementApplicationContext {

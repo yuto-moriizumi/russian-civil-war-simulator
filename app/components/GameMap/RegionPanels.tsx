@@ -6,7 +6,7 @@ import { COUNTRY_COLORS, getAdjacentRegions } from '../../utils/mapUtils';
 import { DIVISIONS_PER_STATE } from '../../utils/commandPower';
 import { regionValues } from '../../data/map/regionValues';
 import { getCountriesWithCoreRegion, getCountryName, getCountryColor } from '../../data/countries';
-import { getDivisionsInRegion } from '../../utils/divisionState';
+import { getDivisionsInRegion } from '../../domain/game/divisionState';
 
 export { MovingUnitInfoPanel } from './MovingUnitInfoPanel';
 export { DivisionSelectionPanel } from './DivisionSelectionPanel';
