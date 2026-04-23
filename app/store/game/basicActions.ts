@@ -1,12 +1,11 @@
-/* eslint-disable max-lines */
-import { CountryId, Screen, Region, Adjacency, Country, GameSpeed, GameState, RegionState, AIState, MapMode, Relationship, Mission, DivisionState } from '../../types/game';
-import { initialMissions } from '../../data/gameData';
+import { CountryId, Screen, Region, Adjacency, Country, GameSpeed, GameState, RegionState, AIState, MapMode, Relationship, DivisionState } from '../../types/game';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
 import * as turf from '@turf/turf';
 import { createDivisionSelectionActions } from './divisionSelectionActions';
 import { applyLiberatePuppet } from './missionRewards';
 import { getDivisionsInRegion } from '../../utils/divisionState';
+import { mergeMissionsWithInitial } from '../../utils/missionUtils';
 import {
   buildRegionUpdate,
   createRegionStatePatch,
@@ -89,11 +88,6 @@ export function getAIControlledCountries(
   countryIds.delete('foreign');
 
   return Array.from(countryIds);
-}
-
-export function mergeMissionsWithInitial(currentMissions: Mission[]): Mission[] {
-  const currentById = new Map(currentMissions.map(mission => [mission.id, mission]));
-  return initialMissions.map(initialMission => currentById.get(initialMission.id) ?? { ...initialMission });
 }
 
 /**

@@ -1,5 +1,6 @@
-import { MissionCondition } from '../types/game';
+import { Mission, MissionCondition } from '../types/game';
 import { getCountryName } from '../data/countries';
+import { initialMissions } from '../data/gameData';
 
 /**
  * Formats a mission condition into a human-readable string.
@@ -31,4 +32,13 @@ export function formatCondition(condition: MissionCondition): string {
     default:
       return 'Unknown condition';
   }
+}
+
+/**
+ * Merges current missions with initial missions, keeping any
+ * state changes (progress, claimed) while filling in defaults from initialMissions.
+ */
+export function mergeMissionsWithInitial(currentMissions: Mission[]): Mission[] {
+  const currentById = new Map(currentMissions.map(mission => [mission.id, mission]));
+  return initialMissions.map(initialMission => currentById.get(initialMission.id) ?? { ...initialMission });
 }

@@ -1,5 +1,164 @@
 import { ActiveCombat, Division, CountryId, RegionState, Adjacency, DivisionState } from '../types/game';
-import { processCombatRound, calculateDamage, applyDamage, DamageResult, findRetreatDestination } from './combat';
+import { calculateDamage, applyDamage, DamageResult, findRetreatDestination } from './combat';
+
+export function processCombatRound(
+  combat: ActiveCombat,
+  divisions: DivisionState,
+  regions: RegionState,
+  adjacency: Adjacency
+): {
+  combat: ActiveCombat;
+  updatedDivisions: DivisionState;
+  retreatingDivisions: { divisionId: string; toRegionId: string | null; fromRegionId: string }[];
+} {
+  if (combat.isComplete) {
+    return { combat, updatedDivisions: divisions, retreatingDivisions: [] };
+  }
+
+  const defenderRegion = regions[combat.defenderRegionId];
+  if (defenderRegion && defenderRegion.owner !== combat.defenderCountry) {
+    const newOwnerIsAttacker = defenderRegion.owner === combat.attackerCountry;
+    if (newOwnerIsAttacker) {
+      console.log('[COMBAT CANCELLED]', { combatId: combat.id, reason: 'defender region already captured by attacker' });
+      return {
+        combat: { ...combat, isComplete: true, victor: combat.attackerCountry },
+        updatedDivisions: divisions,
+        retreatingDivisions: [],
+      };
+    } else {
+      console.log('[COMBAT CANCELLED]', { combatId: combat.id, reason: 'defender region captured by third party' });
+      return {
+        combat: { ...combat, isComplete: true, victor: combat.defenderCountry },
+        updatedDivisions: divisions,
+        retreatingDivisions: combat.attackerDivisionIds.map(id => ({
+          divisionId: id,
+          toRegionId: combat.attackerRegionId,
+          fromRegionId: combat.attackerRegionId,
+        })),
+      };
+    }
+  }
+
+  // Build local mutable arrays from DivisionState for damage computation
+  let attackerDivisions: Division[] = combat.attackerDivisionIds.map(id => ({ ...divisions[id] })).filter(d => d.id);
+  let defenderDivisions: Division[] = combat.defenderDivisionIds.map(id => ({ ...divisions[id] })).filter(d => d.id);
+
+  if (attackerDivisions.length === 0 || defenderDivisions.length === 0) {
+    return {
+      combat: {
+        ...combat,
+        isComplete: true,
+        victor: attackerDivisions.length > 0 ? combat.attackerCountry :
+                defenderDivisions.length > 0 ? combat.defenderCountry : null,
+      },
+      updatedDivisions: divisions,
+      retreatingDivisions: [],
+    };
+  }
+
+  const attackerTotalDamage = attackerDivisions.reduce((sum, attacker) => {
+    const targetIndex = Math.floor(Math.random() * defenderDivisions.length);
+    return sum + calculateDamage(attacker, defenderDivisions[targetIndex]);
+  }, 0);
+
+  const defenderTotalDamage = defenderDivisions.reduce((sum, defender) => {
+    const targetIndex = Math.floor(Math.random() * attackerDivisions.length);
+    return sum + calculateDamage(defender, attackerDivisions[targetIndex]);
+  }, 0);
+
+  const retreatingDivisions: { divisionId: string; toRegionId: string | null; fromRegionId: string }[] = [];
+
+  const damagePerAttacker = Math.ceil(defenderTotalDamage / attackerDivisions.length);
+  const attackerResults = attackerDivisions.map(div => applyDamage(div, damagePerAttacker));
+
+  attackerDivisions = [];
+  attackerResults.forEach(result => {
+    if (result.type === 'survived') {
+      attackerDivisions.push(result.division);
+    } else {
+      const retreatTarget = findRetreatDestination(combat.defenderRegionId, result.division.owner, regions, adjacency, true, combat.attackerRegionId);
+      retreatingDivisions.push({ divisionId: result.division.id, toRegionId: retreatTarget, fromRegionId: combat.attackerRegionId });
+      if (retreatTarget) {
+        console.log(`[RETREAT] ${result.division.name} (${result.division.owner}) retreating from border at ${combat.defenderRegionName} to ${regions[retreatTarget]?.name ?? retreatTarget}`);
+      }
+    }
+  });
+
+  const damagePerDefender = Math.ceil(attackerTotalDamage / defenderDivisions.length);
+  const defenderResults = defenderDivisions.map(div => applyDamage(div, damagePerDefender));
+
+  defenderDivisions = [];
+  defenderResults.forEach(result => {
+    if (result.type === 'survived') {
+      defenderDivisions.push(result.division);
+    } else {
+      const retreatTarget = findRetreatDestination(combat.defenderRegionId, result.division.owner, regions, adjacency, false, combat.attackerRegionId);
+      retreatingDivisions.push({ divisionId: result.division.id, toRegionId: retreatTarget, fromRegionId: combat.defenderRegionId });
+      if (retreatTarget) {
+        console.log(`[RETREAT] ${result.division.name} (${result.division.owner}) retreating from ${combat.defenderRegionName} to ${regions[retreatTarget]?.name ?? retreatTarget}`);
+      }
+    }
+  });
+
+  const newRound = combat.currentRound + 1;
+  const combatEnded =
+    attackerDivisions.length === 0 ||
+    defenderDivisions.length === 0;
+
+  let victor: CountryId | null = null;
+  if (combatEnded) {
+    victor = (defenderDivisions.length === 0 && attackerDivisions.length > 0)
+      ? combat.attackerCountry
+      : combat.defenderCountry;
+
+    const winnerCountry = victor;
+    const winnerRetreatingIndices: number[] = [];
+    retreatingDivisions.forEach((r, i) => {
+      const div = divisions[r.divisionId];
+      if (div && div.owner === winnerCountry) {
+        winnerRetreatingIndices.push(i);
+        const restoredDivision = { ...div, hp: 1 };
+        if (winnerCountry === combat.attackerCountry) {
+          attackerDivisions.push(restoredDivision);
+        } else {
+          defenderDivisions.push(restoredDivision);
+        }
+        console.log(`[VICTORY RESTORE] ${div.name} (${div.owner}) restored to HP=1 after winning at border of ${combat.defenderRegionName}`);
+      }
+    });
+    for (let i = winnerRetreatingIndices.length - 1; i >= 0; i--) {
+      retreatingDivisions.splice(winnerRetreatingIndices[i], 1);
+    }
+  }
+
+  if (combatEnded) {
+    console.log('[COMBAT ENDED]', {
+      combatId: combat.id, defenderRegionName: combat.defenderRegionName, totalRounds: newRound, victor,
+      attackerSurvivors: attackerDivisions.length, defenderSurvivors: defenderDivisions.length,
+      attackerLosses: combat.initialAttackerCount - attackerDivisions.length,
+      defenderLosses: combat.initialDefenderCount - defenderDivisions.length,
+    });
+  }
+
+  // Apply HP changes to DivisionState
+  let updatedDivisions = { ...divisions };
+  for (const div of [...attackerDivisions, ...defenderDivisions]) {
+    updatedDivisions = { ...updatedDivisions, [div.id]: { ...updatedDivisions[div.id], hp: div.hp } };
+  }
+
+  return {
+    combat: {
+      ...combat,
+      attackerDivisionIds: attackerDivisions.map(d => d.id),
+      defenderDivisionIds: defenderDivisions.map(d => d.id),
+      currentRound: newRound,
+      isComplete: combatEnded,
+      victor,
+    },
+    updatedDivisions,
+    retreatingDivisions,
+  };
+}
 
 interface CombatCalculation {
   combat: ActiveCombat;

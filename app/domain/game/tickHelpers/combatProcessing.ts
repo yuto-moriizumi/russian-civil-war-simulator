@@ -1,5 +1,6 @@
 import { ActiveCombat, GameEvent, NotificationItem, RegionState, Adjacency, Movement, DivisionState, Division } from '../../../types/game';
-import { processCombatRounds, shouldProcessCombatRound } from '../../../utils/combat';
+import { processCombatRounds } from '../../../utils/sharedDefenseProcessing';
+import { shouldProcessCombatRound } from '../../../utils/combat';
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 import { calculateDistance, calculateTravelTime } from '../../../utils/distance';
 
