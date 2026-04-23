@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { sovietMissions } from '../data/missions/russia';
 import { initialGameState } from '../store/game/initialState';
-import { applyClaimedMissionRewards, buildMissionRewardDescription } from '../store/game/missionRewards';
-import { areMissionConditionsMet } from '../store/game/missionHelpers';
+import { applyClaimedMissionRewards, buildMissionRewardDescription } from '../domain/game/missionRewards';
+import { areMissionConditionsMet } from '../domain/game/missionHelpers';
 import type { Mission, RegionState } from '../types/game';
 
 describe('Soviet Don Army preparation mission', () => {
