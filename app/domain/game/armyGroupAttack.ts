@@ -1,9 +1,9 @@
-import { Movement, ActiveCombat } from '../../types/game';
+import { Movement, ActiveCombat, Division } from '../../types/game';
 import { getNextStepToward, buildCanEnterPredicate, buildIsHostilePredicate } from '../../utils/pathfinding';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { createActiveCombat } from './combat';
 import { createGameEvent } from './eventUtils';
-import { getDivisionsInRegion, getCombatDefenders } from './divisionState';
+import { getCombatDefenders } from './divisionState';
 import { EngineSimulationState, SimulationLogger, noOpLogger } from './engine/types';
 
 /**
@@ -25,16 +25,29 @@ export function attackArmyGroup(
   if (!group) return null;
 
   const countryId = group.owner;
-  const newDivisions = { ...divisions };
   const canEnter = buildCanEnterPredicate(countryId, regions, relationships);
   const isHostile = buildIsHostilePredicate(countryId, regions, relationships);
   const theater = group.theaterId ? theaters.find(t => t.id === group.theaterId) : null;
+  const frontlineSet = theater ? new Set(theater.frontlineRegions) : null;
+
+  // Build region→division index once: O(D) instead of O(R×D)
+  const divisionsByRegion = new Map<string, Division[]>();
+  for (const div of Object.values(divisions)) {
+    if (div.regionId) {
+      if (!divisionsByRegion.has(div.regionId)) divisionsByRegion.set(div.regionId, []);
+      divisionsByRegion.get(div.regionId)!.push(div);
+    }
+  }
+  const getDivsInRegion = (regionId: string): Division[] => divisionsByRegion.get(regionId) ?? [];
+
+  // Cache activeCombats array to avoid repeated spread
+  const allCombats = [...activeCombats];
 
   // Phase 1 Step 1: Find border regions
   const allBorderRegions: string[] = [];
   for (const [regionId, region] of Object.entries(regions)) {
     if (!region || region.owner !== countryId) continue;
-    if (theater && !theater.frontlineRegions.includes(regionId)) continue;
+    if (frontlineSet && !frontlineSet.has(regionId)) continue;
     const hasEnemyNeighbor = (adjacency[regionId] || []).some(neighborId => {
       const neighbor = regions[neighborId];
       return neighbor && neighbor.owner !== countryId && isHostile(neighborId);
@@ -49,7 +62,7 @@ export function attackArmyGroup(
   // Phase 1 Step 2: Committed counts
   const committedAtBorder = new Map<string, number>();
   allBorderRegions.forEach(id => {
-    const present = getDivisionsInRegion(divisions, id).filter(d => d.armyGroupId === groupId).length;
+    const present = getDivsInRegion(id).filter(d => d.armyGroupId === groupId).length;
     committedAtBorder.set(id, present);
   });
 
@@ -71,7 +84,7 @@ export function attackArmyGroup(
   let totalGroupDivisions = 0;
   Object.values(regions).forEach(region => {
     if (!region) return;
-    totalGroupDivisions += getDivisionsInRegion(divisions, region.id).filter(
+    totalGroupDivisions += getDivsInRegion(region.id).filter(
       d => d.armyGroupId === groupId && d.owner === countryId && !inTransitDivisionIds.has(d.id)
     ).length;
   });
@@ -97,7 +110,7 @@ export function attackArmyGroup(
   const availableDivisions: { divisionId: string; regionId: string }[] = [];
   Object.entries(regions).forEach(([regionId, region]) => {
     if (!region) return;
-    const groupDivs = getDivisionsInRegion(divisions, regionId).filter(
+    const groupDivs = getDivsInRegion(regionId).filter(
       d => d.armyGroupId === groupId && d.owner === countryId && !inTransitDivisionIds.has(d.id)
     );
     if (groupDivs.length === 0) return;
@@ -116,6 +129,7 @@ export function attackArmyGroup(
   // Phase 1 Step 7: Assign to needy borders
   const newMovements: Movement[] = [];
   const newRegions = { ...regions };
+  const newDivisions = { ...divisions };
   const movedRegions = new Set<string>();
   const targetRegionSet = new Set<string>();
   const bordersDispatchedInPhase1 = new Set<string>();
@@ -206,7 +220,7 @@ export function attackArmyGroup(
 
   for (const borderRegionId of allBorderRegions) {
     const target = allocationTarget.get(borderRegionId) ?? 0;
-    const stationaryDivs = getDivisionsInRegion(divisions, borderRegionId).filter(
+    const stationaryDivs = getDivsInRegion(borderRegionId).filter(
       d => d.armyGroupId === groupId && d.owner === countryId && !inTransitDivisionIds.has(d.id)
     );
 
@@ -244,7 +258,7 @@ export function attackArmyGroup(
       arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
 
       let pendingCombatId: string | undefined;
-      const existingCombat = [...activeCombats, ...newCombats].find(
+      const existingCombat = [...allCombats, ...newCombats].find(
         c => c.attackerRegionId === borderRegionId &&
              c.defenderRegionId === attackTargetId &&
              !c.isComplete
@@ -255,10 +269,10 @@ export function attackArmyGroup(
         const inTransitFromDest = new Set(
           movingUnits.filter(m => m.fromRegion === attackTargetId).flatMap(m => m.divisionIds)
         );
-        const defenderDivisions = getDivisionsInRegion(divisions, attackTargetId).filter(d => d.owner === destRegion.owner && !inTransitFromDest.has(d.id));
-        const hasActiveCombatAtDest = [...activeCombats, ...newCombats].some(c => c.defenderRegionId === attackTargetId && !c.isComplete);
+        const defenderDivisions = getDivsInRegion(attackTargetId).filter(d => d.owner === destRegion.owner && !inTransitFromDest.has(d.id));
+        const hasActiveCombatAtDest = [...allCombats, ...newCombats].some(c => c.defenderRegionId === attackTargetId && !c.isComplete);
         if (defenderDivisions.length > 0 || hasActiveCombatAtDest) {
-          const otherCombatsOnRegion = [...activeCombats, ...newCombats].filter(
+          const otherCombatsOnRegion = [...allCombats, ...newCombats].filter(
             c => c.defenderRegionId === attackTargetId && !c.isComplete
           );
           const combatDefenderDivisions = otherCombatsOnRegion.length > 0
@@ -338,7 +352,7 @@ export function attackArmyGroup(
     regions: newRegions,
     movingUnits: [...movingUnits, ...newMovements],
     armyGroups: updatedArmyGroups,
-    activeCombats: [...activeCombats, ...newCombats],
+    activeCombats: [...allCombats, ...newCombats],
     gameEvents: newEvents,
   };
 }

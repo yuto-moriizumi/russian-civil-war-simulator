@@ -1,5 +1,4 @@
-import { getDivisionsInRegion } from './divisionState';
-import { Movement } from '../../types/game';
+import { Movement, Division } from '../../types/game';
 import { getNextStepToward, buildIsHostilePredicate } from '../../utils/pathfinding';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { EngineSimulationState, SimulationLogger, noOpLogger } from './engine/types';
@@ -21,12 +20,23 @@ export function defendArmyGroup(
   const countryId = group.owner;
   const isHostile = buildIsHostilePredicate(countryId, regions, relationships);
   const theater = group.theaterId ? theaters.find(t => t.id === group.theaterId) : null;
+  const frontlineSet = theater ? new Set(theater.frontlineRegions) : null;
+
+  // Build region→division index once: O(D) instead of O(R×D)
+  const divisionsByRegion = new Map<string, Division[]>();
+  for (const div of Object.values(divisions)) {
+    if (div.regionId) {
+      if (!divisionsByRegion.has(div.regionId)) divisionsByRegion.set(div.regionId, []);
+      divisionsByRegion.get(div.regionId)!.push(div);
+    }
+  }
+  const getDivsInRegion = (regionId: string): Division[] => divisionsByRegion.get(regionId) ?? [];
 
   // Step 1: Find border regions
   const allBorderRegions: string[] = [];
   for (const [regionId, region] of Object.entries(regions)) {
     if (!region || region.owner !== countryId) continue;
-    if (theater && !theater.frontlineRegions.includes(regionId)) continue;
+    if (frontlineSet && !frontlineSet.has(regionId)) continue;
     const hasEnemyNeighbor = (adjacency[regionId] || []).some(neighborId => {
       const neighbor = regions[neighborId];
       return neighbor && neighbor.owner !== countryId && isHostile(neighborId);
@@ -41,7 +51,7 @@ export function defendArmyGroup(
   // Step 2: Committed counts
   const committedAtBorder = new Map<string, number>();
   allBorderRegions.forEach(id => {
-    const present = getDivisionsInRegion(divisions, id).filter(d => d.armyGroupId === groupId).length;
+    const present = getDivsInRegion(id).filter(d => d.armyGroupId === groupId).length;
     committedAtBorder.set(id, present);
   });
 
@@ -63,7 +73,7 @@ export function defendArmyGroup(
   let totalGroupDivisions = 0;
   Object.values(regions).forEach(region => {
     if (!region) return;
-    totalGroupDivisions += getDivisionsInRegion(divisions, region.id).filter(
+    totalGroupDivisions += getDivsInRegion(region.id).filter(
       d => d.armyGroupId === groupId && d.owner === countryId && !inTransitDivisionIds.has(d.id)
     ).length;
   });
@@ -95,7 +105,7 @@ export function defendArmyGroup(
   const availableDivisions: { divisionId: string; regionId: string }[] = [];
   Object.entries(regions).forEach(([regionId, region]) => {
     if (!region) return;
-    const groupDivs = getDivisionsInRegion(divisions, regionId).filter(
+    const groupDivs = getDivsInRegion(regionId).filter(
       d => d.armyGroupId === groupId && d.owner === countryId && !inTransitDivisionIds.has(d.id)
     );
     if (groupDivs.length === 0) return;
