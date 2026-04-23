@@ -18,7 +18,7 @@ export interface DuplicationCheckResult {
 export function detectDivisionDuplicates(
   _regions: Record<string, unknown>,
   movingUnits: Movement[],
-  activeCombats: ActiveCombat[],
+  _activeCombats: ActiveCombat[],
   _divisions?: DivisionState
 ): DuplicationCheckResult {
   const reports: DuplicateReport[] = [];
@@ -42,29 +42,8 @@ export function detectDivisionDuplicates(
     }
   }
 
-  // Check: Same division in multiple active combats
-  const divInCombats = new Map<string, { combatId: string; side: string }[]>();
-  for (const combat of activeCombats) {
-    if (combat.isComplete) continue;
-    for (const divId of combat.attackerDivisionIds) {
-      if (!divInCombats.has(divId)) divInCombats.set(divId, []);
-      divInCombats.get(divId)!.push({ combatId: combat.id, side: 'attacker' });
-    }
-    for (const divId of combat.defenderDivisionIds) {
-      if (!divInCombats.has(divId)) divInCombats.set(divId, []);
-      divInCombats.get(divId)!.push({ combatId: combat.id, side: 'defender' });
-    }
-  }
-  for (const [divId, entries] of divInCombats) {
-    const uniqueCombats = [...new Set(entries.map(e => e.combatId))];
-    if (uniqueCombats.length > 1) {
-      reports.push({
-        divisionId: divId,
-        locations: entries.map(e => ({ type: 'combat' as const, locationId: e.combatId, side: e.side })),
-        pattern: 'multi-combat',
-      });
-    }
-  }
+  // Multi-combat participation is valid (same division can fight in multiple combats).
+  // Only check for duplicate movement assignments.
 
   return { hasDuplicates: reports.length > 0, reports };
 }
