@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -274,7 +275,7 @@ export function rehydratePersistedGameState(state?: RehydratableSimulationStore 
 
 export const useSimulationStore = create<SimulationStore>()(
   persist(
-    immer((set, get) => {
+    immer((_set, _get) => {
       const basicActions = createBasicActions(
         setCombinedState as never,
         getCombinedState as never
@@ -351,7 +352,7 @@ export const useSimulationStore = create<SimulationStore>()(
 
 export const useGameUiStore = create<GameUiStore>()(
   persist(
-    immer((set, get) => {
+    immer((_set, _get) => {
       const basicActions = createBasicActions(
         setCombinedState as never,
         getCombinedState as never
