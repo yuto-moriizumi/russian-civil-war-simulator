@@ -11,6 +11,7 @@ import {
   syncArmyGroupsStep,
   applyArmyGroupActionsStep,
   applyMissionsStep,
+  reconcilePlayerArmyGroupsStep,
 } from './steps';
 import { SimulationContext, SimulationDeps, SimulationLogger, SimulationStep, EngineSimulationState } from './types';
 
@@ -28,6 +29,7 @@ const simulationPipeline: SimulationStep[] = [
   syncArmyGroupsStep,
   applyArmyGroupActionsStep,
   applyMissionsStep,
+  reconcilePlayerArmyGroupsStep,
 ];
 
 /**

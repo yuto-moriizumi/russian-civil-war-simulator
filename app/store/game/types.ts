@@ -55,7 +55,6 @@ export interface SimulationStore extends SimulationState {
   openMissions: () => void;
   addToProductionQueue: (armyGroupId: string, count?: number) => void;
   cancelProduction: (productionId: string) => void;
-  detectAndUpdateTheaters: () => void;
   createArmyGroup: (name: string, regionIds: string[], theaterId?: string | null) => void;
   deleteArmyGroup: (groupId: string) => void;
   renameArmyGroup: (groupId: string, name: string) => void;

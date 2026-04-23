@@ -33,9 +33,6 @@ export const createTickActions = (
 
     set(buildSimulationPatchFromEngineState(next));
 
-    TickPerf.start('[tick] 13-theaters');
-    get().detectAndUpdateTheaters();
-    TickPerf.end('[tick] 13-theaters');
     TickPerf.end('[tick] total');
     TickPerf.logIfNeeded();
   },

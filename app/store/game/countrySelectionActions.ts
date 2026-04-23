@@ -64,6 +64,5 @@ export const createCountrySelectionActions = (
       currentState.relationships,
     );
     set(buildSelectCountryPatch(currentState, country, isInitial, aiCountries));
-    get().detectAndUpdateTheaters();
   },
 });

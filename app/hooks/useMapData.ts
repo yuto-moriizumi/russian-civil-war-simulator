@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useSimulationStore } from '../store/useSimulationStore';
 import { createInitialOwnership } from '../utils/mapUtils';
+import { detectTheatersForCountries, syncAIArmyGroupsToTheaters } from '../utils/aiArmyGroupTheaters';
 
 export function useMapData() {
   const setRegions = useSimulationStore(state => state.setRegions);
@@ -9,7 +10,6 @@ export function useMapData() {
   const setMapDataLoaded = useSimulationStore(state => state.setMapDataLoaded);
   const mapDataLoaded = useSimulationStore(state => state.mapDataLoaded);
   const initializeCentroids = useSimulationStore(state => state.initializeCentroids);
-  const detectAndUpdateTheaters = useSimulationStore(state => state.detectAndUpdateTheaters);
   const persistedRegionOwners = useSimulationStore(state => state.regionOwners);
 
   useEffect(() => {
@@ -48,8 +48,43 @@ export function useMapData() {
 
         // Re-sync theaters now that adjacency is available. This handles the case
         // where selectCountry() was called before adjacency finished loading,
-        // leaving non-player AI countries with only a single default army group.
-        detectAndUpdateTheaters();
+        // leaving theaters empty or incomplete.
+        const state = useSimulationStore.getState();
+        if (state.selectedCountry && Object.keys(adjData).length > 0) {
+          const aiCountryIds = state.aiStates.map(s => s.countryId).filter(id => id !== state.selectedCountry!.id);
+          const allCountryIds = [state.selectedCountry.id, ...aiCountryIds];
+
+          const theaters = detectTheatersForCountries({
+            regions,
+            adjacency: adjData,
+            countryIds: allCountryIds,
+            existingTheaters: state.theaters,
+            relationships: state.relationships,
+          });
+
+          if (aiCountryIds.length > 0) {
+            const aiSync = syncAIArmyGroupsToTheaters({
+              aiCountryIds,
+              theaters,
+              armyGroups: state.armyGroups,
+              regions,
+              divisions: state.divisions,
+              movingUnits: state.movingUnits,
+              activeCombats: state.activeCombats,
+              productionQueues: state.productionQueues,
+            });
+            useSimulationStore.setState({
+              theaters,
+              armyGroups: aiSync.armyGroups,
+              divisions: aiSync.divisions,
+              movingUnits: aiSync.movingUnits,
+              activeCombats: aiSync.activeCombats,
+              productionQueues: aiSync.productionQueues,
+            });
+          } else {
+            useSimulationStore.setState({ theaters });
+          }
+        }
 
         // Initialize centroids for distance calculations
         await initializeCentroids();
@@ -59,5 +94,5 @@ export function useMapData() {
     };
 
     loadMapData();
-  }, [setRegions, setAdjacency, setBorderMidpoints, setMapDataLoaded, mapDataLoaded, initializeCentroids, detectAndUpdateTheaters, persistedRegionOwners]);
+  }, [setRegions, setAdjacency, setBorderMidpoints, setMapDataLoaded, mapDataLoaded, initializeCentroids, persistedRegionOwners]);
 }
