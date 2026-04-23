@@ -1,4 +1,4 @@
-import { GameStore } from './types';
+import { ActionsState } from './types';
 import { getDivisionsInRegion } from '../../utils/divisionState';
 import { StoreApi } from 'zustand';
 
@@ -8,8 +8,8 @@ import { StoreApi } from 'zustand';
  * the 350-line lint limit.
  */
 export const createDivisionSelectionActions = (
-  set: StoreApi<GameStore>['setState'],
-  get: StoreApi<GameStore>['getState']
+  set: StoreApi<ActionsState>['setState'],
+  get: StoreApi<ActionsState>['getState']
 ) => ({
   /** Select all divisions in a region. Clears selectedRegion (mutual exclusivity). */
   selectDivisionsInRegion: (regionId: string) => {

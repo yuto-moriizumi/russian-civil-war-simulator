@@ -1,5 +1,5 @@
 import { CountryId, RelationshipType, GameEvent, NotificationItem } from '../../types/game';
-import { GameStore } from './types';
+import { ActionsState } from './types';
 import { StoreApi } from 'zustand';
 import { createGameEvent, createNotification } from '../../utils/eventUtils';
 import { countries } from '../../data/gameData';
@@ -12,8 +12,8 @@ import { applyRelationshipChange, getRelationshipStatus, joinPuppetToOverlordWar
  * - Getting relationship status
  */
 export const createRelationshipActions = (
-  set: StoreApi<GameStore>['setState'],
-  get: StoreApi<GameStore>['getState']
+  set: StoreApi<ActionsState>['setState'],
+  get: StoreApi<ActionsState>['getState']
 ) => ({
   /**
    * Set or update relationship between two countries

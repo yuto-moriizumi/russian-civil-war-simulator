@@ -1,12 +1,12 @@
-import { GameStore } from './types';
+import { ActionsState } from './types';
 import { ProductionQueueItem } from '../../types/game';
 import { getOrdinalSuffix } from '../../utils/eventUtils';
 import { getCommandPowerInfo, COMMAND_POWER_PER_UNIT } from '../../utils/commandPower';
 import { getBaseProductionTime } from '../../utils/bonusCalculator';
 
 export const createProductionActions = (
-  set: (fn: (state: GameStore) => Partial<GameStore>) => void,
-  get: () => GameStore
+  set: (fn: (state: ActionsState) => Partial<ActionsState>) => void,
+  get: () => ActionsState
 ) => ({
   setIsProductionModalOpen: (isOpen: boolean) => {
     set(() => ({ isProductionModalOpen: isOpen }));

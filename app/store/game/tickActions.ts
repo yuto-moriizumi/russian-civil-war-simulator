@@ -1,5 +1,5 @@
 import { GAME_CONFIG } from '../../constants/gameConfig';
-import { GameStore } from './types';
+import { ActionsState } from './types';
 import { StoreApi } from 'zustand';
 import { countries } from '../../data/gameData';
 import { TickPerf } from './tickPerformance';
@@ -13,8 +13,8 @@ import {
 export { getEffectiveAIStates } from './tickHelpers/aiTick';
 
 export const createTickActions = (
-  set: StoreApi<GameStore>['setState'],
-  get: StoreApi<GameStore>['getState']
+  set: StoreApi<ActionsState>['setState'],
+  get: StoreApi<ActionsState>['getState']
 ) => ({
   tick: () => {
     const state = get();

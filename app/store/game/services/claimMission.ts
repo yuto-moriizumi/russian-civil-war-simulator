@@ -1,11 +1,11 @@
 import { applyGameCommand } from '../../../domain/game/commands';
-import type { GameStore } from '../types';
+import type { ActionsState } from '../types';
 import {
   buildSimulationPatchFromEngineState,
   toEngineState,
 } from './engineStateAdapter';
 
-export function buildClaimMissionPatch(state: GameStore, missionId: string): Partial<GameStore> | null {
+export function buildClaimMissionPatch(state: ActionsState, missionId: string): Partial<ActionsState> | null {
   const result = applyGameCommand(toEngineState(state), {
     type: 'CLAIM_MISSION',
     missionId,

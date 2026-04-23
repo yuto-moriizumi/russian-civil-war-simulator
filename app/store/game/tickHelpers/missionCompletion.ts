@@ -2,7 +2,7 @@ import { Mission, GameEvent, NotificationItem, Country, CountryId } from '../../
 import { areMissionConditionsMet } from '../missionHelpers';
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 import { StoreApi } from 'zustand';
-import { GameStore } from '../types';
+import { ActionsState } from '../types';
 import { applyClaimedMissionRewards } from '../missionRewards';
 import { getCountryName } from '../../../data/countries';
 
@@ -14,13 +14,13 @@ interface MissionCheckResult {
 
 interface AIMissionCheckResult {
   updatedMissions: Mission[];
-  countryBonuses: GameStore['countryBonuses'];
-  regions: GameStore['regions'];
-  divisions: GameStore['divisions'];
-  movingUnits: GameStore['movingUnits'];
-  relationships: GameStore['relationships'];
-  armyGroups: GameStore['armyGroups'];
-  aiStates: GameStore['aiStates'];
+  countryBonuses: ActionsState['countryBonuses'];
+  regions: ActionsState['regions'];
+  divisions: ActionsState['divisions'];
+  movingUnits: ActionsState['movingUnits'];
+  relationships: ActionsState['relationships'];
+  armyGroups: ActionsState['armyGroups'];
+  aiStates: ActionsState['aiStates'];
   newEvents: GameEvent[];
   changed: boolean;
 }
@@ -36,7 +36,7 @@ function arePrerequisitesClaimed(mission: Mission, missions: Mission[]): boolean
  * Checks and auto-completes missions based on conditions
  */
 export function checkAndCompleteMissions(
-  get: StoreApi<GameStore>['getState'],
+  get: StoreApi<ActionsState>['getState'],
   selectedCountry: Country
 ): MissionCheckResult {
   const currentState = get();
@@ -103,7 +103,7 @@ export function checkAndCompleteMissions(
  * and claim every currently available mission during the tick.
  */
 export function checkAndClaimAIMissions(
-  state: GameStore,
+  state: ActionsState,
   aiCountryIds: CountryId[]
 ): AIMissionCheckResult {
   const aiCountries = new Set(aiCountryIds);
@@ -118,7 +118,7 @@ export function checkAndClaimAIMissions(
   const newEvents: GameEvent[] = [];
   let changed = false;
 
-  const makeWorkingState = (): GameStore => ({
+  const makeWorkingState = (): ActionsState => ({
     ...state,
     missions: updatedMissions,
     countryBonuses,

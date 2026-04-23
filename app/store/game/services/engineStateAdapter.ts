@@ -1,13 +1,13 @@
 import type { EngineSimulationState } from '../../../domain/game/engine/types';
 import { initialGameState } from '../initialState';
-import type { GameStore } from '../types';
+import type { ActionsState } from '../types';
 import {
   buildRegionUpdate,
   extractRegionDefinitions,
   extractRegionOwners,
 } from '../../../utils/regionState';
 
-function deriveRegionDefinitions(state: Partial<GameStore>) {
+function deriveRegionDefinitions(state: Partial<ActionsState>) {
   if (state.regionDefinitions && Object.keys(state.regionDefinitions).length > 0) {
     return state.regionDefinitions;
   }
@@ -15,7 +15,7 @@ function deriveRegionDefinitions(state: Partial<GameStore>) {
   return extractRegionDefinitions(state.regions ?? {});
 }
 
-export function toEngineState(state: Partial<GameStore>): EngineSimulationState {
+export function toEngineState(state: Partial<ActionsState>): EngineSimulationState {
   return {
     dateTime: state.dateTime ?? new Date(),
     selectedCountry: state.selectedCountry ?? null,
@@ -42,7 +42,7 @@ export function toEngineState(state: Partial<GameStore>): EngineSimulationState 
 
 export function buildSimulationPatchFromEngineState(
   state: EngineSimulationState,
-): Partial<GameStore> {
+): Partial<ActionsState> {
   return {
     selectedCountry: state.selectedCountry,
     dateTime: state.dateTime,
