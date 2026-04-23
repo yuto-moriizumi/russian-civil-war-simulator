@@ -6,7 +6,7 @@ import { GameStore } from './types';
 import { StoreApi } from 'zustand';
 import { defendArmyGroup } from './armyGroupDefend';
 import { attackArmyGroup } from './armyGroupAttack';
-import { createRegionOwnersPatch } from '../../utils/regionState';
+import { buildRegionUpdate, extractRegionOwners } from '../../utils/regionState';
 
 /**
  * Defines actions related to army group management:
@@ -136,7 +136,7 @@ export const createArmyGroupActions = (
     set({
       theaters: allUpdatedTheaters,
       armyGroups: updatedArmyGroups,
-      ...createRegionOwnersPatch(updatedRegions),
+      ...buildRegionUpdate(get().regionDefinitions, extractRegionOwners(updatedRegions)),
       divisions: get().divisions,
       movingUnits: updatedMovingUnits,
       activeCombats: updatedActiveCombats,
@@ -226,7 +226,7 @@ export const createArmyGroupActions = (
   advanceArmyGroup: (groupId: string) => {
     const state = get();
     attackArmyGroup(groupId, state, partial => {
-      const patch = partial.regions ? { ...partial, ...createRegionOwnersPatch(partial.regions) } : partial;
+      const patch = partial.regions ? { ...partial, ...buildRegionUpdate(state.regionDefinitions, extractRegionOwners(partial.regions)) } : partial;
       set({
         ...patch,
         divisions: partial.divisions ?? state.divisions,
@@ -237,7 +237,7 @@ export const createArmyGroupActions = (
   attackArmyGroup: (groupId: string) => {
     const state = get();
     attackArmyGroup(groupId, state, partial => {
-      const patch = partial.regions ? { ...partial, ...createRegionOwnersPatch(partial.regions) } : partial;
+      const patch = partial.regions ? { ...partial, ...buildRegionUpdate(state.regionDefinitions, extractRegionOwners(partial.regions)) } : partial;
       set({
         ...patch,
         divisions: partial.divisions ?? state.divisions,
@@ -248,7 +248,7 @@ export const createArmyGroupActions = (
   defendArmyGroup: (groupId: string) => {
     const state = get();
     defendArmyGroup(groupId, state, partial => {
-      const patch = partial.regions ? { ...partial, ...createRegionOwnersPatch(partial.regions) } : partial;
+      const patch = partial.regions ? { ...partial, ...buildRegionUpdate(state.regionDefinitions, extractRegionOwners(partial.regions)) } : partial;
       set({
         ...patch,
         divisions: partial.divisions ?? state.divisions,

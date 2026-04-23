@@ -15,6 +15,7 @@ import { createDivisionSelectionActions } from './divisionSelectionActions';
 import { applyClaimedMissionRewards, applyLiberatePuppet, buildMissionRewardDescription } from './missionRewards';
 import { getDivisionsInRegion } from '../../utils/divisionState';
 import {
+  buildRegionUpdate,
   composeRegionState,
   createRegionStatePatch,
   extractRegionDefinitions,
@@ -241,17 +242,11 @@ export const createBasicActions = (
     for (const regionId of regionIds) {
       resetRegionOwners[regionId] = initialRegionOwnership[regionId] ?? 'neutral';
     }
-    const resetRegions = composeRegionState(
-      currentState.regionDefinitions,
-      resetRegionOwners,
-      currentState.regions
-    );
     set({
       ...initialGameState,
       // Keep the loaded map geometry so the game doesn't need to re-fetch it.
-      regions: resetRegions,
+      ...buildRegionUpdate(currentState.regionDefinitions, resetRegionOwners),
       regionDefinitions: currentState.regionDefinitions,
-      regionOwners: resetRegionOwners,
       divisions: {},
       adjacency: currentState.adjacency,
       mapDataLoaded: currentState.mapDataLoaded,
@@ -398,9 +393,8 @@ export const createBasicActions = (
       aiStates: aiStates,
       armyGroups: armyGroupsForState,
       placementArmyGroups,
-      regions: regionsForState,
+      ...buildRegionUpdate(currentState.regionDefinitions, extractRegionOwners(regionsForState)),
       regionDefinitions: currentState.regionDefinitions,
-      regionOwners: extractRegionOwners(regionsForState),
       divisions: divisionsForState,
       adjacency: currentState.adjacency,
       mapDataLoaded: currentState.mapDataLoaded,
@@ -482,8 +476,7 @@ export const createBasicActions = (
             ...state.countryBonuses,
             [countryId]: rewards.updatedCountryBonuses,
           },
-          regions: rewards.updatedRegions,
-          regionOwners: extractRegionOwners(rewards.updatedRegions),
+          ...buildRegionUpdate(state.regionDefinitions, extractRegionOwners(rewards.updatedRegions)),
           divisions: rewards.updatedDivisions,
           movingUnits: rewards.updatedMovingUnits,
           relationships: rewards.updatedRelationships,
@@ -513,13 +506,11 @@ export const createBasicActions = (
     const regionDefinitions = Object.keys(currentState.regionDefinitions).length > 0
       ? currentState.regionDefinitions
       : extractRegionDefinitions(savedData.regions);
-    const regions = composeRegionState(regionDefinitions, savedRegionOwners, savedData.regions);
     set({
       ...savedData.gameState,
       missions: mergeMissionsWithInitial(savedData.gameState.missions),
-      regions,
+      ...buildRegionUpdate(regionDefinitions, savedRegionOwners),
       regionDefinitions,
-      regionOwners: savedRegionOwners,
       divisions: rehydrateDivisions(savedData.gameState),
       aiStates: savedData.aiStates,
       isPlaying: false,

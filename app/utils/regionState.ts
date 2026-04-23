@@ -70,13 +70,17 @@ export function createRegionStatePatch(regions: RegionState): {
   return { regions, regionDefinitions, regionOwners };
 }
 
-export function createRegionOwnersPatch(regions: RegionState): {
-  regions: RegionState;
-  regionOwners: RegionOwnershipState;
-} {
+/**
+ * Build a store patch with regionOwners as the source of truth.
+ * regions is derived from regionDefinitions + regionOwners (not the reverse).
+ */
+export function buildRegionUpdate(
+  regionDefinitions: RegionDefinitions | undefined | null,
+  regionOwners: RegionOwnershipState
+): { regionOwners: RegionOwnershipState; regions: RegionState } {
   return {
-    regions,
-    regionOwners: extractRegionOwners(regions),
+    regionOwners,
+    regions: composeRegionState(regionDefinitions ?? {}, regionOwners),
   };
 }
 

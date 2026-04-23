@@ -23,7 +23,8 @@ export interface GameStore
     GameUiState,
     ClientPreferencesState,
     MapRuntimeState {
-  // Compatibility state while callers migrate to regionDefinitions + regionOwners.
+  // Derived cache. Always computed from regionDefinitions + regionOwners via buildRegionUpdate.
+  // Never update independently — use buildRegionUpdate to keep in sync.
   regions: RegionState;
   adjacency: Adjacency;
   selectedRegion: string | null;
