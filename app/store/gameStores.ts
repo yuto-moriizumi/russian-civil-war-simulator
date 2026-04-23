@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -14,6 +13,7 @@ import {
   GameUiStore,
   SimulationStore,
 } from './game/types';
+import { registerDevToolsExport } from './game/exportGameState';
 import { initialGameState } from './game/initialState';
 import { buildDivisionState } from '../domain/game/divisionState';
 import { buildRegionUpdate, extractRegionOwners } from '../utils/regionState';
@@ -30,25 +30,12 @@ type RehydratableSimulationStore = SimulationStore & {
   lastSaveTime?: Date | string | null;
 };
 
-/**
- * UI state keys validated against GameUiStore at compile time.
- * If a key is misspelled or added to GameUiStore without being listed here,
- * TypeScript will catch it via the `satisfies` constraint.
- */
+// UI state keys validated against GameUiStore at compile time.
 const UI_STATE_KEYS = [
-  'currentScreen',
-  'selectedRegion',
-  'selectedUnitRegion',
-  'selectedDivisionIds',
-  'selectedCombatId',
-  'selectedMovementId',
-  'selectedGroupId',
-  'selectedTheaterId',
-  'isProductionModalOpen',
-  'selectedCountryId',
-  'isCountrySidebarOpen',
-  'isSwitchModeActive',
-  'mapMode',
+  'currentScreen', 'selectedRegion', 'selectedUnitRegion', 'selectedDivisionIds',
+  'selectedCombatId', 'selectedMovementId', 'selectedGroupId', 'selectedTheaterId',
+  'isProductionModalOpen', 'selectedCountryId', 'isCountrySidebarOpen',
+  'isSwitchModeActive', 'mapMode',
 ] as const satisfies readonly (keyof GameUiStore)[];
 
 const uiKeySet = new Set<string>(UI_STATE_KEYS);
@@ -99,162 +86,88 @@ const initialGameUiState: Omit<GameUiStore, keyof UiActions> = {
   mapMode: initialGameState.mapMode,
 };
 
-type SimulationActions = Pick<
-  SimulationStore,
-  | 'setRegions'
-  | 'setAdjacency'
-  | 'setBorderMidpoints'
-  | 'setMapDataLoaded'
-  | 'setPlayerAIEnabled'
-  | 'dismissNotification'
-  | 'startNewGame'
-  | 'selectCountry'
-  | 'togglePlay'
-  | 'setGameSpeed'
-  | 'tick'
-  | 'createInfantry'
-  | 'deployUnit'
-  | 'moveUnits'
-  | 'cancelMovement'
-  | 'redirectMovement'
-  | 'claimMission'
-  | 'openMissions'
-  | 'addToProductionQueue'
-  | 'cancelProduction'
-  | 'createArmyGroup'
-  | 'deleteArmyGroup'
-  | 'renameArmyGroup'
-  | 'assignTheaterToGroup'
-  | 'advanceArmyGroup'
-  | 'attackArmyGroup'
-  | 'defendArmyGroup'
-  | 'setArmyGroupMode'
-  | 'deployToArmyGroup'
-  | 'addDivisionsToArmyGroup'
-  | 'setRelationship'
-  | 'getRelationship'
-  | 'initializeCentroids'
-  | 'saveGame'
-  | 'loadGame'
+type SimulationActions = Pick<SimulationStore,
+  | 'setRegions' | 'setAdjacency' | 'setBorderMidpoints' | 'setMapDataLoaded'
+  | 'setPlayerAIEnabled' | 'dismissNotification' | 'startNewGame' | 'selectCountry'
+  | 'togglePlay' | 'setGameSpeed' | 'tick' | 'createInfantry' | 'deployUnit'
+  | 'moveUnits' | 'cancelMovement' | 'redirectMovement' | 'claimMission'
+  | 'openMissions' | 'addToProductionQueue' | 'cancelProduction' | 'createArmyGroup'
+  | 'deleteArmyGroup' | 'renameArmyGroup' | 'assignTheaterToGroup' | 'advanceArmyGroup'
+  | 'attackArmyGroup' | 'defendArmyGroup' | 'setArmyGroupMode' | 'deployToArmyGroup'
+  | 'addDivisionsToArmyGroup' | 'setRelationship' | 'getRelationship'
+  | 'initializeCentroids' | 'saveGame' | 'loadGame'
 >;
 
-type UiActions = Pick<
-  GameUiStore,
-  | 'setSelectedRegion'
-  | 'setSelectedUnitRegion'
-  | 'selectDivisionsInRegion'
-  | 'addDivisionsInRegion'
-  | 'toggleDivisionInSelection'
-  | 'selectDivisionsInArmyGroup'
-  | 'selectSingleDivision'
-  | 'clearSelectedDivisions'
-  | 'setSelectedCombatId'
-  | 'setSelectedMovementId'
-  | 'setIsProductionModalOpen'
-  | 'setSelectedCountryId'
-  | 'setIsCountrySidebarOpen'
-  | 'setSwitchModeActive'
-  | 'navigateToScreen'
-  | 'selectTheater'
-  | 'selectArmyGroup'
-  | 'setMapMode'
+type UiActions = Pick<GameUiStore,
+  | 'setSelectedRegion' | 'setSelectedUnitRegion' | 'selectDivisionsInRegion'
+  | 'addDivisionsInRegion' | 'toggleDivisionInSelection' | 'selectDivisionsInArmyGroup'
+  | 'selectSingleDivision' | 'clearSelectedDivisions' | 'setSelectedCombatId'
+  | 'setSelectedMovementId' | 'setIsProductionModalOpen' | 'setSelectedCountryId'
+  | 'setIsCountrySidebarOpen' | 'setSwitchModeActive' | 'navigateToScreen'
+  | 'selectTheater' | 'selectArmyGroup' | 'setMapMode'
 >;
 
 function splitGameStorePatch(patch: Partial<ActionsState>) {
   const simulationPatch: Partial<SimulationStore> = {};
   const uiPatch: Partial<GameUiStore> = {};
-
   for (const [key, value] of Object.entries(patch) as [keyof ActionsState, unknown][]) {
-    if (uiKeySet.has(key)) {
-      (uiPatch as Record<string, unknown>)[key] = value;
-    } else {
-      (simulationPatch as Record<string, unknown>)[key] = value;
-    }
+    if (uiKeySet.has(key)) (uiPatch as Record<string, unknown>)[key] = value;
+    else (simulationPatch as Record<string, unknown>)[key] = value;
   }
-
   return { simulationPatch, uiPatch };
 }
 
 function getCombinedState(): ActionsState {
-  return {
-    ...useSimulationStore.getState(),
-    ...useGameUiStore.getState(),
-  } as ActionsState;
+  return { ...useSimulationStore.getState(), ...useGameUiStore.getState() } as ActionsState;
 }
 
 function setCombinedState(
-  patch:
-    | Partial<ActionsState>
-    | ((state: ActionsState) => Partial<ActionsState> | ActionsState)
+  patch: Partial<ActionsState> | ((state: ActionsState) => Partial<ActionsState> | ActionsState),
 ) {
   const currentState = getCombinedState();
   const nextPatch = typeof patch === 'function' ? patch(currentState) : patch;
   if (!nextPatch) return;
-
   const { simulationPatch, uiPatch } = splitGameStorePatch(nextPatch);
-
-  if (Object.keys(simulationPatch).length > 0) {
-    useSimulationStore.setState(simulationPatch);
-  }
-  if (Object.keys(uiPatch).length > 0) {
-    useGameUiStore.setState(uiPatch);
-  }
+  if (Object.keys(simulationPatch).length > 0) useSimulationStore.setState(simulationPatch);
+  if (Object.keys(uiPatch).length > 0) useGameUiStore.setState(uiPatch);
 }
 
 export function toPersistedGameState(state: SimulationStore) {
   return {
-    selectedCountry: state.selectedCountry,
-    dateTime: state.dateTime,
-    divisions: state.divisions,
-    missions: state.missions,
-    movingUnits: state.movingUnits,
-    gameEvents: state.gameEvents,
-    activeCombats: state.activeCombats,
-    regionOwners: state.regionOwners,
-    aiStates: state.aiStates,
-    lastSaveTime: state.lastSaveTime,
-    theaters: state.theaters,
-    armyGroups: state.armyGroups,
-    productionQueues: state.productionQueues,
-    relationships: state.relationships,
+    selectedCountry: state.selectedCountry, dateTime: state.dateTime,
+    divisions: state.divisions, missions: state.missions,
+    movingUnits: state.movingUnits, gameEvents: state.gameEvents,
+    activeCombats: state.activeCombats, regionOwners: state.regionOwners,
+    aiStates: state.aiStates, lastSaveTime: state.lastSaveTime,
+    theaters: state.theaters, armyGroups: state.armyGroups,
+    productionQueues: state.productionQueues, relationships: state.relationships,
     isPlayerAIEnabled: state.isPlayerAIEnabled,
   };
 }
 
 export function rehydratePersistedGameState(state?: RehydratableSimulationStore | null) {
   if (!state) return;
-
   state.isPlayerAIEnabled = state.isPlayerAIEnabled ?? false;
   state.regionOwners = Object.keys(state.regionOwners ?? {}).length > 0
-    ? state.regionOwners
-    : extractRegionOwners(state.regions ?? {});
+    ? state.regionOwners : extractRegionOwners(state.regions ?? {});
   const { regions } = buildRegionUpdate(state.regionDefinitions ?? {}, state.regionOwners);
   state.regions = regions;
   state.missions = mergeMissionsWithInitial(state.missions ?? initialGameState.missions);
-  if (state.dateTime && typeof state.dateTime === 'string') {
-    state.dateTime = new Date(state.dateTime);
-  }
-  if (state.lastSaveTime && typeof state.lastSaveTime === 'string') {
-    state.lastSaveTime = new Date(state.lastSaveTime);
-  }
+  if (state.dateTime && typeof state.dateTime === 'string') state.dateTime = new Date(state.dateTime);
+  if (state.lastSaveTime && typeof state.lastSaveTime === 'string') state.lastSaveTime = new Date(state.lastSaveTime);
   if (state.movingUnits) {
     state.movingUnits = state.movingUnits.map((movement: Movement) => ({
-      ...movement,
-      departureTime: new Date(movement.departureTime),
-      arrivalTime: new Date(movement.arrivalTime),
+      ...movement, departureTime: new Date(movement.departureTime), arrivalTime: new Date(movement.arrivalTime),
     }));
   }
   if (state.activeCombats) {
     state.activeCombats = state.activeCombats.map((combat: ActiveCombat) => ({
-      ...combat,
-      startTime: new Date(combat.startTime),
-      lastRoundTime: new Date(combat.lastRoundTime),
+      ...combat, startTime: new Date(combat.startTime), lastRoundTime: new Date(combat.lastRoundTime),
     }));
   }
   if (state.gameEvents) {
     state.gameEvents = state.gameEvents.map((event: GameEvent) => ({
-      ...event,
-      timestamp: new Date(event.timestamp),
+      ...event, timestamp: new Date(event.timestamp),
     }));
   }
   if (state.productionQueues) {
@@ -263,20 +176,13 @@ export function rehydratePersistedGameState(state?: RehydratableSimulationStore 
       if (state.productionQueues[countryId]) {
         state.productionQueues[countryId] = state.productionQueues[countryId].map(
           (production: ProductionQueueItem) => ({
-            ...production,
-            startTime: new Date(production.startTime),
-            completionTime: new Date(production.completionTime),
-          })
+            ...production, startTime: new Date(production.startTime), completionTime: new Date(production.completionTime),
+          }),
         );
       }
     }
   }
-
-  state.divisions = buildDivisionState(
-    state.movingUnits ?? [],
-    state.activeCombats ?? [],
-    state.divisions ?? {}
-  );
+  state.divisions = buildDivisionState(state.movingUnits ?? [], state.activeCombats ?? [], state.divisions ?? {});
   state.isPlaying = false;
 }
 
@@ -289,53 +195,34 @@ export const useSimulationStore = create<SimulationStore>()(
       const armyGroupActions = createArmyGroupActions(setCombinedState, getCombinedState);
       const productionActions = createProductionActions(setCombinedState, getCombinedState);
       const relationshipActions = createRelationshipActions(setCombinedState, getCombinedState);
-
       return {
         ...initialSimulationStoreState,
-        setRegions: basicActions.setRegions,
-        setAdjacency: basicActions.setAdjacency,
-        setBorderMidpoints: basicActions.setBorderMidpoints,
-        setMapDataLoaded: basicActions.setMapDataLoaded,
-        setPlayerAIEnabled: basicActions.setPlayerAIEnabled,
-        dismissNotification: basicActions.dismissNotification,
-        startNewGame: basicActions.startNewGame,
-        selectCountry: basicActions.selectCountry,
-        togglePlay: basicActions.togglePlay,
-        setGameSpeed: basicActions.setGameSpeed,
-        claimMission: basicActions.claimMission,
-        openMissions: basicActions.openMissions,
-        saveGame: basicActions.saveGame,
-        loadGame: basicActions.loadGame,
+        setRegions: basicActions.setRegions, setAdjacency: basicActions.setAdjacency,
+        setBorderMidpoints: basicActions.setBorderMidpoints, setMapDataLoaded: basicActions.setMapDataLoaded,
+        setPlayerAIEnabled: basicActions.setPlayerAIEnabled, dismissNotification: basicActions.dismissNotification,
+        startNewGame: basicActions.startNewGame, selectCountry: basicActions.selectCountry,
+        togglePlay: basicActions.togglePlay, setGameSpeed: basicActions.setGameSpeed,
+        claimMission: basicActions.claimMission, openMissions: basicActions.openMissions,
+        saveGame: basicActions.saveGame, loadGame: basicActions.loadGame,
         initializeCentroids: basicActions.initializeCentroids,
-        tick: tickActions.tick,
-        createInfantry: unitActions.createInfantry,
-        deployUnit: unitActions.deployUnit,
-        moveUnits: unitActions.moveUnits,
-        cancelMovement: unitActions.cancelMovement,
-        redirectMovement: unitActions.redirectMovement,
+        tick: tickActions.tick, createInfantry: unitActions.createInfantry,
+        deployUnit: unitActions.deployUnit, moveUnits: unitActions.moveUnits,
+        cancelMovement: unitActions.cancelMovement, redirectMovement: unitActions.redirectMovement,
         deployToArmyGroup: unitActions.deployToArmyGroup,
-        createArmyGroup: armyGroupActions.createArmyGroup,
-        deleteArmyGroup: armyGroupActions.deleteArmyGroup,
-        renameArmyGroup: armyGroupActions.renameArmyGroup,
-        assignTheaterToGroup: armyGroupActions.assignTheaterToGroup,
-        advanceArmyGroup: armyGroupActions.advanceArmyGroup,
-        attackArmyGroup: armyGroupActions.attackArmyGroup,
-        defendArmyGroup: armyGroupActions.defendArmyGroup,
-        setArmyGroupMode: armyGroupActions.setArmyGroupMode,
+        createArmyGroup: armyGroupActions.createArmyGroup, deleteArmyGroup: armyGroupActions.deleteArmyGroup,
+        renameArmyGroup: armyGroupActions.renameArmyGroup, assignTheaterToGroup: armyGroupActions.assignTheaterToGroup,
+        advanceArmyGroup: armyGroupActions.advanceArmyGroup, attackArmyGroup: armyGroupActions.attackArmyGroup,
+        defendArmyGroup: armyGroupActions.defendArmyGroup, setArmyGroupMode: armyGroupActions.setArmyGroupMode,
         addDivisionsToArmyGroup: armyGroupActions.addDivisionsToArmyGroup,
-        addToProductionQueue: productionActions.addToProductionQueue,
-        cancelProduction: productionActions.cancelProduction,
-        setRelationship: relationshipActions.setRelationship,
-        getRelationship: relationshipActions.getRelationship,
+        addToProductionQueue: productionActions.addToProductionQueue, cancelProduction: productionActions.cancelProduction,
+        setRelationship: relationshipActions.setRelationship, getRelationship: relationshipActions.getRelationship,
       };
     }),
     {
-      name: 'russian-civil-war-save',
-      storage: createJSONStorage(() => localStorage),
-      partialize: toPersistedGameState,
-      onRehydrateStorage: () => rehydratePersistedGameState,
-    }
-  )
+      name: 'russian-civil-war-save', storage: createJSONStorage(() => localStorage),
+      partialize: toPersistedGameState, onRehydrateStorage: () => rehydratePersistedGameState,
+    },
+  ),
 );
 
 export const useGameUiStore = create<GameUiStore>()(
@@ -343,33 +230,24 @@ export const useGameUiStore = create<GameUiStore>()(
     immer((_set, _get) => {
       const basicActions = createBasicActions(setCombinedState, getCombinedState);
       const armyGroupActions = createArmyGroupActions(setCombinedState, getCombinedState);
-
       return {
         ...initialGameUiState,
-        setSelectedRegion: basicActions.setSelectedRegion,
-        setSelectedUnitRegion: basicActions.setSelectedUnitRegion,
-        selectDivisionsInRegion: basicActions.selectDivisionsInRegion,
-        addDivisionsInRegion: basicActions.addDivisionsInRegion,
-        toggleDivisionInSelection: basicActions.toggleDivisionInSelection,
-        selectDivisionsInArmyGroup: basicActions.selectDivisionsInArmyGroup,
-        selectSingleDivision: basicActions.selectSingleDivision,
-        clearSelectedDivisions: basicActions.clearSelectedDivisions,
-        setSelectedCombatId: basicActions.setSelectedCombatId,
-        setSelectedMovementId: basicActions.setSelectedMovementId,
-        setIsProductionModalOpen: basicActions.setIsProductionModalOpen,
-        setSelectedCountryId: basicActions.setSelectedCountryId,
-        setIsCountrySidebarOpen: basicActions.setIsCountrySidebarOpen,
-        setSwitchModeActive: basicActions.setSwitchModeActive,
-        navigateToScreen: basicActions.navigateToScreen,
-        selectTheater: armyGroupActions.selectTheater,
-        selectArmyGroup: armyGroupActions.selectArmyGroup,
-        setMapMode: basicActions.setMapMode,
+        setSelectedRegion: basicActions.setSelectedRegion, setSelectedUnitRegion: basicActions.setSelectedUnitRegion,
+        selectDivisionsInRegion: basicActions.selectDivisionsInRegion, addDivisionsInRegion: basicActions.addDivisionsInRegion,
+        toggleDivisionInSelection: basicActions.toggleDivisionInSelection, selectDivisionsInArmyGroup: basicActions.selectDivisionsInArmyGroup,
+        selectSingleDivision: basicActions.selectSingleDivision, clearSelectedDivisions: basicActions.clearSelectedDivisions,
+        setSelectedCombatId: basicActions.setSelectedCombatId, setSelectedMovementId: basicActions.setSelectedMovementId,
+        setIsProductionModalOpen: basicActions.setIsProductionModalOpen, setSelectedCountryId: basicActions.setSelectedCountryId,
+        setIsCountrySidebarOpen: basicActions.setIsCountrySidebarOpen, setSwitchModeActive: basicActions.setSwitchModeActive,
+        navigateToScreen: basicActions.navigateToScreen, selectTheater: armyGroupActions.selectTheater,
+        selectArmyGroup: armyGroupActions.selectArmyGroup, setMapMode: basicActions.setMapMode,
       };
     }),
     {
-      name: 'russian-civil-war-ui',
-      storage: createJSONStorage(() => localStorage),
+      name: 'russian-civil-war-ui', storage: createJSONStorage(() => localStorage),
       partialize: state => ({ mapMode: state.mapMode }),
-    }
-  )
+    },
+  ),
 );
+
+registerDevToolsExport();
