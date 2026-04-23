@@ -17,7 +17,8 @@ import {
 import { initialGameState } from './game/initialState';
 import { buildDivisionState } from '../utils/divisionState';
 import { buildRegionUpdate, extractRegionOwners } from '../utils/regionState';
-import { createBasicActions, mergeMissionsWithInitial } from './game/basicActions';
+import { createBasicActions } from './game/basicActions';
+import { mergeMissionsWithInitial } from '../utils/missionUtils';
 import { createTickActions } from './game/tickActions';
 import { createUnitActions } from './game/unitActions';
 import { createArmyGroupActions } from './game/armyGroupActions';
