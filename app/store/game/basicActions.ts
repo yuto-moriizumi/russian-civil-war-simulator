@@ -8,6 +8,7 @@ import { createDivisionSelectionActions } from './divisionSelectionActions';
 import { applyLiberatePuppet } from './missionRewards';
 import { getDivisionsInRegion } from '../../utils/divisionState';
 import {
+  buildRegionUpdate,
   createRegionStatePatch,
   extractRegionDefinitions,
   extractRegionOwners,
