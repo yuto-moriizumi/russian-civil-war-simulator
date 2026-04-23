@@ -16,7 +16,6 @@ import { applyClaimedMissionRewards, applyLiberatePuppet, buildMissionRewardDesc
 import { getDivisionsInRegion } from '../../utils/divisionState';
 import {
   buildRegionUpdate,
-  composeRegionState,
   createRegionStatePatch,
   extractRegionDefinitions,
   extractRegionOwners,
