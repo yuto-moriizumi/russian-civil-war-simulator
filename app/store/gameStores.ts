@@ -114,7 +114,6 @@ type SimulationActions = Pick<
   | 'openMissions'
   | 'addToProductionQueue'
   | 'cancelProduction'
-  | 'detectAndUpdateTheaters'
   | 'createArmyGroup'
   | 'deleteArmyGroup'
   | 'renameArmyGroup'
@@ -308,7 +307,6 @@ export const useSimulationStore = create<SimulationStore>()(
         cancelMovement: unitActions.cancelMovement,
         redirectMovement: unitActions.redirectMovement,
         deployToArmyGroup: unitActions.deployToArmyGroup,
-        detectAndUpdateTheaters: armyGroupActions.detectAndUpdateTheaters,
         createArmyGroup: armyGroupActions.createArmyGroup,
         deleteArmyGroup: armyGroupActions.deleteArmyGroup,
         renameArmyGroup: armyGroupActions.renameArmyGroup,

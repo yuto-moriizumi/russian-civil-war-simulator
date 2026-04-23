@@ -10,3 +10,4 @@ export { processAIStep } from './processAIStep';
 export { syncArmyGroupsStep } from './syncArmyGroupsStep';
 export { applyArmyGroupActionsStep } from './applyArmyGroupActionsStep';
 export { applyMissionsStep } from './applyMissionsStep';
+export { reconcilePlayerArmyGroupsStep } from './reconcilePlayerArmyGroupsStep';

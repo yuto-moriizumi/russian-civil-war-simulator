@@ -69,7 +69,6 @@ function runSingleTick(initialState: Partial<GameStore>): GameStore {
     aiStates: [],
     theaters: [],
     missions: [],
-    detectAndUpdateTheaters: () => {},
     ...initialState,
   } as unknown as GameStore;
 
@@ -128,7 +127,6 @@ describe('tick mid-transit combat handling', () => {
       aiStates: [],
       theaters: [],
       missions: [],
-      detectAndUpdateTheaters: () => {},
     } as unknown as GameStore;
 
     const set = ((partial: Partial<GameStore>) => {

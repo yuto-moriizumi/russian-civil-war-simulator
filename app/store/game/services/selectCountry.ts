@@ -3,6 +3,7 @@ import {
   Country,
   DivisionState,
   RegionState,
+  Theater,
 } from '../../../types/game';
 import { initialGameState } from '../initialState';
 import { initialUnitPlacement, initialArmyGroupDefs } from '../../../data/map/initialUnitPlacement';
@@ -11,7 +12,77 @@ import { getDivisionPrefix } from '../../../data/countries';
 import { createInitialAIState, createInitialAIArmyGroup } from '../../../ai/cpuPlayer';
 import { mergeMissionsWithInitial } from '../../../utils/missionUtils';
 import { buildRegionUpdate, extractRegionOwners } from '../../../utils/regionState';
+import { detectTheatersForCountries, syncAIArmyGroupsToTheaters } from '../../../utils/aiArmyGroupTheaters';
 import type { ActionsState } from '../types';
+
+/**
+ * Compute theaters and sync AI army groups when adjacency is available.
+ * Returns theater data to merge into the state patch.
+ */
+function computeTheaters(
+  regions: RegionState,
+  adjacency: ActionsState['adjacency'],
+  playerCountryId: Country,
+  aiCountries: import('../../../types/game').CountryId[],
+  relationships: ActionsState['relationships'],
+  armyGroups: ArmyGroup[],
+  divisions: DivisionState,
+  movingUnits: ActionsState['movingUnits'],
+  activeCombats: ActionsState['activeCombats'],
+  productionQueues: ActionsState['productionQueues'],
+): { theaters: Theater[]; armyGroups: ArmyGroup[]; regions: RegionState; movingUnits: ActionsState['movingUnits']; activeCombats: ActionsState['activeCombats']; productionQueues: ActionsState['productionQueues']; divisions: DivisionState } {
+  const hasAdjacency = Object.keys(adjacency).length > 0;
+  if (!hasAdjacency) {
+    return { theaters: [], armyGroups, regions, movingUnits, activeCombats, productionQueues, divisions };
+  }
+
+  const aiCountryIds = aiCountries;
+  const allCountryIds = [playerCountryId.id, ...aiCountryIds];
+
+  const theaters = detectTheatersForCountries({
+    regions,
+    adjacency,
+    countryIds: allCountryIds,
+    existingTheaters: [],
+    relationships,
+  });
+
+  let resultArmyGroups = armyGroups;
+  let resultRegions = regions;
+  let resultDivisions = divisions;
+  let resultMovingUnits = movingUnits;
+  let resultActiveCombats = activeCombats;
+  let resultProductionQueues = productionQueues;
+
+  if (aiCountryIds.length > 0) {
+    const aiSync = syncAIArmyGroupsToTheaters({
+      aiCountryIds,
+      theaters,
+      armyGroups,
+      regions,
+      divisions,
+      movingUnits,
+      activeCombats,
+      productionQueues,
+    });
+    resultArmyGroups = aiSync.armyGroups;
+    resultRegions = aiSync.regions;
+    resultDivisions = aiSync.divisions;
+    resultMovingUnits = aiSync.movingUnits;
+    resultActiveCombats = aiSync.activeCombats;
+    resultProductionQueues = aiSync.productionQueues;
+  }
+
+  return {
+    theaters,
+    armyGroups: resultArmyGroups,
+    regions: resultRegions,
+    movingUnits: resultMovingUnits,
+    activeCombats: resultActiveCombats,
+    productionQueues: resultProductionQueues,
+    divisions: resultDivisions,
+  };
+}
 
 export function buildSelectCountryPatch(
   currentState: ActionsState,
@@ -125,33 +196,47 @@ export function buildSelectCountryPatch(
     divisionsForState = currentState.divisions;
   }
 
+  // Compute theaters if adjacency is available
+  const theaterResult = computeTheaters(
+    regionsForState,
+    currentState.adjacency,
+    country,
+    aiCountries,
+    currentState.relationships,
+    armyGroupsForState,
+    divisionsForState,
+    currentState.movingUnits,
+    currentState.activeCombats,
+    currentState.productionQueues,
+  );
+
   return {
     ...initialGameState,
     selectedCountry: country,
     currentScreen: 'main' as const,
     missions: mergeMissionsWithInitial(currentState.missions),
     aiStates,
-    armyGroups: armyGroupsForState,
+    armyGroups: theaterResult.armyGroups,
     placementArmyGroups,
-    ...buildRegionUpdate(currentState.regionDefinitions, extractRegionOwners(regionsForState)),
+    ...buildRegionUpdate(currentState.regionDefinitions, extractRegionOwners(theaterResult.regions)),
     regionDefinitions: currentState.regionDefinitions,
-    divisions: divisionsForState,
+    divisions: theaterResult.divisions,
     adjacency: currentState.adjacency,
     mapDataLoaded: currentState.mapDataLoaded,
     regionCentroids: currentState.regionCentroids,
     borderMidpoints: currentState.borderMidpoints,
-    productionQueues: currentState.productionQueues,
+    productionQueues: theaterResult.productionQueues,
     dateTime: currentState.dateTime,
     isPlaying: currentState.isPlaying,
     gameSpeed: currentState.gameSpeed,
     gameEvents: currentState.gameEvents,
     notifications: currentState.notifications,
-    activeCombats: currentState.activeCombats,
-    movingUnits: currentState.movingUnits,
+    activeCombats: theaterResult.activeCombats,
+    movingUnits: theaterResult.movingUnits,
     countryBonuses: currentState.countryBonuses,
     relationships: currentState.relationships,
     scheduledEvents: currentState.scheduledEvents,
-    theaters: currentState.theaters,
+    theaters: theaterResult.theaters,
     isPlayerAIEnabled: currentState.isPlayerAIEnabled,
   };
 }
