@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
-import { useGameStore } from '../store/useGameStore';
-import { CountryId } from '../types/game';
-import { getDivisionsInRegion } from '../utils/divisionState';
+import { useEffect } from "react";
+import { useGameStore } from "../store/useGameStore";
+import { CountryId } from "../types/game";
+import { getDivisionsInRegion } from "../utils/divisionState";
 
+/** CLI tool for browser console, mainly for Playwright(MCP) based testing, used by AI */
 export function useGameAPI() {
   const state = useGameStore();
 
@@ -21,19 +22,25 @@ export function useGameAPI() {
         }
         const region = state.regions[regionId];
         if (!region || !state.selectedCountry) {
-          console.warn(`[gameAPI] Cannot select units in region "${regionId}" - not found`);
+          console.warn(
+            `[gameAPI] Cannot select units in region "${regionId}" - not found`,
+          );
           return;
         }
         const divsInRegion = getDivisionsInRegion(state.divisions, regionId);
         // Allow selection from owned regions OR ally regions where the player
         // has their own divisions (military access / autonomy scenario)
-        const hasOwnDivisions = divsInRegion.some(d => d.owner === state.selectedCountry!.id);
+        const hasOwnDivisions = divsInRegion.some(
+          (d) => d.owner === state.selectedCountry!.id,
+        );
         const isOwnRegion = region.owner === state.selectedCountry.id;
         if ((isOwnRegion || hasOwnDivisions) && divsInRegion.length > 0) {
           state.setSelectedUnitRegion(regionId);
           state.setSelectedRegion(regionId);
         } else {
-          console.warn(`[gameAPI] Cannot select units in region "${regionId}" - not found, not owned by player, or has no units`);
+          console.warn(
+            `[gameAPI] Cannot select units in region "${regionId}" - not found, not owned by player, or has no units`,
+          );
         }
       },
 
@@ -42,13 +49,18 @@ export function useGameAPI() {
       moveSelectedUnits: (toRegionId, count) => {
         const fromRegion = state.selectedUnitRegion;
         if (!fromRegion) {
-          console.warn('[gameAPI] No units selected');
+          console.warn("[gameAPI] No units selected");
           return false;
         }
 
         const selectedIds = state.selectedDivisionIds;
-        const idsToMove = !count && selectedIds.length > 0 ? selectedIds : undefined;
-        const unitsToMove = count ?? (selectedIds.length > 0 ? selectedIds.length : getDivisionsInRegion(state.divisions, fromRegion).length);
+        const idsToMove =
+          !count && selectedIds.length > 0 ? selectedIds : undefined;
+        const unitsToMove =
+          count ??
+          (selectedIds.length > 0
+            ? selectedIds.length
+            : getDivisionsInRegion(state.divisions, fromRegion).length);
         if (unitsToMove <= 0) return false;
 
         state.moveUnits(fromRegion, toRegionId, unitsToMove, idsToMove);
@@ -66,13 +78,20 @@ export function useGameAPI() {
           state.setSelectedMovementId(null);
           return;
         }
-        const movement = state.movingUnits.find(m => m.id === movementId);
+        const movement = state.movingUnits.find((m) => m.id === movementId);
         if (!movement) {
-          console.warn(`[gameAPI] Cannot select movement "${movementId}" - not found`);
+          console.warn(
+            `[gameAPI] Cannot select movement "${movementId}" - not found`,
+          );
           return;
         }
-        if (!state.selectedCountry || movement.owner !== state.selectedCountry.id) {
-          console.warn(`[gameAPI] Cannot select movement "${movementId}" - not owned by player`);
+        if (
+          !state.selectedCountry ||
+          movement.owner !== state.selectedCountry.id
+        ) {
+          console.warn(
+            `[gameAPI] Cannot select movement "${movementId}" - not owned by player`,
+          );
           return;
         }
         state.setSelectedMovementId(movementId);
@@ -82,11 +101,13 @@ export function useGameAPI() {
         state.redirectMovement(movementId, newDestinationRegionId),
 
       // Army Group API methods
-      createArmyGroup: (name, regionIds, theaterId) => state.createArmyGroup(name, regionIds, theaterId),
+      createArmyGroup: (name, regionIds, theaterId) =>
+        state.createArmyGroup(name, regionIds, theaterId),
       getArmyGroups: () => state.armyGroups,
       advanceArmyGroup: (groupId) => state.advanceArmyGroup(groupId),
       defendArmyGroup: (groupId) => state.defendArmyGroup(groupId),
-      setArmyGroupMode: (groupId, mode) => state.setArmyGroupMode(groupId, mode),
+      setArmyGroupMode: (groupId, mode) =>
+        state.setArmyGroupMode(groupId, mode),
       deployToArmyGroup: (groupId) => state.deployToArmyGroup(groupId),
       deleteArmyGroup: (groupId) => state.deleteArmyGroup(groupId),
 
@@ -113,8 +134,10 @@ export function useGameAPI() {
 
       // Relationship API methods
       getRelationships: () => state.relationships,
-      setRelationship: (fromCountry, toCountry, type) => state.setRelationship(fromCountry, toCountry, type),
-      getRelationship: (fromCountry, toCountry) => state.getRelationship(fromCountry, toCountry),
+      setRelationship: (fromCountry, toCountry, type) =>
+        state.setRelationship(fromCountry, toCountry, type),
+      getRelationship: (fromCountry, toCountry) =>
+        state.getRelationship(fromCountry, toCountry),
 
       // Country sidebar
       openCountrySidebar: (countryId) => {
