@@ -178,6 +178,8 @@ export function processCombatRounds(
   divisions: DivisionState
 ): RoundResult[] {
   const results: RoundResult[] = [];
+  // Accumulate HP changes across groups so each group sees previous groups' changes.
+  let runningDivisions = divisions;
 
   // Group combats by defenderRegionId
   const groups = new Map<string, ActiveCombat[]>();
@@ -189,12 +191,16 @@ export function processCombatRounds(
 
   for (const [, group] of groups) {
     if (group.length === 1) {
-      results.push(
-        processCombatRound({ ...group[0], lastRoundTime: new Date(currentTime) }, divisions, regions, adjacency)
-      );
+      const result = processCombatRound({ ...group[0], lastRoundTime: new Date(currentTime) }, runningDivisions, regions, adjacency);
+      results.push(result);
+      runningDivisions = result.updatedDivisions;
       continue;
     }
-    results.push(...processSharedDefenseRound(group, regions, adjacency, currentTime, divisions));
+    const sharedResults = processSharedDefenseRound(group, regions, adjacency, currentTime, runningDivisions);
+    results.push(...sharedResults);
+    if (sharedResults.length > 0) {
+      runningDivisions = sharedResults[sharedResults.length - 1].updatedDivisions;
+    }
   }
 
   return results;
@@ -266,13 +272,12 @@ function processSharedDefenseRound(
       continue;
     }
 
-    const retreats = processAttackerRound(
+    const { retreats, survivingAttackers: survivingAttackerDivisions } = processAttackerRound(
       calc, survivingSharedDefenders, defeatedDefenderDivisions,
       calc.combat.id === firstSharedCombatId,
       regions, adjacency, currentTime
     );
 
-    const survivingAttackerDivisions = calc.attackerDivisions.filter(d => d.hp > 0);
     const combatEnded = survivingAttackerDivisions.length === 0 || survivingSharedDefenders.length === 0;
 
     // Apply HP changes to DivisionState
@@ -334,6 +339,11 @@ function buildCombatCalculations(activeCombats: ActiveCombat[], currentTime: Dat
   });
 }
 
+interface AttackerRoundResult {
+  retreats: RoundResult['retreatingDivisions'];
+  survivingAttackers: Division[];
+}
+
 function processAttackerRound(
   calc: CombatCalculation,
   survivingSharedDefenders: Division[],
@@ -342,7 +352,7 @@ function processAttackerRound(
   regions: RegionState,
   adjacency: Adjacency,
   _currentTime: Date
-): RoundResult['retreatingDivisions'] {
+): AttackerRoundResult {
   const { combat, attackerDivisions, defenderTotalDamage } = calc;
   const retreats: RoundResult['retreatingDivisions'] = [];
 
@@ -393,5 +403,5 @@ function processAttackerRound(
     }
   }
 
-  return retreats;
+  return { retreats, survivingAttackers };
 }
