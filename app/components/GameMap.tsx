@@ -50,7 +50,6 @@ export default function GameMap() {
 
   // Actions
   const setSelectedRegion = useGameUiStore(state => state.setSelectedRegion);
-  const setSelectedUnitRegion = useGameUiStore(state => state.setSelectedUnitRegion);
   const selectDivisionsInRegion = useGameUiStore(state => state.selectDivisionsInRegion);
   const addDivisionsInRegion = useGameUiStore(state => state.addDivisionsInRegion);
   const setSelectedCombatId = useGameUiStore(state => state.setSelectedCombatId);
@@ -73,15 +72,7 @@ export default function GameMap() {
     onRegionHover: undefined,
   });
 
-  const { handleMapClick, handleContextMenu } = useMapEventHandlers(
-    selectedRegion,
-    regions,
-    divisions,
-    playerCountry,
-    setSelectedRegion,
-    setSelectedUnitRegion,
-    setSelectedMovementId,
-  );
+  const { handleMapClick, handleContextMenu } = useMapEventHandlers();
 
   const handleMapLoad = useCallback(() => {
     setMapLoaded(true);
