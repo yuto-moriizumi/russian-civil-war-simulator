@@ -1,6 +1,7 @@
 'use client';
 
-import { useGameStore } from '../../store/useGameStore';
+import { useSimulationStore } from '../../store/useSimulationStore';
+import { useGameUiStore } from '../../store/useGameUiStore';
 import { COUNTRY_COLORS, getAdjacentRegions } from '../../utils/mapUtils';
 import { DIVISIONS_PER_STATE } from '../../utils/commandPower';
 import { regionValues } from '../../data/map/regionValues';
@@ -15,8 +16,8 @@ interface RegionTooltipProps {
 }
 
 export function RegionTooltip({ hoveredRegion }: RegionTooltipProps) {
-  const regions = useGameStore(state => state.regions);
-  const divisions = useGameStore(state => state.divisions);
+  const regions = useSimulationStore(state => state.regions);
+  const divisions = useSimulationStore(state => state.divisions);
 
   const region = regions[hoveredRegion];
   if (!region) return null;
@@ -49,15 +50,15 @@ export function RegionTooltip({ hoveredRegion }: RegionTooltipProps) {
 }
 
 export function RegionInfoPanel() {
-  const selectedRegion = useGameStore(state => state.selectedRegion);
-  const regions = useGameStore(state => state.regions);
-  const adjacency = useGameStore(state => state.adjacency);
-  const divisions = useGameStore(state => state.divisions);
-  const playerCountry = useGameStore(state => state.selectedCountry?.id);
-  const coreRegions = useGameStore(state => state.selectedCountry?.coreRegions);
+  const selectedRegion = useGameUiStore(state => state.selectedRegion);
+  const regions = useSimulationStore(state => state.regions);
+  const adjacency = useSimulationStore(state => state.adjacency);
+  const divisions = useSimulationStore(state => state.divisions);
+  const playerCountry = useSimulationStore(state => state.selectedCountry?.id);
+  const coreRegions = useSimulationStore(state => state.selectedCountry?.coreRegions);
   
-  const setSelectedRegion = useGameStore(state => state.setSelectedRegion);
-  const selectDivisionsInRegion = useGameStore(state => state.selectDivisionsInRegion);
+  const setSelectedRegion = useGameUiStore(state => state.setSelectedRegion);
+  const selectDivisionsInRegion = useGameUiStore(state => state.selectDivisionsInRegion);
 
   if (!selectedRegion) return null;
   const region = regions[selectedRegion];
@@ -202,5 +203,4 @@ export function RegionInfoPanel() {
     </div>
   );
 }
-
 

@@ -1,6 +1,7 @@
 'use client';
 
-import { useGameStore } from '../../store/useGameStore';
+import { useSimulationStore } from '../../store/useSimulationStore';
+import { useGameUiStore } from '../../store/useGameUiStore';
 import { COUNTRY_COLORS, getAdjacentRegions } from '../../utils/mapUtils';
 import { Division } from '../../types/game';
 import { getDivisionsInRegion } from '../../utils/divisionState';
@@ -16,16 +17,16 @@ import { getDivisionsInRegion } from '../../utils/divisionState';
  * clears the selected region, and selecting a region clears this panel.
  */
 export function DivisionSelectionPanel() {
-  const selectedDivisionIds = useGameStore(state => state.selectedDivisionIds);
-  const selectedUnitRegion = useGameStore(state => state.selectedUnitRegion);
-  const regions = useGameStore(state => state.regions);
-  const divisions = useGameStore(state => state.divisions);
-  const movingUnits = useGameStore(state => state.movingUnits);
-  const adjacency = useGameStore(state => state.adjacency);
-  const playerCountry = useGameStore(state => state.selectedCountry?.id);
-  const clearSelectedDivisions = useGameStore(state => state.clearSelectedDivisions);
-  const toggleDivisionInSelection = useGameStore(state => state.toggleDivisionInSelection);
-  const selectSingleDivision = useGameStore(state => state.selectSingleDivision);
+  const selectedDivisionIds = useGameUiStore(state => state.selectedDivisionIds);
+  const selectedUnitRegion = useGameUiStore(state => state.selectedUnitRegion);
+  const clearSelectedDivisions = useGameUiStore(state => state.clearSelectedDivisions);
+  const toggleDivisionInSelection = useGameUiStore(state => state.toggleDivisionInSelection);
+  const selectSingleDivision = useGameUiStore(state => state.selectSingleDivision);
+  const regions = useSimulationStore(state => state.regions);
+  const divisions = useSimulationStore(state => state.divisions);
+  const movingUnits = useSimulationStore(state => state.movingUnits);
+  const adjacency = useSimulationStore(state => state.adjacency);
+  const playerCountry = useSimulationStore(state => state.selectedCountry?.id);
 
   if (selectedDivisionIds.length === 0) return null;
 

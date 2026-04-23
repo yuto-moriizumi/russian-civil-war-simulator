@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useGameStore } from '../store/useGameStore';
+import { useSimulationStore } from '../store/useSimulationStore';
+import { useGameUiStore } from '../store/useGameUiStore';
 import SidebarPanel from './SidebarPanel';
 
 interface ProductionQueuePanelProps {
@@ -12,16 +13,16 @@ export default function ProductionQueuePanel({
   viewOnly = false,
 }: ProductionQueuePanelProps) {
   // Store selectors
-  const isOpen = useGameStore(state => state.isProductionModalOpen);
-  const productionQueue = useGameStore(state => state.productionQueues);
-  const regions = useGameStore(state => state.regions);
-  const armyGroups = useGameStore(state => state.armyGroups);
-  const playerCountry = useGameStore(state => state.selectedCountry?.id);
-  const currentDateTime = useGameStore(state => state.dateTime);
+  const isOpen = useGameUiStore(state => state.isProductionModalOpen);
+  const productionQueue = useSimulationStore(state => state.productionQueues);
+  const regions = useSimulationStore(state => state.regions);
+  const armyGroups = useSimulationStore(state => state.armyGroups);
+  const playerCountry = useSimulationStore(state => state.selectedCountry?.id);
+  const currentDateTime = useSimulationStore(state => state.dateTime);
   
   // Actions
-  const setIsProductionModalOpen = useGameStore(state => state.setIsProductionModalOpen);
-  const cancelProduction = useGameStore(state => state.cancelProduction);
+  const setIsProductionModalOpen = useGameUiStore(state => state.setIsProductionModalOpen);
+  const cancelProduction = useSimulationStore(state => state.cancelProduction);
   
   // Local state
   const [divisionName, setDivisionName] = useState('');

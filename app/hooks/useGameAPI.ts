@@ -1,11 +1,14 @@
 import { useEffect } from "react";
-import { useGameStore } from "../store/useGameStore";
+import { useSimulationStore } from "../store/useSimulationStore";
+import { useGameUiStore } from "../store/useGameUiStore";
 import { CountryId } from "../types/game";
 import { getDivisionsInRegion } from "../utils/divisionState";
 
 /** CLI tool for browser console, mainly for Playwright(MCP) based testing, used by AI */
 export function useGameAPI() {
-  const state = useGameStore();
+  const simulationState = useSimulationStore();
+  const uiState = useGameUiStore();
+  const state = { ...simulationState, ...uiState };
 
   useEffect(() => {
     window.gameAPI = {

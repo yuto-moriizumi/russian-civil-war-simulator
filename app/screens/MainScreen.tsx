@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { useGameStore } from '../store/useGameStore';
+import { useSimulationStore } from '../store/useSimulationStore';
 import CombatPopup from '../components/CombatPopup';
 import TheaterPanel from '../components/TheaterPanel';
 import NotificationToast from '../components/NotificationToast';
@@ -23,9 +23,9 @@ const GameMap = dynamic(() => import('../components/GameMap'), {
 
 export default function MainScreen() {
   // Store selectors
-  const country = useGameStore(state => state.selectedCountry);
-  const mapDataLoaded = useGameStore(state => state.mapDataLoaded);
-  const lastSaveTime = useGameStore(state => state.lastSaveTime);
+  const country = useSimulationStore(state => state.selectedCountry);
+  const mapDataLoaded = useSimulationStore(state => state.mapDataLoaded);
+  const lastSaveTime = useSimulationStore(state => state.lastSaveTime);
   
   // Local state for saved indicator
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);

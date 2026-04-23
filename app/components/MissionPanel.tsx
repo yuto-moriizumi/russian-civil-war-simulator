@@ -1,13 +1,13 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useGameStore } from '../store/useGameStore';
+import { useSimulationStore } from '../store/useSimulationStore';
 
 export default function MissionPanel() {
-  const allMissions = useGameStore(state => state.missions);
-  const selectedCountry = useGameStore(state => state.selectedCountry);
-  const openMissions = useGameStore(state => state.openMissions);
-  const claimMission = useGameStore(state => state.claimMission);
+  const allMissions = useSimulationStore(state => state.missions);
+  const selectedCountry = useSimulationStore(state => state.selectedCountry);
+  const openMissions = useSimulationStore(state => state.openMissions);
+  const claimMission = useSimulationStore(state => state.claimMission);
   const missions = useMemo(
     () => selectedCountry
       ? allMissions.filter(mission => mission.country === selectedCountry.id)

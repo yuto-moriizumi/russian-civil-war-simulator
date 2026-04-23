@@ -130,3 +130,29 @@ export interface GameStore
   saveGame: () => void;
   loadGame: (savedData: { gameState: GameState; regions: RegionState; aiStates: AIState[] }) => void;
 }
+
+export type GameUiStateKey = keyof GameUiState | keyof ClientPreferencesState;
+
+export type GameUiActionKey =
+  | 'setSelectedRegion'
+  | 'setSelectedUnitRegion'
+  | 'selectDivisionsInRegion'
+  | 'addDivisionsInRegion'
+  | 'toggleDivisionInSelection'
+  | 'selectDivisionsInArmyGroup'
+  | 'selectSingleDivision'
+  | 'clearSelectedDivisions'
+  | 'setSelectedCombatId'
+  | 'setSelectedMovementId'
+  | 'setIsProductionModalOpen'
+  | 'setSelectedCountryId'
+  | 'setIsCountrySidebarOpen'
+  | 'setSwitchModeActive'
+  | 'navigateToScreen'
+  | 'selectTheater'
+  | 'selectArmyGroup'
+  | 'setMapMode';
+
+export type GameUiStore = Pick<GameStore, GameUiStateKey | GameUiActionKey>;
+
+export type SimulationStore = Omit<GameStore, GameUiStateKey | GameUiActionKey>;

@@ -2,36 +2,37 @@
 
 import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
-import { useGameStore } from '../store/useGameStore';
+import { useSimulationStore } from '../store/useSimulationStore';
+import { useGameUiStore } from '../store/useGameUiStore';
 import { getCountryFlag } from '../data/countries';
 import { getArmyGroupUnitCount } from '../utils/mapUtils';
 import { canProduceDivision } from '../utils/commandPower';
 
 export default function TheaterPanel() {
   // Store selectors
-  const allTheaters = useGameStore(state => state.theaters);
-  const armyGroups = useGameStore(state => state.armyGroups);
-  const regions = useGameStore(state => state.regions);
-  const divisions = useGameStore(state => state.divisions);
-  const playerCountry = useGameStore(state => state.selectedCountry?.id);
-  const selectedGroupId = useGameStore(state => state.selectedGroupId);
-  const movingUnits = useGameStore(state => state.movingUnits);
-  const activeCombats = useGameStore(state => state.activeCombats);
-  const productionQueue = useGameStore(state => state.productionQueues);
-  const countryBonuses = useGameStore(state => state.countryBonuses);
-  const coreRegions = useGameStore(state => state.selectedCountry?.coreRegions);
+  const allTheaters = useSimulationStore(state => state.theaters);
+  const armyGroups = useSimulationStore(state => state.armyGroups);
+  const regions = useSimulationStore(state => state.regions);
+  const divisions = useSimulationStore(state => state.divisions);
+  const playerCountry = useSimulationStore(state => state.selectedCountry?.id);
+  const movingUnits = useSimulationStore(state => state.movingUnits);
+  const activeCombats = useSimulationStore(state => state.activeCombats);
+  const productionQueue = useSimulationStore(state => state.productionQueues);
+  const countryBonuses = useSimulationStore(state => state.countryBonuses);
+  const coreRegions = useSimulationStore(state => state.selectedCountry?.coreRegions);
+  const selectedGroupId = useGameUiStore(state => state.selectedGroupId);
+  const selectedDivisionIds = useGameUiStore(state => state.selectedDivisionIds);
   
   // Actions
-  const createArmyGroup = useGameStore(state => state.createArmyGroup);
-  const deleteArmyGroup = useGameStore(state => state.deleteArmyGroup);
-  const renameArmyGroup = useGameStore(state => state.renameArmyGroup);
-  const selectArmyGroup = useGameStore(state => state.selectArmyGroup);
-  const setArmyGroupMode = useGameStore(state => state.setArmyGroupMode);
-  const deployToArmyGroup = useGameStore(state => state.deployToArmyGroup);
-  const assignTheaterToGroup = useGameStore(state => state.assignTheaterToGroup);
-  const selectDivisionsInArmyGroup = useGameStore(state => state.selectDivisionsInArmyGroup);
-  const addDivisionsToArmyGroup = useGameStore(state => state.addDivisionsToArmyGroup);
-  const selectedDivisionIds = useGameStore(state => state.selectedDivisionIds);
+  const createArmyGroup = useSimulationStore(state => state.createArmyGroup);
+  const deleteArmyGroup = useSimulationStore(state => state.deleteArmyGroup);
+  const renameArmyGroup = useSimulationStore(state => state.renameArmyGroup);
+  const setArmyGroupMode = useSimulationStore(state => state.setArmyGroupMode);
+  const deployToArmyGroup = useSimulationStore(state => state.deployToArmyGroup);
+  const assignTheaterToGroup = useSimulationStore(state => state.assignTheaterToGroup);
+  const addDivisionsToArmyGroup = useSimulationStore(state => state.addDivisionsToArmyGroup);
+  const selectArmyGroup = useGameUiStore(state => state.selectArmyGroup);
+  const selectDivisionsInArmyGroup = useGameUiStore(state => state.selectDivisionsInArmyGroup);
   
   // Local state
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);

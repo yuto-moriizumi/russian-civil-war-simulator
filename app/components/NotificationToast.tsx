@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useGameStore } from '../store/useGameStore';
+import { useSimulationStore } from '../store/useSimulationStore';
 import { GameEventType } from '../types/game';
 
 const eventIcons: Record<GameEventType, string> = {
@@ -37,10 +37,10 @@ const eventColors: Record<GameEventType, string> = {
 };
 
 export default function NotificationToast() { 
-  const notifications = useGameStore(state => state.notifications);
-  const currentGameTime = useGameStore(state => state.dateTime);
-  const onDismiss = useGameStore(state => state.dismissNotification);
-  const selectedCountry = useGameStore(state => state.selectedCountry);
+  const notifications = useSimulationStore(state => state.notifications);
+  const currentGameTime = useSimulationStore(state => state.dateTime);
+  const onDismiss = useSimulationStore(state => state.dismissNotification);
+  const selectedCountry = useSimulationStore(state => state.selectedCountry);
 
   // Filter notifications that haven't expired yet and are relevant to the player
   // Show notifications that belong to the player's country or have no country (global events)

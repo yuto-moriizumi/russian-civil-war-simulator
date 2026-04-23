@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { useGameStore } from '../store/useGameStore';
+import { useSimulationStore } from '../store/useSimulationStore';
 
 export function useGameLoop() {
-  const isPlaying = useGameStore(state => state.isPlaying);
-  const gameSpeed = useGameStore(state => state.gameSpeed);
-  const tick = useGameStore(state => state.tick);
+  const isPlaying = useSimulationStore(state => state.isPlaying);
+  const gameSpeed = useSimulationStore(state => state.gameSpeed);
+  const tick = useSimulationStore(state => state.tick);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {

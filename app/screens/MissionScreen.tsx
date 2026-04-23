@@ -9,7 +9,8 @@ import {
 import '@xyflow/react/dist/style.css';
 import './MissionScreen.css';
 
-import { useGameStore } from '../store/useGameStore';
+import { useSimulationStore } from '../store/useSimulationStore';
+import { useGameUiStore } from '../store/useGameUiStore';
 import { Mission } from '../types/game';
 import {
   getLayoutedElements,
@@ -19,10 +20,10 @@ import MissionNode from '../components/MissionNode';
 const nodeTypes = { missionNode: MissionNode };
 
 export default function MissionScreen() {
-  const allMissions = useGameStore(state => state.missions);
-  const selectedCountry = useGameStore(state => state.selectedCountry);
-  const navigateToScreen = useGameStore(state => state.navigateToScreen);
-  const claimMission = useGameStore(state => state.claimMission);
+  const allMissions = useSimulationStore(state => state.missions);
+  const selectedCountry = useSimulationStore(state => state.selectedCountry);
+  const navigateToScreen = useGameUiStore(state => state.navigateToScreen);
+  const claimMission = useSimulationStore(state => state.claimMission);
   const missions = useMemo(
     () => selectedCountry
       ? allMissions.filter(mission => mission.country === selectedCountry.id)
