@@ -166,11 +166,7 @@ interface RoundResult {
   updatedDivisions: DivisionState;
   retreatingDivisions: { divisionId: string; toRegionId: string | null; fromRegionId: string }[];
 }
-
-/**
- * Process a round for multiple combats simultaneously, aggregating damage
- * to defenders that are shared across combats (same defenderRegionId).
- */
+/** Process grouped combats sharing a defender region in one combined round. */
 export function processCombatRounds(
   combats: ActiveCombat[],
   regions: RegionState,
@@ -180,10 +176,8 @@ export function processCombatRounds(
   relationships: Relationship[] = [],
 ): RoundResult[] {
   const results: RoundResult[] = [];
-  // Accumulate HP changes across groups so each group sees previous groups' changes.
   let runningDivisions = divisions;
 
-  // Group combats by defenderRegionId
   const groups = new Map<string, ActiveCombat[]>();
   for (const combat of combats) {
     const key = combat.defenderRegionId;
@@ -207,7 +201,6 @@ export function processCombatRounds(
 
   return results;
 }
-
 function processSharedDefenseRound(
   combats: ActiveCombat[],
   regions: RegionState,
@@ -218,8 +211,6 @@ function processSharedDefenseRound(
 ): RoundResult[] {
   const results: RoundResult[] = [];
   const defenderRegion = regions[combats[0].defenderRegionId];
-
-  // Check validity for all combats first
   for (const combat of combats) {
     if (combat.isComplete) {
       results.push({ combat, updatedDivisions: divisions, retreatingDivisions: [] });
@@ -273,9 +264,7 @@ function processSharedDefenseRound(
     const target = allAttackers[Math.floor(Math.random() * allAttackers.length)];
     return sum + calculateDamage(d, target);
   }, 0);
-  const damagePerAttacker = allAttackers.length > 0
-    ? Math.ceil(defenderTotalDamage / allAttackers.length)
-    : 0;
+  const damagePerAttacker = allAttackers.length > 0 ? Math.ceil(defenderTotalDamage / allAttackers.length) : 0;
 
   // Process each combat: apply counter-damage, update defenders, determine retreats
   const firstSharedCombatId = activeCombats.find(c => !c.isComplete && !(defenderRegion && defenderRegion.owner !== c.defenderCountry))?.id;
@@ -309,9 +298,7 @@ function processSharedDefenseRound(
         defenderDivisionIds: survivingSharedDefenders.map(d => d.id),
         currentRound: calc.combat.currentRound + 1,
         isComplete: combatEnded,
-        victor: combatEnded
-          ? (survivingSharedDefenders.length === 0 ? calc.combat.attackerCountry : calc.combat.defenderCountry)
-          : null,
+        victor: combatEnded ? (survivingSharedDefenders.length === 0 ? calc.combat.attackerCountry : calc.combat.defenderCountry) : null,
         lastRoundTime: new Date(currentTime),
       },
       updatedDivisions: runningDivisions,
@@ -394,7 +381,6 @@ function processAttackerRound(
 
   if (combatEnded) {
     victor = survivingSharedDefenders.length === 0 ? combat.attackerCountry : combat.defenderCountry;
-
     if (victor === combat.attackerCountry) {
       for (const result of attackerResults.filter((r: DamageResult) => r.type === 'retreating')) {
         survivingAttackers.push({ ...result.division, hp: 1 });
@@ -406,7 +392,6 @@ function processAttackerRound(
         survivingSharedDefenders.push({ ...defDiv, hp: 1 });
       }
     }
-
   }
 
   // Generate defender retreat events from first combat only to avoid duplicates
