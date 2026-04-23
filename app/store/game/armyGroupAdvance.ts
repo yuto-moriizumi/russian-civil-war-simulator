@@ -159,15 +159,8 @@ export function advanceArmyGroup(
           );
           pendingCombatId = newCombat.id;
           newCombats.push(newCombat);
-          const isFirstCombatOnRegion = otherCombatsOnRegion.length === 0;
-          if (isFirstCombatOnRegion) {
-            for (const d of combatDefenderDivisions) {
-              newDivisions[d.id] = { ...d, regionId: null };
-            }
-          }
-          for (const d of divsForMove) {
-            newDivisions[d.id] = { ...d, regionId: null };
-          }
+          // Defender divisions keep their regionId — they are defending this region.
+          // Attacker divisions keep their regionId — they are departing from this region.
 
           const battleEvent = createGameEvent(
             'combat_victory',
@@ -182,12 +175,7 @@ export function advanceArmyGroup(
       }
     }
 
-    // Set regionId=null for moving divisions if not already done in combat branch
-    if (!pendingCombatId || !newCombats.find(c => c.id === pendingCombatId)) {
-      for (const d of divsForMove) {
-        newDivisions[d.id] = { ...d, regionId: null };
-      }
-    }
+    // Divisions keep their regionId — they are departing from this region.
 
     const newMovement: Movement = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${fromRegion}-${toRegion}`,

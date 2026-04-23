@@ -110,12 +110,7 @@ export function processMovements(
                 combatDefenders,
                 currentDate
               );
-              // Clear defenders from DivisionState (regionId = null)
-              if (otherCombatsOnRegion.length === 0) {
-                for (const d of combatDefenders) {
-                  runningDivisions = { ...runningDivisions, [d.id]: { ...d, regionId: null } };
-                }
-              }
+              // Defender divisions keep their regionId — they are defending this region.
               newMidTransitCombats.push(newCombat);
               currentMovement = { ...currentMovement, pendingCombatId: newCombat.id };
               logger.debug(`[MID-TRANSIT] Combat started at ${destRegion.name}: ${currentMovement.owner} vs ${destRegion.owner} (enemy appeared mid-transit)`);

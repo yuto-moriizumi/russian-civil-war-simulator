@@ -1,5 +1,5 @@
-import type { RegionState, Movement, ActiveCombat, CountryId, Region, DivisionState, Division } from '../../types/game';
-import { getDivisionsInRegion, getCombatDefenders } from '../../domain/game/divisionState';
+import type { RegionState, Movement, ActiveCombat, CountryId, Region, DivisionState } from '../../types/game';
+import { getDivisionsInRegion } from '../../domain/game/divisionState';
 
 export interface UnitMarkerData {
   regionId: string;
@@ -24,9 +24,8 @@ export interface CombatMarkerData {
 
 /**
  * Calculate unit marker data for all regions with units.
- * Also synthesizes markers for defender divisions that are locked in active
- * combats (they are removed from region.divisions when combat starts, but
- * should still appear on the map at their defending region).
+ * Divisions always have a regionId (even in combat or transit), so
+ * getDivisionsInRegion returns the complete set.
  */
 export function calculateUnitMarkers(
   regions: RegionState,
@@ -34,7 +33,7 @@ export function calculateUnitMarkers(
   selectedUnitRegion: string | null,
   playerCountry: CountryId,
   selectedDivisionIds: string[] = [],
-  activeCombats: ActiveCombat[] = [],
+  _activeCombats: ActiveCombat[] = [],
   movingUnits: Movement[] = [],
   divisions: DivisionState = {}
 ): (UnitMarkerData | null)[] {
@@ -46,30 +45,17 @@ export function calculateUnitMarkers(
 
   const selectedDivisionSet = new Set(selectedDivisionIds);
 
-  // Moving divisions have regionId=null in DivisionState so they're already excluded
-  // from getDivisionsInRegion. Still build the set for explicit filtering below.
+  // Build the set of in-transit division IDs so they are excluded from
+  // region markers (they are shown separately by MovingUnitMarker).
   const inTransitDivisionIds = new Set<string>(
     movingUnits.flatMap(m => m.divisionIds)
   );
 
-  // Build a map of extra divisions to overlay per region from active combats.
-  // Defender divisions have regionId=null; re-inject them at the defending region.
-  const combatDefendersByRegion = new Map<string, Division[]>();
-  for (const combat of activeCombats) {
-    if (combat.isComplete) continue;
-    const regionId = combat.defenderRegionId;
-    const existing = combatDefendersByRegion.get(regionId) ?? [];
-    const existingIds = new Set(existing.map(d => d.id));
-    const newDivs = getCombatDefenders(divisions, combat).filter(d => !existingIds.has(d.id));
-    combatDefendersByRegion.set(regionId, [...existing, ...newDivs]);
-  }
-
-  // Collect all region IDs we need markers for: regions with divisions, plus
-  // regions that only have combat defenders
-  const regionIds = new Set([
-    ...Object.keys(regions).filter(id => getDivisionsInRegion(divisions, id).length > 0),
-    ...combatDefendersByRegion.keys(),
-  ]);
+  const regionIds = new Set(
+    Object.keys(regions).filter(id =>
+      getDivisionsInRegion(divisions, id).some(d => !inTransitDivisionIds.has(d.id))
+    ),
+  );
 
   return Array.from(regionIds).map(regionId => {
     const region = regions[regionId];
@@ -81,10 +67,7 @@ export function calculateUnitMarkers(
       return null;
     }
 
-    // Merge resident divisions with defender divisions from ongoing combats,
-    // but exclude in-transit divisions (shown separately by MovingUnitMarker).
-    const combatDivisions = combatDefendersByRegion.get(regionId) ?? [];
-    const allDivisions = [...getDivisionsInRegion(divisions, regionId).filter(d => !inTransitDivisionIds.has(d.id)), ...combatDivisions];
+    const allDivisions = getDivisionsInRegion(divisions, regionId).filter(d => !inTransitDivisionIds.has(d.id));
     if (allDivisions.length === 0) return null;
 
     // Highlight the marker only when at least one division in this region is

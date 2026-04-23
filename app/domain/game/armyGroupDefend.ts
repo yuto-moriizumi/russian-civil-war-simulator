@@ -184,9 +184,7 @@ export function defendArmyGroup(
       const arrivalTime = new Date(dateTime);
       arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
 
-      for (const d of divsToSend) {
-        newDivisions[d.id] = { ...d, regionId: null };
-      }
+      // Divisions keep their regionId — they are departing from this region.
 
       newMovements.push({
         id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${sourceRegionId}`,

@@ -6,7 +6,6 @@ function putDivision(target: DivisionState, division: Division): void {
 
 /**
  * Returns all divisions located in the given region.
- * Divisions in movement or combat have regionId=null and are excluded.
  */
 export function getDivisionsInRegion(divisions: DivisionState, regionId: string): Division[] {
   return Object.values(divisions).filter(d => d.regionId === regionId);

@@ -129,27 +129,28 @@ export function getArmyGroupUnitCount(
   activeCombats: ActiveCombat[] = [],
   divisions: DivisionState = {}
 ): number {
-  const unitsInRegions = Object.values(divisions).filter(
-    d => d.armyGroupId === armyGroupId && d.owner === country && d.regionId !== null
-  ).length;
-
-  const seenCombatDivIds = new Set<string>();
+  // Collect combat division IDs to exclude from the in-region count
+  const combatDivIds = new Set<string>();
   activeCombats
     .filter(c => !c.isComplete)
     .forEach(combat => {
       if (combat.attackerCountry === country) {
         combat.attackerDivisionIds
           .filter(id => divisions[id]?.armyGroupId === armyGroupId)
-          .forEach(id => seenCombatDivIds.add(id));
+          .forEach(id => combatDivIds.add(id));
       }
       if (combat.defenderCountry === country) {
         combat.defenderDivisionIds
           .filter(id => divisions[id]?.armyGroupId === armyGroupId)
-          .forEach(id => seenCombatDivIds.add(id));
+          .forEach(id => combatDivIds.add(id));
       }
     });
 
-  return unitsInRegions + seenCombatDivIds.size;
+  const unitsInRegions = Object.values(divisions).filter(
+    d => d.armyGroupId === armyGroupId && d.owner === country && d.regionId !== null && !combatDivIds.has(d.id)
+  ).length;
+
+  return unitsInRegions + combatDivIds.size;
 }
 
 export function calculateCountryIncome(divisions: DivisionState, regions: RegionState, country: CountryId): number {

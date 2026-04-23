@@ -7,7 +7,7 @@ export function regenerateHPStep(
   _logger: SimulationLogger,
 ): SimulationContext {
   const { state } = context;
-  const nextDivisions = regenerateDivisionHP(state.divisions);
+  const nextDivisions = regenerateDivisionHP(state.divisions, state.movingUnits, state.activeCombats);
   return {
     ...context,
     state: { ...state, divisions: nextDivisions },

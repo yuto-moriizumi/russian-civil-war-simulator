@@ -110,6 +110,8 @@ export function processCombats(
         }
         if (toRegionId === null && division) {
           newCombatEvents.push(createDivisionDestroyedEvent(division, updatedCombat, fromRegionId, currentDate, logger));
+          const { [divisionId]: _removed, ...rest } = runningDivisions;
+          runningDivisions = rest;
         }
       });
 
