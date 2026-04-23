@@ -59,6 +59,14 @@ export interface SimulationResult {
   state: EngineSimulationState;
 }
 
+export function noOpLogger(): SimulationLogger {
+  return {
+    debug: () => {},
+    warn: () => {},
+    error: () => {},
+  };
+}
+
 /** Structured logger for engine diagnostics; avoids coupling domain code to console.*. */
 export interface SimulationLogger {
   debug: (msg: string, ...args: unknown[]) => void;

@@ -13,6 +13,7 @@ import {
 } from '../../types/game';
 import { detectTheaters } from '../../utils/theaterDetection';
 import { getDivisionsInRegion } from '../../utils/divisionState';
+import { SimulationLogger, noOpLogger } from './engine/types';
 
 export interface MissionEvaluationState {
   regions: RegionState;
@@ -37,7 +38,8 @@ function getMissionCountryId(state: MissionEvaluationState): CountryId | null {
  */
 export function evaluateMissionCondition(
   condition: MissionCondition,
-  state: MissionEvaluationState
+  state: MissionEvaluationState,
+  logger: SimulationLogger = noOpLogger(),
 ): boolean {
   const { regions, dateTime, gameEvents, theaters, armyGroups } = state;
   const missionCountry = getMissionCountryId(state);
@@ -132,7 +134,7 @@ export function evaluateMissionCondition(
     }
 
     default:
-      console.warn('Unknown mission condition type:', condition);
+      logger.warn('Unknown mission condition type:', condition);
       return false;
   }
 }

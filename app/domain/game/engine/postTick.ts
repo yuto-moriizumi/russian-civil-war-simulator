@@ -2,7 +2,7 @@ import { CountryId } from '../../../types/game';
 import { checkAndCompleteMissions, checkAndClaimAIMissions } from '../tickHelpers';
 import { attackArmyGroup } from '../armyGroupAttack';
 import { defendArmyGroup } from '../armyGroupDefend';
-import { EngineSimulationState } from './types';
+import { EngineSimulationState, SimulationLogger, noOpLogger } from './types';
 
 interface PostAICtx {
   effectiveAICountryIds: CountryId[];
@@ -13,6 +13,7 @@ interface PostAICtx {
 
 export function applyArmyGroupActions(
   state: EngineSimulationState,
+  logger: SimulationLogger = noOpLogger(),
 ): EngineSimulationState {
   const armyGroupActionsNeeded = state.armyGroups.filter(g => g.mode !== 'none');
   if (armyGroupActionsNeeded.length === 0) return state;
@@ -21,9 +22,9 @@ export function applyArmyGroupActions(
   for (const group of armyGroupActionsNeeded) {
     let patch: Partial<EngineSimulationState> | null;
     if (group.mode === 'advance') {
-      patch = attackArmyGroup(group.id, current);
+      patch = attackArmyGroup(group.id, current, logger);
     } else if (group.mode === 'defend') {
-      patch = defendArmyGroup(group.id, current);
+      patch = defendArmyGroup(group.id, current, logger);
     } else {
       patch = null;
     }
@@ -38,6 +39,7 @@ export function applyMissions(
   state: EngineSimulationState,
   selectedCountry: EngineSimulationState['selectedCountry'],
   ctx: PostAICtx,
+  _logger: SimulationLogger = noOpLogger(),
 ): EngineSimulationState {
   let finalState = state;
 

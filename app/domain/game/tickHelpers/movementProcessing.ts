@@ -2,6 +2,7 @@ import { Movement, ActiveCombat, Region, Relationship, DivisionState } from '../
 import { getDivisionsInRegion } from '../../../utils/divisionState';
 import { createActiveCombat } from '../../../utils/combat';
 import { GAME_CONFIG } from '../../../constants/gameConfig';
+import { SimulationLogger, noOpLogger } from '../engine/types';
 
 interface MovementProcessingResult {
   remainingMovements: Movement[];
@@ -21,7 +22,8 @@ export function processMovements(
   activeCombats: ActiveCombat[] = [],
   regions: Record<string, Region> = {},
   relationships: Relationship[] = [],
-  divisions: DivisionState = {}
+  divisions: DivisionState = {},
+  logger: SimulationLogger = noOpLogger(),
 ): MovementProcessingResult {
   const remainingMovements: Movement[] = [];
   const completedMovements: Movement[] = [];
@@ -78,7 +80,7 @@ export function processMovements(
 
           if (existingCombat) {
             currentMovement = { ...currentMovement, pendingCombatId: existingCombat.id };
-            console.log(`[MID-TRANSIT] ${currentMovement.owner} movement linked to existing combat at ${destRegion.name}`);
+            logger.debug(`[MID-TRANSIT] ${currentMovement.owner} movement linked to existing combat at ${destRegion.name}`);
           } else {
             const inTransitFromDest = new Set(
               movingUnits.filter(m => m.fromRegion === currentMovement.toRegion).flatMap(m => m.divisionIds)
@@ -116,7 +118,7 @@ export function processMovements(
               }
               newMidTransitCombats.push(newCombat);
               currentMovement = { ...currentMovement, pendingCombatId: newCombat.id };
-              console.log(`[MID-TRANSIT] Combat started at ${destRegion.name}: ${currentMovement.owner} vs ${destRegion.owner} (enemy appeared mid-transit)`);
+              logger.debug(`[MID-TRANSIT] Combat started at ${destRegion.name}: ${currentMovement.owner} vs ${destRegion.owner} (enemy appeared mid-transit)`);
             }
           }
         }

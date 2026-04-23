@@ -2,7 +2,7 @@ import { getDivisionsInRegion } from '../../utils/divisionState';
 import { Movement } from '../../types/game';
 import { getNextStepToward, buildIsHostilePredicate } from '../../utils/pathfinding';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
-import { EngineSimulationState } from './engine/types';
+import { EngineSimulationState, SimulationLogger, noOpLogger } from './engine/types';
 
 /**
  * Pure version of defendArmyGroup: returns state delta instead of calling setState.
@@ -11,6 +11,7 @@ import { EngineSimulationState } from './engine/types';
 export function defendArmyGroup(
   groupId: string,
   state: EngineSimulationState,
+  logger: SimulationLogger = noOpLogger(),
 ): Partial<EngineSimulationState> | null {
   const { armyGroups, regions, adjacency, dateTime, movingUnits, theaters, relationships, divisions, regionCentroids } = state;
 
@@ -155,7 +156,7 @@ export function defendArmyGroup(
 
       const nextStep = cachedNextStep(sourceRegionId, borderRegionId);
       if (!nextStep) {
-        console.warn(`[DEFEND] No valid path from ${sourceRegionId} to ${borderRegionId}`);
+        logger.warn(`[DEFEND] No valid path from ${sourceRegionId} to ${borderRegionId}`);
         continue;
       }
       if (regions[nextStep]?.owner !== countryId) continue;
