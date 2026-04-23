@@ -131,15 +131,6 @@ export function processCombatRound(
     }
   }
 
-  if (combatEnded) {
-    console.log('[COMBAT ENDED]', {
-      combatId: combat.id, defenderRegionName: combat.defenderRegionName, totalRounds: newRound, victor,
-      attackerSurvivors: attackerDivisions.length, defenderSurvivors: defenderDivisions.length,
-      attackerLosses: combat.initialAttackerCount - attackerDivisions.length,
-      defenderLosses: combat.initialDefenderCount - defenderDivisions.length,
-    });
-  }
-
   // Apply HP changes to DivisionState
   let updatedDivisions = { ...divisions };
   for (const div of [...attackerDivisions, ...defenderDivisions]) {
@@ -389,13 +380,6 @@ function processAttackerRound(
       }
     }
 
-    console.log('[COMBAT ENDED]', {
-      combatId: combat.id, defenderRegionName: combat.defenderRegionName,
-      totalRounds: combat.currentRound + 1, victor,
-      attackerSurvivors: survivingAttackers.length, defenderSurvivors: survivingSharedDefenders.length,
-      attackerLosses: combat.initialAttackerCount - survivingAttackers.length,
-      defenderLosses: combat.initialDefenderCount - survivingSharedDefenders.length,
-    });
   }
 
   // Generate defender retreat events from first combat only to avoid duplicates
