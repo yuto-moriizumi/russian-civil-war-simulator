@@ -4,6 +4,7 @@ import { createActiveCombat } from '../../../utils/combat';
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 import { calculateDistance, calculateTravelTime } from '../../../utils/distance';
 import { getDivisionsInRegion, getMovementDivisions, getCombatDefenders } from '../../../utils/divisionState';
+import { SimulationLogger, noOpLogger } from '../engine/types';
 
 interface MovementApplicationContext {
   regions: Record<string, Region>;
@@ -31,7 +32,8 @@ export function applyCompletedMovements(
   completedMovements: Movement[],
   allMovements: Movement[],
   context: MovementApplicationContext,
-  currentDate: Date
+  currentDate: Date,
+  logger: SimulationLogger = noOpLogger(),
 ): MovementApplicationResult {
   const nextRegions = { ...context.regions };
   let nextDivisions = { ...context.divisions };
@@ -70,7 +72,7 @@ export function applyCompletedMovements(
     if (dest.owner === owner) {
       if (movement.remainingPath && movement.remainingPath.length > 0) {
         landDivisionsInRegion(toRegion, arrivingDivisions);
-        _dispatchNextHop(movement, nextRegions, nextDivisions, currentDate, newHopMovements, context);
+        _dispatchNextHop(movement, nextRegions, nextDivisions, currentDate, newHopMovements, context, logger);
       } else {
         landDivisionsInRegion(toRegion, arrivingDivisions);
       }
@@ -95,11 +97,11 @@ export function applyCompletedMovements(
       if (effectiveRelationship === 'military_access' || effectiveRelationship === 'autonomy') {
         if (movement.remainingPath && movement.remainingPath.length > 0) {
           landDivisionsInRegion(toRegion, arrivingDivisions);
-          _dispatchNextHop(movement, nextRegions, nextDivisions, currentDate, newHopMovements, context);
+          _dispatchNextHop(movement, nextRegions, nextDivisions, currentDate, newHopMovements, context, logger);
         } else {
           landDivisionsInRegion(toRegion, arrivingDivisions);
         }
-        console.log(`[MILITARY ACCESS] ${arrivingDivisions.length} ${owner} divisions moved to ${dest.name} with military access`);
+        logger.debug(`[MILITARY ACCESS] ${arrivingDivisions.length} ${owner} divisions moved to ${dest.name} with military access`);
 
       } else if (effectiveRelationship === 'war' || effectiveRelationship === 'neutral') {
         const counterMovements = allMovements.filter(m =>
@@ -112,7 +114,7 @@ export function applyCompletedMovements(
         if (counterMovements.length > 0) {
           counterMovements.forEach(m => {
             interceptedMovementIds.push(m.id);
-            console.log(`[MEETING ENGAGEMENT] ${owner} forces intercepted ${m.owner} forces moving out of ${dest.name} toward ${m.toRegion}`);
+            logger.debug(`[MEETING ENGAGEMENT] ${owner} forces intercepted ${m.owner} forces moving out of ${dest.name} toward ${m.toRegion}`);
           });
         }
 
@@ -148,7 +150,7 @@ export function applyCompletedMovements(
             }
 
             nextCombats[combatIndex] = updatedCombat;
-            console.log(`[REINFORCEMENTS] ${arrivingDivisions.length} ${owner} divisions joined the attackers in combat at ${dest.name}`);
+            logger.debug(`[REINFORCEMENTS] ${arrivingDivisions.length} ${owner} divisions joined the attackers in combat at ${dest.name}`);
 
             nextEvents.push(createGameEvent(
               'combat_victory',
@@ -179,7 +181,7 @@ export function applyCompletedMovements(
             }
 
             nextCombats[combatIndex] = updatedCombat;
-            console.log(`[REINFORCEMENTS] ${arrivingDivisions.length} ${owner} divisions joined the defenders in combat at ${dest.name}`);
+            logger.debug(`[REINFORCEMENTS] ${arrivingDivisions.length} ${owner} divisions joined the defenders in combat at ${dest.name}`);
 
             nextEvents.push(createGameEvent(
               'combat_victory',
@@ -226,7 +228,7 @@ export function applyCompletedMovements(
             nextNotifications.push(createNotification(lostEvent, currentDate));
 
             if (movement.remainingPath && movement.remainingPath.length > 0) {
-              _dispatchNextHop(movement, nextRegions, nextDivisions, currentDate, newHopMovements, context);
+              _dispatchNextHop(movement, nextRegions, nextDivisions, currentDate, newHopMovements, context, logger);
             }
           } else {
             const fromRegionStateForCombat = nextRegions[movement.fromRegion];
@@ -270,7 +272,8 @@ function _dispatchNextHop(
   divisions: DivisionState,
   currentDate: Date,
   newHopMovements: Movement[],
-  context: Pick<MovementApplicationContext, 'regionCentroids'>
+  context: Pick<MovementApplicationContext, 'regionCentroids'>,
+  logger: SimulationLogger,
 ): void {
   if (!movement.remainingPath || movement.remainingPath.length === 0) return;
 
@@ -298,7 +301,7 @@ function _dispatchNextHop(
   };
 
   newHopMovements.push(nextHop);
-  console.log(`[MULTI-STEP] ${movement.owner} divisions continuing from ${fromRegionId} → ${nextRegionId}${restPath.length > 0 ? ` (${restPath.length} more hops)` : ' (final hop)'}`);
+  logger.debug(`[MULTI-STEP] ${movement.owner} divisions continuing from ${fromRegionId} → ${nextRegionId}${restPath.length > 0 ? ` (${restPath.length} more hops)` : ' (final hop)'}`);
 }
 
 export function applyFinishedCombats(

@@ -4,7 +4,7 @@ import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { createActiveCombat } from '../../utils/combat';
 import { createGameEvent } from '../../utils/eventUtils';
 import { getDivisionsInRegion, getCombatDefenders } from '../../utils/divisionState';
-import { EngineSimulationState } from './engine/types';
+import { EngineSimulationState, SimulationLogger, noOpLogger } from './engine/types';
 
 /**
  * Pure version of attackArmyGroup: returns state delta instead of calling setState.
@@ -13,6 +13,7 @@ import { EngineSimulationState } from './engine/types';
 export function attackArmyGroup(
   groupId: string,
   state: EngineSimulationState,
+  logger: SimulationLogger = noOpLogger(),
 ): Partial<EngineSimulationState> | null {
   const {
     armyGroups, regions, adjacency, dateTime, movingUnits,
@@ -158,7 +159,7 @@ export function attackArmyGroup(
 
           const nextStep = cachedNextStep(sourceRegionId, borderRegionId);
           if (!nextStep) {
-            console.warn(`[ATTACK] No valid path from ${sourceRegionId} to ${borderRegionId}`);
+            logger.warn(`[ATTACK] No valid path from ${sourceRegionId} to ${borderRegionId}`);
             continue;
           }
 

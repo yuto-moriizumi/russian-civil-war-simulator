@@ -20,7 +20,7 @@ import {
   initializeAIStatesForNewCountries,
 } from '../tickHelpers/aiTick';
 import { applyArmyGroupActions, applyMissions } from './postTick';
-import { EngineSimulationState, SimulationDeps, SimulationResult } from './types';
+import { EngineSimulationState, SimulationDeps, SimulationLogger, SimulationResult } from './types';
 
 let _tickCounter = 0;
 
@@ -28,11 +28,12 @@ function checkDuplicates(
   label: string,
   tickNum: number,
   state: EngineSimulationState,
+  logger: SimulationLogger,
 ): void {
   const result = detectDivisionDuplicates(state.regions, state.movingUnits, state.activeCombats);
   if (result.hasDuplicates) {
-    logDivisionDuplicates(result.reports, tickNum);
-    console.error(`  [DUPLICATE] introduced during: ${label}`);
+    logDivisionDuplicates(result.reports, tickNum, logger);
+    logger.error(`  [DUPLICATE] introduced during: ${label}`);
   }
 }
 
@@ -44,6 +45,7 @@ function checkDuplicates(
 export function advanceSimulation(
   state: EngineSimulationState,
   deps: SimulationDeps,
+  logger: SimulationLogger = console,
 ): SimulationResult {
   _tickCounter++;
   const tickNum = _tickCounter;
@@ -68,8 +70,8 @@ export function advanceSimulation(
 
   const preCheck = detectDivisionDuplicates(regions, movingUnits, activeCombats);
   if (preCheck.hasDuplicates) {
-    logDivisionDuplicates(preCheck.reports, tickNum);
-    console.error('  [DUPLICATE] detected at TICK START — leftovers from previous tick');
+    logDivisionDuplicates(preCheck.reports, tickNum, logger);
+    logger.error('  [DUPLICATE] detected at TICK START — leftovers from previous tick');
   }
 
   // Step 1: validate divisions
@@ -150,6 +152,7 @@ export function advanceSimulation(
     regionsAfterEvents,
     relationshipsAfterEvents,
     divisionsAfterEvents,
+    logger,
   );
 
   // Step 4.5: mid-transit combats
@@ -173,6 +176,7 @@ export function advanceSimulation(
     adjacency,
     regionCentroids,
     divisionsAfterMovements,
+    logger,
   );
 
   // Step 6: apply movements
@@ -200,6 +204,7 @@ export function advanceSimulation(
           regionCentroids,
         },
         newDate,
+        logger,
       );
       nextRegions = result.nextRegions;
       nextDivisions = result.nextDivisions;
@@ -231,7 +236,7 @@ export function advanceSimulation(
     activeCombats: nextCombats,
     divisions: nextDivisions,
   };
-  checkDuplicates('apply movements / combats', tickNum, midState);
+  checkDuplicates('apply movements / combats', tickNum, midState, logger);
 
   // Step 7: HP regen
   nextDivisions = regenerateDivisionHP(nextDivisions);
@@ -316,7 +321,7 @@ export function advanceSimulation(
     activeCombats: nextActiveCombats,
     divisions: nextDivisions,
   };
-  checkDuplicates('AI tick / army group sync', tickNum, afterAIState);
+  checkDuplicates('AI tick / army group sync', tickNum, afterAIState, logger);
 
   // Step 9: army group sync
   nextArmyGroups = syncArmyGroupTerritories(
@@ -345,8 +350,8 @@ export function advanceSimulation(
   };
 
   // Step 10: army group mode actions (advance/defend)
-  const currentState = applyArmyGroupActions(stateAfterStep9);
-  checkDuplicates('army group actions', tickNum, currentState);
+  const currentState = applyArmyGroupActions(stateAfterStep9, logger);
+  checkDuplicates('army group actions', tickNum, currentState, logger);
 
   // Step 11: missions
   const finalState = applyMissions(currentState, selectedCountry, {
@@ -354,7 +359,7 @@ export function advanceSimulation(
     effectiveAIStates,
     selectedCountryId: selectedCountry?.id,
     isPlayerAIEnabled: state.isPlayerAIEnabled,
-  });
+  }, logger);
 
   return { state: finalState };
 }

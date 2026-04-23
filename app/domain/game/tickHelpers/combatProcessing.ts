@@ -2,6 +2,7 @@ import { ActiveCombat, GameEvent, NotificationItem, RegionState, Adjacency, Move
 import { processCombatRounds, shouldProcessCombatRound } from '../../../utils/combat';
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 import { calculateDistance, calculateTravelTime } from '../../../utils/distance';
+import { SimulationLogger, noOpLogger } from '../engine/types';
 
 interface CombatProcessingResult {
   updatedCombats: ActiveCombat[];
@@ -22,12 +23,13 @@ function createDivisionDestroyedEvent(
   division: Division,
   combat: ActiveCombat,
   fromRegionId: string,
-  currentDate: Date
+  currentDate: Date,
+  logger: SimulationLogger
 ): GameEvent {
   const location = getDivisionDestructionLocation(combat, fromRegionId);
   const reason = 'reduced to 0 HP in combat and no friendly retreat destination was available';
 
-  console.log(
+  logger.debug(
     `[DIVISION DESTROYED] ${division.name} (${division.owner}) disappeared at ${location}; reason: ${reason}`
   );
 
@@ -51,7 +53,8 @@ export function processCombats(
   regions: RegionState,
   adjacency: Adjacency,
   regionCentroids: Record<string, [number, number]>,
-  divisions: DivisionState
+  divisions: DivisionState,
+  logger: SimulationLogger = noOpLogger(),
 ): CombatProcessingResult {
   const updatedCombats: ActiveCombat[] = [];
   const finishedCombats: ActiveCombat[] = [];
@@ -105,7 +108,7 @@ export function processCombats(
           retreatMovements.push(retreatMovement);
         }
         if (toRegionId === null && division) {
-          newCombatEvents.push(createDivisionDestroyedEvent(division, updatedCombat, fromRegionId, currentDate));
+          newCombatEvents.push(createDivisionDestroyedEvent(division, updatedCombat, fromRegionId, currentDate, logger));
         }
       });
 

@@ -4,6 +4,7 @@ import { StoreApi } from 'zustand';
 import { countries } from '../../data/gameData';
 import { TickPerf } from './tickPerformance';
 import { advanceSimulation } from '../../domain/game/engine/advanceSimulation';
+import { SimulationLogger } from '../../domain/game/engine/types';
 import {
   buildSimulationPatchFromEngineState,
   toEngineState,
@@ -23,7 +24,12 @@ export const createTickActions = (
     TickPerf.start('[tick] total');
 
     const engineState = toEngineState(state);
-    const { state: next } = advanceSimulation(engineState, { countries, gameConfig: GAME_CONFIG });
+    const simLogger: SimulationLogger = {
+      debug: (...a) => console.debug(...a),
+      warn: (...a) => console.warn(...a),
+      error: (...a) => console.error(...a),
+    };
+    const { state: next } = advanceSimulation(engineState, { countries, gameConfig: GAME_CONFIG }, simLogger);
 
     set(buildSimulationPatchFromEngineState(next));
 
