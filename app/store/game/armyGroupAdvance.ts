@@ -7,9 +7,6 @@ import {
 } from '../../utils/pathfinding';
 import { getDivisionsInRegion, getCombatDefenders } from '../../domain/game/divisionState';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
-import { createActiveCombat } from '../../utils/combat';
-import { createGameEvent } from '../../utils/eventUtils';
-import { ActionsState } from './types';
 import { createActiveCombat } from '../../domain/game/combat';
 import { createGameEvent } from '../../domain/game/eventUtils';
 import { ActionsState } from './types';
