@@ -8,7 +8,7 @@ import type {
   MapMode,
   RegionState,
 } from '../types/game';
-import { getDivisionsInRegion } from '../utils/divisionState';
+import { getDivisionsInRegion } from '../domain/game/divisionState';
 
 function getSimulationState() {
   return useSimulationStore.getState();

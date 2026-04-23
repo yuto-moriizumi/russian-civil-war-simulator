@@ -1,4 +1,4 @@
-import { getDivisionsInRegion } from '../../utils/divisionState';
+import { getDivisionsInRegion } from './divisionState';
 import { Movement } from '../../types/game';
 import { getNextStepToward, buildIsHostilePredicate } from '../../utils/pathfinding';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';

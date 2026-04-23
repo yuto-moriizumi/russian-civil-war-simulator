@@ -11,8 +11,8 @@ import {
   Relationship,
   DivisionState,
 } from '../../types/game';
-import { detectTheaters } from '../../utils/theaterDetection';
-import { getDivisionsInRegion } from '../../utils/divisionState';
+import { detectTheaters } from './theaterDetection';
+import { getDivisionsInRegion } from './divisionState';
 import { SimulationLogger, noOpLogger } from './engine/types';
 
 export interface MissionEvaluationState {

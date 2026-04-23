@@ -1,5 +1,5 @@
 import { GameStore } from './types';
-import { getDivisionsInRegion } from '../../utils/divisionState';
+import { getDivisionsInRegion } from '../../domain/game/divisionState';
 import { StoreApi } from 'zustand';
 
 /**

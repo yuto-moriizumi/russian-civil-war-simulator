@@ -1,13 +1,11 @@
-import { ActiveCombat, Division, CountryId, RegionState, Adjacency, DivisionState } from '../types/game';
+import { ActiveCombat, Division, CountryId, RegionState, Adjacency, DivisionState } from '../../types/game';
 import { calculateDamage, applyDamage, DamageResult, findRetreatDestination } from './combat';
-import { SimulationLogger } from '../domain/game/engine/types';
 
 export function processCombatRound(
   combat: ActiveCombat,
   divisions: DivisionState,
   regions: RegionState,
-  adjacency: Adjacency,
-  logger: SimulationLogger
+  adjacency: Adjacency
 ): {
   combat: ActiveCombat;
   updatedDivisions: DivisionState;
@@ -21,14 +19,14 @@ export function processCombatRound(
   if (defenderRegion && defenderRegion.owner !== combat.defenderCountry) {
     const newOwnerIsAttacker = defenderRegion.owner === combat.attackerCountry;
     if (newOwnerIsAttacker) {
-      logger.debug('[COMBAT CANCELLED]', { combatId: combat.id, reason: 'defender region already captured by attacker' });
+      console.log('[COMBAT CANCELLED]', { combatId: combat.id, reason: 'defender region already captured by attacker' });
       return {
         combat: { ...combat, isComplete: true, victor: combat.attackerCountry },
         updatedDivisions: divisions,
         retreatingDivisions: [],
       };
     } else {
-      logger.debug('[COMBAT CANCELLED]', { combatId: combat.id, reason: 'defender region captured by third party' });
+      console.log('[COMBAT CANCELLED]', { combatId: combat.id, reason: 'defender region captured by third party' });
       return {
         combat: { ...combat, isComplete: true, victor: combat.defenderCountry },
         updatedDivisions: divisions,
@@ -81,7 +79,7 @@ export function processCombatRound(
       const retreatTarget = findRetreatDestination(combat.defenderRegionId, result.division.owner, regions, adjacency, true, combat.attackerRegionId);
       retreatingDivisions.push({ divisionId: result.division.id, toRegionId: retreatTarget, fromRegionId: combat.attackerRegionId });
       if (retreatTarget) {
-        logger.debug(`[RETREAT] ${result.division.name} (${result.division.owner}) retreating from border at ${combat.defenderRegionName} to ${regions[retreatTarget]?.name ?? retreatTarget}`);
+        console.log(`[RETREAT] ${result.division.name} (${result.division.owner}) retreating from border at ${combat.defenderRegionName} to ${regions[retreatTarget]?.name ?? retreatTarget}`);
       }
     }
   });
@@ -97,7 +95,7 @@ export function processCombatRound(
       const retreatTarget = findRetreatDestination(combat.defenderRegionId, result.division.owner, regions, adjacency, false, combat.attackerRegionId);
       retreatingDivisions.push({ divisionId: result.division.id, toRegionId: retreatTarget, fromRegionId: combat.defenderRegionId });
       if (retreatTarget) {
-        logger.debug(`[RETREAT] ${result.division.name} (${result.division.owner}) retreating from ${combat.defenderRegionName} to ${regions[retreatTarget]?.name ?? retreatTarget}`);
+        console.log(`[RETREAT] ${result.division.name} (${result.division.owner}) retreating from ${combat.defenderRegionName} to ${regions[retreatTarget]?.name ?? retreatTarget}`);
       }
     }
   });
@@ -125,7 +123,7 @@ export function processCombatRound(
         } else {
           defenderDivisions.push(restoredDivision);
         }
-        logger.debug(`[VICTORY RESTORE] ${div.name} (${div.owner}) restored to HP=1 after winning at border of ${combat.defenderRegionName}`);
+        console.log(`[VICTORY RESTORE] ${div.name} (${div.owner}) restored to HP=1 after winning at border of ${combat.defenderRegionName}`);
       }
     });
     for (let i = winnerRetreatingIndices.length - 1; i >= 0; i--) {
@@ -134,7 +132,7 @@ export function processCombatRound(
   }
 
   if (combatEnded) {
-    logger.debug('[COMBAT ENDED]', {
+    console.log('[COMBAT ENDED]', {
       combatId: combat.id, defenderRegionName: combat.defenderRegionName, totalRounds: newRound, victor,
       attackerSurvivors: attackerDivisions.length, defenderSurvivors: defenderDivisions.length,
       attackerLosses: combat.initialAttackerCount - attackerDivisions.length,
@@ -186,8 +184,7 @@ export function processCombatRounds(
   regions: RegionState,
   adjacency: Adjacency,
   currentTime: Date,
-  divisions: DivisionState,
-  logger: SimulationLogger
+  divisions: DivisionState
 ): RoundResult[] {
   const results: RoundResult[] = [];
 
@@ -202,11 +199,11 @@ export function processCombatRounds(
   for (const [, group] of groups) {
     if (group.length === 1) {
       results.push(
-        processCombatRound({ ...group[0], lastRoundTime: new Date(currentTime) }, divisions, regions, adjacency, logger)
+        processCombatRound({ ...group[0], lastRoundTime: new Date(currentTime) }, divisions, regions, adjacency)
       );
       continue;
     }
-    results.push(...processSharedDefenseRound(group, regions, adjacency, currentTime, divisions, logger));
+    results.push(...processSharedDefenseRound(group, regions, adjacency, currentTime, divisions));
   }
 
   return results;
@@ -217,8 +214,7 @@ function processSharedDefenseRound(
   regions: RegionState,
   adjacency: Adjacency,
   currentTime: Date,
-  divisions: DivisionState,
-  logger: SimulationLogger
+  divisions: DivisionState
 ): RoundResult[] {
   const results: RoundResult[] = [];
   const defenderRegion = regions[combats[0].defenderRegionId];
@@ -282,7 +278,7 @@ function processSharedDefenseRound(
     const retreats = processAttackerRound(
       calc, survivingSharedDefenders, defeatedDefenderDivisions,
       calc.combat.id === firstSharedCombatId,
-      regions, adjacency, currentTime, logger
+      regions, adjacency, currentTime
     );
 
     const survivingAttackerDivisions = calc.attackerDivisions.filter(d => d.hp > 0);
@@ -354,8 +350,7 @@ function processAttackerRound(
   isFirstInGroup: boolean,
   regions: RegionState,
   adjacency: Adjacency,
-  _currentTime: Date,
-  logger: SimulationLogger
+  _currentTime: Date
 ): RoundResult['retreatingDivisions'] {
   const { combat, attackerDivisions, defenderTotalDamage } = calc;
   const retreats: RoundResult['retreatingDivisions'] = [];
@@ -371,7 +366,7 @@ function processAttackerRound(
       const retreatTarget = findRetreatDestination(combat.defenderRegionId, result.division.owner, regions, adjacency, true, combat.attackerRegionId);
       retreats.push({ divisionId: result.division.id, toRegionId: retreatTarget, fromRegionId: combat.attackerRegionId });
       if (retreatTarget) {
-        logger.debug(`[RETREAT] ${result.division.name} (${result.division.owner}) retreating from border at ${combat.defenderRegionName} to ${regions[retreatTarget]?.name ?? retreatTarget}`);
+        console.log(`[RETREAT] ${result.division.name} (${result.division.owner}) retreating from border at ${combat.defenderRegionName} to ${regions[retreatTarget]?.name ?? retreatTarget}`);
       }
     }
   }
@@ -394,7 +389,7 @@ function processAttackerRound(
       }
     }
 
-    logger.debug('[COMBAT ENDED]', {
+    console.log('[COMBAT ENDED]', {
       combatId: combat.id, defenderRegionName: combat.defenderRegionName,
       totalRounds: combat.currentRound + 1, victor,
       attackerSurvivors: survivingAttackers.length, defenderSurvivors: survivingSharedDefenders.length,
@@ -409,7 +404,7 @@ function processAttackerRound(
       const retreatTarget = findRetreatDestination(combat.defenderRegionId, defDiv.owner, regions, adjacency, false, combat.attackerRegionId);
       retreats.push({ divisionId: defDiv.id, toRegionId: retreatTarget, fromRegionId: combat.defenderRegionId });
       if (retreatTarget) {
-        logger.debug(`[RETREAT] ${defDiv.name} (${defDiv.owner}) retreating from ${combat.defenderRegionName} to ${regions[retreatTarget]?.name ?? retreatTarget}`);
+        console.log(`[RETREAT] ${defDiv.name} (${defDiv.owner}) retreating from ${combat.defenderRegionName} to ${regions[retreatTarget]?.name ?? retreatTarget}`);
       }
     }
   }

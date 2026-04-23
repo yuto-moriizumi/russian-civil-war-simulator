@@ -1,4 +1,4 @@
-import { CountryId, GameEvent, GameEventType, NotificationItem } from '../types/game';
+import { CountryId, GameEvent, GameEventType, NotificationItem } from '../../types/game';
 
 // Helper function to create game events
 export function createGameEvent(

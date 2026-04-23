@@ -1,8 +1,8 @@
 import { GameStore } from './types';
 import { ProductionQueueItem } from '../../types/game';
-import { getOrdinalSuffix } from '../../utils/eventUtils';
+import { getOrdinalSuffix } from '../../domain/game/eventUtils';
 import { getCommandPowerInfo, COMMAND_POWER_PER_UNIT } from '../../utils/commandPower';
-import { getBaseProductionTime } from '../../utils/bonusCalculator';
+import { getBaseProductionTime } from '../../domain/game/bonusCalculator';
 
 export const createProductionActions = (
   set: (fn: (state: GameStore) => Partial<GameStore>) => void,

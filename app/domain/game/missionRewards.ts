@@ -12,13 +12,13 @@ import {
   Relationship,
   DivisionState,
 } from '../../types/game';
-import { createInitialAIArmyGroup, createInitialAIState } from './aiInitialization';
-import { createDivision } from '../../utils/combat';
+import { createInitialAIArmyGroup, createInitialAIState } from '../../ai/cpuPlayer';
+import { createDivision } from './combat';
 import { getCountryName, getDivisionPrefix } from '../../data/countries';
 import { COUNTRY_METADATA } from '../../data/countryMetadata';
-import { calculateCountryBonuses, getDivisionStats } from '../../utils/bonusCalculator';
-import { createGameEvent } from '../../utils/eventUtils';
-import { applyRelationshipChange, getRelationshipStatus, joinPuppetToOverlordWars } from '../../utils/relationshipUtils';
+import { calculateCountryBonuses, getDivisionStats } from './bonusCalculator';
+import { createGameEvent } from './eventUtils';
+import { applyRelationshipChange, getRelationshipStatus, joinPuppetToOverlordWars } from './relationshipUtils';
 
 interface MissionRewardBaseState {
   relationships: Relationship[];

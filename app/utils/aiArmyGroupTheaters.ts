@@ -11,7 +11,7 @@ import {
   DivisionState,
 } from '../types/game';
 import { generateArmyGroupName } from './armyGroupNaming';
-import { detectTheaters } from './theaterDetection';
+import { detectTheaters } from '../domain/game/theaterDetection';
 
 const AI_ARMY_GROUP_COLORS = [
   '#3B82F6',

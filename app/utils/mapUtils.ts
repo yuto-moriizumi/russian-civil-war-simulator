@@ -4,9 +4,8 @@ import { regionValues } from '../data/map/regionValues';
 import { initialRegionOwnership } from '../data/map';
 import { COUNTRY_COLORS } from '../data/countries';
 import { UnitPlacementData } from '../data/map/initialUnitPlacement';
-import { generateDivisionId } from './combat';
-import { getInitialCountryBonuses } from './bonusCalculator';
-import { getDivisionStats } from './bonusCalculator';
+import { generateDivisionId } from '../domain/game/combat';
+import { getInitialCountryBonuses, getDivisionStats } from '../domain/game/bonusCalculator';
 import { COUNTRY_METADATA } from '../data/countryMetadata';
 
 interface ArmyGroupDef {

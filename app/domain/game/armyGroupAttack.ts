@@ -1,9 +1,9 @@
 import { Movement, ActiveCombat } from '../../types/game';
 import { getNextStepToward, buildCanEnterPredicate, buildIsHostilePredicate } from '../../utils/pathfinding';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
-import { createActiveCombat } from '../../utils/combat';
-import { createGameEvent } from '../../utils/eventUtils';
-import { getDivisionsInRegion, getCombatDefenders } from '../../utils/divisionState';
+import { createActiveCombat } from './combat';
+import { createGameEvent } from './eventUtils';
+import { getDivisionsInRegion, getCombatDefenders } from './divisionState';
 import { EngineSimulationState, SimulationLogger, noOpLogger } from './engine/types';
 
 /**
