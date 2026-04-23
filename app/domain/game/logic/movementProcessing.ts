@@ -31,20 +31,10 @@ export function processMovements(
   let runningDivisions = divisions;
 
   movingUnits.forEach(movement => {
-    // Regenerate HP for units in transit directly in DivisionState
-    for (const divId of movement.divisionIds) {
-      const div = runningDivisions[divId];
-      if (div) {
-        const newHp = Math.min(div.hp + GAME_CONFIG.HP.REGEN_PER_TICK, div.maxHp);
-        if (newHp !== div.hp) {
-          runningDivisions = { ...runningDivisions, [divId]: { ...div, hp: newHp } };
-        }
-      }
-    }
-
     let currentMovement = movement;
 
-    // If this movement is linked to a combat, check whether to pause it
+    // If this movement is linked to a combat, check whether to pause it.
+    // Do this BEFORE HP regeneration so combat divisions are not healed each tick.
     if (currentMovement.pendingCombatId) {
       const allCombats = [...activeCombats, ...newMidTransitCombats];
       const linkedCombat = allCombats.find(c => c.id === currentMovement.pendingCombatId);
@@ -55,6 +45,17 @@ export function processMovements(
         currentMovement = { ...currentMovement, arrivalTime: extendedArrival };
         remainingMovements.push(currentMovement);
         return;
+      }
+    }
+
+    // Regenerate HP for units in transit (not in combat) directly in DivisionState
+    for (const divId of movement.divisionIds) {
+      const div = runningDivisions[divId];
+      if (div) {
+        const newHp = Math.min(div.hp + GAME_CONFIG.HP.REGEN_PER_TICK, div.maxHp);
+        if (newHp !== div.hp) {
+          runningDivisions = { ...runningDivisions, [divId]: { ...div, hp: newHp } };
+        }
       }
     }
 
