@@ -30,7 +30,12 @@ type RehydratableSimulationStore = SimulationStore & {
   lastSaveTime?: Date | string | null;
 };
 
-const UI_STATE_KEYS = new Set<keyof ActionsState>([
+/**
+ * UI state keys validated against GameUiStore at compile time.
+ * If a key is misspelled or added to GameUiStore without being listed here,
+ * TypeScript will catch it via the `satisfies` constraint.
+ */
+const UI_STATE_KEYS = [
   'currentScreen',
   'selectedRegion',
   'selectedUnitRegion',
@@ -44,7 +49,9 @@ const UI_STATE_KEYS = new Set<keyof ActionsState>([
   'isCountrySidebarOpen',
   'isSwitchModeActive',
   'mapMode',
-]);
+] as const satisfies readonly (keyof GameUiStore)[];
+
+const uiKeySet = new Set<string>(UI_STATE_KEYS);
 
 const initialSimulationStoreState: Omit<SimulationStore, keyof SimulationActions> = {
   selectedCountry: initialGameState.selectedCountry,
@@ -158,7 +165,7 @@ function splitGameStorePatch(patch: Partial<ActionsState>) {
   const uiPatch: Partial<GameUiStore> = {};
 
   for (const [key, value] of Object.entries(patch) as [keyof ActionsState, unknown][]) {
-    if (UI_STATE_KEYS.has(key)) {
+    if (uiKeySet.has(key)) {
       (uiPatch as Record<string, unknown>)[key] = value;
     } else {
       (simulationPatch as Record<string, unknown>)[key] = value;
