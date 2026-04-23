@@ -73,3 +73,33 @@ export interface SimulationLogger {
   warn: (msg: string, ...args: unknown[]) => void;
   error: (msg: string, ...args: unknown[]) => void;
 }
+
+/** Shared context threaded through each pipeline step. */
+export interface SimulationContext {
+  state: EngineSimulationState;
+  tickNum: number;
+  newDate: Date;
+
+  // Intermediate values passed between steps
+  remainingProductions?: Record<CountryId, ProductionQueueItem[]>;
+  remainingMovements?: Movement[];
+  completedMovements?: Movement[];
+  newMidTransitCombats?: ActiveCombat[];
+  updatedCombats?: ActiveCombat[];
+  finishedCombats?: ActiveCombat[];
+  newCombatEvents?: GameEvent[];
+  newCombatNotifications?: NotificationItem[];
+  retreatMovements?: Movement[];
+  interceptedMovementIds?: string[];
+  newHopMovements?: Movement[];
+  effectiveAICountryIds?: CountryId[];
+  theaterInputsChanged?: boolean;
+  nextTheaters?: Theater[];
+}
+
+/** A single simulation pipeline step: receives context + deps, returns mutated context. */
+export type SimulationStep = (
+  context: SimulationContext,
+  deps: SimulationDeps,
+  logger: SimulationLogger,
+) => SimulationContext;
