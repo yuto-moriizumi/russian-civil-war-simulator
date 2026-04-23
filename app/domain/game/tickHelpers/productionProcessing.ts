@@ -1,6 +1,6 @@
 import { ProductionQueueItem, RegionState, Division, CountryId, CountryBonuses, ArmyGroup, DivisionState } from '../../../types/game';
-import { getDivisionStats } from '../../../utils/bonusCalculator';
-import { addDivisionsToState } from '../../../utils/divisionState';
+import { getDivisionStats } from '../bonusCalculator';
+import { addDivisionsToState } from '../divisionState';
 
 /**
  * Process per-country production queues and complete the FIRST production from each country's queue.

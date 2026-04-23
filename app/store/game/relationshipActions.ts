@@ -1,9 +1,9 @@
 import { CountryId, RelationshipType, GameEvent, NotificationItem } from '../../types/game';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
-import { createGameEvent, createNotification } from '../../utils/eventUtils';
+import { createGameEvent, createNotification } from '../../domain/game/eventUtils';
 import { countries } from '../../data/gameData';
-import { applyRelationshipChange, getRelationshipStatus, joinPuppetToOverlordWars } from '../../utils/relationshipUtils';
+import { applyRelationshipChange, getRelationshipStatus, joinPuppetToOverlordWars } from '../../domain/game/relationshipUtils';
 
 /**
  * Defines actions related to managing relationships between countries:

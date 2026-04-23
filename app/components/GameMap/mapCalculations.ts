@@ -1,5 +1,5 @@
 import type { RegionState, Movement, ActiveCombat, CountryId, Region, DivisionState, Division } from '../../types/game';
-import { getDivisionsInRegion, getCombatDefenders } from '../../utils/divisionState';
+import { getDivisionsInRegion, getCombatDefenders } from '../../domain/game/divisionState';
 
 export interface UnitMarkerData {
   regionId: string;

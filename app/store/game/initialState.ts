@@ -1,7 +1,7 @@
 import { GameState, CountryId, ProductionQueueItem, CountryBonuses } from '../../types/game';
 import { initialMissions, GAME_START_DATE } from '../../data/gameData';
 import { scheduledEvents } from '../../data/scheduledEvents';
-import { getInitialCountryBonuses } from '../../utils/bonusCalculator';
+import { getInitialCountryBonuses } from '../../domain/game/bonusCalculator';
 import { getAllCountryIds } from '../../data/countryMetadata';
 
 // Predefined colors for army groups

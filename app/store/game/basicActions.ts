@@ -4,7 +4,7 @@ import { StoreApi } from 'zustand';
 import * as turf from '@turf/turf';
 import { createDivisionSelectionActions } from './divisionSelectionActions';
 import { applyLiberatePuppet } from './missionRewards';
-import { getDivisionsInRegion } from '../../utils/divisionState';
+import { getDivisionsInRegion } from '../../domain/game/divisionState';
 import { mergeMissionsWithInitial } from '../../utils/missionUtils';
 import {
   buildRegionUpdate,

@@ -5,7 +5,7 @@
  * Re-exported via pathfinding.ts so callers have a single import path.
  */
 import { RegionState, Adjacency, CountryId, Movement, DivisionState } from '../types/game';
-import { getDivisionsInRegion } from './divisionState';
+import { getDivisionsInRegion } from '../domain/game/divisionState';
 
 /**
  * Describes a single division-move assignment produced by

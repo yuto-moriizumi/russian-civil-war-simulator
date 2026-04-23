@@ -5,10 +5,10 @@ import {
   computeFrontline,
   assignDivisionsToFrontline,
 } from '../../utils/pathfinding';
-import { getDivisionsInRegion, getCombatDefenders } from '../../utils/divisionState';
+import { getDivisionsInRegion, getCombatDefenders } from '../../domain/game/divisionState';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
-import { createActiveCombat } from '../../utils/combat';
-import { createGameEvent } from '../../utils/eventUtils';
+import { createActiveCombat } from '../../domain/game/combat';
+import { createGameEvent } from '../../domain/game/eventUtils';
 import { GameStore } from './types';
 
 /**

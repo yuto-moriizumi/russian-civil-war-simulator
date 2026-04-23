@@ -1,4 +1,4 @@
-import type { ActiveCombat, Division, DivisionState, Movement } from '../types/game';
+import type { ActiveCombat, Division, DivisionState, Movement } from '../../types/game';
 
 function putDivision(target: DivisionState, division: Division): void {
   target[division.id] = division;

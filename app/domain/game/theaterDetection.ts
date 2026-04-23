@@ -1,6 +1,6 @@
-import { RegionState, Adjacency, CountryId, Theater, Region, Relationship, DivisionState } from '../types/game';
-import { getCountryAdjective } from '../data/countries';
-import { buildIsHostilePredicate } from './pathfinding';
+import { RegionState, Adjacency, CountryId, Theater, Region, Relationship, DivisionState } from '../../types/game';
+import { getCountryAdjective } from '../../data/countries';
+import { buildIsHostilePredicate } from '../../utils/pathfinding';
 import { getDivisionsInRegion } from './divisionState';
 
 /**

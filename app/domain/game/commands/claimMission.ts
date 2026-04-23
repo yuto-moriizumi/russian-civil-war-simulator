@@ -1,4 +1,4 @@
-import { createGameEvent, createNotification } from '../../../utils/eventUtils';
+import { createGameEvent, createNotification } from '../eventUtils';
 import { EngineSimulationState } from '../engine/types';
 import {
   applyClaimedMissionRewards,

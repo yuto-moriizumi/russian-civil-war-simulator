@@ -6,10 +6,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { processCombatRound } from '../utils/sharedDefenseProcessing';
-import { createActiveCombat } from '../utils/combat';
+import { processCombatRound } from '../domain/game/sharedDefenseProcessing';
+import { createActiveCombat } from '../domain/game/combat';
 import { processCombats } from '../domain/game/tickHelpers/combatProcessing';
-import { noOpLogger } from '../domain/game/engine/types';
 import type { Division, DivisionState, RegionState, Adjacency } from '../types/game';
 
 // ---------------------------------------------------------------------------
@@ -80,7 +79,7 @@ describe('processCombatRound – attacker wins with surviving divisions', () => 
     const combat = makeCombat(attackers, defenders);
     const divisions = makeDivisions([...attackers, ...defenders]);
 
-    const result = processCombatRound(combat, divisions, regions, adjacency, noOpLogger());
+    const result = processCombatRound(combat, divisions, regions, adjacency);
 
     if (result.combat.isComplete) {
       expect(result.combat.victor).toBe('soviet');
@@ -105,7 +104,7 @@ describe('processCombatRound – defender wins but all defenders dropped to HP=0
     const combat = makeCombat(attackers, defenders);
     const divisions = makeDivisions([...attackers, ...defenders]);
 
-    const result = processCombatRound(combat, divisions, regions, adjacency, noOpLogger());
+    const result = processCombatRound(combat, divisions, regions, adjacency);
 
     expect(result.combat.isComplete).toBe(true);
     expect(result.combat.victor).toBe('white');
@@ -134,7 +133,7 @@ describe('processCombatRound – attacker wins, partial attacker survivors + HP=
     const combat = makeCombat(attackers, defenders);
     const divisions = makeDivisions([...attackers, ...defenders]);
 
-    const result = processCombatRound(combat, divisions, regions, adjacency, noOpLogger());
+    const result = processCombatRound(combat, divisions, regions, adjacency);
 
     if (result.combat.isComplete && result.combat.victor === 'soviet') {
       const sovietRetreats = result.retreatingDivisions.filter(r => {
@@ -162,7 +161,7 @@ describe('processCombatRound – loser divisions still retreat to friendly regio
     const combat = makeCombat(attackers, defenders);
     const divisions = makeDivisions([...attackers, ...defenders]);
 
-    const result = processCombatRound(combat, divisions, regions, adjacency, noOpLogger());
+    const result = processCombatRound(combat, divisions, regions, adjacency);
 
     if (result.combat.isComplete && result.combat.victor === 'white') {
       const attackerRetreats = result.retreatingDivisions.filter(r => r.divisionId === 'a1');

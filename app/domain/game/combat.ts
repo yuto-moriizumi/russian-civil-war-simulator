@@ -1,6 +1,6 @@
-import { Division, CombatResult, CountryId, ActiveCombat, ArmyGroup, CountryBonuses, RegionState, Adjacency } from '../types/game';
+import { Division, CombatResult, CountryId, ActiveCombat, ArmyGroup, CountryBonuses, RegionState, Adjacency } from '../../types/game';
 import { getDivisionStats } from './bonusCalculator';
-import { GAME_CONFIG } from '../constants/gameConfig';
+import { GAME_CONFIG } from '../../constants/gameConfig';
 
 export function generateDivisionId(): string {
   return `div_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

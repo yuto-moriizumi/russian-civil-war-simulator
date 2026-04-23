@@ -15,7 +15,7 @@ import {
   SimulationStore,
 } from './game/types';
 import { initialGameState } from './game/initialState';
-import { buildDivisionState } from '../utils/divisionState';
+import { buildDivisionState } from '../domain/game/divisionState';
 import { buildRegionUpdate, extractRegionOwners } from '../utils/regionState';
 import { createBasicActions } from './game/basicActions';
 import { mergeMissionsWithInitial } from '../utils/missionUtils';

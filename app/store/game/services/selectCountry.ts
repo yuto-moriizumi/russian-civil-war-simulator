@@ -6,9 +6,9 @@ import {
 } from '../../../types/game';
 import { initialGameState } from '../initialState';
 import { initialUnitPlacement, initialArmyGroupDefs } from '../../../data/map/initialUnitPlacement';
-import { createDivision } from '../../../utils/combat';
+import { createDivision } from '../../../domain/game/combat';
 import { getDivisionPrefix } from '../../../data/countries';
-import { createInitialAIState, createInitialAIArmyGroup } from '../../../domain/game/aiInitialization';
+import { createInitialAIState, createInitialAIArmyGroup } from '../../../ai/cpuPlayer';
 import { mergeMissionsWithInitial } from '../../../utils/missionUtils';
 import { buildRegionUpdate, extractRegionOwners } from '../../../utils/regionState';
 import type { GameStore } from '../types';

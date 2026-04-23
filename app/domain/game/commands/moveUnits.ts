@@ -1,6 +1,6 @@
-import { createActiveCombat } from '../../../utils/combat';
+import { createActiveCombat } from '../combat';
 import { calculateDistance, calculateTravelTime } from '../../../utils/distance';
-import { createGameEvent, createNotification } from '../../../utils/eventUtils';
+import { createGameEvent, createNotification } from '../eventUtils';
 import {
   buildCanEnterPredicate,
   findPath,
@@ -8,7 +8,7 @@ import {
 import {
   getCombatDefenders,
   getDivisionsInRegion,
-} from '../../../utils/divisionState';
+} from '../divisionState';
 import type { ActiveCombat, Movement } from '../../../types/game';
 import type { EngineSimulationState } from '../engine/types';
 import type { GameCommandResult } from './types';
