@@ -35,15 +35,23 @@ const simulationPipeline: SimulationStep[] = [
 /**
  * Runs the simulation pipeline from an initial context.
  * Returns the final EngineSimulationState.
+ *
+ * If `wrapStep` is provided, each step is wrapped with it for instrumentation.
+ * The wrapper receives the step function and its display name, and must return
+ * a function with the same signature.
  */
 export function runPipeline(
   initialContext: SimulationContext,
   deps: SimulationDeps,
   logger: SimulationLogger,
+  options?: {
+    wrapStep?: (step: SimulationStep, name: string) => SimulationStep;
+  },
 ): EngineSimulationState {
   let context = initialContext;
   for (const step of simulationPipeline) {
-    context = step(context, deps, logger);
+    const wrapped = options?.wrapStep ? options.wrapStep(step, step.name) : step;
+    context = wrapped(context, deps, logger);
   }
   return context.state;
 }

@@ -6,6 +6,7 @@ export function advanceSimulation(
   state: Parameters<typeof runPipeline>[0]['state'],
   deps: SimulationDeps,
   logger: SimulationLogger = console,
+  options?: Parameters<typeof runPipeline>[3],
 ): SimulationResult {
   const newDate = new Date(state.dateTime);
   newDate.setHours(newDate.getHours() + 1);
@@ -16,7 +17,7 @@ export function advanceSimulation(
     tickNum: 0,
   };
 
-  const finalState = runPipeline(initialContext, deps, logger);
+  const finalState = runPipeline(initialContext, deps, logger, options);
   finalState.dateTime = initialContext.newDate;
 
   return { state: finalState };
