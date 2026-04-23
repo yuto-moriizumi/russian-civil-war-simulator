@@ -10,7 +10,7 @@ import {
   toEngineState,
 } from './services/engineStateAdapter';
 
-export { getEffectiveAIStates } from './tickHelpers/aiTick';
+export { getEffectiveAIStates } from '../../domain/game/tickHelpers/aiTick';
 
 export const createTickActions = (
   set: StoreApi<ActionsState>['setState'],
