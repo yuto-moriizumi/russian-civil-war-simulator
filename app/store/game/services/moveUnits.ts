@@ -5,10 +5,19 @@ import {
   toEngineState,
 } from './engineStateAdapter';
 
-export function buildClaimMissionPatch(state: GameStore, missionId: string): Partial<GameStore> | null {
+export function buildMoveUnitsPatch(
+  state: Partial<GameStore>,
+  fromRegion: string,
+  toRegion: string,
+  count: number,
+  divisionIds?: string[],
+): Partial<GameStore> | null {
   const result = applyGameCommand(toEngineState(state), {
-    type: 'CLAIM_MISSION',
-    missionId,
+    type: 'MOVE_UNITS',
+    fromRegion,
+    toRegion,
+    count,
+    divisionIds,
   });
 
   if (!result.applied) {

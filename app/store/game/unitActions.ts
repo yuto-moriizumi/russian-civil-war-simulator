@@ -1,30 +1,12 @@
-import { Movement, ArmyGroup, ActiveCombat } from '../../types/game';
-import { createDivision, createActiveCombat } from '../../utils/combat';
+import { ArmyGroup } from '../../types/game';
+import { createDivision } from '../../utils/combat';
 import { createGameEvent, createNotification, getOrdinalSuffix } from '../../utils/eventUtils';
 import { generateArmyGroupName } from '../../utils/armyGroupNaming';
 import { ARMY_GROUP_COLORS } from './initialState';
 import { GameStore } from './types';
 import { StoreApi } from 'zustand';
-import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { findPath, buildCanEnterPredicate } from '../../utils/pathfinding';
-import { getDivisionsInRegion, getCombatDefenders } from '../../utils/divisionState';
-import { buildRegionUpdate, extractRegionOwners } from '../../utils/regionState';
-
-function resolveMultiFrontDefenders(
-  toRegion: string,
-  activeCombats: ActiveCombat[],
-  regionDivisions: ReturnType<typeof getDivisionsInRegion>,
-  destOwner: string,
-  divisionState: import('../../types/game').DivisionState
-) {
-  const existing = activeCombats.filter(c => c.defenderRegionId === toRegion && !c.isComplete);
-  return {
-    combatDefenderDivisions: existing.length > 0
-      ? getCombatDefenders(divisionState, existing[0])
-      : regionDivisions.filter(d => d.owner === destOwner),
-    isFirstCombat: existing.length === 0,
-  };
-}
+import { buildMoveUnitsPatch } from './services/moveUnits';
 
 export const createUnitActions = (
   set: StoreApi<GameStore>['setState'],
@@ -132,183 +114,10 @@ export const createUnitActions = (
   },
 
   moveUnits: (fromRegion: string, toRegion: string, count: number, divisionIds?: string[]) => {
-    const { adjacency, regions, selectedCountry, dateTime, movingUnits, relationships, activeCombats, gameEvents, notifications, divisions } = get();
-
-    const isDirectlyAdjacent = adjacency[fromRegion]?.includes(toRegion);
-    let firstHop = toRegion;
-    let remainingPath: string[] | undefined;
-    if (!isDirectlyAdjacent) {
-      const canEnter = buildCanEnterPredicate(selectedCountry?.id ?? ('' as import('../../types/game').CountryId), regions, relationships);
-      const path = findPath(fromRegion, toRegion, adjacency, canEnter);
-      if (!path || path.length === 0) {
-        console.warn(`Cannot move from ${fromRegion} to ${toRegion}: no accessible path found`);
-        return;
-      }
-      firstHop = path[0];
-      remainingPath = path.slice(1);
+    const patch = buildMoveUnitsPatch(get(), fromRegion, toRegion, count, divisionIds);
+    if (patch) {
+      set(patch);
     }
-
-    const actualToRegion = firstHop;
-    const finalDestination = remainingPath && remainingPath.length > 0 ? toRegion : undefined;
-
-    if (!adjacency[fromRegion]?.includes(actualToRegion)) return;
-
-    const from = regions[fromRegion];
-    const to = regions[actualToRegion];
-    const fromDivisions = getDivisionsInRegion(divisions, fromRegion);
-    if (!from || fromDivisions.length < count || !selectedCountry) return;
-
-    const fromOwner = from.owner;
-    const isOwnRegion = fromOwner === selectedCountry.id;
-    if (!isOwnRegion) {
-      const theirRel = relationships.find(
-        r => r.fromCountry === fromOwner && r.toCountry === selectedCountry.id
-      );
-      const ourRel = relationships.find(
-        r => r.fromCountry === selectedCountry.id && r.toCountry === fromOwner
-      );
-      const theyGrantUs = theirRel ? theirRel.type : 'neutral';
-      const weDeclared = ourRel ? ourRel.type : 'neutral';
-      const hasAccess =
-        theyGrantUs === 'military_access' ||
-        theyGrantUs === 'autonomy' ||
-        weDeclared === 'autonomy';
-      const hasOurDivisions = fromDivisions.some(d => d.owner === selectedCountry.id);
-      if (!hasAccess || !hasOurDivisions) return;
-    }
-
-    const targetOwner = to.owner;
-    const theyGrantUs = relationships.find(r => r.fromCountry === targetOwner && r.toCountry === selectedCountry.id)?.type ?? 'neutral';
-    const weDeclared = relationships.find(r => r.fromCountry === selectedCountry.id && r.toCountry === targetOwner)?.type ?? 'neutral';
-    const hasAutonomy = theyGrantUs === 'autonomy' || weDeclared === 'autonomy';
-
-    if (targetOwner !== selectedCountry.id) {
-      const canMove = theyGrantUs !== 'neutral' || weDeclared === 'war' || hasAutonomy;
-      if (!canMove) {
-        console.warn(`Cannot move to ${to.name}: No military access or war state with ${targetOwner}`);
-        return;
-      }
-    }
-
-    const ownDivisions = fromDivisions.filter(d => d.owner === selectedCountry.id);
-    const divisionsToMove = divisionIds && divisionIds.length > 0
-      ? ownDivisions.filter(d => divisionIds.includes(d.id))
-      : ownDivisions.slice(0, count);
-
-    const { regionCentroids } = get();
-    const distanceKm = calculateDistance(fromRegion, actualToRegion, regionCentroids);
-    const travelTimeHours = calculateTravelTime(distanceKm, false);
-    const destLabel = finalDestination
-      ? `${to.name} → … → ${regions[finalDestination]?.name ?? finalDestination}`
-      : to.name;
-    console.log(`Moving from ${from.name} to ${destLabel} (first hop: ${to.name}): ${Math.round(distanceKm)} km, ${travelTimeHours.toFixed(1)} hours (${Math.floor(travelTimeHours / 24)}d ${Math.round(travelTimeHours % 24)}h)`);
-    const arrivalTime = new Date(dateTime);
-    arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
-
-    const isHostile = targetOwner !== selectedCountry.id && !hasAutonomy && theyGrantUs !== 'military_access';
-
-    let newCombat: ActiveCombat | null = null;
-    let nextDivisions = { ...divisions };
-    const nextRegions = { ...regions };
-    let nextActiveCombats = activeCombats;
-    let nextGameEvents = gameEvents;
-    let nextNotifications = notifications;
-
-    // Set regionId=null for moving divisions
-    for (const d of divisionsToMove) {
-      nextDivisions = { ...nextDivisions, [d.id]: { ...d, regionId: null } };
-    }
-
-    if (isHostile) {
-      const existingCombat = activeCombats.find(c =>
-        c.attackerRegionId === fromRegion &&
-        c.defenderRegionId === actualToRegion &&
-        !c.isComplete
-      );
-      if (existingCombat) {
-        nextActiveCombats = activeCombats.map(c => {
-          if (c.id !== existingCombat.id) return c;
-          if (selectedCountry.id === c.attackerCountry) {
-            return {
-              ...c,
-              attackerDivisionIds: [...c.attackerDivisionIds, ...divisionsToMove.map(d => d.id)],
-              initialAttackerCount: c.initialAttackerCount + divisionsToMove.length,
-              initialAttackerHp: c.initialAttackerHp + divisionsToMove.reduce((s, d) => s + d.hp, 0),
-            };
-          }
-          return c;
-        });
-        const newMovement: Movement = {
-          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          fromRegion,
-          toRegion: actualToRegion,
-          divisionIds: divisionsToMove.map(d => d.id),
-          departureTime: new Date(dateTime),
-          arrivalTime,
-          owner: selectedCountry.id,
-          pendingCombatId: existingCombat.id,
-          ...(remainingPath && remainingPath.length > 0 ? { remainingPath, finalDestination } : {}),
-        };
-        set({
-          divisions: nextDivisions,
-          movingUnits: [...movingUnits, newMovement],
-          activeCombats: nextActiveCombats,
-        });
-        return;
-      }
-
-      const inTransitFromDest = new Set(
-        movingUnits.filter(m => m.fromRegion === actualToRegion).flatMap(m => m.divisionIds)
-      );
-      const toDivisions = getDivisionsInRegion(divisions, actualToRegion);
-      const defenderDivisions = toDivisions.filter(d => d.owner === to.owner && !inTransitFromDest.has(d.id));
-      const hasActiveCombatAtDest = activeCombats.some(c => c.defenderRegionId === actualToRegion && !c.isComplete);
-      if (defenderDivisions.length > 0 || hasActiveCombatAtDest) {
-        const { combatDefenderDivisions, isFirstCombat } = resolveMultiFrontDefenders(actualToRegion, activeCombats, toDivisions, to.owner, nextDivisions);
-
-        newCombat = createActiveCombat(
-          fromRegion, from.name, actualToRegion, to.name,
-          selectedCountry.id, to.owner, divisionsToMove, combatDefenderDivisions, dateTime
-        );
-        if (isFirstCombat) {
-          for (const d of combatDefenderDivisions) {
-            nextDivisions = { ...nextDivisions, [d.id]: { ...d, regionId: null } };
-          }
-        }
-        nextActiveCombats = [...activeCombats, newCombat];
-        const battleEvent = createGameEvent(
-          'combat_victory',
-          `Battle for ${to.name} Begins!`,
-          `${selectedCountry.id === 'soviet' ? 'Soviet' : 'White'} forces (${divisionsToMove.length} divisions) are advancing on ${to.owner === 'soviet' ? 'Soviet' : 'White'} defenders (${defenderDivisions.length} divisions) at ${to.name}.`,
-          dateTime,
-          selectedCountry.id,
-          actualToRegion
-        );
-        nextGameEvents = [...gameEvents, battleEvent];
-        nextNotifications = [...notifications, createNotification(battleEvent, dateTime)];
-      }
-    }
-
-    const newMovement: Movement = {
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      fromRegion,
-      toRegion: actualToRegion,
-      divisionIds: divisionsToMove.map(d => d.id),
-      departureTime: new Date(dateTime),
-      arrivalTime,
-      owner: selectedCountry.id,
-      ...(newCombat ? { pendingCombatId: newCombat.id } : {}),
-      ...(remainingPath && remainingPath.length > 0 ? { remainingPath, finalDestination } : {}),
-    };
-
-    set({
-      ...buildRegionUpdate(get().regionDefinitions, extractRegionOwners(nextRegions)),
-      divisions: nextDivisions,
-      movingUnits: [...movingUnits, newMovement],
-      activeCombats: nextActiveCombats,
-      gameEvents: nextGameEvents,
-      notifications: nextNotifications,
-    });
   },
 
   cancelMovement: (movementId: string) => {
