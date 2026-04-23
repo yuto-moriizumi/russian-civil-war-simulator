@@ -1,5 +1,5 @@
 import { CountryId } from '../../../types/game';
-import { checkAndCompleteMissions, checkAndClaimAIMissions } from '../tickHelpers';
+import { checkAndCompleteMissions, checkAndClaimAIMissions } from '../logic';
 import { attackArmyGroup } from '../armyGroupAttack';
 import { defendArmyGroup } from '../armyGroupDefend';
 import { EngineSimulationState, SimulationLogger, noOpLogger } from './types';

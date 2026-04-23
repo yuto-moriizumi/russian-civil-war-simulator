@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { scheduledEvents } from '../data/scheduledEvents';
-import { processScheduledEvents } from '../domain/game/tickHelpers/scheduledEventProcessing';
+import { processScheduledEvents } from '../domain/game/logic/scheduledEventProcessing';
 import type { Relationship, RegionState } from '../types/game';
 
 describe('scheduled events', () => {

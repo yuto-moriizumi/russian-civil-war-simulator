@@ -12,7 +12,7 @@
 import { describe, it, expect } from 'vitest';
 import { canMoveTo, getAdjacentRegions } from '../utils/mapUtils';
 import { calculateTravelTime, MOVEMENT_SPEED_KM_PER_HOUR } from '../utils/distance';
-import { processMovements } from '../domain/game/tickHelpers/movementProcessing';
+import { processMovements } from '../domain/game/logic/movementProcessing';
 import { findPath, getNextStepToward, buildCanEnterPredicate } from '../utils/pathfinding';
 import type {
   Division,

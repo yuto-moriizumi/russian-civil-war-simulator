@@ -1,4 +1,4 @@
-import { processCombats } from '../../tickHelpers';
+import { processCombats } from '../../logic';
 import type { SimulationContext, SimulationDeps, SimulationLogger } from '../types';
 
 export function processCombatsStep(

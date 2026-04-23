@@ -1,4 +1,4 @@
-import { syncArmyGroupTerritories } from '../../tickHelpers';
+import { syncArmyGroupTerritories } from '../../logic';
 import type { SimulationContext, SimulationDeps, SimulationLogger } from '../types';
 
 export function syncArmyGroupsStep(

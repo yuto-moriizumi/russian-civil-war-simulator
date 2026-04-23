@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { applyCompletedMovements } from '../domain/game/tickHelpers/movementApplication';
+import { applyCompletedMovements } from '../domain/game/logic/movementApplication';
 import { createUnitActions } from '../store/game/unitActions';
 import type { Division, DivisionState, Movement, Region, RegionState, ActiveCombat, Relationship, CountryId } from '../types/game';
 import type { GameStore } from '../store/game/types';

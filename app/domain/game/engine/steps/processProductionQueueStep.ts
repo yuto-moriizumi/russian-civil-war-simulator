@@ -1,4 +1,4 @@
-import { processProductionQueue } from '../../tickHelpers';
+import { processProductionQueue } from '../../logic';
 import type { SimulationContext, SimulationDeps, SimulationLogger, EngineSimulationState } from '../types';
 
 export function processProductionQueueStep(

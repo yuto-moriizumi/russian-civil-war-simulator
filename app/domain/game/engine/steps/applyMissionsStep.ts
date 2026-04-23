@@ -1,5 +1,5 @@
 import { CountryId } from '../../../../types/game';
-import { checkAndCompleteMissions, checkAndClaimAIMissions } from '../../tickHelpers';
+import { checkAndCompleteMissions, checkAndClaimAIMissions } from '../../logic';
 import type { SimulationContext, SimulationDeps, SimulationLogger, EngineSimulationState } from '../types';
 
 export function applyMissionsStep(

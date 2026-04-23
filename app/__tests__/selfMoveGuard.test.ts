@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { applyCompletedMovements } from '../domain/game/tickHelpers/movementApplication';
+import { applyCompletedMovements } from '../domain/game/logic/movementApplication';
 import type { Division, DivisionState, Movement, Region, RegionState, Relationship } from '../types/game';
 
 const D0 = new Date('1918-01-01T00:00:00Z');

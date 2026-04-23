@@ -1,5 +1,5 @@
 import { SimulationContext, SimulationDeps, SimulationLogger } from '../types';
-import { validateDivisions, detectDivisionDuplicates, logDivisionDuplicates } from '../../tickHelpers';
+import { validateDivisions, detectDivisionDuplicates, logDivisionDuplicates } from '../../logic';
 
 export function validateDivisionsStep(
   context: SimulationContext,

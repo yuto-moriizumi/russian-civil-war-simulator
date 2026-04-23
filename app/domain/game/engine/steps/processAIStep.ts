@@ -5,7 +5,7 @@ import {
   processAITick,
   hasOwnershipChangedForCountries,
   initializeAIStatesForNewCountries,
-} from '../../tickHelpers/aiTick';
+} from '../../logic/aiTick';
 import type { SimulationContext, SimulationDeps, SimulationLogger, EngineSimulationState } from '../types';
 
 export function processAIStep(

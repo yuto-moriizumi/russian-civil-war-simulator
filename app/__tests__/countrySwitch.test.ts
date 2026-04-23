@@ -18,7 +18,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { initialUnitPlacement } from '../data/map/initialUnitPlacement';
 import { initialGameState } from '../store/game/initialState';
 import { runAITick } from '../ai/cpuPlayer';
-import { processProductionQueue } from '../domain/game/tickHelpers/productionProcessing';
+import { processProductionQueue } from '../domain/game/logic/productionProcessing';
 import type {
   AIState,
   Division,

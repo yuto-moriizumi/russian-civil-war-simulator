@@ -1,4 +1,4 @@
-import { regenerateDivisionHP } from '../../tickHelpers';
+import { regenerateDivisionHP } from '../../logic';
 import type { SimulationContext, SimulationDeps, SimulationLogger } from '../types';
 
 export function regenerateHPStep(

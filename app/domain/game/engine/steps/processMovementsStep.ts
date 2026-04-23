@@ -1,4 +1,4 @@
-import { processMovements } from '../../tickHelpers';
+import { processMovements } from '../../logic';
 import type { SimulationContext, SimulationDeps, SimulationLogger } from '../types';
 
 export function processMovementsStep(

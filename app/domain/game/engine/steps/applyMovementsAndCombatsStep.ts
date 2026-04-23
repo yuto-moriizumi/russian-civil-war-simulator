@@ -1,4 +1,4 @@
-import { applyCompletedMovements, applyFinishedCombats } from '../../tickHelpers';
+import { applyCompletedMovements, applyFinishedCombats } from '../../logic';
 import type { SimulationContext, SimulationDeps, SimulationLogger, EngineSimulationState } from '../types';
 
 export function applyMovementsAndCombatsStep(

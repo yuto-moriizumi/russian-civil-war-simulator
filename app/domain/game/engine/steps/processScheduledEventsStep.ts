@@ -1,4 +1,4 @@
-import { processScheduledEvents } from '../../tickHelpers';
+import { processScheduledEvents } from '../../logic';
 import type { SimulationContext, SimulationDeps, SimulationLogger, EngineSimulationState } from '../types';
 
 export function processScheduledEventsStep(
