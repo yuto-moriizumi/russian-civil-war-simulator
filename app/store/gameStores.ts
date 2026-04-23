@@ -1,4 +1,4 @@
-/* eslint-disable max-lines */
+
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -10,7 +10,7 @@ import {
   CountryId,
 } from '../types/game';
 import {
-  GameStore,
+  ActionsState,
   GameUiStore,
   SimulationStore,
 } from './game/types';
@@ -30,7 +30,7 @@ type RehydratableSimulationStore = SimulationStore & {
   lastSaveTime?: Date | string | null;
 };
 
-const UI_STATE_KEYS = new Set<keyof GameUiStore>([
+const UI_STATE_KEYS = new Set<keyof ActionsState>([
   'currentScreen',
   'selectedRegion',
   'selectedUnitRegion',
@@ -65,15 +65,15 @@ const initialSimulationStoreState: Omit<SimulationStore, keyof SimulationActions
   relationships: initialGameState.relationships,
   scheduledEvents: initialGameState.scheduledEvents,
   countryBonuses: initialGameState.countryBonuses,
+  aiStates: [],
+  lastSaveTime: null,
+  placementArmyGroups: [],
   regions: {},
   regionDefinitions: {},
   adjacency: {},
   mapDataLoaded: false,
   regionCentroids: initialGameState.regionCentroids,
   borderMidpoints: initialGameState.borderMidpoints,
-  aiStates: [],
-  lastSaveTime: null,
-  placementArmyGroups: [],
 };
 
 const initialGameUiState: Omit<GameUiStore, keyof UiActions> = {
@@ -154,12 +154,12 @@ type UiActions = Pick<
   | 'setMapMode'
 >;
 
-function splitGameStorePatch(patch: Partial<GameStore>) {
+function splitGameStorePatch(patch: Partial<ActionsState>) {
   const simulationPatch: Partial<SimulationStore> = {};
   const uiPatch: Partial<GameUiStore> = {};
 
-  for (const [key, value] of Object.entries(patch) as [keyof GameStore, unknown][]) {
-    if (UI_STATE_KEYS.has(key as keyof GameUiStore)) {
+  for (const [key, value] of Object.entries(patch) as [keyof ActionsState, unknown][]) {
+    if (UI_STATE_KEYS.has(key)) {
       (uiPatch as Record<string, unknown>)[key] = value;
     } else {
       (simulationPatch as Record<string, unknown>)[key] = value;
@@ -169,17 +169,17 @@ function splitGameStorePatch(patch: Partial<GameStore>) {
   return { simulationPatch, uiPatch };
 }
 
-function getCombinedState(): GameStore {
+function getCombinedState(): ActionsState {
   return {
     ...useSimulationStore.getState(),
     ...useGameUiStore.getState(),
-  } as GameStore;
+  } as ActionsState;
 }
 
 function setCombinedState(
   patch:
-    | Partial<GameStore>
-    | ((state: GameStore) => Partial<GameStore> | GameStore)
+    | Partial<ActionsState>
+    | ((state: ActionsState) => Partial<ActionsState> | ActionsState)
 ) {
   const currentState = getCombinedState();
   const nextPatch = typeof patch === 'function' ? patch(currentState) : patch;
@@ -277,30 +277,12 @@ export function rehydratePersistedGameState(state?: RehydratableSimulationStore 
 export const useSimulationStore = create<SimulationStore>()(
   persist(
     immer((_set, _get) => {
-      const basicActions = createBasicActions(
-        setCombinedState as never,
-        getCombinedState as never
-      );
-      const tickActions = createTickActions(
-        setCombinedState as never,
-        getCombinedState as never
-      );
-      const unitActions = createUnitActions(
-        setCombinedState as never,
-        getCombinedState as never
-      );
-      const armyGroupActions = createArmyGroupActions(
-        setCombinedState as never,
-        getCombinedState as never
-      );
-      const productionActions = createProductionActions(
-        setCombinedState as never,
-        getCombinedState as never
-      );
-      const relationshipActions = createRelationshipActions(
-        setCombinedState as never,
-        getCombinedState as never
-      );
+      const basicActions = createBasicActions(setCombinedState, getCombinedState);
+      const tickActions = createTickActions(setCombinedState, getCombinedState);
+      const unitActions = createUnitActions(setCombinedState, getCombinedState);
+      const armyGroupActions = createArmyGroupActions(setCombinedState, getCombinedState);
+      const productionActions = createProductionActions(setCombinedState, getCombinedState);
+      const relationshipActions = createRelationshipActions(setCombinedState, getCombinedState);
 
       return {
         ...initialSimulationStoreState,
@@ -354,14 +336,8 @@ export const useSimulationStore = create<SimulationStore>()(
 export const useGameUiStore = create<GameUiStore>()(
   persist(
     immer((_set, _get) => {
-      const basicActions = createBasicActions(
-        setCombinedState as never,
-        getCombinedState as never
-      );
-      const armyGroupActions = createArmyGroupActions(
-        setCombinedState as never,
-        getCombinedState as never
-      );
+      const basicActions = createBasicActions(setCombinedState, getCombinedState);
+      const armyGroupActions = createArmyGroupActions(setCombinedState, getCombinedState);
 
       return {
         ...initialGameUiState,

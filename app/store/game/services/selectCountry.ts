@@ -11,10 +11,10 @@ import { getDivisionPrefix } from '../../../data/countries';
 import { createInitialAIState, createInitialAIArmyGroup } from '../../../ai/cpuPlayer';
 import { mergeMissionsWithInitial } from '../../../utils/missionUtils';
 import { buildRegionUpdate, extractRegionOwners } from '../../../utils/regionState';
-import type { GameStore } from '../types';
+import type { ActionsState } from '../types';
 
 export function buildSelectCountryPatch(
-  currentState: GameStore,
+  currentState: ActionsState,
   country: Country,
   isInitial: boolean,
   aiCountries: import('../../../types/game').CountryId[]

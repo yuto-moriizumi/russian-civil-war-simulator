@@ -14,77 +14,37 @@ import {
 import {
   ClientPreferencesState,
   GameUiState,
-  MapRuntimeState,
   SimulationState,
 } from './stateTypes';
 
-export interface GameStore
-  extends SimulationState,
-    GameUiState,
-    ClientPreferencesState,
-    MapRuntimeState {
-  // Derived cache. Always computed from regionDefinitions + regionOwners via buildRegionUpdate.
-  // Never update independently — use buildRegionUpdate to keep in sync.
+// ============================================================================
+// SimulationStore — standalone interface
+// ============================================================================
+
+export interface SimulationStore extends SimulationState {
+  // Runtime map data
   regions: RegionState;
+  regionDefinitions: import('./stateTypes').MapRuntimeState['regionDefinitions'];
   adjacency: Adjacency;
-  selectedRegion: string | null;
-  selectedUnitRegion: string | null;
-  /** IDs of divisions currently selected in the Division Selection Window */
-  selectedDivisionIds: string[];
   mapDataLoaded: boolean;
-  aiStates: AIState[]; // Multiple AI states for different countries
-  selectedCombatId: string | null;
-  selectedMovementId: string | null;
+  regionCentroids: Record<string, [number, number]>;
+  borderMidpoints: Record<string, [number, number]>;
+  aiStates: AIState[];
   lastSaveTime: Date | null;
-  selectedGroupId: string | null; // Currently selected army group
-  selectedTheaterId: string | null; // Currently selected theater
-  isProductionModalOpen: boolean; // Production queue modal state
-  selectedCountryId: CountryId | null; // Country for the country sidebar
-  isCountrySidebarOpen: boolean; // Country sidebar state
   /** Army groups derived from the map tool's unit placement editor; merged into armyGroups at game start */
   placementArmyGroups: import('../../types/game').ArmyGroup[];
-  /** When true, left-clicking a region switches the player to that region's controlling country */
-  isSwitchModeActive: boolean;
 
   // Actions
   setRegions: (regions: RegionState) => void;
   setAdjacency: (adjacency: Adjacency) => void;
   setBorderMidpoints: (midpoints: Record<string, [number, number]>) => void;
   setMapDataLoaded: (loaded: boolean) => void;
-  setSelectedRegion: (regionId: string | null) => void;
-  setSelectedUnitRegion: (regionId: string | null) => void;
-  /** Select divisions by region; clears selectedRegion (mutual exclusivity) */
-  selectDivisionsInRegion: (regionId: string) => void;
-  /** Shift+click on a unit marker: append all divisions from regionId to the current selection */
-  addDivisionsInRegion: (regionId: string) => void;
-  /** Toggle a single division in/out of the current selection */
-  toggleDivisionInSelection: (divisionId: string) => void;
-  /** Select all divisions across all regions of an army group */
-  selectDivisionsInArmyGroup: (groupId: string) => void;
-  /** Narrow the selection to a single division by ID (keeps selectedUnitRegion) */
-  selectSingleDivision: (divisionId: string) => void;
-  /** Clear all selected divisions */
-  clearSelectedDivisions: () => void;
-  setSelectedCombatId: (combatId: string | null) => void;
-  setSelectedMovementId: (movementId: string | null) => void;
-  setIsProductionModalOpen: (isOpen: boolean) => void;
-  setSelectedCountryId: (countryId: CountryId | null) => void;
-  setIsCountrySidebarOpen: (isOpen: boolean) => void;
-  setSwitchModeActive: (active: boolean) => void;
   setPlayerAIEnabled: (enabled: boolean) => void;
-  
-  // Notification Actions
   dismissNotification: (notificationId: string) => void;
-  
-  // Game Control Actions
-  navigateToScreen: (screen: Screen) => void;
-  /** Reset all game state and clear persistence, then navigate to country select. */
   startNewGame: () => void;
   selectCountry: (country: Country, isInitial?: boolean) => void;
   togglePlay: () => void;
   setGameSpeed: (speed: GameSpeed) => void;
-  
-  // Game Logic Actions
   tick: () => void;
   createInfantry: () => void;
   deployUnit: () => void;
@@ -93,43 +53,78 @@ export interface GameStore
   redirectMovement: (movementId: string, newDestinationRegionId: string) => void;
   claimMission: (missionId: string) => void;
   openMissions: () => void;
-  
-  // Production Queue Actions
   addToProductionQueue: (armyGroupId: string, count?: number) => void;
   cancelProduction: (productionId: string) => void;
-  
-  // Theater Actions
   detectAndUpdateTheaters: () => void;
-  selectTheater: (theaterId: string | null) => void;
-  
-  // Army Group Actions
   createArmyGroup: (name: string, regionIds: string[], theaterId?: string | null) => void;
   deleteArmyGroup: (groupId: string) => void;
   renameArmyGroup: (groupId: string, name: string) => void;
   assignTheaterToGroup: (groupId: string, theaterId: string | null) => void;
-  selectArmyGroup: (groupId: string | null) => void;
   advanceArmyGroup: (groupId: string) => void;
   attackArmyGroup: (groupId: string) => void;
   defendArmyGroup: (groupId: string) => void;
   setArmyGroupMode: (groupId: string, mode: ArmyGroupMode) => void;
   deployToArmyGroup: (groupId: string, count?: number) => void;
-  /** Assign the given division IDs to the specified army group (skips already-assigned divisions). */
   addDivisionsToArmyGroup: (groupId: string, divisionIds: string[]) => void;
-  
-  // Relationship Actions
   setRelationship: (fromCountry: CountryId, toCountry: CountryId, type: RelationshipType) => void;
   getRelationship: (fromCountry: CountryId, toCountry: CountryId) => RelationshipType;
-  
-  // Map Mode Actions
-  setMapMode: (mode: MapMode) => void;
-  
-  // Centroid Initialization
   initializeCentroids: () => Promise<void>;
-  
-  // Persistence Actions
   saveGame: () => void;
   loadGame: (savedData: { gameState: GameState; regions: RegionState; aiStates: AIState[] }) => void;
 }
+
+// ============================================================================
+// GameUiStore — standalone interface
+// ============================================================================
+
+export interface GameUiStore extends GameUiState, ClientPreferencesState {
+  setSelectedRegion: (regionId: string | null) => void;
+  setSelectedUnitRegion: (regionId: string | null) => void;
+  selectDivisionsInRegion: (regionId: string) => void;
+  addDivisionsInRegion: (regionId: string) => void;
+  toggleDivisionInSelection: (divisionId: string) => void;
+  selectDivisionsInArmyGroup: (groupId: string) => void;
+  selectSingleDivision: (divisionId: string) => void;
+  clearSelectedDivisions: () => void;
+  setSelectedCombatId: (combatId: string | null) => void;
+  setSelectedMovementId: (movementId: string | null) => void;
+  setIsProductionModalOpen: (isOpen: boolean) => void;
+  setSelectedCountryId: (countryId: CountryId | null) => void;
+  setIsCountrySidebarOpen: (isOpen: boolean) => void;
+  setSwitchModeActive: (active: boolean) => void;
+  navigateToScreen: (screen: Screen) => void;
+  selectTheater: (theaterId: string | null) => void;
+  selectArmyGroup: (groupId: string | null) => void;
+  setMapMode: (mode: MapMode) => void;
+}
+
+// ============================================================================
+// GameStore — alias for backward compatibility
+// ============================================================================
+
+export type GameStore = SimulationStore & GameUiStore;
+
+/**
+ * The union of all state properties that simulation action creators may read/write.
+ * Action creators in store/game/ are typed against this interface so they can
+ * update both simulation and UI properties — splitGameStorePatch in gameStores.ts
+ * routes UI keys to useGameUiStore at runtime.
+ */
+export type ActionsState = SimulationStore & Pick<GameUiStore,
+  | 'selectedRegion'
+  | 'selectedUnitRegion'
+  | 'selectedDivisionIds'
+  | 'selectedCombatId'
+  | 'selectedMovementId'
+  | 'selectedGroupId'
+  | 'selectedTheaterId'
+  | 'isProductionModalOpen'
+  | 'selectedCountryId'
+  | 'isCountrySidebarOpen'
+  | 'isSwitchModeActive'
+  | 'currentScreen'
+  | 'mapMode'
+>;
 
 export type GameUiStateKey = keyof GameUiState | keyof ClientPreferencesState;
 
@@ -152,7 +147,3 @@ export type GameUiActionKey =
   | 'selectTheater'
   | 'selectArmyGroup'
   | 'setMapMode';
-
-export type GameUiStore = Pick<GameStore, GameUiStateKey | GameUiActionKey>;
-
-export type SimulationStore = Omit<GameStore, GameUiStateKey | GameUiActionKey>;

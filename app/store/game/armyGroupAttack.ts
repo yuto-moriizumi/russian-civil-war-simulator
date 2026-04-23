@@ -1,5 +1,5 @@
 import { attackArmyGroup as attackArmyGroupPure } from '../../domain/game/armyGroupAttack';
-import { GameStore } from './types';
+import { ActionsState } from './types';
 import {
   buildSimulationPatchFromEngineState,
   toEngineState,
@@ -7,13 +7,13 @@ import {
 
 /**
  * Store adapter for attackArmyGroup.
- * Converts GameStore -> EngineSimulationState, calls the pure domain function,
+ * Converts SimulationStore -> EngineSimulationState, calls the pure domain function,
  * then applies the resulting patch via setState.
  */
 export function attackArmyGroup(
   groupId: string,
-  state: GameStore,
-  setState: (partial: Partial<GameStore>) => void
+  state: ActionsState,
+  setState: (partial: Partial<ActionsState>) => void
 ): void {
   const engineState = toEngineState(state);
   const patch = attackArmyGroupPure(groupId, engineState);

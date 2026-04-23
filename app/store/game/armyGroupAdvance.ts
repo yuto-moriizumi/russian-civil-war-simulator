@@ -9,7 +9,7 @@ import { getDivisionsInRegion, getCombatDefenders } from '../../domain/game/divi
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { createActiveCombat } from '../../domain/game/combat';
 import { createGameEvent } from '../../domain/game/eventUtils';
-import { GameStore } from './types';
+import { ActionsState } from './types';
 
 /**
  * Advances an army group using a HOI4-style frontline assignment strategy.
@@ -27,8 +27,8 @@ import { GameStore } from './types';
  */
 export function advanceArmyGroup(
   groupId: string,
-  state: GameStore,
-  setState: (partial: Partial<GameStore>) => void
+  state: ActionsState,
+  setState: (partial: Partial<ActionsState>) => void
 ) {
   const {
     armyGroups, regions, adjacency, dateTime, movingUnits,

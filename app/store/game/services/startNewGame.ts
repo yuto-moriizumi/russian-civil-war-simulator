@@ -2,22 +2,22 @@ import { RegionOwnershipState, RegionState } from '../../../types/game';
 import { initialGameState } from '../initialState';
 import { initialRegionOwnership } from '../../../data/map';
 import { buildRegionUpdate } from '../../../utils/regionState';
-import type { GameStore } from '../types';
+import type { ActionsState } from '../types';
 
 export interface StartNewGamePatch {
   regions: RegionState;
-  regionDefinitions: GameStore['regionDefinitions'];
+  regionDefinitions: ActionsState['regionDefinitions'];
   regionOwners: RegionOwnershipState;
-  divisions: GameStore['divisions'];
-  adjacency: GameStore['adjacency'];
+  divisions: ActionsState['divisions'];
+  adjacency: ActionsState['adjacency'];
   mapDataLoaded: boolean;
-  regionCentroids: GameStore['regionCentroids'];
-  borderMidpoints: GameStore['borderMidpoints'];
+  regionCentroids: ActionsState['regionCentroids'];
+  borderMidpoints: ActionsState['borderMidpoints'];
   currentScreen: 'countrySelect';
 }
 
 export function buildStartNewGamePatch(currentState: Pick<
-  GameStore,
+  ActionsState,
   'regionDefinitions' | 'regions' | 'adjacency' | 'mapDataLoaded' | 'regionCentroids' | 'borderMidpoints'
 >): typeof initialGameState & StartNewGamePatch {
   const regionIds = new Set([

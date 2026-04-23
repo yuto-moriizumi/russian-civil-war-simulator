@@ -2,7 +2,7 @@ import { ArmyGroup, ArmyGroupMode } from '../../types/game';
 import { detectTheatersForCountries, syncAIArmyGroupsToTheaters } from '../../utils/aiArmyGroupTheaters';
 import { generateArmyGroupName } from '../../utils/armyGroupNaming';
 import { ARMY_GROUP_COLORS } from './initialState';
-import { GameStore } from './types';
+import { ActionsState } from './types';
 import { StoreApi } from 'zustand';
 import { defendArmyGroup } from './armyGroupDefend';
 import { attackArmyGroup } from './armyGroupAttack';
@@ -16,8 +16,8 @@ import { buildRegionUpdate, extractRegionOwners } from '../../utils/regionState'
  * - Army group advancement (moving all units toward enemy)
  */
 export const createArmyGroupActions = (
-  set: StoreApi<GameStore>['setState'],
-  get: StoreApi<GameStore>['getState']
+  set: StoreApi<ActionsState>['setState'],
+  get: StoreApi<ActionsState>['getState']
 ) => ({
   // Theater Actions
   detectAndUpdateTheaters: () => {

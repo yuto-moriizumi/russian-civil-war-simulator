@@ -3,14 +3,14 @@ import { createDivision } from '../../domain/game/combat';
 import { createGameEvent, createNotification, getOrdinalSuffix } from '../../domain/game/eventUtils';
 import { generateArmyGroupName } from '../../utils/armyGroupNaming';
 import { ARMY_GROUP_COLORS } from './initialState';
-import { GameStore } from './types';
+import { ActionsState } from './types';
 import { StoreApi } from 'zustand';
 import { findPath, buildCanEnterPredicate } from '../../utils/pathfinding';
 import { buildMoveUnitsPatch } from './services/moveUnits';
 
 export const createUnitActions = (
-  set: StoreApi<GameStore>['setState'],
-  get: StoreApi<GameStore>['getState']
+  set: StoreApi<ActionsState>['setState'],
+  get: StoreApi<ActionsState>['getState']
 ) => ({
   createInfantry: () => {
     const { selectedCountry, dateTime, gameEvents, regions, selectedGroupId, armyGroups, selectedRegion, countryBonuses, divisions } = get();

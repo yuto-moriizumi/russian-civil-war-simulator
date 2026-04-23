@@ -1,5 +1,5 @@
 import { CountryId, Screen, Region, Adjacency, Country, GameSpeed, GameState, RegionState, AIState, MapMode, Relationship, DivisionState } from '../../types/game';
-import { GameStore } from './types';
+import { ActionsState } from './types';
 import { StoreApi } from 'zustand';
 import * as turf from '@turf/turf';
 import { createDivisionSelectionActions } from './divisionSelectionActions';
@@ -102,8 +102,8 @@ export function getAIControlledCountries(
  * - Save/load functionality
  */
 export const createBasicActions = (
-  set: StoreApi<GameStore>['setState'],
-  get: StoreApi<GameStore>['getState']
+  set: StoreApi<ActionsState>['setState'],
+  get: StoreApi<ActionsState>['getState']
 ) => ({
   setRegions: (regions: Record<string, Region>) => set(createRegionStatePatch(regions)),
   
@@ -233,7 +233,7 @@ export const createBasicActions = (
     get().detectAndUpdateTheaters();
   },
 
-  togglePlay: () => set((state: GameStore) => ({ isPlaying: !state.isPlaying })),
+  togglePlay: () => set((state: ActionsState) => ({ isPlaying: !state.isPlaying })),
 
   setGameSpeed: (speed: GameSpeed) => set({ gameSpeed: speed }),
 
