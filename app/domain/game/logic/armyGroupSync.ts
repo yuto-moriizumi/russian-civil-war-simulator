@@ -28,6 +28,8 @@ export function syncArmyGroupTerritories(
 
     // Add regions where divisions of this group are located — O(1) per region
     for (const regionId of Object.keys(regions)) {
+      const region = regions[regionId];
+      if (!region || region.owner !== group.owner) continue;
       const regionDivs = divisionsByRegion.get(regionId);
       if (regionDivs?.some(d => d.armyGroupId === group.id)) {
         currentRegions.add(regionId);
@@ -36,6 +38,8 @@ export function syncArmyGroupTerritories(
 
     // Include regions where units of this group are currently moving to
     for (const m of movingUnits) {
+      const destination = regions[m.toRegion];
+      if (!destination || destination.owner !== group.owner) continue;
       const divIds = (m as { divisionIds?: string[] }).divisionIds ?? [];
       if (divIds.some(id => divisions[id]?.armyGroupId === group.id)) {
         currentRegions.add(m.toRegion);
@@ -50,10 +54,6 @@ export function syncArmyGroupTerritories(
       if (region.owner === group.owner) {
         filteredRegions.push(id);
         continue;
-      }
-      const regionDivs = divisionsByRegion.get(id);
-      if (regionDivs?.some(d => d.owner === group.owner)) {
-        filteredRegions.push(id);
       }
     }
 

@@ -13,6 +13,7 @@ export function processCombatsStep(
     adjacency,
     regionCentroids,
     divisions,
+    relationships,
   } = state;
 
   const {
@@ -29,6 +30,7 @@ export function processCombatsStep(
     adjacency,
     regionCentroids,
     divisions,
+    relationships,
     logger,
   );
 

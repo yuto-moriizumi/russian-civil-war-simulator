@@ -1,6 +1,7 @@
 import { Movement, ActiveCombat, Region, GameEvent, NotificationItem, Relationship, Country, DivisionState, Division } from '../../../types/game';
 import { determineNewOwner } from '../occupationUtils';
 import { createActiveCombat } from '../combat';
+import { canRetreatToRegion } from '../combat';
 import {
   addCombatReinforcements,
   findActiveCombatOnBorder,
@@ -30,6 +31,49 @@ interface MovementApplicationResult {
   nextNotifications: NotificationItem[];
   interceptedMovementIds: string[];
   newHopMovements: Movement[];
+}
+
+function resolveRegionOwnerAfterFinishedCombats(
+  region: Region,
+  regionId: string,
+  finishedCombats: ActiveCombat[],
+  countries: Country[],
+  relationships: Relationship[],
+) {
+  let owner = region.owner;
+
+  finishedCombats.forEach(combat => {
+    if (combat.defenderRegionId !== regionId || combat.victor !== combat.attackerCountry) {
+      return;
+    }
+
+    owner = determineNewOwner(
+      combat.attackerCountry,
+      regionId,
+      countries,
+      relationships,
+      combat.defenderCountry,
+    );
+  });
+
+  return owner;
+}
+
+function createRetreatFailureEvent(
+  division: Division,
+  destination: Region,
+  currentDate: Date,
+): GameEvent {
+  const reason = `${destination.name} was no longer a friendly retreat destination`;
+
+  return createGameEvent(
+    'division_destroyed',
+    `${division.name} Destroyed`,
+    `${division.name} (${division.owner}) disappeared while retreating toward ${destination.name}. Reason: ${reason}.`,
+    currentDate,
+    division.owner,
+    destination.id,
+  );
 }
 
 export function applyCompletedMovements(
@@ -66,12 +110,49 @@ export function applyCompletedMovements(
 
     const dest = nextRegions[toRegion];
     if (!dest) return;
+    const isRetreatMovement = movement.isRetreat ?? movement.id.startsWith('retreat_');
 
     const landDivisionsInRegion = (targetRegionId: string, divs: Division[]) => {
       for (const d of divs) {
         nextDivisions = { ...nextDivisions, [d.id]: { ...d, regionId: targetRegionId } };
       }
     };
+
+    if (isRetreatMovement) {
+      const finalOwner = resolveRegionOwnerAfterFinishedCombats(
+        dest,
+        toRegion,
+        context.finishedCombats ?? [],
+        context.countries ?? [],
+        context.relationships,
+      );
+
+      if (finalOwner !== owner) {
+        const canUseDestination = canRetreatToRegion(
+          owner,
+          finalOwner,
+          context.relationships,
+        );
+        if (canUseDestination) {
+          landDivisionsInRegion(toRegion, arrivingDivisions);
+          return;
+        }
+
+        arrivingDivisions.forEach(division => {
+          const { [division.id]: _removed, ...rest } = nextDivisions;
+          nextDivisions = rest;
+          nextEvents.push(createRetreatFailureEvent(division, dest, currentDate));
+        });
+
+        logger.debug(
+          `[RETREAT FAILED] ${arrivingDivisions.length} ${owner} divisions were destroyed retreating toward ${dest.name}; destination is no longer friendly`
+        );
+        return;
+      }
+
+      landDivisionsInRegion(toRegion, arrivingDivisions);
+      return;
+    }
 
     if (dest.owner === owner) {
       if (movement.remainingPath && movement.remainingPath.length > 0) {

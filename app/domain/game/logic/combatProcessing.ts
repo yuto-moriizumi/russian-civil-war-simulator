@@ -1,4 +1,4 @@
-import { ActiveCombat, GameEvent, NotificationItem, RegionState, Adjacency, Movement, DivisionState, Division } from '../../../types/game';
+import { ActiveCombat, GameEvent, NotificationItem, RegionState, Adjacency, Movement, DivisionState, Division, Relationship } from '../../../types/game';
 import { processCombatRounds } from '../sharedDefenseProcessing';
 import { shouldProcessCombatRound } from '../combat';
 import { createGameEvent, createNotification } from '../eventUtils';
@@ -55,6 +55,7 @@ export function processCombats(
   adjacency: Adjacency,
   regionCentroids: Record<string, [number, number]>,
   divisions: DivisionState,
+  relationships: Relationship[] = [],
   logger: SimulationLogger = noOpLogger(),
 ): CombatProcessingResult {
   const updatedCombats: ActiveCombat[] = [];
@@ -80,7 +81,7 @@ export function processCombats(
   });
 
   if (eligibleCombats.length > 0) {
-    const roundResults = processCombatRounds(eligibleCombats, regions, adjacency, currentDate, runningDivisions);
+    const roundResults = processCombatRounds(eligibleCombats, regions, adjacency, currentDate, runningDivisions, relationships);
 
     roundResults.forEach(result => {
       const updatedCombat = result.combat;
@@ -104,6 +105,7 @@ export function processCombats(
             departureTime: new Date(currentDate),
             arrivalTime,
             owner: division?.owner ?? updatedCombat.attackerCountry,
+            isRetreat: true,
           };
 
           retreatMovements.push(retreatMovement);

@@ -99,6 +99,108 @@ describe('applyCompletedMovements', () => {
     expect(ev?.country).toBe('soviet');
   });
 
+  it('destroys retreating divisions instead of capturing an undefended enemy region', () => {
+    const retreating = makeDiv({ id: 'retreating', regionId: 'A' });
+    const divisions: DivisionState = { 'retreating': retreating };
+    const regions: RegionState = {
+      A: makeRegion('A'),
+      B: makeRegion('B', { owner: 'white' }),
+    };
+    const mv = makeMovement({
+      id: 'retreat_1',
+      toRegion: 'B',
+      divisionIds: [retreating.id],
+      isRetreat: true,
+    });
+
+    const { nextRegions, nextDivisions, nextCombats, nextEvents } = applyCompletedMovements(
+      [mv],
+      [mv],
+      ctx(regions, divisions),
+      NOW
+    );
+
+    expect(nextRegions['B'].owner).toBe('white');
+    expect(nextDivisions[retreating.id]).toBeUndefined();
+    expect(nextCombats).toHaveLength(0);
+    expect(nextEvents.some(event => event.type === 'region_captured')).toBe(false);
+    expect(nextEvents.some(event => event.type === 'division_destroyed')).toBe(true);
+  });
+
+  it('allows retreating divisions to land in a military-access region', () => {
+    const retreating = makeDiv({ id: 'retreating', regionId: 'A', owner: 'white' });
+    const divisions: DivisionState = { 'retreating': retreating };
+    const regions: RegionState = {
+      A: makeRegion('A', { owner: 'white' }),
+      B: makeRegion('B', { owner: 'don' }),
+    };
+    const rel: Relationship[] = [{ fromCountry: 'don', toCountry: 'white', type: 'military_access' }];
+    const mv = makeMovement({
+      id: 'retreat_access',
+      fromRegion: 'A',
+      toRegion: 'B',
+      divisionIds: [retreating.id],
+      owner: 'white',
+      isRetreat: true,
+    });
+
+    const { nextRegions, nextDivisions, nextCombats, nextEvents } = applyCompletedMovements(
+      [mv],
+      [mv],
+      ctx(regions, divisions, [], rel),
+      NOW
+    );
+
+    expect(nextRegions['B'].owner).toBe('don');
+    expect(nextDivisions[retreating.id]?.regionId).toBe('B');
+    expect(nextCombats).toHaveLength(0);
+    expect(nextEvents.some(event => event.type === 'division_destroyed')).toBe(false);
+    expect(nextEvents.some(event => event.type === 'region_captured')).toBe(false);
+  });
+
+  it('destroys retreating divisions when the destination falls before the retreat resolves', () => {
+    const retreating = makeDiv({ id: 'retreating', regionId: 'A' });
+    const divisions: DivisionState = { 'retreating': retreating };
+    const regions: RegionState = {
+      A: makeRegion('A'),
+      B: makeRegion('B'),
+      C: makeRegion('C', { owner: 'white' }),
+    };
+    const mv = makeMovement({
+      id: 'retreat_2',
+      fromRegion: 'A',
+      toRegion: 'B',
+      divisionIds: [retreating.id],
+      isRetreat: true,
+    });
+    const finishedCombat = makeCombat({
+      attackerRegionId: 'C',
+      attackerRegionName: 'C',
+      defenderRegionId: 'B',
+      defenderRegionName: 'B',
+      attackerCountry: 'white',
+      defenderCountry: 'soviet',
+      attackerDivisionIds: ['white-atk'],
+      defenderDivisionIds: [],
+      initialAttackerCount: 1,
+      initialDefenderCount: 0,
+      isComplete: true,
+      victor: 'white',
+    });
+
+    const { nextRegions, nextDivisions, nextEvents } = applyCompletedMovements(
+      [mv],
+      [mv],
+      ctx(regions, divisions, [], NO_REL, [finishedCombat]),
+      NOW
+    );
+
+    expect(nextRegions['B'].owner).toBe('soviet');
+    expect(nextDivisions[retreating.id]).toBeUndefined();
+    expect(nextEvents.some(event => event.type === 'region_captured')).toBe(false);
+    expect(nextEvents.some(event => event.type === 'division_destroyed')).toBe(true);
+  });
+
   it('starts a new combat when moving into a defended enemy region', () => {
     const attacker = makeDiv({ id: 'attacker', regionId: 'A' });
     const defender = makeDiv({ id: 'defender', owner: 'white', regionId: 'B' });

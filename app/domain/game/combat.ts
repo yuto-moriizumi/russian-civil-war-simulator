@@ -1,4 +1,4 @@
-import { Division, CombatResult, CountryId, ActiveCombat, ArmyGroup, CountryBonuses, RegionState, Adjacency } from '../../types/game';
+import { Division, CombatResult, CountryId, ActiveCombat, ArmyGroup, CountryBonuses, RegionState, Adjacency, Relationship } from '../../types/game';
 import { getDivisionStats } from './bonusCalculator';
 import { GAME_CONFIG } from '../../constants/gameConfig';
 
@@ -204,17 +204,18 @@ export function findRetreatDestination(
   regions: RegionState,
   adjacency: Adjacency,
   isAttacker: boolean,
-  attackerRegionId: string
+  attackerRegionId: string,
+  relationships: Relationship[] = [],
 ): string | null {
   if (isAttacker) {
     const originRegion = regions[attackerRegionId];
-    if (originRegion && originRegion.owner === divisionOwner) {
+    if (originRegion && canRetreatToRegion(divisionOwner, originRegion.owner, relationships)) {
       return attackerRegionId;
     }
     const adjacentRegionIds = adjacency[attackerRegionId] || [];
     const friendlyNeighbors = adjacentRegionIds.filter(regionId => {
       const region = regions[regionId];
-      return region && region.owner === divisionOwner;
+      return region && canRetreatToRegion(divisionOwner, region.owner, relationships);
     });
     if (friendlyNeighbors.length > 0) {
       return friendlyNeighbors[Math.floor(Math.random() * friendlyNeighbors.length)];
@@ -226,17 +227,44 @@ export function findRetreatDestination(
   const friendlyNeighbors = adjacentRegionIds.filter(regionId => {
     if (regionId === attackerRegionId) return false;
     const region = regions[regionId];
-    return region && region.owner === divisionOwner;
+    return region && canRetreatToRegion(divisionOwner, region.owner, relationships);
   });
   if (friendlyNeighbors.length > 0) {
     return friendlyNeighbors[Math.floor(Math.random() * friendlyNeighbors.length)];
   }
   const allFriendly = adjacentRegionIds.filter(regionId => {
     const region = regions[regionId];
-    return region && region.owner === divisionOwner;
+    return region && canRetreatToRegion(divisionOwner, region.owner, relationships);
   });
   if (allFriendly.length > 0) return allFriendly[Math.floor(Math.random() * allFriendly.length)];
   return null;
+}
+
+export function canRetreatToRegion(
+  divisionOwner: CountryId,
+  regionOwner: CountryId,
+  relationships: Relationship[] = [],
+): boolean {
+  if (divisionOwner === regionOwner) return true;
+
+  const theyGrantUs =
+    relationships.find(
+      relationship =>
+        relationship.fromCountry === regionOwner &&
+        relationship.toCountry === divisionOwner,
+    )?.type ?? 'neutral';
+  const weDeclared =
+    relationships.find(
+      relationship =>
+        relationship.fromCountry === divisionOwner &&
+        relationship.toCountry === regionOwner,
+    )?.type ?? 'neutral';
+
+  return (
+    theyGrantUs === 'military_access' ||
+    theyGrantUs === 'autonomy' ||
+    weDeclared === 'autonomy'
+  );
 }
 
 export function shouldProcessCombatRound(combat: ActiveCombat, currentTime: Date): boolean {

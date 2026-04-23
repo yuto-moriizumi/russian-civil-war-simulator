@@ -171,6 +171,45 @@ describe('processCombatRound – loser divisions still retreat to friendly regio
   });
 });
 
+describe('processCombats – retreat via military access', () => {
+  it('allows defeated defenders to retreat into a military-access region', () => {
+    const attackers = [makeDiv('a1', 'soviet', 100, 50, 50)];
+    const defenders = [makeDiv('d1', 'white', 1, 1, 1)];
+    const combat = makeCombat(attackers, defenders, 'TULA');
+    const divisionState = makeDivisions([...attackers, ...defenders]);
+    const retreatRegions: RegionState = {
+      TULA: { id: 'TULA', name: 'Tula Oblast', countryIso3: 'RUS', owner: 'white' },
+      SOVIET_REAR: { id: 'SOVIET_REAR', name: 'Soviet Rear', countryIso3: 'RUS', owner: 'soviet' },
+      DON_ACCESS: { id: 'DON_ACCESS', name: 'Don Access', countryIso3: 'RUS', owner: 'don' },
+    };
+    const retreatAdjacency: Adjacency = {
+      TULA: ['SOVIET_REAR', 'DON_ACCESS'],
+      SOVIET_REAR: ['TULA'],
+      DON_ACCESS: ['TULA'],
+    };
+    const relationships = [
+      { fromCountry: 'don', toCountry: 'white', type: 'military_access' as const },
+    ];
+
+    const result = processCombats(
+      [combat],
+      new Date('1918-01-01T02:00:00Z'),
+      retreatRegions,
+      retreatAdjacency,
+      {
+        TULA: [37.6173, 54.2048],
+        SOVIET_REAR: [37.0, 54.0],
+        DON_ACCESS: [38.0, 54.0],
+      },
+      divisionState,
+      relationships,
+    );
+
+    const retreat = result.retreatMovements.find(movement => movement.divisionIds.includes('d1'));
+    expect(retreat?.toRegion).toBe('DON_ACCESS');
+  });
+});
+
 describe('processCombats – attacker defeat notifications', () => {
   it('does not show Battle for <region> Lost when the attacker loses', () => {
     const attackers = [makeDiv('a1', 'soviet', 1, 1, 1)];

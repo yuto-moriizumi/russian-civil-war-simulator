@@ -1,11 +1,12 @@
-import { ActiveCombat, Division, CountryId, RegionState, Adjacency, DivisionState } from '../../types/game';
+import { ActiveCombat, Division, CountryId, RegionState, Adjacency, DivisionState, Relationship } from '../../types/game';
 import { calculateDamage, applyDamage, DamageResult, findRetreatDestination } from './combat';
 
 export function processCombatRound(
   combat: ActiveCombat,
   divisions: DivisionState,
   regions: RegionState,
-  adjacency: Adjacency
+  adjacency: Adjacency,
+  relationships: Relationship[] = [],
 ): {
   combat: ActiveCombat;
   updatedDivisions: DivisionState;
@@ -76,7 +77,7 @@ export function processCombatRound(
     if (result.type === 'survived') {
       attackerDivisions.push(result.division);
     } else {
-      const retreatTarget = findRetreatDestination(combat.defenderRegionId, result.division.owner, regions, adjacency, true, combat.attackerRegionId);
+      const retreatTarget = findRetreatDestination(combat.defenderRegionId, result.division.owner, regions, adjacency, true, combat.attackerRegionId, relationships);
       retreatingDivisions.push({ divisionId: result.division.id, toRegionId: retreatTarget, fromRegionId: combat.attackerRegionId });
       if (retreatTarget) {
         console.log(`[RETREAT] ${result.division.name} (${result.division.owner}) retreating from border at ${combat.defenderRegionName} to ${regions[retreatTarget]?.name ?? retreatTarget}`);
@@ -92,7 +93,7 @@ export function processCombatRound(
     if (result.type === 'survived') {
       defenderDivisions.push(result.division);
     } else {
-      const retreatTarget = findRetreatDestination(combat.defenderRegionId, result.division.owner, regions, adjacency, false, combat.attackerRegionId);
+      const retreatTarget = findRetreatDestination(combat.defenderRegionId, result.division.owner, regions, adjacency, false, combat.attackerRegionId, relationships);
       retreatingDivisions.push({ divisionId: result.division.id, toRegionId: retreatTarget, fromRegionId: combat.defenderRegionId });
       if (retreatTarget) {
         console.log(`[RETREAT] ${result.division.name} (${result.division.owner}) retreating from ${combat.defenderRegionName} to ${regions[retreatTarget]?.name ?? retreatTarget}`);
@@ -175,7 +176,8 @@ export function processCombatRounds(
   regions: RegionState,
   adjacency: Adjacency,
   currentTime: Date,
-  divisions: DivisionState
+  divisions: DivisionState,
+  relationships: Relationship[] = [],
 ): RoundResult[] {
   const results: RoundResult[] = [];
   // Accumulate HP changes across groups so each group sees previous groups' changes.
@@ -191,12 +193,12 @@ export function processCombatRounds(
 
   for (const [, group] of groups) {
     if (group.length === 1) {
-      const result = processCombatRound({ ...group[0], lastRoundTime: new Date(currentTime) }, runningDivisions, regions, adjacency);
+      const result = processCombatRound({ ...group[0], lastRoundTime: new Date(currentTime) }, runningDivisions, regions, adjacency, relationships);
       results.push(result);
       runningDivisions = result.updatedDivisions;
       continue;
     }
-    const sharedResults = processSharedDefenseRound(group, regions, adjacency, currentTime, runningDivisions);
+    const sharedResults = processSharedDefenseRound(group, regions, adjacency, currentTime, runningDivisions, relationships);
     results.push(...sharedResults);
     if (sharedResults.length > 0) {
       runningDivisions = sharedResults[sharedResults.length - 1].updatedDivisions;
@@ -211,7 +213,8 @@ function processSharedDefenseRound(
   regions: RegionState,
   adjacency: Adjacency,
   currentTime: Date,
-  divisions: DivisionState
+  divisions: DivisionState,
+  relationships: Relationship[] = [],
 ): RoundResult[] {
   const results: RoundResult[] = [];
   const defenderRegion = regions[combats[0].defenderRegionId];
@@ -288,7 +291,7 @@ function processSharedDefenseRound(
     const { retreats, survivingAttackers: survivingAttackerDivisions } = processAttackerRound(
       calc, damagePerAttacker, survivingSharedDefenders, defeatedDefenderDivisions,
       calc.combat.id === firstSharedCombatId,
-      regions, adjacency, currentTime
+      regions, adjacency, currentTime, relationships
     );
 
     const combatEnded = survivingAttackerDivisions.length === 0 || survivingSharedDefenders.length === 0;
@@ -365,7 +368,8 @@ function processAttackerRound(
   isFirstInGroup: boolean,
   regions: RegionState,
   adjacency: Adjacency,
-  _currentTime: Date
+  _currentTime: Date,
+  relationships: Relationship[] = [],
 ): AttackerRoundResult {
   const { combat, attackerDivisions } = calc;
   const retreats: RoundResult['retreatingDivisions'] = [];
@@ -377,7 +381,7 @@ function processAttackerRound(
     if (result.type === 'survived') {
       survivingAttackers.push(result.division);
     } else {
-      const retreatTarget = findRetreatDestination(combat.defenderRegionId, result.division.owner, regions, adjacency, true, combat.attackerRegionId);
+      const retreatTarget = findRetreatDestination(combat.defenderRegionId, result.division.owner, regions, adjacency, true, combat.attackerRegionId, relationships);
       retreats.push({ divisionId: result.division.id, toRegionId: retreatTarget, fromRegionId: combat.attackerRegionId });
       if (retreatTarget) {
         console.log(`[RETREAT] ${result.division.name} (${result.division.owner}) retreating from border at ${combat.defenderRegionName} to ${regions[retreatTarget]?.name ?? retreatTarget}`);
@@ -408,7 +412,7 @@ function processAttackerRound(
   // Generate defender retreat events from first combat only to avoid duplicates
   if (isFirstInGroup && defeatedDefenderDivisions.length > 0 && survivingSharedDefenders.length === 0) {
     for (const defDiv of defeatedDefenderDivisions) {
-      const retreatTarget = findRetreatDestination(combat.defenderRegionId, defDiv.owner, regions, adjacency, false, combat.attackerRegionId);
+      const retreatTarget = findRetreatDestination(combat.defenderRegionId, defDiv.owner, regions, adjacency, false, combat.attackerRegionId, relationships);
       retreats.push({ divisionId: defDiv.id, toRegionId: retreatTarget, fromRegionId: combat.defenderRegionId });
       if (retreatTarget) {
         console.log(`[RETREAT] ${defDiv.name} (${defDiv.owner}) retreating from ${combat.defenderRegionName} to ${regions[retreatTarget]?.name ?? retreatTarget}`);

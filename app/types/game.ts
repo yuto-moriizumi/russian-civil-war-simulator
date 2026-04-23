@@ -108,6 +108,8 @@ export interface Movement {
   departureTime: Date;
   arrivalTime: Date;
   owner: CountryId;
+  /** Retreat movements must only land in still-friendly territory. */
+  isRetreat?: boolean;
   /**
    * When set, this movement initiated a combat at the destination region.
    * The movement's progress is paused while the referenced combat is active.
