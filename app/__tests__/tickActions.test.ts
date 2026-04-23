@@ -138,12 +138,11 @@ describe('tick mid-transit combat handling', () => {
 
     expect(state.activeCombats).toHaveLength(1);
     expect(state.activeCombats[0].defenderDivisionIds).toEqual(['defender']);
-    // Defender division is moved into combat, not in region
+    // Defender division keeps its regionId — it is defending region B
     const defenderInRegion = Object.values(state.divisions).filter(d => d.regionId === 'B' && d.id === 'defender');
-    expect(defenderInRegion).toHaveLength(0);
+    expect(defenderInRegion).toHaveLength(1);
     expect(state.movingUnits[0].pendingCombatId).toBe(state.activeCombats[0].id);
-    // Division in state has regionId: null (in combat); combat snapshot preserves original regionId
-    expect(state.divisions.defender.regionId).toBe(null);
+    expect(state.divisions.defender.regionId).toBe('B');
     expect(state.divisions.defender.id).toBe(state.activeCombats[0].defenderDivisionIds[0]);
   });
 });

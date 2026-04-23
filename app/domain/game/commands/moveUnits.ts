@@ -165,17 +165,12 @@ export function applyMoveUnitsCommand(
     theyGrantUs !== 'military_access';
 
   let newCombat: ActiveCombat | null = null;
-  let nextDivisions = { ...divisions };
+  const nextDivisions = { ...divisions };
   let nextActiveCombats = activeCombats;
   let nextGameEvents = gameEvents;
   let nextNotifications = notifications;
 
-  for (const division of divisionsToMove) {
-    nextDivisions = {
-      ...nextDivisions,
-      [division.id]: { ...division, regionId: null },
-    };
-  }
+  // Divisions keep their regionId — they are departing from this region.
 
   if (isHostile) {
     const existingCombat = activeCombats.find(
@@ -246,7 +241,7 @@ export function applyMoveUnitsCommand(
     );
 
     if (defenderDivisions.length > 0 || hasActiveCombatAtDest) {
-      const { combatDefenderDivisions, isFirstCombat } =
+      const { combatDefenderDivisions } =
         resolveMultiFrontDefenders(
           actualToRegion,
           activeCombats,
@@ -267,14 +262,7 @@ export function applyMoveUnitsCommand(
         dateTime,
       );
 
-      if (isFirstCombat) {
-        for (const division of combatDefenderDivisions) {
-          nextDivisions = {
-            ...nextDivisions,
-            [division.id]: { ...division, regionId: null },
-          };
-        }
-      }
+      // Defender divisions keep their regionId — they are defending this region.
 
       nextActiveCombats = [...activeCombats, newCombat];
       const battleEvent = createGameEvent(

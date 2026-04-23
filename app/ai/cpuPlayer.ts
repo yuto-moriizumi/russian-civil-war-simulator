@@ -53,7 +53,10 @@ function countAssignedDivisions(
   movingUnits: Movement[],
   productionQueue: ProductionQueueItem[]
 ): number {
-  const onMap = Object.values(divisions).filter(d => d.armyGroupId === groupId && d.regionId !== null).length;
+  const transitIds = new Set<string>(
+    movingUnits.flatMap(m => m.divisionIds)
+  );
+  const onMap = Object.values(divisions).filter(d => d.armyGroupId === groupId && !transitIds.has(d.id)).length;
   const inTransit = movingUnits.reduce(
     (count, movement) => count + movement.divisionIds.filter(id => divisions[id]?.armyGroupId === groupId).length,
     0

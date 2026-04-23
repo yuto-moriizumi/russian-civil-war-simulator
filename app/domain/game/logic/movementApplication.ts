@@ -246,9 +246,7 @@ export function applyCompletedMovements(
             nextCombats.push(newCombat);
             const isFirstCombatOnRegion = otherCombatsOnRegion.length === 0 && totalDefenderDivisions.length > 0;
             if (isFirstCombatOnRegion) {
-              for (const d of effectiveDefenderDivisions) {
-                nextDivisions = { ...nextDivisions, [d.id]: { ...d, regionId: null } };
-              }
+            // Defender divisions keep their regionId — they are defending this region.
             }
             const battleEvent = createGameEvent(
               'combat_victory',
@@ -328,14 +326,8 @@ export function applyFinishedCombats(
           nextDivisions = { ...nextDivisions, [id]: { ...div, regionId: combat.defenderRegionId } };
         }
       }
-      // Remove defeated defender divisions from state
-      for (const id of combat.defenderDivisionIds) {
-        const div = nextDivisions[id];
-        if (div && div.regionId === null) {
-          const { [id]: _removed, ...rest } = nextDivisions;
-          nextDivisions = rest;
-        }
-      }
+      // Defeated defender divisions are already removed during combat processing.
+      // Surviving defenders keep their regionId (the defended region).
     } else {
       // Defender wins: restore attacker divisions to origin region
       for (const id of combat.attackerDivisionIds) {
