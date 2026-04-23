@@ -8,7 +8,7 @@ import { describe, it, expect } from 'vitest';
 import {
   applyCompletedMovements,
   applyFinishedCombats,
-} from '../store/game/tickHelpers/movementApplication';
+} from '../domain/game/tickHelpers/movementApplication';
 import type { Division, DivisionState, Movement, Region, RegionState, ActiveCombat, Relationship } from '../types/game';
 
 // ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { scheduledEvents } from '../data/scheduledEvents';
-import { processScheduledEvents } from '../store/game/tickHelpers/scheduledEventProcessing';
+import { processScheduledEvents } from '../domain/game/tickHelpers/scheduledEventProcessing';
 import type { CountryId, Relationship, ScheduledEvent } from '../types/game';
 
 function relation(fromCountry: CountryId, toCountry: CountryId, type: Relationship['type']): Relationship {
