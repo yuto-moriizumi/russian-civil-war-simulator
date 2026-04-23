@@ -24,7 +24,7 @@ import { attackArmyGroup } from './armyGroupAttack';
 import { defendArmyGroup } from './armyGroupDefend';
 import { TickPerf } from './tickPerformance';
 import { RegionState } from '../../types/game';
-import { createRegionOwnersPatch } from '../../utils/regionState';
+import { buildRegionUpdate, extractRegionOwners } from '../../utils/regionState';
 
 export { getEffectiveAIStates } from './tickHelpers/aiTick';
 
@@ -60,7 +60,7 @@ export const createTickActions = (
     }
     TickPerf.end('[tick] 0-duplicates');
 
-    const { dateTime, selectedCountry, regions, adjacency, movingUnits, activeCombats, aiStates, gameEvents, notifications, armyGroups, productionQueues, relationships, regionCentroids, scheduledEvents, divisions } = state;
+    const { dateTime, selectedCountry, regions, regionDefinitions, adjacency, movingUnits, activeCombats, aiStates, gameEvents, notifications, armyGroups, productionQueues, relationships, regionCentroids, scheduledEvents, divisions } = state;
 
     TickPerf.start('[tick] 1-validate');
     const { updatedRegions, updatedMovingUnits, updatedDivisions: divisionsAfterValidation } = validateDivisions(regions, movingUnits, armyGroups, divisions);
@@ -276,7 +276,7 @@ export const createTickActions = (
       dateTime: newDate,
       movingUnits: nextMovingUnits,
       activeCombats: nextActiveCombats,
-      ...createRegionOwnersPatch(nextRegions),
+      ...buildRegionUpdate(regionDefinitions, extractRegionOwners(nextRegions)),
       divisions: nextDivisions,
       gameEvents: nextEvents,
       notifications: nextNotifications,
@@ -295,7 +295,7 @@ export const createTickActions = (
     armyGroupActionsNeeded.forEach(group => {
       const collectPatch = (partial: Partial<GameStore>) => {
         const patch = partial.regions
-          ? { ...partial, ...createRegionOwnersPatch(partial.regions) }
+          ? { ...partial, ...buildRegionUpdate(regionDefinitions, extractRegionOwners(partial.regions)) }
           : partial;
         armyGroupPatches.push(patch);
         batchState = { ...batchState, ...patch };
@@ -344,7 +344,7 @@ export const createTickActions = (
         set({
           missions: aiMissionResults.updatedMissions,
           countryBonuses: aiMissionResults.countryBonuses,
-          ...createRegionOwnersPatch(aiMissionResults.regions),
+          ...buildRegionUpdate(regionDefinitions, extractRegionOwners(aiMissionResults.regions)),
           divisions: aiMissionResults.divisions,
           movingUnits: aiMissionResults.movingUnits,
           relationships: aiMissionResults.relationships,

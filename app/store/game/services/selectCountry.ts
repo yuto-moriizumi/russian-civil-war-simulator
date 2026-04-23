@@ -10,7 +10,7 @@ import { createDivision } from '../../../utils/combat';
 import { getDivisionPrefix } from '../../../data/countries';
 import { createInitialAIState, createInitialAIArmyGroup } from '../../../ai/cpuPlayer';
 import { mergeMissionsWithInitial } from '../basicActions';
-import { extractRegionOwners } from '../../../utils/regionState';
+import { buildRegionUpdate, extractRegionOwners } from '../../../utils/regionState';
 import type { GameStore } from '../types';
 
 export function buildSelectCountryPatch(
@@ -133,9 +133,8 @@ export function buildSelectCountryPatch(
     aiStates,
     armyGroups: armyGroupsForState,
     placementArmyGroups,
-    regions: regionsForState,
+    ...buildRegionUpdate(currentState.regionDefinitions, extractRegionOwners(regionsForState)),
     regionDefinitions: currentState.regionDefinitions,
-    regionOwners: extractRegionOwners(regionsForState),
     divisions: divisionsForState,
     adjacency: currentState.adjacency,
     mapDataLoaded: currentState.mapDataLoaded,

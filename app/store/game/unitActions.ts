@@ -8,7 +8,7 @@ import { StoreApi } from 'zustand';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { findPath, buildCanEnterPredicate } from '../../utils/pathfinding';
 import { getDivisionsInRegion, getCombatDefenders } from '../../utils/divisionState';
-import { createRegionOwnersPatch } from '../../utils/regionState';
+import { buildRegionUpdate, extractRegionOwners } from '../../utils/regionState';
 
 function resolveMultiFrontDefenders(
   toRegion: string,
@@ -302,7 +302,7 @@ export const createUnitActions = (
     };
 
     set({
-      ...createRegionOwnersPatch(nextRegions),
+      ...buildRegionUpdate(get().regionDefinitions, extractRegionOwners(nextRegions)),
       divisions: nextDivisions,
       movingUnits: [...movingUnits, newMovement],
       activeCombats: nextActiveCombats,

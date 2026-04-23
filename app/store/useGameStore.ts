@@ -7,7 +7,7 @@ import { Movement, ActiveCombat, GameEvent, ProductionQueueItem, CountryId } fro
 import { GameStore } from './game/types';
 import { initialGameState } from './game/initialState';
 import { buildDivisionState } from '../utils/divisionState';
-import { composeRegionState, extractRegionOwners } from '../utils/regionState';
+import { buildRegionUpdate, extractRegionOwners } from '../utils/regionState';
 
 // Action creators
 import { createBasicActions, mergeMissionsWithInitial } from './game/basicActions';
@@ -53,11 +53,8 @@ export function rehydratePersistedGameState(state?: RehydratableGameStore | null
   state.regionOwners = Object.keys(state.regionOwners ?? {}).length > 0
     ? state.regionOwners
     : extractRegionOwners(state.regions ?? {});
-  state.regions = composeRegionState(
-    state.regionDefinitions ?? {},
-    state.regionOwners,
-    state.regions ?? {}
-  );
+  const { regions } = buildRegionUpdate(state.regionDefinitions ?? {}, state.regionOwners);
+  state.regions = regions;
   state.missions = mergeMissionsWithInitial(state.missions ?? initialGameState.missions);
   if (state.dateTime && typeof state.dateTime === 'string') {
     state.dateTime = new Date(state.dateTime);

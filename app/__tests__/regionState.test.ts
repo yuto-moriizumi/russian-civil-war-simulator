@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { RegionState } from '../types/game';
 import {
+  buildRegionUpdate,
   composeRegionState,
-  createRegionOwnersPatch,
   createRegionStatePatch,
   extractRegionOwners,
 } from '../utils/regionState';
@@ -42,22 +42,19 @@ describe('region state split helpers', () => {
     });
   });
 
-  it('owner-only patches leave map definitions out of simulation updates', () => {
-    const changed: RegionState = {
-      ...regions,
-      A: { ...regions.A, owner: 'white' },
-    };
+  it('buildRegionUpdate derives regions from regionOwners (not the reverse)', () => {
+    const patch = createRegionStatePatch(regions);
+    const newOwners = { A: 'white' as const, B: 'white' as const };
 
-    expect(createRegionOwnersPatch(changed)).toEqual({
-      regions: changed,
-      regionOwners: {
-        A: 'white',
-        B: 'white',
-      },
+    const update = buildRegionUpdate(patch.regionDefinitions, newOwners);
+
+    expect(update.regionOwners).toEqual(newOwners);
+    expect(update.regions.A).toEqual({
+      id: 'A',
+      name: 'Alpha',
+      countryIso3: 'AAA',
+      owner: 'white',
     });
-    expect(extractRegionOwners(changed)).toEqual({
-      A: 'white',
-      B: 'white',
-    });
+    expect(extractRegionOwners(update.regions)).toEqual(newOwners);
   });
 });

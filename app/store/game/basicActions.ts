@@ -8,10 +8,10 @@ import { createDivisionSelectionActions } from './divisionSelectionActions';
 import { applyLiberatePuppet } from './missionRewards';
 import { getDivisionsInRegion } from '../../utils/divisionState';
 import {
+  buildRegionUpdate,
   createRegionStatePatch,
   extractRegionDefinitions,
   extractRegionOwners,
-  composeRegionState,
 } from '../../utils/regionState';
 import { buildStartNewGamePatch } from './services/startNewGame';
 import { buildSelectCountryPatch } from './services/selectCountry';
@@ -264,13 +264,11 @@ export const createBasicActions = (
     const regionDefinitions = Object.keys(currentState.regionDefinitions).length > 0
       ? currentState.regionDefinitions
       : extractRegionDefinitions(savedData.regions);
-    const regions = composeRegionState(regionDefinitions, savedRegionOwners, savedData.regions);
     set({
       ...savedData.gameState,
       missions: mergeMissionsWithInitial(savedData.gameState.missions),
-      regions,
+      ...buildRegionUpdate(regionDefinitions, savedRegionOwners),
       regionDefinitions,
-      regionOwners: savedRegionOwners,
       divisions: rehydrateDivisions(savedData.gameState),
       aiStates: savedData.aiStates,
       isPlaying: false,

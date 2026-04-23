@@ -1,6 +1,6 @@
 import { createGameEvent, createNotification } from '../../../utils/eventUtils';
 import { applyClaimedMissionRewards, buildMissionRewardDescription } from '../missionRewards';
-import { extractRegionOwners } from '../../../utils/regionState';
+import { buildRegionUpdate, extractRegionOwners } from '../../../utils/regionState';
 import type { GameStore } from '../types';
 
 export function buildClaimMissionPatch(state: GameStore, missionId: string): Partial<GameStore> | null {
@@ -56,8 +56,7 @@ export function buildClaimMissionPatch(state: GameStore, missionId: string): Par
       ...state.countryBonuses,
       [countryId]: rewards.updatedCountryBonuses,
     },
-    regions: rewards.updatedRegions,
-    regionOwners: extractRegionOwners(rewards.updatedRegions),
+    ...buildRegionUpdate(state.regionDefinitions, extractRegionOwners(rewards.updatedRegions)),
     divisions: rewards.updatedDivisions,
     movingUnits: rewards.updatedMovingUnits,
     relationships: rewards.updatedRelationships,

@@ -1,7 +1,7 @@
 import { RegionOwnershipState, RegionState } from '../../../types/game';
 import { initialGameState } from '../initialState';
 import { initialRegionOwnership } from '../../../data/map';
-import { composeRegionState } from '../../../utils/regionState';
+import { buildRegionUpdate } from '../../../utils/regionState';
 import type { GameStore } from '../types';
 
 export interface StartNewGamePatch {
@@ -28,17 +28,10 @@ export function buildStartNewGamePatch(currentState: Pick<
   for (const regionId of regionIds) {
     resetRegionOwners[regionId] = initialRegionOwnership[regionId] ?? 'neutral';
   }
-  const resetRegions = composeRegionState(
-    currentState.regionDefinitions,
-    resetRegionOwners,
-    currentState.regions
-  );
-
   return {
     ...initialGameState,
-    regions: resetRegions,
+    ...buildRegionUpdate(currentState.regionDefinitions, resetRegionOwners),
     regionDefinitions: currentState.regionDefinitions,
-    regionOwners: resetRegionOwners,
     divisions: {},
     adjacency: currentState.adjacency,
     mapDataLoaded: currentState.mapDataLoaded,
