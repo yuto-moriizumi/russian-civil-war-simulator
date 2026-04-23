@@ -9,6 +9,11 @@ import {
   getCombatDefenders,
   getDivisionsInRegion,
 } from '../divisionState';
+import {
+  addCombatReinforcements,
+  findActiveCombatOnBorder,
+  getCommittedDivisionIds,
+} from '../combatParticipation';
 import type { ActiveCombat, Movement } from '../../../types/game';
 import type { EngineSimulationState } from '../engine/types';
 import type { GameCommandResult } from './types';
@@ -145,10 +150,14 @@ export function applyMoveUnitsCommand(
   const ownDivisions = fromDivisions.filter(
     division => division.owner === selectedCountry.id,
   );
+  const committedDivisionIds = getCommittedDivisionIds(movingUnits, activeCombats);
+  const availableOwnDivisions = ownDivisions.filter(
+    division => !committedDivisionIds.has(division.id),
+  );
   const divisionsToMove =
     divisionIds && divisionIds.length > 0
-      ? ownDivisions.filter(division => divisionIds.includes(division.id))
-      : ownDivisions.slice(0, count);
+      ? availableOwnDivisions.filter(division => divisionIds.includes(division.id))
+      : availableOwnDivisions.slice(0, count);
 
   if (divisionsToMove.length === 0) {
     return { state, applied: false };
@@ -173,31 +182,20 @@ export function applyMoveUnitsCommand(
   // Divisions keep their regionId — they are departing from this region.
 
   if (isHostile) {
-    const existingCombat = activeCombats.find(
-      combat =>
-        combat.attackerRegionId === fromRegion &&
-        combat.defenderRegionId === actualToRegion &&
-        !combat.isComplete,
+    const existingCombat = findActiveCombatOnBorder(
+      activeCombats,
+      fromRegion,
+      actualToRegion,
     );
 
     if (existingCombat) {
       nextActiveCombats = activeCombats.map(combat => {
         if (combat.id !== existingCombat.id) return combat;
-        if (selectedCountry.id === combat.attackerCountry) {
-          return {
-            ...combat,
-            attackerDivisionIds: [
-              ...combat.attackerDivisionIds,
-              ...divisionsToMove.map(division => division.id),
-            ],
-            initialAttackerCount:
-              combat.initialAttackerCount + divisionsToMove.length,
-            initialAttackerHp:
-              combat.initialAttackerHp +
-              divisionsToMove.reduce((sum, division) => sum + division.hp, 0),
-          };
-        }
-        return combat;
+        return addCombatReinforcements(
+          combat,
+          selectedCountry.id,
+          divisionsToMove,
+        );
       });
 
       const movement: Movement = {

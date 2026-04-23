@@ -1,6 +1,7 @@
 import { Movement, Division } from '../../types/game';
 import { getNextStepToward, buildIsHostilePredicate } from '../../utils/pathfinding';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
+import { getCommittedDivisionIds } from './combatParticipation';
 import { EngineSimulationState, SimulationLogger, noOpLogger } from './engine/types';
 
 /**
@@ -12,7 +13,7 @@ export function defendArmyGroup(
   state: EngineSimulationState,
   logger: SimulationLogger = noOpLogger(),
 ): Partial<EngineSimulationState> | null {
-  const { armyGroups, regions, adjacency, dateTime, movingUnits, theaters, relationships, divisions, regionCentroids } = state;
+  const { armyGroups, regions, adjacency, dateTime, movingUnits, theaters, relationships, divisions, regionCentroids, activeCombats } = state;
 
   const group = armyGroups.find(g => g.id === groupId);
   if (!group) return null;
@@ -31,6 +32,7 @@ export function defendArmyGroup(
     }
   }
   const getDivsInRegion = (regionId: string): Division[] => divisionsByRegion.get(regionId) ?? [];
+  const engagedDivisionIds = getCommittedDivisionIds([], activeCombats);
 
   // Step 1: Find border regions
   const allBorderRegions: string[] = [];
@@ -106,7 +108,11 @@ export function defendArmyGroup(
   Object.entries(regions).forEach(([regionId, region]) => {
     if (!region) return;
     const groupDivs = getDivsInRegion(regionId).filter(
-      d => d.armyGroupId === groupId && d.owner === countryId && !inTransitDivisionIds.has(d.id)
+      d =>
+        d.armyGroupId === groupId &&
+        d.owner === countryId &&
+        !inTransitDivisionIds.has(d.id) &&
+        !engagedDivisionIds.has(d.id)
     );
     if (groupDivs.length === 0) return;
     if (borderSet.has(regionId)) {

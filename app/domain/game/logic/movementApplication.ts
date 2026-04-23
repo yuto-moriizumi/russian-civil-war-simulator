@@ -1,6 +1,10 @@
 import { Movement, ActiveCombat, Region, GameEvent, NotificationItem, Relationship, Country, DivisionState, Division } from '../../../types/game';
 import { determineNewOwner } from '../occupationUtils';
 import { createActiveCombat } from '../combat';
+import {
+  addCombatReinforcements,
+  findActiveCombatOnBorder,
+} from '../combatParticipation';
 import { createGameEvent, createNotification } from '../eventUtils';
 import { calculateDistance, calculateTravelTime } from '../../../utils/distance';
 import { getDivisionsInRegion, getMovementDivisions, getCombatDefenders } from '../divisionState';
@@ -126,30 +130,56 @@ export function applyCompletedMovements(
             .flatMap(m => m.divisionIds)
         );
 
-        const ongoingCombat = nextCombats.find(c =>
-          c.attackerRegionId === movement.fromRegion &&
-          c.defenderRegionId === toRegion &&
-          !c.isComplete
+        const ongoingCombat = findActiveCombatOnBorder(
+          nextCombats,
+          movement.fromRegion,
+          toRegion,
         );
 
         if (ongoingCombat) {
           const combatIndex = nextCombats.findIndex(c => c.id === ongoingCombat.id);
+          let updatedCombat = addCombatReinforcements(
+            ongoingCombat,
+            owner,
+            arrivingDivisions,
+          );
 
-          if (owner === ongoingCombat.attackerCountry) {
-            const updatedCombat = {
-              ...ongoingCombat,
-              attackerDivisionIds: [...ongoingCombat.attackerDivisionIds, ...arrivingDivisions.map(d => d.id)],
-              initialAttackerHp: ongoingCombat.initialAttackerHp + arrivingDivisions.reduce((sum, d) => sum + d.hp, 0),
-              initialAttackerCount: ongoingCombat.initialAttackerCount + arrivingDivisions.length,
-            };
+          if (owner === ongoingCombat.attackerCountry && interceptingDivisions.length > 0) {
+            updatedCombat = addCombatReinforcements(
+              updatedCombat,
+              ongoingCombat.defenderCountry,
+              interceptingDivisions,
+            );
+          } else if (owner === ongoingCombat.defenderCountry) {
+            updatedCombat = addCombatReinforcements(
+              updatedCombat,
+              ongoingCombat.defenderCountry,
+              interceptingDivisions,
+            );
 
             if (interceptingDivisions.length > 0) {
-              updatedCombat.defenderDivisionIds = [...updatedCombat.defenderDivisionIds, ...interceptingDivisions.map(d => d.id)];
-              updatedCombat.initialDefenderHp += interceptingDivisions.reduce((sum, d) => sum + d.hp, 0);
-              updatedCombat.initialDefenderCount += interceptingDivisions.length;
-            }
+              const interceptedAttackers = counterMovements
+                .filter(m => m.owner === ongoingCombat.attackerCountry)
+                .flatMap(m => getMovementDivisions(nextDivisions, m));
 
-            nextCombats[combatIndex] = updatedCombat;
+              if (interceptedAttackers.length > 0) {
+                updatedCombat = addCombatReinforcements(
+                  updatedCombat,
+                  ongoingCombat.attackerCountry,
+                  interceptedAttackers,
+                );
+                const interceptedAttackerIds = new Set(interceptedAttackers.map(d => d.id));
+                updatedCombat = {
+                  ...updatedCombat,
+                  defenderDivisionIds: updatedCombat.defenderDivisionIds.filter(id => !interceptedAttackerIds.has(id)),
+                };
+              }
+            }
+          }
+
+          nextCombats[combatIndex] = updatedCombat;
+
+          if (owner === ongoingCombat.attackerCountry) {
             logger.debug(`[REINFORCEMENTS] ${arrivingDivisions.length} ${owner} divisions joined the attackers in combat at ${dest.name}`);
 
             nextEvents.push(createGameEvent(
@@ -159,28 +189,6 @@ export function applyCompletedMovements(
               currentDate, owner, toRegion
             ));
           } else if (owner === ongoingCombat.defenderCountry) {
-            const totalToAdd = [...arrivingDivisions, ...interceptingDivisions];
-            const updatedCombat = {
-              ...ongoingCombat,
-              defenderDivisionIds: [...ongoingCombat.defenderDivisionIds, ...totalToAdd.map(d => d.id)],
-              initialDefenderHp: ongoingCombat.initialDefenderHp + totalToAdd.reduce((sum, d) => sum + d.hp, 0),
-              initialDefenderCount: ongoingCombat.initialDefenderCount + totalToAdd.length,
-            };
-
-            if (interceptingDivisions.length > 0) {
-              const interceptedAttackers = counterMovements
-                .filter(m => m.owner === ongoingCombat.attackerCountry)
-                .flatMap(m => getMovementDivisions(nextDivisions, m));
-
-              if (interceptedAttackers.length > 0) {
-                updatedCombat.attackerDivisionIds = [...updatedCombat.attackerDivisionIds, ...interceptedAttackers.map(d => d.id)];
-                updatedCombat.initialAttackerHp += interceptedAttackers.reduce((sum, d) => sum + d.hp, 0);
-                updatedCombat.initialAttackerCount += interceptedAttackers.length;
-                updatedCombat.defenderDivisionIds = updatedCombat.defenderDivisionIds.filter(id => !interceptedAttackers.some(d => d.id === id));
-              }
-            }
-
-            nextCombats[combatIndex] = updatedCombat;
             logger.debug(`[REINFORCEMENTS] ${arrivingDivisions.length} ${owner} divisions joined the defenders in combat at ${dest.name}`);
 
             nextEvents.push(createGameEvent(

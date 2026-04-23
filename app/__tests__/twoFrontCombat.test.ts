@@ -157,3 +157,45 @@ describe('two-front combat: enemy enters a region whose defender is attacking el
     expect(newCombat!.defenderDivisionIds).toHaveLength(1);
   });
 });
+
+describe('two-front combat: reverse move on an already engaged border', () => {
+  it('does not dispatch the lone defending division into a second reverse combat', () => {
+    const sovietDiv = makeDiv({ id: 'soviet-div', owner: 'soviet', regionId: 'A' });
+    const whiteDiv = makeDiv({ id: 'white-div', owner: 'white', regionId: 'B' });
+    const divisions: DivisionState = {
+      'soviet-div': sovietDiv,
+      'white-div': whiteDiv,
+    };
+    const regions: RegionState = {
+      A: makeRegion('A', { owner: 'soviet' }),
+      B: makeRegion('B', { owner: 'white' }),
+    };
+    const existingCombat = makeCombat({
+      id: 'combat-a-b',
+      attackerRegionId: 'A',
+      defenderRegionId: 'B',
+      attackerCountry: 'soviet',
+      defenderCountry: 'white',
+      attackerDivisionIds: ['soviet-div'],
+      defenderDivisionIds: ['white-div'],
+    });
+    const adjacency = { A: ['B'], B: ['A'] };
+
+    const { get, set, captured } = makeStoreStub({
+      regions,
+      divisions,
+      adjacency,
+      activeCombats: [existingCombat],
+      selectedCountry: { id: 'white' as CountryId } as GameStore['selectedCountry'],
+    });
+    const actions = createUnitActions(
+      set as Parameters<typeof createUnitActions>[0],
+      get as Parameters<typeof createUnitActions>[1],
+    );
+
+    actions.moveUnits('B', 'A', 1);
+
+    expect(captured.movingUnits).toBeUndefined();
+    expect(captured.activeCombats).toBeUndefined();
+  });
+});

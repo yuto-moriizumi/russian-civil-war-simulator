@@ -8,6 +8,11 @@ import {
 import { getDivisionsInRegion, getCombatDefenders } from '../../domain/game/divisionState';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { createActiveCombat } from '../../domain/game/combat';
+import {
+  addCombatReinforcements,
+  findActiveCombatOnBorder,
+  getCommittedDivisionIds,
+} from '../../domain/game/combatParticipation';
 import { createGameEvent } from '../../domain/game/eventUtils';
 import { ActionsState } from './types';
 
@@ -77,11 +82,13 @@ export function advanceArmyGroup(
   // -------------------------------------------------------------------------
   const newMovements: Movement[] = [];
   const newCombats: ActiveCombat[] = [];
+  let updatedActiveCombats = [...activeCombats];
   let newEvents = [...gameEvents];
   const newRegions = { ...regions };
   const newDivisions = { ...divisions };
   const movedRegions = new Set<string>();
   const targetRegionIds = new Set<string>();
+  const engagedDivisionIds = getCommittedDivisionIds([], activeCombats);
 
   // Group assignments by (fromRegion, toRegion) so we create one Movement per
   // (source, destination) pair rather than one per division.
@@ -100,7 +107,9 @@ export function advanceArmyGroup(
     if (!sourceRegion || !destRegion) continue;
 
     // Collect the actual Division objects
-    const divsForMove = getDivisionsInRegion(divisions, fromRegion).filter(d => divIds.includes(d.id));
+    const divsForMove = getDivisionsInRegion(divisions, fromRegion).filter(
+      d => divIds.includes(d.id) && !engagedDivisionIds.has(d.id),
+    );
     if (divsForMove.length === 0) continue;
 
     // Access check — canEnter already validated for advance targets but be
@@ -126,20 +135,35 @@ export function advanceArmyGroup(
     let pendingCombatId: string | undefined;
 
     if (isHostile) {
-      const existingCombat = [...activeCombats, ...newCombats].find(
-        c => c.attackerRegionId === fromRegion &&
-             c.defenderRegionId === toRegion &&
-             !c.isComplete
+      const allKnownCombats = [...updatedActiveCombats, ...newCombats];
+      const existingCombat = findActiveCombatOnBorder(
+        allKnownCombats,
+        fromRegion,
+        toRegion,
       );
       if (existingCombat) {
         pendingCombatId = existingCombat.id;
+        const newCombatIndex = newCombats.findIndex(c => c.id === existingCombat.id);
+        if (newCombatIndex >= 0) {
+          newCombats[newCombatIndex] = addCombatReinforcements(
+            newCombats[newCombatIndex],
+            countryId,
+            divsForMove,
+          );
+        } else {
+          updatedActiveCombats = updatedActiveCombats.map(combat =>
+            combat.id === existingCombat.id
+              ? addCombatReinforcements(combat, countryId, divsForMove)
+              : combat,
+          );
+        }
       } else {
           const inTransitFromDest = new Set(
           movingUnits.filter(m => m.fromRegion === toRegion).flatMap(m => m.divisionIds)
         );
         const defenderDivisions = getDivisionsInRegion(divisions, toRegion).filter(d => d.owner === destRegion.owner && !inTransitFromDest.has(d.id));
         if (defenderDivisions.length > 0) {
-          const otherCombatsOnRegion = [...activeCombats, ...newCombats].filter(
+          const otherCombatsOnRegion = allKnownCombats.filter(
             c => c.defenderRegionId === toRegion && !c.isComplete
           );
           const combatDefenderDivisions = otherCombatsOnRegion.length > 0
@@ -209,7 +233,7 @@ export function advanceArmyGroup(
       divisions: newDivisions,
       movingUnits: [...movingUnits, ...newMovements],
       armyGroups: updatedArmyGroups,
-      activeCombats: [...activeCombats, ...newCombats],
+      activeCombats: [...updatedActiveCombats, ...newCombats],
       gameEvents: newEvents,
       ...(shouldClearSelection && { selectedUnitRegion: null }),
     });

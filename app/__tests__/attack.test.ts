@@ -263,6 +263,71 @@ describe('attackArmyGroup – single-enemy auto-advance when borders meet target
   });
 });
 
+describe('attackArmyGroup – divisions already defending a border combat stay put', () => {
+  it('does not issue a reverse attack with the lone defending division from an active 1v1 combat', () => {
+    const sovietDiv = makeDiv('soviet-div', 'ag-sov', 'soviet');
+    const whiteDiv = makeDiv('white-div', 'ag-1', 'white');
+    const divisions = buildDivState({ A: [sovietDiv], B: [whiteDiv] });
+
+    const regions: RegionState = {
+      A: makeRegion('A', 'soviet'),
+      B: makeRegion('B', 'white'),
+    };
+
+    const adjacency: Adjacency = {
+      A: ['B'],
+      B: ['A'],
+    };
+
+    const relationships: Relationship[] = [
+      { fromCountry: 'white', toCountry: 'soviet', type: 'war' },
+      { fromCountry: 'soviet', toCountry: 'white', type: 'war' },
+    ];
+
+    const activeCombat: ActiveCombat = {
+      id: 'combat-a-b',
+      attackerRegionId: 'A',
+      attackerRegionName: 'A',
+      defenderRegionId: 'B',
+      defenderRegionName: 'B',
+      attackerCountry: 'soviet',
+      defenderCountry: 'white',
+      attackerDivisionIds: ['soviet-div'],
+      defenderDivisionIds: ['white-div'],
+      initialAttackerCount: 1,
+      initialDefenderCount: 1,
+      initialAttackerHp: 100,
+      initialDefenderHp: 100,
+      currentRound: 0,
+      startTime: new Date('1918-01-01T00:00:00Z'),
+      lastRoundTime: new Date('1918-01-01T00:00:00Z'),
+      roundIntervalHours: 1,
+      isComplete: false,
+      victor: null,
+    };
+
+    const group = makeGroup({ owner: 'white', regionIds: ['B'] });
+    const state = makeState(
+      regions,
+      adjacency,
+      [group],
+      [],
+      [],
+      relationships,
+      [activeCombat],
+      divisions,
+    );
+
+    let captured: Partial<GameStore> = {};
+    attackArmyGroup('ag-1', state, partial => {
+      captured = partial;
+    });
+
+    expect(captured.movingUnits).toBeUndefined();
+    expect(captured.activeCombats).toBeUndefined();
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Scenario 3: Phase 2 creates combat when a border has surplus divisions and
 //             the enemy region is defended.

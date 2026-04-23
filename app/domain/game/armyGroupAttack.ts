@@ -2,6 +2,11 @@ import { Movement, ActiveCombat, Division } from '../../types/game';
 import { getNextStepToward, buildCanEnterPredicate, buildIsHostilePredicate } from '../../utils/pathfinding';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { createActiveCombat } from './combat';
+import {
+  addCombatReinforcements,
+  findActiveCombatOnBorder,
+  getCommittedDivisionIds,
+} from './combatParticipation';
 import { createGameEvent } from './eventUtils';
 import { getCombatDefenders } from './divisionState';
 import { EngineSimulationState, SimulationLogger, noOpLogger } from './engine/types';
@@ -41,7 +46,8 @@ export function attackArmyGroup(
   const getDivsInRegion = (regionId: string): Division[] => divisionsByRegion.get(regionId) ?? [];
 
   // Cache activeCombats array to avoid repeated spread
-  const allCombats = [...activeCombats];
+  let allCombats = [...activeCombats];
+  const engagedDivisionIds = getCommittedDivisionIds([], activeCombats);
 
   // Phase 1 Step 1: Find border regions
   const allBorderRegions: string[] = [];
@@ -111,7 +117,11 @@ export function attackArmyGroup(
   Object.entries(regions).forEach(([regionId, region]) => {
     if (!region) return;
     const groupDivs = getDivsInRegion(regionId).filter(
-      d => d.armyGroupId === groupId && d.owner === countryId && !inTransitDivisionIds.has(d.id)
+      d =>
+        d.armyGroupId === groupId &&
+        d.owner === countryId &&
+        !inTransitDivisionIds.has(d.id) &&
+        !engagedDivisionIds.has(d.id)
     );
     if (groupDivs.length === 0) return;
     if (borderSet.has(regionId)) {
@@ -219,7 +229,11 @@ export function attackArmyGroup(
   for (const borderRegionId of allBorderRegions) {
     const target = allocationTarget.get(borderRegionId) ?? 0;
     const stationaryDivs = getDivsInRegion(borderRegionId).filter(
-      d => d.armyGroupId === groupId && d.owner === countryId && !inTransitDivisionIds.has(d.id)
+      d =>
+        d.armyGroupId === groupId &&
+        d.owner === countryId &&
+        !inTransitDivisionIds.has(d.id) &&
+        !engagedDivisionIds.has(d.id)
     );
 
     const attackTargets = (adjacency[borderRegionId] || []).filter(
@@ -256,21 +270,36 @@ export function attackArmyGroup(
       arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
 
       let pendingCombatId: string | undefined;
-      const existingCombat = [...allCombats, ...newCombats].find(
-        c => c.attackerRegionId === borderRegionId &&
-             c.defenderRegionId === attackTargetId &&
-             !c.isComplete
+      const allKnownCombats = [...allCombats, ...newCombats];
+      const existingCombat = findActiveCombatOnBorder(
+        allKnownCombats,
+        borderRegionId,
+        attackTargetId,
       );
       if (existingCombat) {
         pendingCombatId = existingCombat.id;
+        const combatIndex = newCombats.findIndex(c => c.id === existingCombat.id);
+        if (combatIndex >= 0) {
+          newCombats[combatIndex] = addCombatReinforcements(
+            newCombats[combatIndex],
+            countryId,
+            divsForAttack,
+          );
+        } else {
+          allCombats = allCombats.map(combat =>
+            combat.id === existingCombat.id
+              ? addCombatReinforcements(combat, countryId, divsForAttack)
+              : combat,
+          );
+        }
       } else {
         const inTransitFromDest = new Set(
           movingUnits.filter(m => m.fromRegion === attackTargetId).flatMap(m => m.divisionIds)
         );
         const defenderDivisions = getDivsInRegion(attackTargetId).filter(d => d.owner === destRegion.owner && !inTransitFromDest.has(d.id));
-        const hasActiveCombatAtDest = [...allCombats, ...newCombats].some(c => c.defenderRegionId === attackTargetId && !c.isComplete);
+        const hasActiveCombatAtDest = allKnownCombats.some(c => c.defenderRegionId === attackTargetId && !c.isComplete);
         if (defenderDivisions.length > 0 || hasActiveCombatAtDest) {
-          const otherCombatsOnRegion = [...allCombats, ...newCombats].filter(
+          const otherCombatsOnRegion = allKnownCombats.filter(
             c => c.defenderRegionId === attackTargetId && !c.isComplete
           );
           const combatDefenderDivisions = otherCombatsOnRegion.length > 0
