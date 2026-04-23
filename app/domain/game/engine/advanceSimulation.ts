@@ -1,5 +1,4 @@
 import { CountryId, ProductionQueueItem } from '../../../types/game';
-import { buildRegionUpdate, extractRegionOwners } from '../../../utils/regionState';
 import { detectTheatersForCountries, syncAIArmyGroupsToTheaters } from '../../../utils/aiArmyGroupTheaters';
 import {
   validateDivisions,
@@ -9,23 +8,19 @@ import {
   applyFinishedCombats,
   regenerateDivisionHP,
   syncArmyGroupTerritories,
-  checkAndCompleteMissions,
-  checkAndClaimAIMissions,
   processProductionQueue,
   processScheduledEvents,
   detectDivisionDuplicates,
   logDivisionDuplicates,
-} from '../../../store/game/tickHelpers';
+} from '../tickHelpers';
 import {
   getEffectiveAIStates,
   processAITick,
   hasOwnershipChangedForCountries,
   initializeAIStatesForNewCountries,
-} from '../../../store/game/tickHelpers/aiTick';
-import { attackArmyGroup } from '../../../store/game/armyGroupAttack';
-import { defendArmyGroup } from '../../../store/game/armyGroupDefend';
+} from '../tickHelpers/aiTick';
+import { applyArmyGroupActions, applyMissions } from './postTick';
 import { EngineSimulationState, SimulationDeps, SimulationResult } from './types';
-import { GameStore } from '../../../store/game/types';
 
 let _tickCounter = 0;
 
@@ -57,7 +52,6 @@ export function advanceSimulation(
     dateTime,
     selectedCountry,
     regions,
-    regionDefinitions,
     adjacency,
     movingUnits,
     activeCombats,
@@ -351,120 +345,17 @@ export function advanceSimulation(
   };
 
   // Step 10: army group mode actions (advance/defend)
-  // These helpers currently depend on a GameStore-like object, so we bridge here.
-  const armyGroupActionsNeeded = nextArmyGroups.filter(g => g.mode !== 'none');
-  let currentState = stateAfterStep9;
-
-  if (armyGroupActionsNeeded.length > 0) {
-    const patches: Partial<GameStore>[] = [];
-    const fakeStore = buildFakeStore(currentState);
-    let batchFakeStore = fakeStore;
-
-    const collectPatch = (partial: Partial<GameStore>) => {
-      const patch = partial.regions
-        ? { ...partial, ...buildRegionUpdate(regionDefinitions, extractRegionOwners(partial.regions)) }
-        : partial;
-      patches.push(patch);
-      batchFakeStore = { ...batchFakeStore, ...patch };
-    };
-
-    armyGroupActionsNeeded.forEach(group => {
-      if (group.mode === 'advance') {
-        attackArmyGroup(group.id, batchFakeStore, collectPatch);
-      } else if (group.mode === 'defend') {
-        defendArmyGroup(group.id, batchFakeStore, collectPatch);
-      }
-    });
-
-    if (patches.length > 0) {
-      const mergedPatch: Partial<GameStore> = {};
-      for (const patch of patches) {
-        Object.assign(mergedPatch, patch);
-      }
-      const finalFakeStore: GameStore = { ...batchFakeStore };
-      for (const key of Object.keys(mergedPatch) as (keyof GameStore)[]) {
-        (finalFakeStore as unknown as Record<string, unknown>)[key] = batchFakeStore[key];
-      }
-      currentState = applyStorePatchToEngineState(currentState, finalFakeStore, regionDefinitions);
-    }
-  }
-
+  const currentState = applyArmyGroupActions(stateAfterStep9);
   checkDuplicates('army group actions', tickNum, currentState);
 
   // Step 11: missions
-  let finalState = currentState;
-
-  if (selectedCountry && !state.isPlayerAIEnabled) {
-    const fakeGet = () => buildFakeStore(finalState);
-    const missionResults = checkAndCompleteMissions(fakeGet as never, selectedCountry);
-
-    if (missionResults.updatedMissions.some((m, i) => m.completed !== finalState.missions[i].completed)) {
-      finalState = {
-        ...finalState,
-        missions: missionResults.updatedMissions,
-        gameEvents: [...finalState.gameEvents, ...missionResults.newEvents],
-        notifications: [...finalState.notifications, ...missionResults.newNotifications],
-      };
-    }
-  }
-
-  const aiMissionCountryIds = effectiveAIStates
-    .map(aiState => aiState.countryId)
-    .filter(
-      countryId => countryId !== selectedCountry?.id || state.isPlayerAIEnabled,
-    );
-  if (aiMissionCountryIds.length > 0) {
-    const fakeStore = buildFakeStore(finalState);
-    const aiMissionResults = checkAndClaimAIMissions(fakeStore as never, aiMissionCountryIds);
-
-    if (aiMissionResults.changed) {
-      finalState = {
-        ...finalState,
-        missions: aiMissionResults.updatedMissions,
-        countryBonuses: aiMissionResults.countryBonuses,
-        regions: aiMissionResults.regions,
-        divisions: aiMissionResults.divisions,
-        movingUnits: aiMissionResults.movingUnits,
-        relationships: aiMissionResults.relationships,
-        armyGroups: aiMissionResults.armyGroups,
-        aiStates: aiMissionResults.aiStates,
-        gameEvents: [...finalState.gameEvents, ...aiMissionResults.newEvents],
-      };
-    }
-  }
+  const finalState = applyMissions(currentState, selectedCountry, {
+    effectiveAICountryIds,
+    effectiveAIStates,
+    selectedCountryId: selectedCountry?.id,
+    isPlayerAIEnabled: state.isPlayerAIEnabled,
+  });
 
   return { state: finalState };
 }
 
-/**
- * Builds a minimal GameStore-shaped object from EngineSimulationState for helpers that
- * still depend on the store interface. This bridge will shrink as helpers are migrated.
- */
-function buildFakeStore(state: EngineSimulationState): GameStore {
-  return state as unknown as GameStore;
-}
-
-function applyStorePatchToEngineState(
-  base: EngineSimulationState,
-  patch: GameStore,
-  regionDefinitions: EngineSimulationState['regionDefinitions'],
-): EngineSimulationState {
-  const next: EngineSimulationState = { ...base };
-  const simKeys: (keyof EngineSimulationState)[] = [
-    'dateTime', 'selectedCountry', 'isPlayerAIEnabled',
-    'regions', 'regionDefinitions', 'adjacency', 'regionCentroids',
-    'divisions', 'movingUnits', 'activeCombats', 'armyGroups', 'theaters',
-    'productionQueues', 'relationships', 'scheduledEvents', 'countryBonuses',
-    'aiStates', 'missions', 'gameEvents', 'notifications',
-  ];
-  for (const key of simKeys) {
-    if (key in patch) {
-      (next as unknown as Record<string, unknown>)[key] = (patch as unknown as Record<string, unknown>)[key];
-    }
-  }
-  // Ensure regions is re-derived if regionOwners changed (patch may have set regions directly)
-  if ('regions' in patch) {
-    next.regions = (patch as unknown as { regions: EngineSimulationState['regions'] }).regions;
-  }
-  return next;
-}
