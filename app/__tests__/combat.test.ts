@@ -9,7 +9,7 @@ import { describe, it, expect } from 'vitest';
 import { processCombatRound } from '../domain/game/sharedDefenseProcessing';
 import { createActiveCombat } from '../domain/game/combat';
 import { processCombats } from '../domain/game/logic/combatProcessing';
-import type { Division, DivisionState, RegionState, Adjacency } from '../types/game';
+import type { Division, DivisionState, RegionState, Adjacency, Relationship } from '../types/game';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -187,7 +187,7 @@ describe('processCombats – retreat via military access', () => {
       SOVIET_REAR: ['TULA'],
       DON_ACCESS: ['TULA'],
     };
-    const relationships = [
+    const relationships: Relationship[] = [
       { fromCountry: 'don', toCountry: 'white', type: 'military_access' as const },
     ];
 
