@@ -17,6 +17,7 @@ export function advanceSimulation(
   };
 
   const finalState = runPipeline(initialContext, deps, logger);
+  finalState.dateTime = initialContext.newDate;
 
   return { state: finalState };
 }
