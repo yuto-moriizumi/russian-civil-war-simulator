@@ -261,6 +261,19 @@ function processSharedDefenseRound(
     .filter((r: DamageResult) => r.type === 'retreating')
     .map((r: DamageResult) => r.division);
 
+  // Compute defender counter-damage once across ALL attackers combined, then distribute evenly.
+  // This prevents defenders from dealing full damage separately to each attacking group.
+  const allAttackers = combatCalc
+    .filter(c => c.needsSharedProcessing)
+    .flatMap(c => c.attackerDivisions);
+  const defenderTotalDamage = sharedDefenderDivisions.reduce((sum, d) => {
+    const target = allAttackers[Math.floor(Math.random() * allAttackers.length)];
+    return sum + calculateDamage(d, target);
+  }, 0);
+  const damagePerAttacker = allAttackers.length > 0
+    ? Math.ceil(defenderTotalDamage / allAttackers.length)
+    : 0;
+
   // Process each combat: apply counter-damage, update defenders, determine retreats
   const firstSharedCombatId = activeCombats.find(c => !c.isComplete && !(defenderRegion && defenderRegion.owner !== c.defenderCountry))?.id;
 
@@ -273,7 +286,7 @@ function processSharedDefenseRound(
     }
 
     const { retreats, survivingAttackers: survivingAttackerDivisions } = processAttackerRound(
-      calc, survivingSharedDefenders, defeatedDefenderDivisions,
+      calc, damagePerAttacker, survivingSharedDefenders, defeatedDefenderDivisions,
       calc.combat.id === firstSharedCombatId,
       regions, adjacency, currentTime
     );
@@ -346,6 +359,7 @@ interface AttackerRoundResult {
 
 function processAttackerRound(
   calc: CombatCalculation,
+  damagePerAttacker: number,
   survivingSharedDefenders: Division[],
   defeatedDefenderDivisions: Division[],
   isFirstInGroup: boolean,
@@ -353,10 +367,9 @@ function processAttackerRound(
   adjacency: Adjacency,
   _currentTime: Date
 ): AttackerRoundResult {
-  const { combat, attackerDivisions, defenderTotalDamage } = calc;
+  const { combat, attackerDivisions } = calc;
   const retreats: RoundResult['retreatingDivisions'] = [];
 
-  const damagePerAttacker = Math.ceil(defenderTotalDamage / attackerDivisions.length);
   const attackerResults = attackerDivisions.map((div: Division) => applyDamage(div, damagePerAttacker));
 
   const survivingAttackers: Division[] = [];
