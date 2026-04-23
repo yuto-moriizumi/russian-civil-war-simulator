@@ -2,7 +2,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useGameStore } from '../store/useGameStore';
+import { useSimulationStore } from '../store/useSimulationStore';
+import { useGameUiStore } from '../store/useGameUiStore';
 import { getCommandPowerInfo } from '../utils/commandPower';
 import SpeedControl from './SpeedControl';
 
@@ -12,28 +13,28 @@ interface TopBarProps {
 
 export default function TopBar({ showSavedIndicator }: TopBarProps) {
   // Store selectors
-  const country = useGameStore(state => state.selectedCountry);
-  const dateTime = useGameStore(state => state.dateTime);
-  const isPlaying = useGameStore(state => state.isPlaying);
-  const gameSpeed = useGameStore(state => state.gameSpeed);
-  const productionQueue = useGameStore(state => state.productionQueues);
-  const mapMode = useGameStore(state => state.mapMode);
-  const regions = useGameStore(state => state.regions);
-  const divisions = useGameStore(state => state.divisions);
-  const movingUnits = useGameStore(state => state.movingUnits);
-  const countryBonuses = useGameStore(state => state.countryBonuses);
-  const isPlayerAIEnabled = useGameStore(state => state.isPlayerAIEnabled);
+  const country = useSimulationStore(state => state.selectedCountry);
+  const dateTime = useSimulationStore(state => state.dateTime);
+  const isPlaying = useSimulationStore(state => state.isPlaying);
+  const gameSpeed = useSimulationStore(state => state.gameSpeed);
+  const productionQueue = useSimulationStore(state => state.productionQueues);
+  const regions = useSimulationStore(state => state.regions);
+  const divisions = useSimulationStore(state => state.divisions);
+  const movingUnits = useSimulationStore(state => state.movingUnits);
+  const countryBonuses = useSimulationStore(state => state.countryBonuses);
+  const isPlayerAIEnabled = useSimulationStore(state => state.isPlayerAIEnabled);
+  const mapMode = useGameUiStore(state => state.mapMode);
+  const isSwitchModeActive = useGameUiStore(state => state.isSwitchModeActive);
   
   // Actions
-  const togglePlay = useGameStore(state => state.togglePlay);
-  const setGameSpeed = useGameStore(state => state.setGameSpeed);
-  const saveGame = useGameStore(state => state.saveGame);
-  const setIsProductionModalOpen = useGameStore(state => state.setIsProductionModalOpen);
-  const setIsCountrySidebarOpen = useGameStore(state => state.setIsCountrySidebarOpen);
-  const setMapMode = useGameStore(state => state.setMapMode);
-  const isSwitchModeActive = useGameStore(state => state.isSwitchModeActive);
-  const setSwitchModeActive = useGameStore(state => state.setSwitchModeActive);
-  const setPlayerAIEnabled = useGameStore(state => state.setPlayerAIEnabled);
+  const togglePlay = useSimulationStore(state => state.togglePlay);
+  const setGameSpeed = useSimulationStore(state => state.setGameSpeed);
+  const saveGame = useSimulationStore(state => state.saveGame);
+  const setPlayerAIEnabled = useSimulationStore(state => state.setPlayerAIEnabled);
+  const setIsProductionModalOpen = useGameUiStore(state => state.setIsProductionModalOpen);
+  const setIsCountrySidebarOpen = useGameUiStore(state => state.setIsCountrySidebarOpen);
+  const setMapMode = useGameUiStore(state => state.setMapMode);
+  const setSwitchModeActive = useGameUiStore(state => state.setSwitchModeActive);
   
   // Calculate derived values
   const commandPowerInfo = useMemo(() => 

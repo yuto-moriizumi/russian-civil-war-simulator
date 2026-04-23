@@ -1,6 +1,7 @@
 'use client';
 
-import { useGameStore } from '../store/useGameStore';
+import { useSimulationStore } from '../store/useSimulationStore';
+import { useGameUiStore } from '../store/useGameUiStore';
 import { Division, CountryId } from '../types/game';
 import { getCountryCombatName } from '../data/countries';
 
@@ -9,11 +10,11 @@ import { getCountryCombatName } from '../data/countries';
  * Similar to Hearts of Iron battle interface
  */
 export default function CombatPopup() {
-  const selectedCombatId = useGameStore(state => state.selectedCombatId);
-  const activeCombats = useGameStore(state => state.activeCombats);
-  const setSelectedCombatId = useGameStore(state => state.setSelectedCombatId);
+  const selectedCombatId = useGameUiStore(state => state.selectedCombatId);
+  const activeCombats = useSimulationStore(state => state.activeCombats);
+  const setSelectedCombatId = useGameUiStore(state => state.setSelectedCombatId);
 
-  const divisions = useGameStore(state => state.divisions);
+  const divisions = useSimulationStore(state => state.divisions);
   const combat = activeCombats.find(c => c.id === selectedCombatId);
   const onClose = () => setSelectedCombatId(null);
 

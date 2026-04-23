@@ -2,7 +2,8 @@
 
 import { useRef, useEffect, useCallback } from 'react';
 import type { MapLayerMouseEvent } from 'react-map-gl/maplibre';
-import { useGameStore } from '../../store/useGameStore';
+import { useSimulationStore } from '../../store/useSimulationStore';
+import { useGameUiStore } from '../../store/useGameUiStore';
 import { COUNTRY_METADATA } from '../../data/countryMetadata';
 import type { CountryId } from '../../types/game';
 import { getDivisionsInRegion } from '../../utils/divisionState';
@@ -13,30 +14,30 @@ import { getDivisionsInRegion } from '../../utils/divisionState';
  */
 export function useMapEventHandlers(
   selectedRegion: string | null,
-  regions: ReturnType<typeof useGameStore.getState>['regions'],
-  divisions: ReturnType<typeof useGameStore.getState>['divisions'],
+  regions: ReturnType<typeof useSimulationStore.getState>['regions'],
+  divisions: ReturnType<typeof useSimulationStore.getState>['divisions'],
   playerCountry: string | undefined,
   setSelectedRegion: (id: string | null) => void,
   setSelectedUnitRegion: (id: string | null) => void,
   setSelectedMovementId: (id: string | null) => void,
 ) {
-  const moveUnits = useGameStore(state => state.moveUnits);
-  const redirectMovement = useGameStore(state => state.redirectMovement);
-  const cancelMovement = useGameStore(state => state.cancelMovement);
-  const movingUnits = useGameStore(state => state.movingUnits);
-  const setSelectedCountryId = useGameStore(state => state.setSelectedCountryId);
-  const setIsCountrySidebarOpen = useGameStore(state => state.setIsCountrySidebarOpen);
-  const selectedMovementId = useGameStore(state => state.selectedMovementId);
-  const isSwitchModeActive = useGameStore(state => state.isSwitchModeActive);
-  const setSwitchModeActive = useGameStore(state => state.setSwitchModeActive);
-  const selectCountry = useGameStore(state => state.selectCountry);
-  const clearSelectedDivisions = useGameStore(state => state.clearSelectedDivisions);
+  const moveUnits = useSimulationStore(state => state.moveUnits);
+  const redirectMovement = useSimulationStore(state => state.redirectMovement);
+  const cancelMovement = useSimulationStore(state => state.cancelMovement);
+  const movingUnits = useSimulationStore(state => state.movingUnits);
+  const selectCountry = useSimulationStore(state => state.selectCountry);
+  const setSelectedCountryId = useGameUiStore(state => state.setSelectedCountryId);
+  const setIsCountrySidebarOpen = useGameUiStore(state => state.setIsCountrySidebarOpen);
+  const selectedMovementId = useGameUiStore(state => state.selectedMovementId);
+  const isSwitchModeActive = useGameUiStore(state => state.isSwitchModeActive);
+  const setSwitchModeActive = useGameUiStore(state => state.setSwitchModeActive);
+  const clearSelectedDivisions = useGameUiStore(state => state.clearSelectedDivisions);
 
   const selectedUnitRegionRef = useRef<string | null>(null);
   const selectedMovementIdRef = useRef<string | null>(null);
   const regionsRef = useRef(regions);
   const divisionsRef = useRef(divisions);
-  const adjacencyRef = useRef(useGameStore.getState().adjacency);
+  const adjacencyRef = useRef(useSimulationStore.getState().adjacency);
   const moveUnitsRef = useRef(moveUnits);
   const redirectMovementRef = useRef(redirectMovement);
   const cancelMovementRef = useRef(cancelMovement);
@@ -53,14 +54,14 @@ export function useMapEventHandlers(
    *  can use it without capturing a stale value in a useCallback closure. */
   const selectedDivisionIdsRef = useRef<string[]>([]);
 
-  const selectedUnitRegion = useGameStore(state => state.selectedUnitRegion);
-  const selectedDivisionIds = useGameStore(state => state.selectedDivisionIds);
+  const selectedUnitRegion = useGameUiStore(state => state.selectedUnitRegion);
+  const selectedDivisionIds = useGameUiStore(state => state.selectedDivisionIds);
 
   useEffect(() => { selectedUnitRegionRef.current = selectedUnitRegion; }, [selectedUnitRegion]);
   useEffect(() => { selectedMovementIdRef.current = selectedMovementId; }, [selectedMovementId]);
   useEffect(() => { regionsRef.current = regions; }, [regions]);
   useEffect(() => { divisionsRef.current = divisions; }, [divisions]);
-  useEffect(() => { adjacencyRef.current = useGameStore.getState().adjacency; });
+  useEffect(() => { adjacencyRef.current = useSimulationStore.getState().adjacency; });
   useEffect(() => { moveUnitsRef.current = moveUnits; }, [moveUnits]);
   useEffect(() => { redirectMovementRef.current = redirectMovement; }, [redirectMovement]);
   useEffect(() => { cancelMovementRef.current = cancelMovement; }, [cancelMovement]);

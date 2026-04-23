@@ -1,15 +1,16 @@
 'use client';
 
-import { useGameStore } from '../../store/useGameStore';
+import { useSimulationStore } from '../../store/useSimulationStore';
+import { useGameUiStore } from '../../store/useGameUiStore';
 import { COUNTRY_COLORS } from '../../utils/mapUtils';
 
 export function MovingUnitInfoPanel() {
-  const selectedMovementId = useGameStore(state => state.selectedMovementId);
-  const setSelectedMovementId = useGameStore(state => state.setSelectedMovementId);
-  const movingUnits = useGameStore(state => state.movingUnits);
-  const regions = useGameStore(state => state.regions);
-  const dateTime = useGameStore(state => state.dateTime);
-  const divisions = useGameStore(state => state.divisions);
+  const selectedMovementId = useGameUiStore(state => state.selectedMovementId);
+  const setSelectedMovementId = useGameUiStore(state => state.setSelectedMovementId);
+  const movingUnits = useSimulationStore(state => state.movingUnits);
+  const regions = useSimulationStore(state => state.regions);
+  const dateTime = useSimulationStore(state => state.dateTime);
+  const divisions = useSimulationStore(state => state.divisions);
 
   if (!selectedMovementId) return null;
   const movement = movingUnits.find(m => m.id === selectedMovementId);

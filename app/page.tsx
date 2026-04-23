@@ -1,6 +1,7 @@
 'use client';
 
-import { useGameStore } from './store/useGameStore';
+import { useSimulationStore } from './store/useSimulationStore';
+import { useGameUiStore } from './store/useGameUiStore';
 import { useGameLoop } from './hooks/useGameLoop';
 import { useMapData } from './hooks/useMapData';
 import { useGameAPI } from './hooks/useGameAPI';
@@ -10,8 +11,8 @@ import MainScreen from './screens/MainScreen';
 import MissionScreen from './screens/MissionScreen';
 
 export default function Home() {
-  const currentScreen = useGameStore(state => state.currentScreen);
-  const selectedCountry = useGameStore(state => state.selectedCountry);
+  const currentScreen = useGameUiStore(state => state.currentScreen);
+  const selectedCountry = useSimulationStore(state => state.selectedCountry);
   
   // Initialize Hooks
   useGameLoop();
@@ -43,10 +44,10 @@ export default function Home() {
 
 // Sub-components to keep the main file clean and use specific store slices
 function TitleScreenView() {
-  const navigateToScreen = useGameStore(state => state.navigateToScreen);
-  const startNewGame = useGameStore(state => state.startNewGame);
-  const selectedCountry = useGameStore(state => state.selectedCountry);
-  const dateTime = useGameStore(state => state.dateTime);
+  const navigateToScreen = useGameUiStore(state => state.navigateToScreen);
+  const startNewGame = useSimulationStore(state => state.startNewGame);
+  const selectedCountry = useSimulationStore(state => state.selectedCountry);
+  const dateTime = useSimulationStore(state => state.dateTime);
   
   // Check if there's a valid saved game (has a selected country and non-default date)
   const hasSave = selectedCountry !== null;
@@ -71,8 +72,8 @@ function TitleScreenView() {
 }
 
 function CountrySelectScreenView() {
-  const selectCountry = useGameStore(state => state.selectCountry);
-  const navigateToScreen = useGameStore(state => state.navigateToScreen);
+  const selectCountry = useSimulationStore(state => state.selectCountry);
+  const navigateToScreen = useGameUiStore(state => state.navigateToScreen);
   return (
     <CountrySelectScreen
       onSelectCountry={(country) => selectCountry(country, true)}
@@ -82,7 +83,7 @@ function CountrySelectScreenView() {
 }
 
 function MainScreenView() {
-  const selectedCountry = useGameStore(state => state.selectedCountry);
+  const selectedCountry = useSimulationStore(state => state.selectedCountry);
   
   if (!selectedCountry) {
     return <CountrySelectScreenView />;

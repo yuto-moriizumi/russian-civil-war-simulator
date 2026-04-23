@@ -3,7 +3,8 @@
 import { useRef, useState, useCallback, useMemo } from 'react';
 import Map, { MapRef, Source, Layer, NavigationControl } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { useGameStore } from '../store/useGameStore';
+import { useSimulationStore } from '../store/useSimulationStore';
+import { useGameUiStore } from '../store/useGameUiStore';
 
 import { UnitMarker, MovingUnitMarker, CombatMarker } from './GameMap/MapMarkers';
 import { RegionTooltip, RegionInfoPanel, MovingUnitInfoPanel, DivisionSelectionPanel } from './GameMap/RegionPanels';
@@ -26,34 +27,34 @@ import {
 
 export default function GameMap() {
   // Store selectors
-  const regions = useGameStore(state => state.regions);
-  const divisions = useGameStore(state => state.divisions);
-  const adjacency = useGameStore(state => state.adjacency);
-  const selectedRegion = useGameStore(state => state.selectedRegion);
-  const selectedUnitRegion = useGameStore(state => state.selectedUnitRegion);
-  const movingUnits = useGameStore(state => state.movingUnits);
-  const activeCombats = useGameStore(state => state.activeCombats);
-  const currentDateTime = useGameStore(state => state.dateTime);
-  const playerCountry = useGameStore(state => state.selectedCountry?.id);
-  const playerCoreRegions = useGameStore(state => state.selectedCountry?.coreRegions);
-  const theaters = useGameStore(state => state.theaters);
-  const selectedTheaterId = useGameStore(state => state.selectedTheaterId);
-  const selectedGroupId = useGameStore(state => state.selectedGroupId);
-  const armyGroups = useGameStore(state => state.armyGroups);
-  const mapMode = useGameStore(state => state.mapMode);
-  const regionCentroids = useGameStore(state => state.regionCentroids);
-  const borderMidpoints = useGameStore(state => state.borderMidpoints);
-  const getRelationship = useGameStore(state => state.getRelationship);
-  const selectedMovementId = useGameStore(state => state.selectedMovementId);
-  const selectedDivisionIds = useGameStore(state => state.selectedDivisionIds);
+  const regions = useSimulationStore(state => state.regions);
+  const divisions = useSimulationStore(state => state.divisions);
+  const adjacency = useSimulationStore(state => state.adjacency);
+  const movingUnits = useSimulationStore(state => state.movingUnits);
+  const activeCombats = useSimulationStore(state => state.activeCombats);
+  const currentDateTime = useSimulationStore(state => state.dateTime);
+  const playerCountry = useSimulationStore(state => state.selectedCountry?.id);
+  const playerCoreRegions = useSimulationStore(state => state.selectedCountry?.coreRegions);
+  const theaters = useSimulationStore(state => state.theaters);
+  const armyGroups = useSimulationStore(state => state.armyGroups);
+  const regionCentroids = useSimulationStore(state => state.regionCentroids);
+  const borderMidpoints = useSimulationStore(state => state.borderMidpoints);
+  const getRelationship = useSimulationStore(state => state.getRelationship);
+  const selectedRegion = useGameUiStore(state => state.selectedRegion);
+  const selectedUnitRegion = useGameUiStore(state => state.selectedUnitRegion);
+  const selectedTheaterId = useGameUiStore(state => state.selectedTheaterId);
+  const selectedGroupId = useGameUiStore(state => state.selectedGroupId);
+  const mapMode = useGameUiStore(state => state.mapMode);
+  const selectedMovementId = useGameUiStore(state => state.selectedMovementId);
+  const selectedDivisionIds = useGameUiStore(state => state.selectedDivisionIds);
 
   // Actions
-  const setSelectedRegion = useGameStore(state => state.setSelectedRegion);
-  const setSelectedUnitRegion = useGameStore(state => state.setSelectedUnitRegion);
-  const selectDivisionsInRegion = useGameStore(state => state.selectDivisionsInRegion);
-  const addDivisionsInRegion = useGameStore(state => state.addDivisionsInRegion);
-  const setSelectedCombatId = useGameStore(state => state.setSelectedCombatId);
-  const setSelectedMovementId = useGameStore(state => state.setSelectedMovementId);
+  const setSelectedRegion = useGameUiStore(state => state.setSelectedRegion);
+  const setSelectedUnitRegion = useGameUiStore(state => state.setSelectedUnitRegion);
+  const selectDivisionsInRegion = useGameUiStore(state => state.selectDivisionsInRegion);
+  const addDivisionsInRegion = useGameUiStore(state => state.addDivisionsInRegion);
+  const setSelectedCombatId = useGameUiStore(state => state.setSelectedCombatId);
+  const setSelectedMovementId = useGameUiStore(state => state.setSelectedMovementId);
 
   // Local refs and state
   const mapRef = useRef<MapRef>(null);

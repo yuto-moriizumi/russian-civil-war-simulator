@@ -1,6 +1,7 @@
 'use client';
 
-import { useGameStore } from '../store/useGameStore';
+import { useSimulationStore } from '../store/useSimulationStore';
+import { useGameUiStore } from '../store/useGameUiStore';
 import { RelationshipType } from '../types/game';
 import SidebarPanel from './SidebarPanel';
 import { countries } from '../data/gameData';
@@ -28,14 +29,14 @@ const RELATIONSHIP_COLORS: Record<RelationshipType, string> = {
 
 export default function CountrySidebar() {
   // Store selectors
-  const isOpen = useGameStore(state => state.isCountrySidebarOpen);
-  const countryId = useGameStore(state => state.selectedCountryId);
-  const playerCountry = useGameStore(state => state.selectedCountry?.id);
-  const relationships = useGameStore(state => state.relationships);
+  const isOpen = useGameUiStore(state => state.isCountrySidebarOpen);
+  const countryId = useGameUiStore(state => state.selectedCountryId);
+  const playerCountry = useSimulationStore(state => state.selectedCountry?.id);
+  const relationships = useSimulationStore(state => state.relationships);
   
   // Actions
-  const setIsCountrySidebarOpen = useGameStore(state => state.setIsCountrySidebarOpen);
-  const setRelationship = useGameStore(state => state.setRelationship);
+  const setIsCountrySidebarOpen = useGameUiStore(state => state.setIsCountrySidebarOpen);
+  const setRelationship = useSimulationStore(state => state.setRelationship);
   
   if (!countryId || !playerCountry) return null;
   

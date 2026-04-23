@@ -1,16 +1,16 @@
 import { useEffect } from 'react';
-import { useGameStore } from '../store/useGameStore';
+import { useSimulationStore } from '../store/useSimulationStore';
 import { createInitialOwnership } from '../utils/mapUtils';
 
 export function useMapData() {
-  const setRegions = useGameStore(state => state.setRegions);
-  const setAdjacency = useGameStore(state => state.setAdjacency);
-  const setBorderMidpoints = useGameStore(state => state.setBorderMidpoints);
-  const setMapDataLoaded = useGameStore(state => state.setMapDataLoaded);
-  const mapDataLoaded = useGameStore(state => state.mapDataLoaded);
-  const initializeCentroids = useGameStore(state => state.initializeCentroids);
-  const detectAndUpdateTheaters = useGameStore(state => state.detectAndUpdateTheaters);
-  const persistedRegionOwners = useGameStore(state => state.regionOwners);
+  const setRegions = useSimulationStore(state => state.setRegions);
+  const setAdjacency = useSimulationStore(state => state.setAdjacency);
+  const setBorderMidpoints = useSimulationStore(state => state.setBorderMidpoints);
+  const setMapDataLoaded = useSimulationStore(state => state.setMapDataLoaded);
+  const mapDataLoaded = useSimulationStore(state => state.mapDataLoaded);
+  const initializeCentroids = useSimulationStore(state => state.initializeCentroids);
+  const detectAndUpdateTheaters = useSimulationStore(state => state.detectAndUpdateTheaters);
+  const persistedRegionOwners = useSimulationStore(state => state.regionOwners);
 
   useEffect(() => {
     if (mapDataLoaded) return;
