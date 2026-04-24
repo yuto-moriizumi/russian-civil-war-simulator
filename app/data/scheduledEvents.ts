@@ -2,6 +2,7 @@ import { ScheduledEvent } from '../types/game';
 import { caucasusFrontEscalationEvent } from './scheduledEvents/caucasusFrontEscalation';
 import { retreatFromTabrizEvent } from './scheduledEvents/retreatFromTabriz';
 import { transcaucasianDemocraticFederativeRepublicEstablishedEvent } from './scheduledEvents/transcaucasianDemocraticFederativeRepublic';
+import { transcaucasianDemocraticFederativeRepublicDissolutionEvent } from './scheduledEvents/transcaucasianDemocraticFederativeRepublicDissolution';
 export const scheduledEvents: ScheduledEvent[] = [
   {
     id: 'finnish-civil-war',
@@ -310,14 +311,7 @@ export const scheduledEvents: ScheduledEvent[] = [
   },
   retreatFromTabrizEvent,
   transcaucasianDemocraticFederativeRepublicEstablishedEvent,
-  {
-    id: 'dissolution-of-the-transcaucasian-democratic-federative-republic',
-    date: '1918-05-26',
-    title: 'Dissolution of the Transcaucasian Democratic Federative Republic',
-    description: 'The Transcaucasian federation collapses. Azerbaijan secures AZE, Armenian core territories break away to the First Republic of Armenia, and the remaining TDFR-held lands pass to Democratic Republic of Georgia.',
-    actions: [{ type: 'transferRegion', regionId: 'AZE', newOwner: 'adr' }, { type: 'transferCoreRegionsFromCountry', newOwner: 'armenia', fromCountry: 'tdfr' }, { type: 'transferAllRegionsFromCountry', newOwner: 'georgia', fromCountry: 'tdfr' }],
-    triggered: false,
-  },
+  transcaucasianDemocraticFederativeRepublicDissolutionEvent,
   {
     id: 'odessa-soviet-republic-proclaimed',
     date: '1918-02-01',
