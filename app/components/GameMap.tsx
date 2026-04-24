@@ -212,6 +212,7 @@ export default function GameMap() {
               centroid={centroid}
               isSelected={isSelected}
               isPlayerUnit={isPlayerUnit}
+              movingUnits={movingUnits}
               onRegionSelect={setSelectedRegion}
               onDivisionSelect={handleDivisionSelect}
             />
