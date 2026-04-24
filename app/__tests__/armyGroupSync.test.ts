@@ -53,7 +53,7 @@ describe('syncArmyGroupTerritories', () => {
       ACCESS: { id: 'ACCESS', name: 'Access', countryIso3: 'DON', owner: 'don' as never },
     };
     const divisions: DivisionState = {
-      'div-1': makeDivision({ regionId: null }),
+      'div-1': makeDivision({ regionId: 'test-region' }),
     };
     const movingUnits: Movement[] = [{
       id: 'retreat-1',

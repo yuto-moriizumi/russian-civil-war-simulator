@@ -48,7 +48,7 @@ function makeDiv(id: string): Division {
     maxHp: 100,
     attack: 10,
     defence: 15,
-    regionId: null,
+    regionId: 'test-region',
   };
 }
 

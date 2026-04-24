@@ -22,7 +22,7 @@ function makeDiv(
   attack = 10,
   defence = 10
 ): Division {
-  return { id, name: id, owner, armyGroupId: 'ag-test', hp, maxHp: 100, attack, defence, regionId: null };
+  return { id, name: id, owner, armyGroupId: 'ag-test', hp, maxHp: 100, attack, defence, regionId: 'test-region' };
 }
 
 function makeDivisions(divs: Division[]): DivisionState {

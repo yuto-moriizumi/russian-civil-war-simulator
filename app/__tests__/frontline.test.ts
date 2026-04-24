@@ -46,7 +46,7 @@ function makeDiv(id: string, armyGroupId = 'ag-1'): Division {
     maxHp: 100,
     attack: 10,
     defence: 15,
-    regionId: null,
+    regionId: 'test-region',
   };
 }
 
