@@ -1,4 +1,4 @@
-import { Movement, ActiveCombat } from '../../types/game';
+import { Movement, ActiveCombat, Relationship } from '../../types/game';
 import {
   buildCanEnterPredicate,
   buildIsHostilePredicate,
@@ -14,8 +14,21 @@ import {
   getCommittedDivisionIds,
 } from '../../domain/game/combatParticipation';
 import { createGameEvent } from '../../domain/game/eventUtils';
-import { shareSameOverlord } from '../../domain/game/relationshipUtils';
 import { ActionsState } from './types';
+
+function areCountriesAtWar(
+  countryA: string,
+  countryB: string,
+  relationships: Relationship[],
+): boolean {
+  const aDeclaresB = relationships.find(
+    r => r.fromCountry === countryA && r.toCountry === countryB,
+  )?.type ?? 'neutral';
+  const bDeclaresA = relationships.find(
+    r => r.fromCountry === countryB && r.toCountry === countryA,
+  )?.type ?? 'neutral';
+  return aDeclaresB === 'war' || bDeclaresA === 'war';
+}
 
 /**
  * Advances an army group using a HOI4-style frontline assignment strategy.
@@ -122,16 +135,8 @@ export function advanceArmyGroup(
     const arrivalTime = new Date(dateTime);
     arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
 
-    // Determine hostility of the destination
-    const theyGrantUs = relationships.find(
-      r => r.fromCountry === destRegion.owner && r.toCountry === countryId
-    )?.type ?? 'neutral';
-    const weDeclared = relationships.find(
-      r => r.fromCountry === countryId && r.toCountry === destRegion.owner
-    )?.type ?? 'neutral';
-    const destAutonomy = theyGrantUs === 'autonomy' || weDeclared === 'autonomy';
     const isEnemy = destRegion.owner !== countryId;
-    const isHostile = isEnemy && !destAutonomy && theyGrantUs !== 'military_access' && !shareSameOverlord(countryId, destRegion.owner, relationships);
+    const isHostile = isEnemy && areCountriesAtWar(countryId, destRegion.owner, relationships);
 
     let pendingCombatId: string | undefined;
 

@@ -170,11 +170,11 @@ export function applyMoveUnitsCommand(
   const arrivalTime = new Date(dateTime);
   arrivalTime.setHours(arrivalTime.getHours() + travelTimeHours);
 
-  const isHostile =
+  const isAtWar =
     targetOwner !== selectedCountry.id &&
-    !hasAutonomy &&
-    theyGrantUs !== 'military_access' &&
-    !shareSameOverlord(selectedCountry.id, targetOwner, relationships);
+    (weDeclared === 'war' || theyGrantUs === 'war');
+
+  const isHostile = isAtWar;
 
   let newCombat: ActiveCombat | null = null;
   const nextDivisions = { ...divisions };

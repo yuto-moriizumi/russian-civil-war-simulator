@@ -1,4 +1,4 @@
-import { Movement, ActiveCombat, Division } from '../../types/game';
+import { Movement, ActiveCombat, Division, Relationship } from '../../types/game';
 import { getNextStepToward, buildCanEnterPredicate, buildIsHostilePredicate } from '../../utils/pathfinding';
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { createActiveCombat } from './combat';
@@ -10,6 +10,20 @@ import {
 import { createGameEvent } from './eventUtils';
 import { getCombatDefenders } from './divisionState';
 import { EngineSimulationState, SimulationLogger, noOpLogger } from './engine/types';
+
+function areCountriesAtWar(
+  countryA: string,
+  countryB: string,
+  relationships: Relationship[],
+): boolean {
+  const aDeclaresB = relationships.find(
+    r => r.fromCountry === countryA && r.toCountry === countryB,
+  )?.type ?? 'neutral';
+  const bDeclaresA = relationships.find(
+    r => r.fromCountry === countryB && r.toCountry === countryA,
+  )?.type ?? 'neutral';
+  return aDeclaresB === 'war' || bDeclaresA === 'war';
+}
 
 /**
  * Pure version of attackArmyGroup: returns state delta instead of calling setState.
@@ -235,7 +249,12 @@ export function attackArmyGroup(
     );
 
     const attackTargets = (adjacency[borderRegionId] || []).filter(
-      neighborId => isHostile(neighborId) && canEnter(neighborId)
+      neighborId => {
+        const neighbor = regions[neighborId];
+        if (!neighbor) return false;
+        if (!isHostile(neighborId) || !canEnter(neighborId)) return false;
+        return areCountriesAtWar(countryId, neighbor.owner, relationships);
+      }
     );
     if (attackTargets.length === 0) continue;
 
