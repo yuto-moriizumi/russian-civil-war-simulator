@@ -233,6 +233,10 @@ export type ScheduledEventCondition =
     eventId?: string;     // event ID to check (for eventTriggered type)
   }
   | {
+    type: 'date';
+    date: string;         // Trigger only on this date (YYYY-MM-DD)
+  }
+  | {
     type: 'or';
     conditions: ScheduledEventCondition[];
   };

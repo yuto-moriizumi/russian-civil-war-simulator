@@ -177,3 +177,58 @@ describe('mergeCountry action', () => {
     expect(result.newEvents).toHaveLength(0);
   });
 });
+
+describe('date scheduled event condition', () => {
+  const dateConditionEvent: ScheduledEvent = {
+    id: 'test-date-condition',
+    date: '1918-01-01',
+    title: 'Date Condition Event',
+    description: 'Triggers only on the condition date',
+    conditions: [
+      { type: 'date', date: '1918-02-10' },
+    ],
+    actions: [
+      { type: 'transferRegion', regionId: 'REG-A', newOwner: 'germany' as CountryId },
+    ],
+    triggered: false,
+  };
+
+  it('fires only on the matching condition date', () => {
+    const regions: Record<string, Region> = {
+      'REG-A': { id: 'REG-A', name: 'Region A', countryIso3: 'RUS', owner: 'poland' as CountryId },
+    };
+
+    const beforeResult = processScheduledEvents(
+      [dateConditionEvent],
+      new Date(1918, 1, 9),
+      regions,
+      [],
+      []
+    );
+
+    expect(beforeResult.updatedScheduledEvents[0].triggered).toBe(false);
+    expect(beforeResult.updatedRegions['REG-A'].owner).toBe('poland');
+
+    const onDateResult = processScheduledEvents(
+      [dateConditionEvent],
+      new Date(1918, 1, 10),
+      regions,
+      [],
+      []
+    );
+
+    expect(onDateResult.updatedScheduledEvents[0].triggered).toBe(true);
+    expect(onDateResult.updatedRegions['REG-A'].owner).toBe('germany');
+
+    const afterResult = processScheduledEvents(
+      [dateConditionEvent],
+      new Date(1918, 1, 11),
+      regions,
+      [],
+      []
+    );
+
+    expect(afterResult.updatedScheduledEvents[0].triggered).toBe(false);
+    expect(afterResult.updatedRegions['REG-A'].owner).toBe('poland');
+  });
+});
