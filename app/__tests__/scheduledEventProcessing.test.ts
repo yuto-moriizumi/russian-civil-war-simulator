@@ -232,3 +232,126 @@ describe('date scheduled event condition', () => {
     expect(afterResult.updatedRegions['REG-A'].owner).toBe('poland');
   });
 });
+
+describe('dateReached scheduled event condition', () => {
+  const dateReachedConditionEvent: ScheduledEvent = {
+    id: 'test-date-reached-condition',
+    date: '1918-01-01',
+    title: 'Date Reached Condition Event',
+    description: 'Triggers on or after the condition date when other conditions pass',
+    conditions: [
+      { type: 'dateReached', date: '1918-02-10' },
+      { type: 'atLeastOneRegionOwnedByOrPuppetOf', regions: ['REG-A'], country: 'poland' as CountryId },
+    ],
+    actions: [
+      { type: 'transferRegion', regionId: 'REG-A', newOwner: 'germany' as CountryId },
+    ],
+    triggered: false,
+  };
+
+  it('fires on or after the matching condition date', () => {
+    const regions: Record<string, Region> = {
+      'REG-A': { id: 'REG-A', name: 'Region A', countryIso3: 'RUS', owner: 'poland' as CountryId },
+    };
+
+    const beforeResult = processScheduledEvents(
+      [dateReachedConditionEvent],
+      new Date(1918, 1, 9),
+      regions,
+      [],
+      []
+    );
+
+    expect(beforeResult.updatedScheduledEvents[0].triggered).toBe(false);
+    expect(beforeResult.updatedRegions['REG-A'].owner).toBe('poland');
+
+    const onDateResult = processScheduledEvents(
+      [dateReachedConditionEvent],
+      new Date(1918, 1, 10),
+      regions,
+      [],
+      []
+    );
+
+    expect(onDateResult.updatedScheduledEvents[0].triggered).toBe(true);
+    expect(onDateResult.updatedRegions['REG-A'].owner).toBe('germany');
+
+    const afterDateResult = processScheduledEvents(
+      [dateReachedConditionEvent],
+      new Date(1918, 1, 11),
+      regions,
+      [],
+      []
+    );
+
+    expect(afterDateResult.updatedScheduledEvents[0].triggered).toBe(true);
+    expect(afterDateResult.updatedRegions['REG-A'].owner).toBe('germany');
+  });
+});
+
+describe('or scheduled event condition', () => {
+  const orConditionEvent: ScheduledEvent = {
+    id: 'test-or-condition',
+    date: '1918-04-22',
+    title: 'OR Condition Event',
+    description: 'Triggers when either the fallback date is reached or an early condition is met',
+    conditions: [
+      {
+        type: 'or',
+        conditions: [
+          { type: 'dateReached', date: '1918-04-22' },
+          { type: 'atLeastOneRegionOwnedByOrPuppetOf', regions: ['REG-A'], country: 'soviet' as CountryId },
+        ],
+      },
+    ],
+    actions: [
+      { type: 'transferRegion', regionId: 'REG-A', newOwner: 'germany' as CountryId },
+    ],
+    triggered: false,
+  };
+
+  it('fires before the fallback date when an OR branch becomes true', () => {
+    const regions: Record<string, Region> = {
+      'REG-A': { id: 'REG-A', name: 'Region A', countryIso3: 'RUS', owner: 'soviet' as CountryId },
+    };
+
+    const result = processScheduledEvents(
+      [orConditionEvent],
+      new Date(1918, 3, 1),
+      regions,
+      [],
+      []
+    );
+
+    expect(result.updatedScheduledEvents[0].triggered).toBe(true);
+    expect(result.updatedRegions['REG-A'].owner).toBe('germany');
+  });
+
+  it('fires on the fallback date when no earlier OR branch has passed', () => {
+    const regions: Record<string, Region> = {
+      'REG-A': { id: 'REG-A', name: 'Region A', countryIso3: 'RUS', owner: 'poland' as CountryId },
+    };
+
+    const beforeDateResult = processScheduledEvents(
+      [orConditionEvent],
+      new Date(1918, 3, 21),
+      regions,
+      [],
+      []
+    );
+
+    expect(beforeDateResult.updatedScheduledEvents[0].triggered).toBe(false);
+    expect(beforeDateResult.updatedRegions['REG-A'].owner).toBe('poland');
+
+    const onDateResult = processScheduledEvents(
+      [orConditionEvent],
+      new Date(1918, 3, 22),
+      regions,
+      [],
+      []
+    );
+
+    expect(onDateResult.updatedScheduledEvents[0].triggered).toBe(true);
+    expect(onDateResult.updatedRegions['REG-A'].owner).toBe('germany');
+  });
+});

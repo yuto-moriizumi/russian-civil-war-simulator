@@ -237,17 +237,20 @@ export type ScheduledEventCondition =
     date: string;         // Trigger only on this date (YYYY-MM-DD)
   }
   | {
+    type: 'dateReached';
+    date: string;         // Trigger on or after this date (YYYY-MM-DD)
+  }
+  | {
     type: 'and' | 'or';
     conditions: ScheduledEventCondition[];
   };
 
 export interface ScheduledEvent {
   id: string;
-  date: string; // YYYY-MM-DD format; if conditions present, treated as earliest possible trigger date (AND) or fallback date (OR)
+  date: string; // YYYY-MM-DD format; used directly by unconditional events and as canonical metadata for conditioned events
   title: string;
   description: string;
   conditions?: ScheduledEventCondition[]; // Conditions to check; supports nested AND/OR groups
-  conditionLogic?: 'and' | 'or'; // How to evaluate conditions with date. Default: 'and'
   actions: ScheduledEventAction[];
   triggered: boolean; // Track if event has already been triggered
 }
