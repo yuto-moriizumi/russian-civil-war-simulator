@@ -65,7 +65,7 @@ export function RegionInfoPanel() {
   if (!region) return null;
 
   return (
-    <div className="absolute left-4 bottom-16 z-10 rounded-lg border-2 border-amber-500 bg-stone-900/95 p-4 min-w-[280px]">
+    <div className="absolute left-4 bottom-16 z-30 rounded-lg border-2 border-amber-500 bg-stone-900/95 p-4 min-w-[280px]">
       <div className="mb-2 text-lg font-bold text-amber-400">
         {region.name}
       </div>
@@ -203,4 +203,3 @@ export function RegionInfoPanel() {
     </div>
   );
 }
-
