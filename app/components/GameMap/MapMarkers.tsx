@@ -6,6 +6,7 @@ import { Region, Movement, ActiveCombat, DivisionState, CountryId } from '../../
 import { COUNTRY_COLORS } from '../../utils/mapUtils';
 import { COUNTRY_FLAGS } from './mapConstants';
 import { getDivisionsInRegion } from '../../domain/game/divisionState';
+import { UnitMarkerRow } from './UnitMarkerRow';
 
 interface UnitMarkerProps {
   regionId: string;
@@ -75,56 +76,18 @@ export function UnitMarker({
           transition: 'all 0.2s ease',
         }}
       >
-        {markerRows.map(([owner, count], index) => {
-          const flagUrl = COUNTRY_FLAGS[owner as keyof typeof COUNTRY_FLAGS] ?? COUNTRY_FLAGS[region.owner];
-          const bgColor = COUNTRY_COLORS[owner as keyof typeof COUNTRY_COLORS] ?? COUNTRY_COLORS[region.owner];
-          const textColor = owner === 'white' ? '#000' : '#fff';
-          const textShadow = owner === 'white' ? 'none' : '1px 1px 1px rgba(0,0,0,0.5)';
-
-          return (
-            <div
-              key={`${regionId}-${owner}`}
-              data-owner={owner}
-              style={{
-                backgroundColor: bgColor,
-                border: isSelected ? '2px solid #22d3ee' : '1px solid rgba(0,0,0,0.5)',
-                borderRadius: '4px',
-                padding: '2px 6px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                boxShadow: isSelected ? '0 0 10px #22d3ee' : '0 2px 4px rgba(0,0,0,0.3)',
-                marginTop: index === 0 ? 0 : '-4px',
-                zIndex: markerRows.length - index,
-              }}
-            >
-              {flagUrl ? (
-                <img
-                  src={flagUrl}
-                  alt={owner}
-                  style={{
-                    width: '16px',
-                    height: '11px',
-                    objectFit: 'cover',
-                    border: '1px solid rgba(0,0,0,0.3)',
-                  }}
-                />
-              ) : (
-                <span style={{ fontSize: '14px' }}>&#9632;</span>
-              )}
-              <span
-                style={{
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                  color: textColor,
-                  textShadow,
-                }}
-              >
-                {count}
-              </span>
-            </div>
-          );
-        })}
+        {markerRows.map(([owner, count], index) => (
+          <UnitMarkerRow
+            key={`${regionId}-${owner}`}
+            owner={owner}
+            count={count}
+            regionId={regionId}
+            regionOwner={region.owner}
+            isSelected={isSelected}
+            index={index}
+            totalRows={markerRows.length}
+          />
+        ))}
       </div>
     </Marker>
   );
