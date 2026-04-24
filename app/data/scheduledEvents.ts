@@ -1,4 +1,5 @@
 import { ScheduledEvent } from '../types/game';
+import { transcaucasianDemocraticFederativeRepublicEstablishedEvent } from './scheduledEvents/transcaucasianDemocraticFederativeRepublic';
 
 /**
  * List of all scheduled historical events
@@ -308,6 +309,7 @@ export const scheduledEvents: ScheduledEvent[] = [
     ],
     triggered: false,
   },
+  transcaucasianDemocraticFederativeRepublicEstablishedEvent,
   {
     id: 'odessa-soviet-republic-proclaimed',
     date: '1918-02-01',
