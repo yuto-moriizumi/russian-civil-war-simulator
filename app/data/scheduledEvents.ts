@@ -4,6 +4,7 @@ import { mountainousRepublicOfTheNorthernCaucasusEvents } from './scheduledEvent
 import { retreatFromTabrizEvent } from './scheduledEvents/retreatFromTabriz';
 import { transcaucasianDemocraticFederativeRepublicEstablishedEvent } from './scheduledEvents/transcaucasianDemocraticFederativeRepublic';
 import { transcaucasianDemocraticFederativeRepublicDissolutionEvent } from './scheduledEvents/transcaucasianDemocraticFederativeRepublicDissolution';
+import { ukrainianIndependenceEvent } from './scheduledEvents/ukrainianIndependence';
 
 /** List of all scheduled historical events */
 export const scheduledEvents: ScheduledEvent[] = [
@@ -106,6 +107,7 @@ export const scheduledEvents: ScheduledEvent[] = [
     ],
     triggered: false,
   },
+  ukrainianIndependenceEvent,
   caucasusFrontEscalationEvent,
   {
     id: 'moldavian-independence',
