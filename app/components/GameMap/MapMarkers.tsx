@@ -2,10 +2,11 @@
 'use client';
 
 import { Marker } from 'react-map-gl/maplibre';
-import { Region, Movement, ActiveCombat, DivisionState } from '../../types/game';
+import { Region, Movement, ActiveCombat, DivisionState, CountryId } from '../../types/game';
 import { COUNTRY_COLORS } from '../../utils/mapUtils';
 import { COUNTRY_FLAGS } from './mapConstants';
 import { getDivisionsInRegion } from '../../domain/game/divisionState';
+import { UnitMarkerRow } from './UnitMarkerRow';
 
 interface UnitMarkerProps {
   regionId: string;
@@ -41,15 +42,14 @@ export function UnitMarker({
     acc[d.owner] = (acc[d.owner] ?? 0) + 1;
     return acc;
   }, {});
-  const ownerEntries = Object.entries(ownerCounts).sort((a, b) => b[1] - a[1]);
+  const ownerEntries = Object.entries(ownerCounts)
+    .sort((a, b) => b[1] - a[1]) as [CountryId, number][];
   // Primary display owner: the one with the most divisions (fall back to region owner)
   const primaryOwner = ownerEntries.length > 0 ? ownerEntries[0][0] : region.owner;
   const hasMixedOwners = ownerEntries.length > 1;
-
-  const flagUrl = COUNTRY_FLAGS[primaryOwner as keyof typeof COUNTRY_FLAGS] ?? COUNTRY_FLAGS[region.owner];
-  const bgColor = COUNTRY_COLORS[primaryOwner as keyof typeof COUNTRY_COLORS] ?? COUNTRY_COLORS[region.owner];
-  const textColor = primaryOwner === 'white' ? '#000' : '#fff';
-  const textShadow = primaryOwner === 'white' ? 'none' : '1px 1px 1px rgba(0,0,0,0.5)';
+  const markerRows: [CountryId, number][] = hasMixedOwners
+    ? ownerEntries
+    : [[primaryOwner as CountryId, regionDivisions.length]];
   
   return (
     <Marker
@@ -69,44 +69,25 @@ export function UnitMarker({
       <div
         className="unit-marker"
         style={{
-          backgroundColor: bgColor,
-          border: isSelected ? '2px solid #22d3ee' : '1px solid rgba(0,0,0,0.5)',
-          borderRadius: '4px',
-          padding: '2px 6px',
           display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          boxShadow: isSelected ? '0 0 10px #22d3ee' : '0 2px 4px rgba(0,0,0,0.3)',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
           cursor: isPlayerUnit ? 'pointer' : 'default',
           transition: 'all 0.2s ease',
         }}
       >
-        {flagUrl ? (
-          <img
-            src={flagUrl}
-            alt={primaryOwner}
-            style={{
-              width: '16px',
-              height: '11px',
-              objectFit: 'cover',
-              border: '1px solid rgba(0,0,0,0.3)',
-            }}
+        {markerRows.map(([owner, count], index) => (
+          <UnitMarkerRow
+            key={`${regionId}-${owner}`}
+            owner={owner}
+            count={count}
+            regionId={regionId}
+            regionOwner={region.owner}
+            isSelected={isSelected}
+            index={index}
+            totalRows={markerRows.length}
           />
-        ) : (
-          <span style={{ fontSize: '14px' }}>&#9632;</span>
-        )}
-        <span
-          style={{
-            fontSize: '12px',
-            fontWeight: 'bold',
-            color: textColor,
-            textShadow,
-          }}
-        >
-          {hasMixedOwners
-            ? ownerEntries.map(([, count], i) => (i === 0 ? count : `+${count}`)).join(' ')
-            : regionDivisions.length}
-        </span>
+        ))}
       </div>
     </Marker>
   );
