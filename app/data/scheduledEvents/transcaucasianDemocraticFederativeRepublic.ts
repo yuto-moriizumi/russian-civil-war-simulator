@@ -5,6 +5,14 @@ export const transcaucasianDemocraticFederativeRepublicEstablishedEvent: Schedul
   date: '1918-04-22',
   title: 'Transcaucasian Democratic Federative Republic Established',
   description: 'The Transcaucasian Sejm declares the Transcaucasian Democratic Federative Republic. White-held Transcaucasian core regions pass to the new federation, which raises an initial defense force as the Ottoman Empire opens hostilities.',
+  conditions: [
+    {
+      type: 'atLeastOneRegionNotOwnedByOrPuppetOf',
+      regions: ['RU-DA', 'RU-KDA'],
+      country: 'white',
+    },
+  ],
+  conditionLogic: 'or',
   actions: [
     {
       type: 'transferCoreRegionsFromCountry',
