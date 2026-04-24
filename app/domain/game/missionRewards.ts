@@ -19,7 +19,6 @@ import { COUNTRY_METADATA } from '../../data/countryMetadata';
 import { calculateCountryBonuses, getDivisionStats } from './bonusCalculator';
 import { createGameEvent } from './eventUtils';
 import {
-  applyRelationshipChange,
   declareWarBetweenCoalitions,
   getRelationshipStatus,
   joinPuppetToOverlordWars,
