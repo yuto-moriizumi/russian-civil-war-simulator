@@ -69,7 +69,6 @@ export const initialGameState: GameState = {
     // Ottoman Empire relationships (November 1917)
     { fromCountry: 'ottoman', toCountry: 'germany', type: 'military_access' },
     { fromCountry: 'ottoman', toCountry: 'austriahungary', type: 'military_access' },
-    { fromCountry: 'ottoman', toCountry: 'greece', type: 'war' },
     // Serbia relationships
     { fromCountry: 'serbia', toCountry: 'austriahungary', type: 'war' },
     { fromCountry: 'serbia', toCountry: 'germany', type: 'war' }
