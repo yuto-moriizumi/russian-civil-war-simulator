@@ -112,4 +112,45 @@ describe('liberated puppets - AI readiness', () => {
       { fromCountry: 'white', toCountry: 'ukrainesoviet', type: 'war' },
     ]));
   });
+
+  it('falls back to another transferred core region when the configured spawn region is not controlled', () => {
+    const state = {
+      ...initialGameState,
+      selectedCountry: sovietCountry,
+      relationships: [],
+      armyGroups: [],
+      aiStates: [],
+    } as unknown as GameStore;
+
+    const regions: RegionState = {
+      'UA-63': {
+        id: 'UA-63',
+        name: 'Kharkiv',
+        countryIso3: 'UKR',
+        owner: 'ukraine',
+      },
+      'UA-65': {
+        id: 'UA-65',
+        name: 'Kherson',
+        countryIso3: 'UKR',
+        owner: 'soviet',
+      },
+    };
+
+    const result = applyLiberatePuppet(
+      {
+        country: 'ukrainesoviet',
+        spawnRegionId: 'UA-63',
+        divisions: 2,
+      },
+      'soviet',
+      state,
+      regions
+    );
+
+    const spawnedDivisions = Object.values(result.updatedDivisions).filter(d => d.owner === 'ukrainesoviet');
+    expect(result.updatedRegions['UA-65'].owner).toBe('ukrainesoviet');
+    expect(spawnedDivisions).toHaveLength(2);
+    expect(spawnedDivisions.every(division => division.regionId === 'UA-65')).toBe(true);
+  });
 });

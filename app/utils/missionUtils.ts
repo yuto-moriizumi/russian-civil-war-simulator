@@ -11,6 +11,8 @@ export function formatCondition(condition: MissionCondition): string {
       return `Control regions: ${condition.regionIds.join(', ')}`;
     case 'controlRegionCount':
       return `Control at least ${condition.count} regions`;
+    case 'controlCoreRegionCountByOverlord':
+      return `Control at least ${condition.count} core regions of ${getCountryName(condition.country)} directly or by puppet`;
     case 'hasUnits':
       return `Have at least ${condition.count} divisions`;
     case 'dateAfter':

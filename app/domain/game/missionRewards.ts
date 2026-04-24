@@ -203,11 +203,14 @@ export function applyLiberatePuppet(
 
   const updatedDivisions = { ...baseDivisions };
   const puppetBonuses = state.countryBonuses[puppetId];
-  const spawnRegion = updatedRegions[spawnRegionId];
-  if (spawnRegion && puppetBonuses) {
+  const effectiveSpawnRegionId = updatedRegions[spawnRegionId]?.owner === puppetId
+    ? spawnRegionId
+    : puppetCoreRegions.find(regionId => updatedRegions[regionId]?.owner === puppetId);
+  const spawnRegion = effectiveSpawnRegionId ? updatedRegions[effectiveSpawnRegionId] : null;
+  if (spawnRegion && effectiveSpawnRegionId && puppetBonuses) {
     const prefix = getDivisionPrefix(puppetId);
     const newDivisions = Array.from({ length: divisionCount }, (_, i) =>
-      createDivision(puppetId, `${prefix} ${i + 1}`, puppetArmyGroup.id, spawnRegionId, puppetBonuses)
+      createDivision(puppetId, `${prefix} ${i + 1}`, puppetArmyGroup.id, effectiveSpawnRegionId, puppetBonuses)
     );
     for (const div of newDivisions) {
       updatedDivisions[div.id] = div;
