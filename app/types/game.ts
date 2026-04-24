@@ -233,7 +233,7 @@ export type ScheduledEventCondition =
     eventId?: string;     // event ID to check (for eventTriggered type)
   }
   | {
-    type: 'or';
+    type: 'and' | 'or';
     conditions: ScheduledEventCondition[];
   };
 
@@ -242,7 +242,7 @@ export interface ScheduledEvent {
   date: string; // YYYY-MM-DD format; if conditions present, treated as earliest possible trigger date (AND) or fallback date (OR)
   title: string;
   description: string;
-  conditions?: ScheduledEventCondition[]; // Conditions to check; supports nested OR groups
+  conditions?: ScheduledEventCondition[]; // Conditions to check; supports nested AND/OR groups
   conditionLogic?: 'and' | 'or'; // How to evaluate conditions with date. Default: 'and'
   actions: ScheduledEventAction[];
   triggered: boolean; // Track if event has already been triggered
