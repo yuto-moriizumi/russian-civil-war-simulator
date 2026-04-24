@@ -134,6 +134,11 @@ function MissionNode({ data }: NodeProps<MissionNodeType>) {
                 ⚔️ War on {getCountryName(mission.rewards.declareWar.target)}
               </span>
             )}
+            {mission.rewards.liberatePuppet && (
+              <span className={mission.claimed ? 'text-green-400 line-through' : 'text-emerald-400'}>
+                🤝 Puppet: {getCountryName(mission.rewards.liberatePuppet.country)}
+              </span>
+            )}
           </div>
         </div>
 
