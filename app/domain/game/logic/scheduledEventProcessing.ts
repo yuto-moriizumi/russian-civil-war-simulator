@@ -47,6 +47,7 @@ export function processScheduledEvents(
       const dateReached = dateString >= event.date;
       const conditionsMet = checkConditions(
         event.conditions,
+        dateString,
         updatedRegions,
         relationships,
         allScheduledEvents,
@@ -231,6 +232,7 @@ function isOwnedByOrPuppetOf(owner: CountryId, overlord: CountryId, relationship
 
 function checkConditions(
   conditions: ScheduledEventCondition[],
+  currentDateString: string,
   regions: Record<string, Region>,
   relationships: Relationship[],
   scheduledEvents: ScheduledEvent[] = [],
@@ -240,6 +242,7 @@ function checkConditions(
     if (condition.type === 'or') {
       return checkConditions(
         condition.conditions,
+        currentDateString,
         regions,
         relationships,
         scheduledEvents,
@@ -260,6 +263,9 @@ function checkConditions(
     }
     if (condition.type === 'eventTriggered') {
       return scheduledEvents.some(e => e.id === condition.eventId && e.triggered);
+    }
+    if (condition.type === 'date') {
+      return currentDateString === condition.date;
     }
     return true;
   };
