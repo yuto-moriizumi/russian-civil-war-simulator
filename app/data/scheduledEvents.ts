@@ -2,10 +2,6 @@ import { ScheduledEvent } from '../types/game';
 import { caucasusFrontEscalationEvent } from './scheduledEvents/caucasusFrontEscalation';
 import { retreatFromTabrizEvent } from './scheduledEvents/retreatFromTabriz';
 import { transcaucasianDemocraticFederativeRepublicEstablishedEvent } from './scheduledEvents/transcaucasianDemocraticFederativeRepublic';
-
-/**
- * List of all scheduled historical events
- */
 export const scheduledEvents: ScheduledEvent[] = [
   {
     id: 'finnish-civil-war',
