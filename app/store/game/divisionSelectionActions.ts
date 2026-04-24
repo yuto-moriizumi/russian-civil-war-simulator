@@ -13,10 +13,12 @@ export const createDivisionSelectionActions = (
 ) => ({
   /** Select all divisions in a region. Clears selectedRegion (mutual exclusivity). */
   selectDivisionsInRegion: (regionId: string) => {
-    const { regions, divisions } = get();
+    const { regions, divisions, selectedCountry } = get();
     const region = regions[regionId];
     if (!region) return;
-    const divisionIds = getDivisionsInRegion(divisions, regionId).map(d => d.id);
+    const divisionIds = getDivisionsInRegion(divisions, regionId)
+      .filter(d => !selectedCountry || d.owner === selectedCountry.id)
+      .map(d => d.id);
     set({ selectedDivisionIds: divisionIds, selectedUnitRegion: regionId, selectedRegion: null });
   },
 
@@ -27,10 +29,12 @@ export const createDivisionSelectionActions = (
    * right-click movement has a sensible source.
    */
   addDivisionsInRegion: (regionId: string) => {
-    const { regions, selectedDivisionIds, selectedUnitRegion, divisions } = get();
+    const { regions, selectedDivisionIds, selectedUnitRegion, divisions, selectedCountry } = get();
     const region = regions[regionId];
     if (!region) return;
-    const newIds = getDivisionsInRegion(divisions, regionId).map(d => d.id);
+    const newIds = getDivisionsInRegion(divisions, regionId)
+      .filter(d => !selectedCountry || d.owner === selectedCountry.id)
+      .map(d => d.id);
     const existing = new Set(selectedDivisionIds);
     const merged = [...selectedDivisionIds, ...newIds.filter(id => !existing.has(id))];
     set({
