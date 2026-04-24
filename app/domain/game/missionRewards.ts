@@ -182,7 +182,7 @@ export function applyLiberatePuppet(
   for (const regionId of puppetCoreRegions) {
     const region = updatedRegions[regionId];
     if (!region) continue;
-    const ownerCoreRegions = COUNTRY_METADATA[region.owner as keyof typeof COUNTRY_METADATA]?.coreRegions ?? [];
+    const ownerCoreRegions: string[] = COUNTRY_METADATA[region.owner as keyof typeof COUNTRY_METADATA]?.coreRegions ?? [];
     const isOwnerCoreRegion = ownerCoreRegions.includes(regionId);
     if ((region.owner === overlordId || overlordPuppets.includes(region.owner)) && !isOwnerCoreRegion) {
       updatedRegions[regionId] = { ...region, owner: puppetId };
