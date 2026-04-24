@@ -14,6 +14,7 @@ interface UnitMarkerProps {
   centroid: [number, number];
   isSelected: boolean;
   isPlayerUnit: boolean;
+  movingUnits?: Movement[];
   onRegionSelect: (regionId: string) => void;
   /** Called with (regionId, shiftHeld) so callers can implement multi-select */
   onDivisionSelect: (regionId: string, shiftHeld: boolean) => void;
@@ -26,10 +27,12 @@ export function UnitMarker({
   centroid,
   isSelected,
   isPlayerUnit,
+  movingUnits = [],
   onRegionSelect,
   onDivisionSelect,
 }: UnitMarkerProps) {
-  const regionDivisions = getDivisionsInRegion(divisions, regionId);
+  const inTransitIds = new Set(movingUnits.flatMap(m => m.divisionIds));
+  const regionDivisions = getDivisionsInRegion(divisions, regionId).filter(d => !inTransitIds.has(d.id));
   // Group divisions by owner so the marker reflects who actually controls the units,
   // not just who owns the territory. This is critical for military-access scenarios
   // where Soviet divisions sit in a Ukraine-owned region — they should show the
