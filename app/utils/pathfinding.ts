@@ -1,5 +1,6 @@
 import { RegionState, Adjacency, CountryId, Movement, Relationship, ActiveCombat, DivisionState } from '../types/game';
 import { getDivisionsInRegion } from '../domain/game/divisionState';
+import { shareSameOverlord } from '../domain/game/relationshipUtils';
 
 /**
  * Build a predicate that returns true for regions that are hostile to the
@@ -16,37 +17,24 @@ import { getDivisionsInRegion } from '../domain/game/divisionState';
  * - Own territory.
  * - Autonomy servants.
  * - Military-access partners.
+ * - Countries sharing the same overlord (suzerain).
  */
-// Returns the overlord (suzerain) of a country if one exists, or null.
-function getOverlord(countryId: CountryId, relMap: Map<string, Relationship>, allCountries: CountryId[]): CountryId | null {
-  for (const potential of allCountries) {
-    const rel = relMap.get(`${potential}|${countryId}`);
-    if (rel?.type === 'autonomy') return potential;
-  }
-  return null;
-}
 
 export function buildIsHostilePredicate(
   countryId: CountryId,
   regions: RegionState,
   relationships: Relationship[]
 ): (regionId: string) => boolean {
-  // Build a Map for O(1) lookup instead of O(L) Array.find() on every edge evaluation
   const relMap = new Map<string, Relationship>();
   for (const r of relationships) {
     relMap.set(`${r.fromCountry}|${r.toCountry}`, r);
   }
-
-  const allCountries = [...new Set(relationships.flatMap(r => [r.fromCountry, r.toCountry]))];
-  const myOverlord = getOverlord(countryId, relMap, allCountries);
 
   return (regionId: string): boolean => {
     const region = regions[regionId];
     if (!region) return false;
     if (region.owner === countryId) return false;
 
-    // Unowned (neutral-country) territory is always hostile — the player can
-    // advance into it, so it should trigger frontline / theater detection.
     if (region.owner === 'neutral') return true;
 
     const theirRel = relMap.get(`${region.owner}|${countryId}`);
@@ -55,16 +43,13 @@ export function buildIsHostilePredicate(
     const theirType = theirRel?.type ?? 'neutral';
     const ourType   = ourRel?.type   ?? 'neutral';
 
-    // Explicitly friendly — autonomy or military access: not hostile
     const isFriendly =
       theirType === 'autonomy' || ourType === 'autonomy' ||
       theirType === 'military_access' || ourType === 'military_access';
     if (isFriendly) return false;
 
-    // Same overlord (suzerain) — treat as friendly
-    if (myOverlord !== null && myOverlord === getOverlord(region.owner, relMap, allCountries)) return false;
+    if (shareSameOverlord(countryId, region.owner, relationships)) return false;
 
-    // War, or no relationship at all (neutral) — treat as hostile
     return true;
   };
 }
@@ -85,14 +70,10 @@ export function buildCanEnterPredicate(
   regions: RegionState,
   relationships: Relationship[]
 ): (regionId: string) => boolean {
-  // Build a Map for O(1) lookup instead of O(L) Array.find() on every edge evaluation
   const relMap = new Map<string, Relationship>();
   for (const r of relationships) {
     relMap.set(`${r.fromCountry}|${r.toCountry}`, r);
   }
-
-  const allCountries = [...new Set(relationships.flatMap(r => [r.fromCountry, r.toCountry]))];
-  const myOverlord = getOverlord(countryId, relMap, allCountries);
 
   return (regionId: string): boolean => {
     const region = regions[regionId];
@@ -108,8 +89,7 @@ export function buildCanEnterPredicate(
     const hasAutonomy = theyGrantUs === 'autonomy' || weDeclared === 'autonomy';
     if (theyGrantUs !== 'neutral' || weDeclared === 'war' || hasAutonomy) return true;
 
-    // Same overlord (suzerain) — automatically grant military access
-    if (myOverlord !== null && myOverlord === getOverlord(region.owner, relMap, allCountries)) return true;
+    if (shareSameOverlord(countryId, region.owner, relationships)) return true;
 
     return false;
   };

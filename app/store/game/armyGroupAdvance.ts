@@ -14,6 +14,7 @@ import {
   getCommittedDivisionIds,
 } from '../../domain/game/combatParticipation';
 import { createGameEvent } from '../../domain/game/eventUtils';
+import { shareSameOverlord } from '../../domain/game/relationshipUtils';
 import { ActionsState } from './types';
 
 /**
@@ -130,7 +131,7 @@ export function advanceArmyGroup(
     )?.type ?? 'neutral';
     const destAutonomy = theyGrantUs === 'autonomy' || weDeclared === 'autonomy';
     const isEnemy = destRegion.owner !== countryId;
-    const isHostile = isEnemy && !destAutonomy && theyGrantUs !== 'military_access';
+    const isHostile = isEnemy && !destAutonomy && theyGrantUs !== 'military_access' && !shareSameOverlord(countryId, destRegion.owner, relationships);
 
     let pendingCombatId: string | undefined;
 

@@ -14,6 +14,7 @@ import {
   findActiveCombatOnBorder,
   getCommittedDivisionIds,
 } from '../combatParticipation';
+import { shareSameOverlord } from '../relationshipUtils';
 import type { ActiveCombat, Movement } from '../../../types/game';
 import type { EngineSimulationState } from '../engine/types';
 import type { GameCommandResult } from './types';
@@ -114,7 +115,8 @@ export function applyMoveUnitsCommand(
     const hasAccess =
       theyGrantUs === 'military_access' ||
       theyGrantUs === 'autonomy' ||
-      weDeclared === 'autonomy';
+      weDeclared === 'autonomy' ||
+      shareSameOverlord(selectedCountry.id, fromOwner, relationships);
     const hasOurDivisions = fromDivisions.some(
       division => division.owner === selectedCountry.id,
     );
@@ -171,7 +173,8 @@ export function applyMoveUnitsCommand(
   const isHostile =
     targetOwner !== selectedCountry.id &&
     !hasAutonomy &&
-    theyGrantUs !== 'military_access';
+    theyGrantUs !== 'military_access' &&
+    !shareSameOverlord(selectedCountry.id, targetOwner, relationships);
 
   let newCombat: ActiveCombat | null = null;
   const nextDivisions = { ...divisions };
