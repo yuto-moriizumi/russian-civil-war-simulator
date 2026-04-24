@@ -14,6 +14,24 @@
         "color": "#10B981"
       }
     ],
+    "don": [
+      {
+        "name": "Don Cossack Host",
+        "color": "#3B82F6"
+      }
+    ],
+    "germany": [
+      {
+        "name": "10. Armee",
+        "color": "#3B82F6"
+      }
+    ],
+    "ottoman": [
+      {
+        "name": "Ottoman Army",
+        "color": "#3B82F6"
+      }
+    ],
     "serbia": [
       {
         "name": "Serbian Army Group",
@@ -36,6 +54,14 @@
       {
         "name": "Volunteer Army",
         "color": "#3B82F6"
+      },
+      {
+        "name": "Caucasus Army",
+        "color": "#10B981"
+      },
+      {
+        "name": "8th Army",
+        "color": "#F59E0B"
       }
     ]
   },
@@ -44,6 +70,20 @@
       {
         "owner": "austriahungary",
         "armyGroupName": "k.u.k. Armee",
+        "count": 1
+      }
+    ],
+    "BY-BR": [
+      {
+        "owner": "germany",
+        "armyGroupName": "10. Armee",
+        "count": 1
+      }
+    ],
+    "BY-HR": [
+      {
+        "owner": "germany",
+        "armyGroupName": "10. Armee",
         "count": 1
       }
     ],
@@ -68,17 +108,66 @@
         "count": 1
       }
     ],
-    "GEO": [
-      {
-        "owner": "white",
-        "armyGroupName": "Volunteer Army",
-        "count": 1
-      }
-    ],
     "HR-16": [
       {
         "owner": "austriahungary",
         "armyGroupName": "k.u.k. Armee",
+        "count": 1
+      }
+    ],
+    "IR-02": [
+      {
+        "owner": "white",
+        "armyGroupName": "Caucasus Army",
+        "count": 1
+      }
+    ],
+    "LT-PN": [
+      {
+        "owner": "germany",
+        "armyGroupName": "10. Armee",
+        "count": 1
+      }
+    ],
+    "LT-UT": [
+      {
+        "owner": "germany",
+        "armyGroupName": "10. Armee",
+        "count": 1
+      }
+    ],
+    "LT-VL": [
+      {
+        "owner": "germany",
+        "armyGroupName": "10. Armee",
+        "count": 1
+      }
+    ],
+    "LV-016": [
+      {
+        "owner": "germany",
+        "armyGroupName": "10. Armee",
+        "count": 1
+      }
+    ],
+    "LV-052": [
+      {
+        "owner": "germany",
+        "armyGroupName": "10. Armee",
+        "count": 1
+      }
+    ],
+    "LV-RIX": [
+      {
+        "owner": "germany",
+        "armyGroupName": "10. Armee",
+        "count": 1
+      }
+    ],
+    "MDA": [
+      {
+        "owner": "white",
+        "armyGroupName": "8th Army",
         "count": 1
       }
     ],
@@ -187,6 +276,13 @@
         "count": 1
       }
     ],
+    "RU-CU": [
+      {
+        "owner": "white",
+        "armyGroupName": "Volunteer Army",
+        "count": 1
+      }
+    ],
     "RU-IVA": [
       {
         "owner": "soviet",
@@ -216,6 +312,13 @@
       }
     ],
     "RU-ME": [
+      {
+        "owner": "white",
+        "armyGroupName": "Volunteer Army",
+        "count": 1
+      }
+    ],
+    "RU-MO": [
       {
         "owner": "white",
         "armyGroupName": "Volunteer Army",
@@ -257,6 +360,13 @@
         "count": 1
       }
     ],
+    "RU-ROS": [
+      {
+        "owner": "don",
+        "armyGroupName": "Don Cossack Host",
+        "count": 1
+      }
+    ],
     "RU-RYA": [
       {
         "owner": "soviet",
@@ -285,10 +395,87 @@
         "count": 1
       }
     ],
+    "TR-12": [
+      {
+        "owner": "ottoman",
+        "armyGroupName": "Ottoman Army",
+        "count": 1
+      }
+    ],
+    "TR-13": [
+      {
+        "owner": "white",
+        "armyGroupName": "Caucasus Army",
+        "count": 1
+      }
+    ],
+    "TR-21": [
+      {
+        "owner": "ottoman",
+        "armyGroupName": "Ottoman Army",
+        "count": 1
+      }
+    ],
+    "TR-24": [
+      {
+        "owner": "ottoman",
+        "armyGroupName": "Ottoman Army",
+        "count": 1
+      }
+    ],
+    "TR-25": [
+      {
+        "owner": "white",
+        "armyGroupName": "Caucasus Army",
+        "count": 1
+      }
+    ],
+    "TR-28": [
+      {
+        "owner": "ottoman",
+        "armyGroupName": "Ottoman Army",
+        "count": 1
+      }
+    ],
+    "TR-30": [
+      {
+        "owner": "ottoman",
+        "armyGroupName": "Ottoman Army",
+        "count": 1
+      }
+    ],
+    "TR-61": [
+      {
+        "owner": "white",
+        "armyGroupName": "Caucasus Army",
+        "count": 1
+      }
+    ],
+    "TR-72": [
+      {
+        "owner": "ottoman",
+        "armyGroupName": "Ottoman Army",
+        "count": 1
+      }
+    ],
+    "TR-73": [
+      {
+        "owner": "ottoman",
+        "armyGroupName": "Ottoman Army",
+        "count": 1
+      }
+    ],
     "UA-30": [
       {
         "owner": "ukraine",
         "armyGroupName": "Ukrainian Army",
+        "count": 1
+      }
+    ],
+    "UA-56": [
+      {
+        "owner": "germany",
+        "armyGroupName": "10. Armee",
         "count": 1
       }
     ],
