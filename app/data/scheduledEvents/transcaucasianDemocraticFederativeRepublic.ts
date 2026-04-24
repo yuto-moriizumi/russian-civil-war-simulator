@@ -8,8 +8,13 @@ export const transcaucasianDemocraticFederativeRepublicEstablishedEvent: Schedul
   conditions: [
     {
       type: 'atLeastOneRegionNotOwnedByOrPuppetOf',
-      regions: ['RU-DA', 'RU-KDA'],
+      regions: ['RU-DA'],
       country: 'white',
+    },
+    {
+      type: 'atLeastOneRegionOwnedByOrPuppetOf',
+      regions: ['RU-KDA'],
+      country: 'soviet',
     },
   ],
   conditionLogic: 'or',

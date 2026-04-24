@@ -182,6 +182,49 @@ describe('scheduled events', () => {
     expect(result.updatedScheduledEvents[0].triggered).toBe(true);
   });
 
+  it('establishes the Transcaucasian Democratic Federative Republic early if RU-KDA is held by a Soviet puppet', () => {
+    const event = scheduledEvents.find(e => e.id === 'transcaucasian-democratic-federative-republic-established');
+    const regions: RegionState = {
+      GEO: r('GEO', 'white'),
+      ARM: r('ARM', 'white'),
+      AZE: r('AZE', 'white'),
+      'RU-DA': r('RU-DA', 'white'),
+      'RU-KDA': r('RU-KDA', 'kuban_soviet'),
+    };
+    const relationships: Relationship[] = [
+      { fromCountry: 'soviet', toCountry: 'kuban_soviet', type: 'autonomy' },
+    ];
+
+    expect(event).toBeDefined();
+
+    const result = processScheduledEvents([event!], new Date(1918, 3, 10), regions, relationships, []);
+
+    expect(result.updatedRegions.GEO.owner).toBe('tdfr');
+    expect(result.updatedRegions.ARM.owner).toBe('tdfr');
+    expect(result.updatedRegions.AZE.owner).toBe('tdfr');
+    expect(result.updatedScheduledEvents[0].triggered).toBe(true);
+  });
+
+  it('does not establish the Transcaucasian Democratic Federative Republic early just because RU-KDA is non-White', () => {
+    const event = scheduledEvents.find(e => e.id === 'transcaucasian-democratic-federative-republic-established');
+    const regions: RegionState = {
+      GEO: r('GEO', 'white'),
+      ARM: r('ARM', 'white'),
+      AZE: r('AZE', 'white'),
+      'RU-DA': r('RU-DA', 'white'),
+      'RU-KDA': r('RU-KDA', 'ottoman'),
+    };
+
+    expect(event).toBeDefined();
+
+    const result = processScheduledEvents([event!], new Date(1918, 3, 10), regions, [], []);
+
+    expect(result.updatedRegions.GEO.owner).toBe('white');
+    expect(result.updatedRegions.ARM.owner).toBe('white');
+    expect(result.updatedRegions.AZE.owner).toBe('white');
+    expect(result.updatedScheduledEvents[0].triggered).toBe(false);
+  });
+
   it('dissolves the TDFR on May 26, 1918 by splitting its held regions between Azerbaijan, Armenia, and Georgia', () => {
     const event = scheduledEvents.find(
       e => e.id === 'dissolution-of-the-transcaucasian-democratic-federative-republic'
