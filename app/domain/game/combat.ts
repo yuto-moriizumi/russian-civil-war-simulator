@@ -39,6 +39,7 @@ export function createDivision(
   owner: CountryId,
   name: string,
   armyGroupId: string,
+  regionId: string,
   countryBonuses: CountryBonuses,
   options?: {
     hp?: number;
@@ -54,7 +55,7 @@ export function createDivision(
     name,
     owner,
     armyGroupId,
-    regionId: null,
+    regionId,
     hp: options?.hp ?? maxHp,
     maxHp,
     attack: options?.attack ?? stats.attack,

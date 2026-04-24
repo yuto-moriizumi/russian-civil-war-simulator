@@ -29,7 +29,7 @@ export function regenerateDivisionHP(
 
   const result: DivisionState = {};
   for (const [id, div] of Object.entries(divisions)) {
-    if (div.regionId !== null && !excludedIds.has(id)) {
+    if (!excludedIds.has(id)) {
       result[id] = { ...div, hp: Math.min(div.hp + GAME_CONFIG.HP.REGEN_PER_TICK, div.maxHp) };
     } else {
       result[id] = div;

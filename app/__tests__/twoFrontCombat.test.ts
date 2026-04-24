@@ -16,7 +16,7 @@ const NOW = new Date('1918-01-01T12:00:00Z');
 
 function makeDiv(overrides: Partial<Division> = {}): Division {
   return { id: 'div-1', name: '1st', owner: 'soviet', armyGroupId: 'ag-1',
-    hp: 100, maxHp: 100, attack: 10, defence: 15, regionId: null, ...overrides };
+    hp: 100, maxHp: 100, attack: 10, defence: 15, regionId: 'test-region', ...overrides };
 }
 
 function makeRegion(id: string, overrides: Partial<Region> = {}): Region {
@@ -78,7 +78,7 @@ describe('two-front combat: second attack on defender whose divisions are alread
   it('creates a new combat when attacking a region that is already defending (divisions cleared)', () => {
     const sovA = makeDiv({ id: 'sov-a', owner: 'soviet', regionId: 'A' });
     const sovietDivB = makeDiv({ id: 'sov-b', owner: 'soviet', regionId: 'B' });
-    const whiteDefC = makeDiv({ id: 'wht-c', owner: 'white', regionId: null });
+    const whiteDefC = makeDiv({ id: 'wht-c', owner: 'white', regionId: 'test-region' });
     const divisions: DivisionState = { 'sov-a': sovA, 'sov-b': sovietDivB, 'wht-c': whiteDefC };
     const regions: RegionState = {
       A: makeRegion('A', { owner: 'soviet' }),

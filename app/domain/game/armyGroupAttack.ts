@@ -38,10 +38,8 @@ export function attackArmyGroup(
   // Build region→division index once: O(D) instead of O(R×D)
   const divisionsByRegion = new Map<string, Division[]>();
   for (const div of Object.values(divisions)) {
-    if (div.regionId) {
-      if (!divisionsByRegion.has(div.regionId)) divisionsByRegion.set(div.regionId, []);
-      divisionsByRegion.get(div.regionId)!.push(div);
-    }
+    if (!divisionsByRegion.has(div.regionId)) divisionsByRegion.set(div.regionId, []);
+    divisionsByRegion.get(div.regionId)!.push(div);
   }
   const getDivsInRegion = (regionId: string): Division[] => divisionsByRegion.get(regionId) ?? [];
 
@@ -293,10 +291,8 @@ export function attackArmyGroup(
           );
         }
       } else {
-        const inTransitFromDest = new Set(
-          movingUnits.filter(m => m.fromRegion === attackTargetId).flatMap(m => m.divisionIds)
-        );
-        const defenderDivisions = getDivsInRegion(attackTargetId).filter(d => d.owner === destRegion.owner && !inTransitFromDest.has(d.id));
+        // Divisions at the target region (including those currently moving away — regionId stays as source until arrival)
+        const defenderDivisions = getDivsInRegion(attackTargetId).filter(d => d.owner === destRegion.owner);
         const hasActiveCombatAtDest = allKnownCombats.some(c => c.defenderRegionId === attackTargetId && !c.isComplete);
         if (defenderDivisions.length > 0 || hasActiveCombatAtDest) {
           const otherCombatsOnRegion = allKnownCombats.filter(

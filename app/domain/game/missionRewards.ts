@@ -202,10 +202,10 @@ export function applyLiberatePuppet(
   if (spawnRegion && puppetBonuses) {
     const prefix = getDivisionPrefix(puppetId);
     const newDivisions = Array.from({ length: divisionCount }, (_, i) =>
-      createDivision(puppetId, `${prefix} ${i + 1}`, puppetArmyGroup.id, puppetBonuses)
+      createDivision(puppetId, `${prefix} ${i + 1}`, puppetArmyGroup.id, spawnRegionId, puppetBonuses)
     );
     for (const div of newDivisions) {
-      updatedDivisions[div.id] = { ...div, regionId: spawnRegionId };
+      updatedDivisions[div.id] = div;
     }
   }
 

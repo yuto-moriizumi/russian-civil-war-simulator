@@ -39,7 +39,7 @@ function makeDiv(overrides: Partial<Division> = {}): Division {
     maxHp: 100,
     attack: 10,
     defence: 15,
-    regionId: null,
+    regionId: 'test-region',
     ...overrides,
   };
 }
@@ -187,7 +187,7 @@ describe('processMovements', () => {
 
   it('regenerates HP for divisions in transit (+10 per tick, capped at maxHp)', () => {
     const now = new Date('1918-01-01T18:00:00Z');
-    const div = makeDiv({ hp: 80, maxHp: 100, regionId: null });
+    const div = makeDiv({ hp: 80, maxHp: 100, regionId: 'test-region' });
     const divisions: DivisionState = { [div.id]: div };
     const mv = makeMovement({
       arrivalTime: new Date('1918-01-01T20:00:00Z'),
@@ -202,7 +202,7 @@ describe('processMovements', () => {
 
   it('caps HP at maxHp when regen would overflow', () => {
     const now = new Date('1918-01-01T18:00:00Z');
-    const div = makeDiv({ hp: 95, maxHp: 100, regionId: null });
+    const div = makeDiv({ hp: 95, maxHp: 100, regionId: 'test-region' });
     const divisions: DivisionState = { [div.id]: div };
     const mv = makeMovement({
       arrivalTime: new Date('1918-01-01T20:00:00Z'),

@@ -46,7 +46,7 @@ function makeDiv(id: string, armyGroupId = 'ag-1'): Division {
     maxHp: 100,
     attack: 10,
     defence: 15,
-    regionId: null,
+    regionId: 'test-region',
   };
 }
 
@@ -57,7 +57,7 @@ function buildDivState(
   const state: DivisionState = {};
   for (const [regionId, divs] of Object.entries(assignments)) {
     for (const div of divs) {
-      state[div.id] = { ...div, regionId: regionId === 'null' ? null : regionId };
+      state[div.id] = { ...div, regionId };
     }
   }
   return state;
@@ -90,8 +90,8 @@ describe('computeFrontline', () => {
   const canEnter = () => true;
 
   it('identifies B as a frontline region and C as a target', () => {
-    const divA = { ...makeDiv('div-a'), regionId: 'A' as string | null };
-    const divB = { ...makeDiv('div-b'), regionId: 'B' as string | null };
+    const divA = { ...makeDiv('div-a'), regionId: 'A' };
+    const divB = { ...makeDiv('div-b'), regionId: 'B' };
     const regions: RegionState = {
       A: makeRegion('A', 'soviet'),
       B: makeRegion('B', 'soviet'),
