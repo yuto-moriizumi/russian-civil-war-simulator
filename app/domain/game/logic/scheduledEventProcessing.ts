@@ -237,6 +237,15 @@ function checkConditions(
   conditionLogic: 'and' | 'or' = 'and'
 ): boolean {
   const evaluateCondition = (condition: ScheduledEventCondition): boolean => {
+    if (condition.type === 'or') {
+      return checkConditions(
+        condition.conditions,
+        regions,
+        relationships,
+        scheduledEvents,
+        'or'
+      );
+    }
     if (condition.type === 'atLeastOneRegionOwnedByOrPuppetOf') {
       return condition.regions!.some(regionId => {
         const region = regions[regionId];
