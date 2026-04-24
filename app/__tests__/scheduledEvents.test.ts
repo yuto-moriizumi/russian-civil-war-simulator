@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { scheduledEvents } from '../data/scheduledEvents';
 import { processScheduledEvents } from '../domain/game/logic/scheduledEventProcessing';
-import type { CountryId, Region, RegionState, Relationship } from '../types/game';
+import type { ArmyGroup, CountryId, DivisionState, Region, RegionState, Relationship } from '../types/game';
 
 const r = (id: string, owner: CountryId): Region =>
   ({ id, name: id, countryIso3: id, owner }) as Region;
@@ -68,6 +68,43 @@ describe('scheduled events', () => {
     expect(result.updatedRelationships).toContainEqual({
       fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy',
     });
+    expect(result.updatedScheduledEvents[0].triggered).toBe(true);
+  });
+
+  it('merges Moldavia into Romania on April 9, 1918', () => {
+    const event = scheduledEvents.find(e => e.id === 'union-of-bessarabia-with-romania');
+    const regions: RegionState = {
+      MDA: r('MDA', 'moldavia'),
+      'RO-IS': r('RO-IS', 'romania'),
+    };
+    const armyGroups: ArmyGroup[] = [
+      { id: 'mda-ag', name: 'Moldavian Army', regionIds: ['MDA'], color: '#0033A0', owner: 'moldavia', theaterId: null, mode: 'none' as const },
+      { id: 'ro-ag', name: 'Romanian Army', regionIds: ['RO-IS'], color: '#FCD116', owner: 'romania', theaterId: null, mode: 'none' as const },
+    ];
+    const divisions: DivisionState = {
+      'mda-div': { id: 'mda-div', name: 'Moldavian Division', owner: 'moldavia', armyGroupId: 'mda-ag', hp: 100, maxHp: 100, attack: 5, defence: 3, regionId: 'MDA' },
+      'ro-div': { id: 'ro-div', name: 'Romanian Division', owner: 'romania', armyGroupId: 'ro-ag', hp: 100, maxHp: 100, attack: 5, defence: 3, regionId: 'RO-IS' },
+    };
+
+    expect(event).toBeDefined();
+    expect(event?.date).toBe('1918-04-09');
+
+    const result = processScheduledEvents(
+      [event!],
+      new Date(1918, 3, 9),
+      regions,
+      [],
+      armyGroups,
+      divisions
+    );
+
+    expect(result.updatedRegions.MDA.owner).toBe('romania');
+    expect(result.updatedDivisions['mda-div'].owner).toBe('romania');
+    expect(result.updatedDivisions['ro-div'].owner).toBe('romania');
+    expect(result.updatedArmyGroups).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'mda-ag', owner: 'romania' }),
+      expect.objectContaining({ id: 'ro-ag', owner: 'romania' }),
+    ]));
     expect(result.updatedScheduledEvents[0].triggered).toBe(true);
   });
 
