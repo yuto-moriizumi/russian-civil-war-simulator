@@ -1,4 +1,5 @@
 import { ScheduledEvent } from '../types/game';
+import { caucasusFrontEscalationEvent } from './scheduledEvents/caucasusFrontEscalation';
 import { retreatFromTabrizEvent } from './scheduledEvents/retreatFromTabriz';
 import { transcaucasianDemocraticFederativeRepublicEstablishedEvent } from './scheduledEvents/transcaucasianDemocraticFederativeRepublic';
 
@@ -105,6 +106,7 @@ export const scheduledEvents: ScheduledEvent[] = [
     ],
     triggered: false,
   },
+  caucasusFrontEscalationEvent,
   {
     id: 'moldavian-independence',
     date: '1918-02-06',

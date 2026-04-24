@@ -114,6 +114,29 @@ describe('scheduled events', () => {
     expect(result.updatedScheduledEvents[0].triggered).toBe(true);
   });
 
+  it('has the Ottoman Empire declare war on the White Army on February 5, 1918', () => {
+    const event = scheduledEvents.find(
+      scheduledEvent => scheduledEvent.id === 'caucasus-front-escalation'
+    );
+
+    expect(event).toBeDefined();
+    expect(event?.date).toBe('1918-02-05');
+
+    const result = processScheduledEvents(
+      [event!],
+      new Date(1918, 1, 5),
+      {},
+      [],
+      []
+    );
+
+    expect(result.updatedRelationships).toEqual(expect.arrayContaining([
+      { fromCountry: 'ottoman', toCountry: 'white', type: 'war' },
+      { fromCountry: 'white', toCountry: 'ottoman', type: 'war' },
+    ]));
+    expect(result.updatedScheduledEvents[0].triggered).toBe(true);
+  });
+
   it('makes every attacker and defender puppet join scheduled war declarations', () => {
     const event = scheduledEvents.find(
       scheduledEvent => scheduledEvent.id === 'treaty-of-brest-litovsk-ukraine'
