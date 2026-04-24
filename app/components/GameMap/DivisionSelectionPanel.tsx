@@ -85,7 +85,7 @@ export function DivisionSelectionPanel() {
       : 0;
 
   return (
-    <div className="absolute left-4 bottom-16 z-10 rounded-lg border-2 border-cyan-400 bg-stone-900/95 p-4 min-w-[280px]">
+    <div className="absolute left-4 bottom-16 z-30 rounded-lg border-2 border-cyan-400 bg-stone-900/95 p-4 min-w-[280px]">
       {/* Header */}
       <div className="mb-1 text-lg font-bold text-cyan-400">
         Division Selection

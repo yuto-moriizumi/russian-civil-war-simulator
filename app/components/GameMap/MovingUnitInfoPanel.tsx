@@ -27,7 +27,7 @@ export function MovingUnitInfoPanel() {
   const isPaused = !!movement.pendingCombatId;
 
   return (
-    <div className="absolute left-4 bottom-16 z-10 rounded-lg border-2 border-cyan-400 bg-stone-900/95 p-4 min-w-[280px]">
+    <div className="absolute left-4 bottom-16 z-30 rounded-lg border-2 border-cyan-400 bg-stone-900/95 p-4 min-w-[280px]">
       <div className="mb-2 text-lg font-bold text-cyan-400 flex items-center gap-2">
         <span>{movement.isRetreat ? 'Retreating' : 'In Transit'}</span>
         {movement.isRetreat && (
