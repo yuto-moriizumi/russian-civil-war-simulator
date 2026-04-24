@@ -343,11 +343,11 @@ describe('scheduled events', () => {
         id: 'RU-KB',
         name: 'Kabardino-Balkaria',
         countryIso3: 'RUS',
-        owner: 'north_caucasian_soviet',
+        owner: 'northcaucasian',
       },
     };
     const relationships: Relationship[] = [
-      { fromCountry: 'soviet', toCountry: 'north_caucasian_soviet', type: 'autonomy' },
+      { fromCountry: 'soviet', toCountry: 'northcaucasian', type: 'autonomy' },
     ];
 
     const result = processScheduledEvents(
@@ -361,8 +361,8 @@ describe('scheduled events', () => {
     expect(result.updatedRelationships).toEqual(expect.arrayContaining([
       { fromCountry: 'mrnc', toCountry: 'soviet', type: 'war' },
       { fromCountry: 'soviet', toCountry: 'mrnc', type: 'war' },
-      { fromCountry: 'mrnc', toCountry: 'north_caucasian_soviet', type: 'war' },
-      { fromCountry: 'north_caucasian_soviet', toCountry: 'mrnc', type: 'war' },
+      { fromCountry: 'mrnc', toCountry: 'northcaucasian', type: 'war' },
+      { fromCountry: 'northcaucasian', toCountry: 'mrnc', type: 'war' },
     ]));
     expect(result.updatedScheduledEvents.every(scheduledEvent => scheduledEvent.triggered)).toBe(true);
   });
