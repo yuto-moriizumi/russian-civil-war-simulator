@@ -86,6 +86,7 @@ export const createUnitActions = (
         selectedCountry.id,
         divisionName,
         targetGroupId,
+        deploymentTarget,
         countryBonuses[selectedCountry.id]
       );
 
@@ -102,7 +103,7 @@ export const createUnitActions = (
       const newNotification = createNotification(newEvent, dateTime);
 
       set({
-        divisions: { ...divisions, [newDivision.id]: { ...newDivision, regionId: deploymentTarget } },
+        divisions: { ...divisions, [newDivision.id]: newDivision },
         gameEvents: [...gameEvents, newEvent],
         notifications: [...get().notifications, newNotification],
       });

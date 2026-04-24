@@ -21,7 +21,7 @@ export function rehydrateDivisions(gameState: GameState): ActionsState['division
     if (legacyMovement.divisions && legacyMovement.divisions.length > 0) {
       for (const div of legacyMovement.divisions) {
         if (!base[div.id]) {
-          base[div.id] = { ...div, regionId: null };
+          base[div.id] = { ...div, regionId: div.regionId ?? movement.fromRegion };
         }
       }
     }

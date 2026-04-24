@@ -23,7 +23,7 @@ export interface Division {
   maxHp: number;        // Maximum hit points
   attack: number;       // Attack power (damage dealt)
   defence: number;      // Defence power (damage reduction)
-  regionId: string | null; // Region where the division is located; null = in active combat
+  regionId: string; // Current region of the division; while moving, stays as source region until arrival
 }
 
 // Normalized division state. Division objects are keyed by their stable ID.

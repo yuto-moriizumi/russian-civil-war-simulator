@@ -142,7 +142,7 @@ export function applyCompletedMovements(
           });
         }
 
-        // With divisionIds, moving divisions have regionId=null so getDivisionsInRegion already excludes them.
+        // Moving divisions retain regionId of their source region, so getDivisionsInRegion(dest) already excludes them.
         // Still exclude counter-movements explicitly as they're being intercepted.
         const inTransitFromDest = new Set(
           allMovements

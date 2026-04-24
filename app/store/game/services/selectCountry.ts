@@ -160,8 +160,8 @@ export function buildSelectCountryPatch(
           const n = divCounters[owner];
           const suffix = n === 1 ? '1st' : n === 2 ? '2nd' : n === 3 ? '3rd' : `${n}th`;
           const name = `${suffix} ${prefix}`;
-          const division = createDivision(owner as import('../../../types/game').CountryId, name, armyGroup.id, initialBonuses);
-          initialDivisions[division.id] = { ...division, regionId };
+          const division = createDivision(owner as import('../../../types/game').CountryId, name, armyGroup.id, regionId, initialBonuses);
+          initialDivisions[division.id] = division;
         }
       }
     }

@@ -83,11 +83,9 @@ export function processMovements(
             currentMovement = { ...currentMovement, pendingCombatId: existingCombat.id };
             logger.debug(`[MID-TRANSIT] ${currentMovement.owner} movement linked to existing combat at ${destRegion.name}`);
           } else {
-            const inTransitFromDest = new Set(
-              movingUnits.filter(m => m.fromRegion === currentMovement.toRegion).flatMap(m => m.divisionIds)
-            );
+            // Divisions at the destination (including those currently moving away — regionId stays as source until arrival)
             const defenders = getDivisionsInRegion(runningDivisions, currentMovement.toRegion).filter(
-              d => d.owner === destRegion.owner && !inTransitFromDest.has(d.id)
+              d => d.owner === destRegion.owner
             );
             const otherCombatsOnRegion = [...activeCombats, ...newMidTransitCombats].filter(
               c => c.defenderRegionId === currentMovement.toRegion && !c.isComplete
