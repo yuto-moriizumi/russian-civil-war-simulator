@@ -18,7 +18,6 @@ export function regenerateDivisionHP(
     }
   }
   for (const c of activeCombats) {
-    if (c.isComplete) continue;
     for (const id of c.attackerDivisionIds) {
       excludedIds.add(id);
     }
