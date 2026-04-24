@@ -225,19 +225,24 @@ export interface ScheduledEventAction {
   count?: number;
 }
 
-export interface ScheduledEventCondition {
-  type: 'atLeastOneRegionOwnedByOrPuppetOf' | 'atLeastOneRegionNotOwnedByOrPuppetOf' | 'eventTriggered';
-  regions?: string[];    // region IDs to check
-  country?: CountryId;  // overlord country
-  eventId?: string;     // event ID to check (for eventTriggered type)
-}
+export type ScheduledEventCondition =
+  | {
+    type: 'atLeastOneRegionOwnedByOrPuppetOf' | 'atLeastOneRegionNotOwnedByOrPuppetOf' | 'eventTriggered';
+    regions?: string[];   // region IDs to check
+    country?: CountryId;  // overlord country
+    eventId?: string;     // event ID to check (for eventTriggered type)
+  }
+  | {
+    type: 'or';
+    conditions: ScheduledEventCondition[];
+  };
 
 export interface ScheduledEvent {
   id: string;
   date: string; // YYYY-MM-DD format; if conditions present, treated as earliest possible trigger date (AND) or fallback date (OR)
   title: string;
   description: string;
-  conditions?: ScheduledEventCondition[]; // Conditions to check; AND = all must pass, OR = any one passing triggers
+  conditions?: ScheduledEventCondition[]; // Conditions to check; supports nested OR groups
   conditionLogic?: 'and' | 'or'; // How to evaluate conditions with date. Default: 'and'
   actions: ScheduledEventAction[];
   triggered: boolean; // Track if event has already been triggered

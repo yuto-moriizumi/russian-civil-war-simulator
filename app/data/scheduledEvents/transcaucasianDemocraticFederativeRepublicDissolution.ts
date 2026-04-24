@@ -11,12 +11,26 @@ export const transcaucasianDemocraticFederativeRepublicDissolutionEvent: Schedul
       eventId: 'transcaucasian-democratic-federative-republic-established',
     },
     {
-      type: 'atLeastOneRegionNotOwnedByOrPuppetOf',
-      regions: ['TR-08', 'TR-25', 'TR-04'],
-      country: 'tdfr',
+      type: 'or',
+      conditions: [
+        {
+          type: 'atLeastOneRegionNotOwnedByOrPuppetOf',
+          regions: ['TR-08'],
+          country: 'tdfr',
+        },
+        {
+          type: 'atLeastOneRegionNotOwnedByOrPuppetOf',
+          regions: ['TR-25'],
+          country: 'tdfr',
+        },
+        {
+          type: 'atLeastOneRegionNotOwnedByOrPuppetOf',
+          regions: ['TR-04'],
+          country: 'tdfr',
+        },
+      ],
     },
   ],
-  conditionLogic: 'or',
   actions: [
     { type: 'mergeCountry', newOwner: 'georgia', fromCountry: 'tdfr' },
     { type: 'transferRegion', regionId: 'AZE', newOwner: 'adr' },

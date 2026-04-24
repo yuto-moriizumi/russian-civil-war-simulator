@@ -225,13 +225,16 @@ describe('scheduled events', () => {
     expect(result.updatedScheduledEvents[0].triggered).toBe(false);
   });
 
-  it('dissolves the TDFR on May 26, 1918 by splitting its held regions between Azerbaijan, Armenia, and Georgia', () => {
+  it('dissolves the TDFR once established and a monitored frontier region is no longer under TDFR control', () => {
     const event = scheduledEvents.find(
       e => e.id === 'dissolution-of-the-transcaucasian-democratic-federative-republic'
     );
     const regions: RegionState = {
       AZE: r('AZE', 'tdfr'), ARM: r('ARM', 'tdfr'), 'AM-01': r('AM-01', 'tdfr'),
-      GEO: r('GEO', 'tdfr'), 'TR-08': r('TR-08', 'tdfr'), 'RU-MOW': r('RU-MOW', 'tdfr'),
+      GEO: r('GEO', 'tdfr'),
+      'TR-08': r('TR-08', 'ottoman'),
+      'TR-25': r('TR-25', 'tdfr'),
+      'RU-MOW': r('RU-MOW', 'tdfr'),
     };
     const establishedEvent = scheduledEvents.find(
       e => e.id === 'transcaucasian-democratic-federative-republic-established'
@@ -249,7 +252,8 @@ describe('scheduled events', () => {
     expect(result.updatedRegions.ARM.owner).toBe('armenia');
     expect(result.updatedRegions['AM-01'].owner).toBe('armenia');
     expect(result.updatedRegions.GEO.owner).toBe('georgia');
-    expect(result.updatedRegions['TR-08'].owner).toBe('georgia');
+    expect(result.updatedRegions['TR-08'].owner).toBe('ottoman');
+    expect(result.updatedRegions['TR-25'].owner).toBe('armenia');
     expect(result.updatedRegions['RU-MOW'].owner).toBe('georgia');
     const armenianDivisionsInArm = Object.values(result.updatedDivisions).filter(
       division => division.owner === 'armenia' && division.regionId === 'ARM'
@@ -259,5 +263,64 @@ describe('scheduled events', () => {
       Array(5).fill('armenia-ag-spawned')
     );
     expect(result.updatedScheduledEvents[0].triggered).toBe(true);
+  });
+
+  it('does not dissolve the TDFR on date alone after establishment if all monitored frontier regions remain under TDFR control', () => {
+    const event = scheduledEvents.find(
+      e => e.id === 'dissolution-of-the-transcaucasian-democratic-federative-republic'
+    );
+    const establishedEvent = scheduledEvents.find(
+      e => e.id === 'transcaucasian-democratic-federative-republic-established'
+    );
+    const regions: RegionState = {
+      AZE: r('AZE', 'tdfr'),
+      ARM: r('ARM', 'tdfr'),
+      GEO: r('GEO', 'tdfr'),
+      'TR-08': r('TR-08', 'tdfr'),
+      'TR-25': r('TR-25', 'tdfr'),
+      'TR-04': r('TR-04', 'tdfr'),
+    };
+
+    expect(event).toBeDefined();
+    expect(establishedEvent).toBeDefined();
+
+    const result = processScheduledEvents(
+      [event!], new Date(1918, 4, 26), regions, [], [], {},
+      [{ ...establishedEvent!, triggered: true }]
+    );
+
+    expect(result.updatedScheduledEvents[0].triggered).toBe(false);
+    expect(result.updatedRegions.AZE.owner).toBe('tdfr');
+    expect(result.updatedRegions.ARM.owner).toBe('tdfr');
+    expect(result.updatedRegions.GEO.owner).toBe('tdfr');
+  });
+
+  it('does not dissolve the TDFR before the establishment event even if a monitored frontier region is lost', () => {
+    const event = scheduledEvents.find(
+      e => e.id === 'dissolution-of-the-transcaucasian-democratic-federative-republic'
+    );
+    const establishedEvent = scheduledEvents.find(
+      e => e.id === 'transcaucasian-democratic-federative-republic-established'
+    );
+    const regions: RegionState = {
+      AZE: r('AZE', 'tdfr'),
+      ARM: r('ARM', 'tdfr'),
+      GEO: r('GEO', 'tdfr'),
+      'TR-08': r('TR-08', 'ottoman'),
+      'TR-25': r('TR-25', 'tdfr'),
+      'TR-04': r('TR-04', 'tdfr'),
+    };
+
+    expect(event).toBeDefined();
+    expect(establishedEvent).toBeDefined();
+
+    const result = processScheduledEvents(
+      [event!], new Date(1918, 4, 26), regions, [], [], {},
+      [{ ...establishedEvent!, triggered: false }]
+    );
+
+    expect(result.updatedScheduledEvents[0].triggered).toBe(false);
+    expect(result.updatedRegions.AZE.owner).toBe('tdfr');
+    expect(result.updatedRegions.GEO.owner).toBe('tdfr');
   });
 });
