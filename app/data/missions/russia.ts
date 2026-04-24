@@ -31,6 +31,21 @@ export const sovietMissions: Mission[] = [
     available: [{ type: 'controlRegion', regionId: 'UA-63' }],
   },
   {
+    id: 'soviet_secure_kherson',
+    country: 'soviet',
+    name: 'ヘルソンの確保',
+    description: 'ヘルソン（UA-65）をソビエトまたはその傀儡国の支配下に置け',
+    completed: false,
+    claimed: false,
+    rewards: {
+      declareWar: {
+        target: 'crimea',
+      },
+    },
+    prerequisites: ['soviet_capture_kharkiv'],
+    available: [{ type: 'controlRegionByOverlord', regionId: 'UA-65' }],
+  },
+  {
     id: 'soviet_kuban',
     country: 'soviet',
     name: 'クバーニの確保',
@@ -99,7 +114,7 @@ export const sovietMissions: Mission[] = [
         divisions: 2,
       },
     },
-    prerequisites: ['soviet_capture_kharkiv'],
+    prerequisites: ['soviet_secure_kherson'],
     available: [
       { type: 'controlRegion', regionId: 'UA-40' },
     ],
