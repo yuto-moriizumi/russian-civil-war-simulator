@@ -1,8 +1,11 @@
 import { ScheduledEvent } from '../types/game';
 import { caucasusFrontEscalationEvent } from './scheduledEvents/caucasusFrontEscalation';
+import { mountainousRepublicOfTheNorthernCaucasusEvents } from './scheduledEvents/mountainousRepublicOfTheNorthernCaucasus';
 import { retreatFromTabrizEvent } from './scheduledEvents/retreatFromTabriz';
 import { transcaucasianDemocraticFederativeRepublicEstablishedEvent } from './scheduledEvents/transcaucasianDemocraticFederativeRepublic';
 import { transcaucasianDemocraticFederativeRepublicDissolutionEvent } from './scheduledEvents/transcaucasianDemocraticFederativeRepublicDissolution';
+
+/** List of all scheduled historical events */
 export const scheduledEvents: ScheduledEvent[] = [
   {
     id: 'finnish-civil-war',
@@ -311,6 +314,7 @@ export const scheduledEvents: ScheduledEvent[] = [
   },
   retreatFromTabrizEvent,
   transcaucasianDemocraticFederativeRepublicEstablishedEvent,
+  ...mountainousRepublicOfTheNorthernCaucasusEvents,
   transcaucasianDemocraticFederativeRepublicDissolutionEvent,
   {
     id: 'odessa-soviet-republic-proclaimed',
