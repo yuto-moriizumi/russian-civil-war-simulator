@@ -114,6 +114,39 @@ describe('scheduled events', () => {
     expect(result.updatedScheduledEvents[0].triggered).toBe(true);
   });
 
+  it('ends Ukraine puppet relationship with the White Army on January 22, 1918', () => {
+    const event = scheduledEvents.find(
+      scheduledEvent => scheduledEvent.id === 'ukrainian-independence'
+    );
+    const relationships: Relationship[] = [
+      { fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy' },
+      { fromCountry: 'white', toCountry: 'moldavia', type: 'autonomy' },
+    ];
+
+    expect(event).toBeDefined();
+    expect(event?.date).toBe('1918-01-22');
+
+    const result = processScheduledEvents(
+      [event!],
+      new Date(1918, 0, 22),
+      {},
+      relationships,
+      []
+    );
+
+    expect(result.updatedRelationships).not.toContainEqual({
+      fromCountry: 'white',
+      toCountry: 'ukraine',
+      type: 'autonomy',
+    });
+    expect(result.updatedRelationships).toContainEqual({
+      fromCountry: 'white',
+      toCountry: 'moldavia',
+      type: 'autonomy',
+    });
+    expect(result.updatedScheduledEvents[0].triggered).toBe(true);
+  });
+
   it('has the Ottoman Empire declare war on the White Army on February 5, 1918', () => {
     const event = scheduledEvents.find(
       scheduledEvent => scheduledEvent.id === 'caucasus-front-escalation'
