@@ -99,7 +99,7 @@ export default function MissionScreen() {
           nodesConnectable={false}
           elementsSelectable={false}
           panOnScroll
-          panOnDrag={[1, 2]}
+          panOnDrag
           zoomOnScroll
           minZoom={0.5}
           maxZoom={1.5}
