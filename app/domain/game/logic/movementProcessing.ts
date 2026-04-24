@@ -3,7 +3,6 @@ import { getDivisionsInRegion } from '../divisionState';
 import { createActiveCombat } from '../combat';
 import { GAME_CONFIG } from '../../../constants/gameConfig';
 import { SimulationLogger, noOpLogger } from '../engine/types';
-import { shareSameOverlord } from '../relationshipUtils';
 
 interface MovementProcessingResult {
   remainingMovements: Movement[];
@@ -70,8 +69,8 @@ export function processMovements(
         const weDeclared = relationships.find(
           r => r.fromCountry === currentMovement.owner && r.toCountry === destRegion.owner
         )?.type ?? 'neutral';
-        const hasAutonomy = theyGrantUs === 'autonomy' || weDeclared === 'autonomy';
-        const isHostile = !hasAutonomy && theyGrantUs !== 'military_access' && !shareSameOverlord(currentMovement.owner, destRegion.owner, relationships);
+        const isAtWar = weDeclared === 'war' || theyGrantUs === 'war';
+        const isHostile = isAtWar;
 
         if (isHostile) {
           const existingCombat = [...activeCombats, ...newMidTransitCombats].find(

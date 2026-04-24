@@ -144,8 +144,6 @@ export function applyCompletedMovements(
           });
         }
 
-        // Moving divisions retain regionId of their source region, so getDivisionsInRegion(dest) already excludes them.
-        // Still exclude counter-movements explicitly as they're being intercepted.
         const inTransitFromDest = new Set(
           allMovements
             .filter(m => m.fromRegion === toRegion && m.owner !== owner && !counterMovements.includes(m) && !m.pendingCombatId)
@@ -158,7 +156,8 @@ export function applyCompletedMovements(
           toRegion,
         );
 
-        if (ongoingCombat) {
+        if (ongoingCombat && (effectiveRelationship === 'war' || ongoingCombat.attackerCountry === owner || ongoingCombat.defenderCountry === owner)) {
+          // Reinforce existing combat — works for both war and neutral (de facto combat participants)
           const combatIndex = nextCombats.findIndex(c => c.id === ongoingCombat.id);
           let updatedCombat = addCombatReinforcements(
             ongoingCombat,
@@ -220,7 +219,8 @@ export function applyCompletedMovements(
               currentDate, owner, toRegion
             ));
           }
-        } else {
+        } else if (effectiveRelationship === 'war') {
+          // Only at-war countries can create new combats or capture regions
           const existingDefenderDivisions = getDivisionsInRegion(nextDivisions, toRegion).filter(
             d => d.owner === dest.owner && !inTransitFromDest.has(d.id)
           );
@@ -286,6 +286,9 @@ export function applyCompletedMovements(
             );
             nextEvents.push(battleEvent);
           }
+        } else {
+          // Neutral relationship with no existing combat — divisions cannot enter
+          logger.debug(`[BLOCKED] ${owner} divisions cannot enter ${dest.name} (owned by ${dest.owner}) without war or access`);
         }
       }
     }

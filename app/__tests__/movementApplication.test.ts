@@ -79,8 +79,9 @@ describe('applyCompletedMovements', () => {
       A: makeRegion('A'),
       B: makeRegion('B', { owner: 'white' }),
     };
+    const rel: Relationship[] = [{ fromCountry: 'soviet', toCountry: 'white', type: 'war' }];
     const mv = makeMovement({ toRegion: 'B', divisionIds: [attacker.id] });
-    const { nextRegions, nextDivisions } = applyCompletedMovements([mv], [mv], ctx(regions, divisions), NOW);
+    const { nextRegions, nextDivisions } = applyCompletedMovements([mv], [mv], ctx(regions, divisions, [], rel), NOW);
     expect(nextRegions['B'].owner).toBe('soviet');
     expect(Object.values(nextDivisions).filter(d => d.regionId === 'B')).toHaveLength(1);
   });
@@ -92,8 +93,9 @@ describe('applyCompletedMovements', () => {
       A: makeRegion('A'),
       B: makeRegion('B', { owner: 'white' }),
     };
+    const rel: Relationship[] = [{ fromCountry: 'soviet', toCountry: 'white', type: 'war' }];
     const mv = makeMovement({ toRegion: 'B', divisionIds: [div.id] });
-    const { nextEvents } = applyCompletedMovements([mv], [mv], ctx(regions, divisions), NOW);
+    const { nextEvents } = applyCompletedMovements([mv], [mv], ctx(regions, divisions, [], rel), NOW);
     const ev = nextEvents.find(e => e.type === 'region_captured');
     expect(ev).toBeDefined();
     expect(ev?.country).toBe('soviet');
@@ -209,8 +211,9 @@ describe('applyCompletedMovements', () => {
       A: makeRegion('A'),
       B: makeRegion('B', { owner: 'white' }),
     };
+    const rel: Relationship[] = [{ fromCountry: 'soviet', toCountry: 'white', type: 'war' }];
     const mv = makeMovement({ toRegion: 'B', divisionIds: [attacker.id] });
-    const { nextCombats, nextRegions } = applyCompletedMovements([mv], [mv], ctx(regions, divisions), NOW);
+    const { nextCombats, nextRegions } = applyCompletedMovements([mv], [mv], ctx(regions, divisions, [], rel), NOW);
     expect(nextCombats).toHaveLength(1);
     expect(nextCombats[0].attackerCountry).toBe('soviet');
     expect(nextCombats[0].defenderCountry).toBe('white');
@@ -247,8 +250,9 @@ describe('applyCompletedMovements', () => {
       defenderDivisionIds: [makeDiv({ id: 'defender', owner: 'white' }).id],
       initialAttackerCount: 1,
     });
+    const rel: Relationship[] = [{ fromCountry: 'soviet', toCountry: 'white', type: 'war' }];
     const mv = makeMovement({ id: 'mv-reinforce', toRegion: 'B', divisionIds: [reinforcement.id] });
-    const { nextCombats } = applyCompletedMovements([mv], [mv], ctx(regions, divisions, [ongoing]), NOW);
+    const { nextCombats } = applyCompletedMovements([mv], [mv], ctx(regions, divisions, [ongoing], rel), NOW);
     expect(nextCombats).toHaveLength(1);
     expect(nextCombats[0].attackerDivisionIds).toHaveLength(2);
     expect(nextCombats[0].initialAttackerCount).toBe(2);
@@ -368,9 +372,10 @@ describe('multi-step movement (remainingPath)', () => {
       remainingPath: ['C'],
       finalDestination: 'C',
     });
+    const rel: Relationship[] = [{ fromCountry: 'soviet', toCountry: 'white', type: 'war' }];
 
     const { nextCombats, newHopMovements } = applyCompletedMovements(
-      [mv], [mv], ctx(regions, divisions), NOW
+      [mv], [mv], ctx(regions, divisions, [], rel), NOW
     );
 
     expect(nextCombats).toHaveLength(1);
@@ -393,9 +398,10 @@ describe('multi-step movement (remainingPath)', () => {
       remainingPath: ['C'],
       finalDestination: 'C',
     });
+    const rel: Relationship[] = [{ fromCountry: 'soviet', toCountry: 'white', type: 'war' }];
 
     const { nextRegions, newHopMovements, nextEvents } = applyCompletedMovements(
-      [mv], [mv], ctx(regions, divisions), NOW
+      [mv], [mv], ctx(regions, divisions, [], rel), NOW
     );
 
     expect(nextRegions['B'].owner).toBe('soviet');

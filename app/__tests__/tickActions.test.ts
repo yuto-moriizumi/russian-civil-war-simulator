@@ -118,7 +118,7 @@ describe('tick mid-transit combat handling', () => {
         { id: 'ag-white', name: 'White AG', owner: 'white', regionIds: ['B'], color: '#10B981', mode: 'none' as const },
       ],
       productionQueues: {},
-      relationships: [],
+      relationships: [{ fromCountry: 'soviet', toCountry: 'white', type: 'war' }],
       scheduledEvents: [],
       regionCentroids: {},
       borderMidpoints: {},
