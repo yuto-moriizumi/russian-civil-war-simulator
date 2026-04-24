@@ -45,7 +45,13 @@ export function processScheduledEvents(
     if (event.conditions) {
       const conditionLogic = event.conditionLogic ?? 'and';
       const dateReached = dateString >= event.date;
-      const conditionsMet = checkConditions(event.conditions, updatedRegions, relationships, allScheduledEvents);
+      const conditionsMet = checkConditions(
+        event.conditions,
+        updatedRegions,
+        relationships,
+        allScheduledEvents,
+        conditionLogic
+      );
 
       if (conditionLogic === 'or') {
         if (!dateReached && !conditionsMet) return event;
@@ -227,9 +233,10 @@ function checkConditions(
   conditions: ScheduledEventCondition[],
   regions: Record<string, Region>,
   relationships: Relationship[],
-  scheduledEvents: ScheduledEvent[] = []
+  scheduledEvents: ScheduledEvent[] = [],
+  conditionLogic: 'and' | 'or' = 'and'
 ): boolean {
-  return conditions.every(condition => {
+  const evaluateCondition = (condition: ScheduledEventCondition): boolean => {
     if (condition.type === 'atLeastOneRegionOwnedByOrPuppetOf') {
       return condition.regions!.some(regionId => {
         const region = regions[regionId];
@@ -246,7 +253,11 @@ function checkConditions(
       return scheduledEvents.some(e => e.id === condition.eventId && e.triggered);
     }
     return true;
-  });
+  };
+
+  return conditionLogic === 'or'
+    ? conditions.some(evaluateCondition)
+    : conditions.every(evaluateCondition);
 }
 
 /**
