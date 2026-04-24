@@ -148,4 +148,71 @@ describe('scheduled events', () => {
     ]));
     expect(result.updatedScheduledEvents[0].triggered).toBe(true);
   });
+
+  it('establishes the Transcaucasian Democratic Federative Republic on April 22, 1918', () => {
+    const event = scheduledEvents.find(
+      scheduledEvent => scheduledEvent.id === 'transcaucasian-democratic-federative-republic-established'
+    );
+    const regions: RegionState = {
+      GEO: {
+        id: 'GEO',
+        name: 'Georgia',
+        countryIso3: 'GEO',
+        owner: 'white',
+      },
+      ARM: {
+        id: 'ARM',
+        name: 'Armenia',
+        countryIso3: 'ARM',
+        owner: 'white',
+      },
+      AZE: {
+        id: 'AZE',
+        name: 'Azerbaijan',
+        countryIso3: 'AZE',
+        owner: 'white',
+      },
+      'GE-01': {
+        id: 'GE-01',
+        name: 'Abkhazia',
+        countryIso3: 'GEO',
+        owner: 'soviet',
+      },
+    };
+
+    expect(event).toBeDefined();
+    expect(event?.date).toBe('1918-04-22');
+
+    const result = processScheduledEvents(
+      [event!],
+      new Date(1918, 3, 22),
+      regions,
+      [],
+      []
+    );
+
+    expect(result.updatedRegions.GEO.owner).toBe('tdfr');
+    expect(result.updatedRegions.ARM.owner).toBe('tdfr');
+    expect(result.updatedRegions.AZE.owner).toBe('tdfr');
+    expect(result.updatedRegions['GE-01'].owner).toBe('soviet');
+    expect(Object.values(result.updatedDivisions)).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        owner: 'tdfr',
+        regionId: 'GEO',
+        armyGroupId: 'tdfr-ag-spawned',
+      }),
+    ]));
+    expect(result.updatedArmyGroups).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: 'tdfr-ag-spawned',
+        owner: 'tdfr',
+        name: 'Transcaucasian Defense Force',
+      }),
+    ]));
+    expect(result.updatedRelationships).toEqual(expect.arrayContaining([
+      { fromCountry: 'ottoman', toCountry: 'tdfr', type: 'war' },
+      { fromCountry: 'tdfr', toCountry: 'ottoman', type: 'war' },
+    ]));
+    expect(result.updatedScheduledEvents[0].triggered).toBe(true);
+  });
 });
