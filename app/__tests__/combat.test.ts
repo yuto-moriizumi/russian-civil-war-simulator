@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { processCombatRound } from '../domain/game/sharedDefenseProcessing';
+import { processCombatRound, processCombatRounds } from '../domain/game/sharedDefenseProcessing';
 import { createActiveCombat } from '../domain/game/combat';
 import { processCombats } from '../domain/game/logic/combatProcessing';
 import type { Division, DivisionState, RegionState, Adjacency, Relationship } from '../types/game';
@@ -207,6 +207,51 @@ describe('processCombats – retreat via military access', () => {
 
     const retreat = result.retreatMovements.find(movement => movement.divisionIds.includes('d1'));
     expect(retreat?.toRegion).toBe('DON_ACCESS');
+  });
+});
+
+describe('processCombatRounds – shared defense with missing defender divisions', () => {
+  it('completes grouped combats without crashing when every defender pool is already empty', () => {
+    const attackerA = makeDiv('a1', 'soviet', 100, 10, 10);
+    const attackerB = makeDiv('a2', 'soviet', 100, 10, 10);
+    const divisionState = makeDivisions([attackerA, attackerB]);
+    const sharedDefenseRegions: RegionState = {
+      TULA: { id: 'TULA', name: 'Tula Oblast', countryIso3: 'RUS', owner: 'white' },
+      SOVIET_REAR: { id: 'SOVIET_REAR', name: 'Soviet Rear', countryIso3: 'RUS', owner: 'soviet' },
+      SOVIET_REAR_2: { id: 'SOVIET_REAR_2', name: 'Soviet Rear 2', countryIso3: 'RUS', owner: 'soviet' },
+    };
+    const sharedDefenseAdjacency: Adjacency = {
+      TULA: ['SOVIET_REAR', 'SOVIET_REAR_2'],
+      SOVIET_REAR: ['TULA'],
+      SOVIET_REAR_2: ['TULA'],
+    };
+    const combatA = {
+      ...makeCombat([attackerA], [makeDiv('missing-d1', 'white', 100)], 'TULA'),
+      id: 'combat-a',
+      attackerDivisionIds: ['a1'],
+      defenderDivisionIds: ['missing-d1'],
+    };
+    const combatB = {
+      ...makeCombat([attackerB], [makeDiv('missing-d2', 'white', 100)], 'TULA'),
+      id: 'combat-b',
+      attackerRegionId: 'SOVIET_REAR_2',
+      attackerRegionName: 'Soviet Rear 2',
+      attackerDivisionIds: ['a2'],
+      defenderDivisionIds: ['missing-d2'],
+    };
+
+    const result = processCombatRounds(
+      [combatA, combatB],
+      sharedDefenseRegions,
+      sharedDefenseAdjacency,
+      new Date('1918-01-01T02:00:00Z'),
+      divisionState,
+    );
+
+    expect(result).toHaveLength(2);
+    expect(result.every(round => round.combat.isComplete)).toBe(true);
+    expect(result.map(round => round.combat.victor)).toEqual(['soviet', 'soviet']);
+    expect(result.flatMap(round => round.retreatingDivisions)).toHaveLength(0);
   });
 });
 

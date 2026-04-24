@@ -234,14 +234,19 @@ function processSharedDefenseRound(
 
   const combatCalc = buildCombatCalculations(activeCombats, currentTime, divisions);
 
-  // Aggregate total attacker damage across all active combats
-  const totalAttackerDamage = combatCalc
-    .filter(c => c.needsSharedProcessing)
-    .reduce((sum, c) => sum + c.attackerTotalDamage, 0);
+  const sharedCombatCalc = combatCalc.filter(c => c.needsSharedProcessing);
+  if (sharedCombatCalc.length === 0) {
+    for (const calc of combatCalc) {
+      results.push({ combat: calc.combat, updatedDivisions: divisions, retreatingDivisions: [] });
+    }
+    return results;
+  }
 
-  // Build shared defender pool from the first active combat
-  const firstActive = combatCalc.find(c => c.needsSharedProcessing)!;
-  const sharedDefenderDivisions = firstActive.defenderDivisions.map(d => ({ ...d }));
+  // Aggregate total attacker damage across all active combats
+  const totalAttackerDamage = sharedCombatCalc.reduce((sum, c) => sum + c.attackerTotalDamage, 0);
+
+  // All shared-defense combats point at the same defender pool; use any active entry.
+  const sharedDefenderDivisions = sharedCombatCalc[0].defenderDivisions.map(d => ({ ...d }));
 
   // Apply aggregated attacker damage to shared defenders
   const damagePerDefender = Math.ceil(totalAttackerDamage / sharedDefenderDivisions.length);
@@ -257,9 +262,7 @@ function processSharedDefenseRound(
 
   // Compute defender counter-damage once across ALL attackers combined, then distribute evenly.
   // This prevents defenders from dealing full damage separately to each attacking group.
-  const allAttackers = combatCalc
-    .filter(c => c.needsSharedProcessing)
-    .flatMap(c => c.attackerDivisions);
+  const allAttackers = sharedCombatCalc.flatMap(c => c.attackerDivisions);
   const defenderTotalDamage = sharedDefenderDivisions.reduce((sum, d) => {
     const target = allAttackers[Math.floor(Math.random() * allAttackers.length)];
     return sum + calculateDamage(d, target);
@@ -267,7 +270,7 @@ function processSharedDefenseRound(
   const damagePerAttacker = allAttackers.length > 0 ? Math.ceil(defenderTotalDamage / allAttackers.length) : 0;
 
   // Process each combat: apply counter-damage, update defenders, determine retreats
-  const firstSharedCombatId = activeCombats.find(c => !c.isComplete && !(defenderRegion && defenderRegion.owner !== c.defenderCountry))?.id;
+  const firstSharedCombatId = sharedCombatCalc[0].combat.id;
 
   let runningDivisions = divisions;
 
