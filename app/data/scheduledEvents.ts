@@ -1,5 +1,6 @@
 import { ScheduledEvent } from '../types/game';
 import { mountainousRepublicOfTheNorthernCaucasusEvents } from './scheduledEvents/mountainousRepublicOfTheNorthernCaucasus';
+import { retreatFromTabrizEvent } from './scheduledEvents/retreatFromTabriz';
 import { transcaucasianDemocraticFederativeRepublicEstablishedEvent } from './scheduledEvents/transcaucasianDemocraticFederativeRepublic';
 
 /**
@@ -310,6 +311,7 @@ export const scheduledEvents: ScheduledEvent[] = [
     ],
     triggered: false,
   },
+  retreatFromTabrizEvent,
   transcaucasianDemocraticFederativeRepublicEstablishedEvent,
   ...mountainousRepublicOfTheNorthernCaucasusEvents,
   {
