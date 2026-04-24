@@ -181,7 +181,10 @@ export function applyLiberatePuppet(
   const puppetCoreRegions = COUNTRY_METADATA[puppetId as keyof typeof COUNTRY_METADATA]?.coreRegions ?? [];
   for (const regionId of puppetCoreRegions) {
     const region = updatedRegions[regionId];
-    if (region && (region.owner === overlordId || overlordPuppets.includes(region.owner))) {
+    if (!region) continue;
+    const ownerCoreRegions: string[] = COUNTRY_METADATA[region.owner as keyof typeof COUNTRY_METADATA]?.coreRegions ?? [];
+    const isOwnerCoreRegion = ownerCoreRegions.includes(regionId);
+    if ((region.owner === overlordId || overlordPuppets.includes(region.owner)) && !isOwnerCoreRegion) {
       updatedRegions[regionId] = { ...region, owner: puppetId };
     }
   }
