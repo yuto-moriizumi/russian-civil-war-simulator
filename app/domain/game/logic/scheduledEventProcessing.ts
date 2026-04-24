@@ -133,6 +133,17 @@ export function processScheduledEvents(
             }
           }
         }
+      } else if (action.type === 'transferCoreRegionsIfOwnedByOrPuppetOf' && action.newOwner && action.overlordCountry) {
+        const countryData = COUNTRY_METADATA[action.newOwner];
+        const eligibleOwners = getCountryAndPuppets(action.overlordCountry, updatedRelationships);
+        if (countryData?.coreRegions) {
+          for (const regionId of countryData.coreRegions) {
+            const region = updatedRegions[regionId];
+            if (region && eligibleOwners.has(region.owner)) {
+              updatedRegions[regionId] = { ...region, owner: action.newOwner };
+            }
+          }
+        }
       } else if (action.type === 'transferAllRegionsFromCountry' && action.newOwner && action.fromCountry) {
         for (const [regionId, region] of Object.entries(updatedRegions)) {
           if (region.owner === action.fromCountry) {
