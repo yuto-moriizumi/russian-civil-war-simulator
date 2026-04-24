@@ -41,6 +41,18 @@ body {
   animation: pulse 1.5s ease-in-out infinite;
 }
 
+/* Retreat movement animation - faster and more intense than normal movement */
+@keyframes pulse-retreat {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.15);
+  }
+}
+
 /* Combat indicator animation */
 @keyframes combat-pulse {
   0%, 100% {

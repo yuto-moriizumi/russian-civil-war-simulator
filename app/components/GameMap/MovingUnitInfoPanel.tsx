@@ -29,7 +29,12 @@ export function MovingUnitInfoPanel() {
   return (
     <div className="absolute left-4 bottom-16 z-10 rounded-lg border-2 border-cyan-400 bg-stone-900/95 p-4 min-w-[280px]">
       <div className="mb-2 text-lg font-bold text-cyan-400 flex items-center gap-2">
-        <span>In Transit</span>
+        <span>{movement.isRetreat ? 'Retreating' : 'In Transit'}</span>
+        {movement.isRetreat && (
+          <span className="text-xs font-normal text-orange-400 bg-orange-900/40 px-1.5 py-0.5 rounded">
+            ↩ Retreat
+          </span>
+        )}
         {isPaused && (
           <span className="text-xs font-normal text-yellow-400 bg-yellow-900/40 px-1.5 py-0.5 rounded">
             Combat Pending
