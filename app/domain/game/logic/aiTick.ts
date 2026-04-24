@@ -1,8 +1,9 @@
-import { AIState, ArmyGroup, CountryId, CountryBonuses, ProductionQueueItem, RegionState, ActiveCombat, Movement, Modifier } from '../../../types/game';
+import { AIState, ArmyGroup, CountryId, CountryBonuses, DivisionState, ProductionQueueItem, RegionState, ActiveCombat, Movement, Modifier, Theater, Relationship } from '../../../types/game';
 import { createInitialAIState, runAITick } from '../../../ai/cpuPlayer';
 import { clampProductionQueueToCommandPower } from '../../../utils/commandPower';
 import { getBaseProductionTime } from '../bonusCalculator';
 import { countries } from '../../../data/gameData';
+import { reallocateDivisionsAcrossArmyGroups } from './divisionReallocation';
 
 export function hasOwnershipChangedForCountries(
   countryIds: Set<CountryId>,
@@ -53,19 +54,26 @@ interface ProcessAITickArgs {
   nextArmyGroups: ArmyGroup[];
   nextProductionQueues: Record<CountryId, ProductionQueueItem[]>;
   nextRegions: RegionState;
-  nextDivisions: import('../../../types/game').DivisionState;
+  nextDivisions: DivisionState;
   nextMovingUnits: Movement[];
   nextActiveCombats: ActiveCombat[];
   countryBonuses: Record<CountryId, CountryBonuses>;
   modifiers: Record<CountryId, Modifier[]>;
   newDate: Date;
   selectedCountryId: CountryId | undefined;
+  theaters: Theater[];
+  relationships: Relationship[];
 }
 
 interface ProcessAITickResult {
   nextAIStates: AIState[];
   nextArmyGroups: ArmyGroup[];
   nextProductionQueues: Record<CountryId, ProductionQueueItem[]>;
+  nextDivisions: DivisionState;
+}
+
+function isWeeklyReallocationTick(date: Date): boolean {
+  return date.getDay() === 1 && date.getHours() === 0;
 }
 
 export function processAITick({
@@ -73,16 +81,19 @@ export function processAITick({
   nextArmyGroups: initialArmyGroups,
   nextProductionQueues: initialQueues,
   nextRegions,
-  nextDivisions,
+  nextDivisions: initialDivisions,
   nextMovingUnits,
   nextActiveCombats,
   countryBonuses,
   modifiers,
   newDate,
   selectedCountryId,
+  theaters,
+  relationships,
 }: ProcessAITickArgs): ProcessAITickResult {
   let nextArmyGroups = initialArmyGroups;
   let nextProductionQueues = initialQueues;
+  let nextDivisions = initialDivisions;
 
   const nextAIStates = effectiveAIStates.map(aiState => {
     const country = countries.find(c => c.id === aiState.countryId);
@@ -111,7 +122,8 @@ export function processAITick({
       nextProductionQueues[aiState.countryId] || [],
       nextProductionQueues,
       bonuses,
-      country?.coreRegions
+      country?.coreRegions,
+      modifiers?.[aiState.countryId]
     );
 
     if (aiActions.newArmyGroup) {
@@ -139,5 +151,18 @@ export function processAITick({
     return aiActions.updatedAIState;
   }).filter(s => s.countryId !== selectedCountryId);
 
-  return { nextAIStates, nextArmyGroups, nextProductionQueues };
+  if (isWeeklyReallocationTick(newDate)) {
+    for (const aiState of effectiveAIStates) {
+      nextDivisions = reallocateDivisionsAcrossArmyGroups(
+        aiState.countryId,
+        nextArmyGroups,
+        nextDivisions,
+        nextMovingUnits,
+        theaters,
+        relationships
+      );
+    }
+  }
+
+  return { nextAIStates, nextArmyGroups, nextProductionQueues, nextDivisions };
 }

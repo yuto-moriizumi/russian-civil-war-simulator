@@ -105,10 +105,13 @@ export function processAIStep(
       modifiers: state.modifiers,
       newDate: context.newDate,
       selectedCountryId: selectedCountry?.id,
+      theaters: nextTheaters,
+      relationships,
     });
     nextAIStates = aiResult.nextAIStates;
     nextArmyGroups = aiResult.nextArmyGroups;
     nextProductionQueues = aiResult.nextProductionQueues;
+    nextDivisions = aiResult.nextDivisions;
   }
 
   const nextState: EngineSimulationState = {
