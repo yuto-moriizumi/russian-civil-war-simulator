@@ -126,6 +126,20 @@ export const scheduledEvents: ScheduledEvent[] = [
     triggered: false,
   },
   {
+    id: 'union-of-bessarabia-with-romania',
+    date: '1918-04-09',
+    title: 'Union of Bessarabia with Romania',
+    description: 'Sfatul Tarii votes for union with Romania, and the Moldavian Democratic Republic is absorbed into the Romanian state.',
+    actions: [
+      {
+        type: 'mergeCountry',
+        newOwner: 'romania',
+        fromCountry: 'moldavia',
+      },
+    ],
+    triggered: false,
+  },
+  {
     id: 'donetsk-krivoy-rog-soviet-republic-independence',
     date: '1918-02-12',
     title: 'Donetsk–Krivoy Rog Soviet Republic Declared',
