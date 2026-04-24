@@ -202,6 +202,12 @@ function checkConditions(
         return region && isOwnedByOrPuppetOf(region.owner, condition.country, relationships);
       });
     }
+    if (condition.type === 'atLeastOneRegionNotOwnedByOrPuppetOf') {
+      return condition.regions.some(regionId => {
+        const region = regions[regionId];
+        return region && !isOwnedByOrPuppetOf(region.owner, condition.country, relationships);
+      });
+    }
     return true;
   });
 }
