@@ -55,6 +55,60 @@ export function getWarEnemies(
   return [...enemies];
 }
 
+export function getCountryAndPuppets(
+  countryId: CountryId,
+  relationships: Relationship[],
+): CountryId[] {
+  const belligerents = new Set<CountryId>([countryId]);
+  const queue: CountryId[] = [countryId];
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+
+    relationships.forEach(relationship => {
+      if (
+        relationship.type === 'autonomy' &&
+        relationship.fromCountry === current &&
+        !belligerents.has(relationship.toCountry)
+      ) {
+        belligerents.add(relationship.toCountry);
+        queue.push(relationship.toCountry);
+      }
+    });
+  }
+
+  return [...belligerents];
+}
+
+export function declareWarBetweenCoalitions(
+  relationships: Relationship[],
+  attackerId: CountryId,
+  defenderId: CountryId,
+): {
+  updatedRelationships: Relationship[];
+  attackerBelligerents: CountryId[];
+  defenderBelligerents: CountryId[];
+} {
+  const attackerBelligerents = getCountryAndPuppets(attackerId, relationships);
+  const defenderBelligerents = getCountryAndPuppets(defenderId, relationships);
+
+  let updatedRelationships = relationships;
+
+  attackerBelligerents.forEach(attacker => {
+    defenderBelligerents.forEach(defender => {
+      if (attacker === defender) return;
+      updatedRelationships = applyRelationshipChange(updatedRelationships, attacker, defender, 'war');
+      updatedRelationships = applyRelationshipChange(updatedRelationships, defender, attacker, 'war');
+    });
+  });
+
+  return {
+    updatedRelationships,
+    attackerBelligerents,
+    defenderBelligerents,
+  };
+}
+
 export function joinPuppetToOverlordWars(
   relationships: Relationship[],
   overlordId: CountryId,

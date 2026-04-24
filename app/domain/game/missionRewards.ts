@@ -18,7 +18,12 @@ import { getCountryName, getDivisionPrefix } from '../../data/countries';
 import { COUNTRY_METADATA } from '../../data/countryMetadata';
 import { calculateCountryBonuses, getDivisionStats } from './bonusCalculator';
 import { createGameEvent } from './eventUtils';
-import { applyRelationshipChange, getRelationshipStatus, joinPuppetToOverlordWars } from './relationshipUtils';
+import {
+  applyRelationshipChange,
+  declareWarBetweenCoalitions,
+  getRelationshipStatus,
+  joinPuppetToOverlordWars,
+} from './relationshipUtils';
 
 interface MissionRewardBaseState {
   relationships: Relationship[];
@@ -94,44 +99,42 @@ function applyDeclareWarReward(
     ));
   }
 
-  updatedRelationships = applyRelationshipChange(updatedRelationships, declarerId, targetId, 'war');
-  updatedRelationships = applyRelationshipChange(updatedRelationships, targetId, declarerId, 'war');
+  const {
+    updatedRelationships: warRelationships,
+    attackerBelligerents,
+    defenderBelligerents,
+  } = declareWarBetweenCoalitions(relationships, declarerId, targetId);
+  updatedRelationships = warRelationships;
 
-  const servantsOfDeclarer = relationships.filter(
-    r => r.fromCountry === declarerId && r.type === 'autonomy'
-  );
-  servantsOfDeclarer.forEach(servant => {
-    if (getRelationshipStatus(relationships, servant.toCountry, targetId) === 'war') return;
+  attackerBelligerents
+    .filter(countryId => countryId !== declarerId)
+    .forEach(attackerCountryId => {
+      if (getRelationshipStatus(relationships, attackerCountryId, targetId) === 'war') return;
 
-    const servantName = getCountryName(servant.toCountry);
-    warEvents.push(createGameEvent(
-      'war_declared',
-      `${servantName} joins war against ${targetName}`,
-      `${servantName} joins their Master (${declarerName}) in war against ${targetName}!`,
-      dateTime,
-      servant.toCountry,
-    ));
-    updatedRelationships = applyRelationshipChange(updatedRelationships, servant.toCountry, targetId, 'war');
-    updatedRelationships = applyRelationshipChange(updatedRelationships, targetId, servant.toCountry, 'war');
-  });
+      const servantName = getCountryName(attackerCountryId);
+      warEvents.push(createGameEvent(
+        'war_declared',
+        `${servantName} joins war against ${targetName}`,
+        `${servantName} joins their Master (${declarerName}) in war against ${targetName}!`,
+        dateTime,
+        attackerCountryId,
+      ));
+    });
 
-  const servantsOfTarget = relationships.filter(
-    r => r.fromCountry === targetId && r.type === 'autonomy'
-  );
-  servantsOfTarget.forEach(servant => {
-    if (getRelationshipStatus(relationships, servant.toCountry, declarerId) === 'war') return;
+  defenderBelligerents
+    .filter(countryId => countryId !== targetId)
+    .forEach(defenderCountryId => {
+      if (getRelationshipStatus(relationships, defenderCountryId, declarerId) === 'war') return;
 
-    const servantName = getCountryName(servant.toCountry);
-    warEvents.push(createGameEvent(
-      'war_declared',
-      `${servantName} joins defense against ${declarerName}`,
-      `${servantName} joins their Master (${targetName}) to defend against ${declarerName}!`,
-      dateTime,
-      servant.toCountry,
-    ));
-    updatedRelationships = applyRelationshipChange(updatedRelationships, servant.toCountry, declarerId, 'war');
-    updatedRelationships = applyRelationshipChange(updatedRelationships, declarerId, servant.toCountry, 'war');
-  });
+      const servantName = getCountryName(defenderCountryId);
+      warEvents.push(createGameEvent(
+        'war_declared',
+        `${servantName} joins defense against ${declarerName}`,
+        `${servantName} joins their Master (${targetName}) to defend against ${declarerName}!`,
+        dateTime,
+        defenderCountryId,
+      ));
+    });
 
   return { updatedRelationships, warEvents };
 }

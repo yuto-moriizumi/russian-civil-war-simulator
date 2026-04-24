@@ -255,6 +255,52 @@ describe('mission declare war rewards', () => {
     ]));
   });
 
+  it('pulls both sides and all puppets into the war when claimed', () => {
+    const mission: Mission = {
+      id: 'soviet_secure_voronezh',
+      country: 'soviet',
+      name: 'ドン軍制圧の準備',
+      description: 'Secure Voronezh.',
+      completed: true,
+      claimed: true,
+      rewards: { declareWar: { target: 'don' } },
+      prerequisites: ['soviet_mobilize'],
+      available: [
+        { type: 'controlRegionByOverlord', regionId: 'RU-VOR' },
+      ],
+    };
+
+    const rewards = applyClaimedMissionRewards(
+      {
+        regions: {},
+        movingUnits: [],
+        relationships: [
+          { fromCountry: 'soviet', toCountry: 'ukrainesoviet', type: 'autonomy' },
+          { fromCountry: 'don', toCountry: 'kuban', type: 'autonomy' },
+        ],
+        armyGroups: [],
+        aiStates: [],
+        selectedCountry: null,
+        countryBonuses: initialGameState.countryBonuses,
+        dateTime: new Date('1918-01-01T00:00:00Z'),
+      },
+      mission,
+      'soviet',
+      [mission],
+    );
+
+    expect(rewards.updatedRelationships).toEqual(expect.arrayContaining([
+      { fromCountry: 'soviet', toCountry: 'don', type: 'war' },
+      { fromCountry: 'don', toCountry: 'soviet', type: 'war' },
+      { fromCountry: 'ukrainesoviet', toCountry: 'don', type: 'war' },
+      { fromCountry: 'don', toCountry: 'ukrainesoviet', type: 'war' },
+      { fromCountry: 'soviet', toCountry: 'kuban', type: 'war' },
+      { fromCountry: 'kuban', toCountry: 'soviet', type: 'war' },
+      { fromCountry: 'ukrainesoviet', toCountry: 'kuban', type: 'war' },
+      { fromCountry: 'kuban', toCountry: 'ukrainesoviet', type: 'war' },
+    ]));
+  });
+
   it('describes declare war rewards in claim text', () => {
     expect(buildMissionRewardDescription({ declareWar: { target: 'don' } }))
       .toBe('Declare war on Don Republic');

@@ -113,4 +113,39 @@ describe('scheduled events', () => {
     });
     expect(result.updatedScheduledEvents[0].triggered).toBe(true);
   });
+
+  it('makes every attacker and defender puppet join scheduled war declarations', () => {
+    const event = scheduledEvents.find(
+      scheduledEvent => scheduledEvent.id === 'treaty-of-brest-litovsk-ukraine'
+    );
+    const relationships: Relationship[] = [
+      { fromCountry: 'germany', toCountry: 'poland', type: 'autonomy' },
+      { fromCountry: 'poland', toCountry: 'balticdutchy', type: 'autonomy' },
+      { fromCountry: 'soviet', toCountry: 'ukrainesoviet', type: 'autonomy' },
+      { fromCountry: 'soviet', toCountry: 'odessa', type: 'autonomy' },
+    ];
+
+    expect(event).toBeDefined();
+    expect(event?.date).toBe('1918-02-09');
+
+    const result = processScheduledEvents(
+      [event!],
+      new Date(1918, 1, 9),
+      {},
+      relationships,
+      []
+    );
+
+    expect(result.updatedRelationships).toEqual(expect.arrayContaining([
+      { fromCountry: 'germany', toCountry: 'soviet', type: 'war' },
+      { fromCountry: 'poland', toCountry: 'soviet', type: 'war' },
+      { fromCountry: 'balticdutchy', toCountry: 'soviet', type: 'war' },
+      { fromCountry: 'germany', toCountry: 'ukrainesoviet', type: 'war' },
+      { fromCountry: 'germany', toCountry: 'odessa', type: 'war' },
+      { fromCountry: 'poland', toCountry: 'ukrainesoviet', type: 'war' },
+      { fromCountry: 'balticdutchy', toCountry: 'odessa', type: 'war' },
+      { fromCountry: 'odessa', toCountry: 'balticdutchy', type: 'war' },
+    ]));
+    expect(result.updatedScheduledEvents[0].triggered).toBe(true);
+  });
 });

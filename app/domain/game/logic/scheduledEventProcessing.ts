@@ -1,7 +1,7 @@
 import { Region, GameEvent, NotificationItem, CountryId, Relationship, ScheduledEvent, ScheduledEventAction, ScheduledEventCondition, ArmyGroup, Division, DivisionState } from '../../../types/game';
 import { createGameEvent, createNotification } from '../eventUtils';
 import { BASE_DIVISION_STATS } from '../bonusCalculator';
-import { applyRelationshipChange, joinPuppetToOverlordWars } from '../relationshipUtils';
+import { applyRelationshipChange, declareWarBetweenCoalitions, getCountryAndPuppets as getCoalitionCountries, joinPuppetToOverlordWars } from '../relationshipUtils';
 import { COUNTRY_METADATA } from '../../../data/countryMetadata';
 
 /**
@@ -191,30 +191,7 @@ function applyWarDeclaration(
   fromCountry: CountryId,
   toCountry: CountryId
 ): Relationship[] {
-  let updatedRelationships = [...relationships];
-  
-  // Remove any existing relationship between these countries
-  updatedRelationships = updatedRelationships.filter(
-    r => !(
-      (r.fromCountry === fromCountry && r.toCountry === toCountry) ||
-      (r.fromCountry === toCountry && r.toCountry === fromCountry)
-    )
-  );
-  
-  // Add mutual war relationships
-  updatedRelationships.push({
-    fromCountry,
-    toCountry,
-    type: 'war',
-  });
-  
-  updatedRelationships.push({
-    fromCountry: toCountry,
-    toCountry: fromCountry,
-    type: 'war',
-  });
-  
-  return updatedRelationships;
+  return declareWarBetweenCoalitions(relationships, fromCountry, toCountry).updatedRelationships;
 }
 
 function removeRelationship(
@@ -247,20 +224,7 @@ function endWarWithCountryAndPuppets(
 }
 
 function getCountryAndPuppets(masterCountry: CountryId, relationships: Relationship[]): Set<CountryId> {
-  const countries = new Set<CountryId>([masterCountry]);
-  const queue: CountryId[] = [masterCountry];
-
-  while (queue.length > 0) {
-    const current = queue.shift()!;
-    relationships
-      .filter(r => r.fromCountry === current && r.type === 'autonomy' && !countries.has(r.toCountry))
-      .forEach(r => {
-        countries.add(r.toCountry);
-        queue.push(r.toCountry);
-      });
-  }
-
-  return countries;
+  return new Set(getCoalitionCountries(masterCountry, relationships));
 }
 
 /**
