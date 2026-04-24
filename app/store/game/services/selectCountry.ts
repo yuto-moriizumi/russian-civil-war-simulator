@@ -54,9 +54,20 @@ function computeTheaters(
   let resultActiveCombats = activeCombats;
   let resultProductionQueues = productionQueues;
 
-  if (aiCountryIds.length > 0) {
+  // Capture player army group modes before sync (syncAIArmyGroupsToTheaters forces 'advance')
+  const playerGroupModes = new Map<string, import('../../../types/game').ArmyGroupMode>();
+  armyGroups.forEach(g => {
+    if (g.owner === playerCountryId.id) {
+      playerGroupModes.set(g.id, g.mode);
+    }
+  });
+
+  // Include player country in sync so all army groups get theater assignments
+  const allCountryIdsForSync = [playerCountryId.id, ...aiCountryIds];
+
+  if (allCountryIdsForSync.length > 0) {
     const aiSync = syncAIArmyGroupsToTheaters({
-      aiCountryIds,
+      aiCountryIds: allCountryIdsForSync,
       theaters,
       armyGroups,
       regions,
@@ -71,6 +82,14 @@ function computeTheaters(
     resultMovingUnits = aiSync.movingUnits;
     resultActiveCombats = aiSync.activeCombats;
     resultProductionQueues = aiSync.productionQueues;
+
+    // Restore player army group modes (don't force 'advance' on player)
+    resultArmyGroups = resultArmyGroups.map(group => {
+      if (group.owner === playerCountryId.id && playerGroupModes.has(group.id)) {
+        return { ...group, mode: playerGroupModes.get(group.id)! };
+      }
+      return group;
+    });
   }
 
   return {
