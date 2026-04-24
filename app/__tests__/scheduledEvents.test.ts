@@ -149,6 +149,55 @@ describe('scheduled events', () => {
     expect(result.updatedScheduledEvents[0].triggered).toBe(true);
   });
 
+  it('returns White-held Persian core regions to Persia on February 28, 1918', () => {
+    const event = scheduledEvents.find(
+      scheduledEvent => scheduledEvent.id === 'retreat-from-tabriz'
+    );
+    const regions: RegionState = {
+      'IR-01': {
+        id: 'IR-01',
+        name: 'East Azerbaijan',
+        countryIso3: 'IRN',
+        owner: 'white',
+      },
+      'IR-02': {
+        id: 'IR-02',
+        name: 'West Azerbaijan',
+        countryIso3: 'IRN',
+        owner: 'white',
+      },
+      'IR-03': {
+        id: 'IR-03',
+        name: 'Ardabil',
+        countryIso3: 'IRN',
+        owner: 'soviet',
+      },
+      GEO: {
+        id: 'GEO',
+        name: 'Georgia',
+        countryIso3: 'GEO',
+        owner: 'white',
+      },
+    };
+
+    expect(event).toBeDefined();
+    expect(event?.date).toBe('1918-02-28');
+
+    const result = processScheduledEvents(
+      [event!],
+      new Date(1918, 1, 28),
+      regions,
+      [],
+      []
+    );
+
+    expect(result.updatedRegions['IR-01'].owner).toBe('persia');
+    expect(result.updatedRegions['IR-02'].owner).toBe('persia');
+    expect(result.updatedRegions['IR-03'].owner).toBe('soviet');
+    expect(result.updatedRegions.GEO.owner).toBe('white');
+    expect(result.updatedScheduledEvents[0].triggered).toBe(true);
+  });
+
   it('establishes the Transcaucasian Democratic Federative Republic on April 22, 1918', () => {
     const event = scheduledEvents.find(
       scheduledEvent => scheduledEvent.id === 'transcaucasian-democratic-federative-republic-established'
