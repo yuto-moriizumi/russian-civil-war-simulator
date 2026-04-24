@@ -1,169 +1,40 @@
 'use client';
 
-import { useRef, useState, useCallback, useMemo } from 'react';
-import Map, { MapRef, Source, Layer, NavigationControl } from 'react-map-gl/maplibre';
+import Map, { Source, Layer, NavigationControl } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { useSimulationStore } from '../store/useSimulationStore';
-import { useGameUiStore } from '../store/useGameUiStore';
 
 import { UnitMarker, MovingUnitMarker, CombatMarker } from './GameMap/MapMarkers';
 import { RegionTooltip, RegionInfoPanel, MovingUnitInfoPanel, DivisionSelectionPanel } from './GameMap/RegionPanels';
-import { useMapState } from './GameMap/useMapState';
-import { useMapEventHandlers } from './GameMap/useMapEventHandlers';
-import {
-  createMapModeFillColorExpression,
-  createLineColorExpression,
-  createLineWidthExpression,
-  createFillOpacityExpression,
-  createFillPaint,
-  createLinePaint,
-  createMapStyle,
-} from './GameMap/mapStyles';
-import {
-  calculateUnitMarkers,
-  calculateMovingUnitMarkers,
-  calculateCombatMarkers,
-} from './GameMap/mapCalculations';
+import { useGameMapViewModel } from './GameMap/useGameMapViewModel';
 
 export default function GameMap() {
-  // Store selectors
-  const regions = useSimulationStore(state => state.regions);
-  const divisions = useSimulationStore(state => state.divisions);
-  const adjacency = useSimulationStore(state => state.adjacency);
-  const movingUnits = useSimulationStore(state => state.movingUnits);
-  const activeCombats = useSimulationStore(state => state.activeCombats);
-  const currentDateTime = useSimulationStore(state => state.dateTime);
-  const playerCountry = useSimulationStore(state => state.selectedCountry?.id);
-  const playerCoreRegions = useSimulationStore(state => state.selectedCountry?.coreRegions);
-  const theaters = useSimulationStore(state => state.theaters);
-  const armyGroups = useSimulationStore(state => state.armyGroups);
-  const regionCentroids = useSimulationStore(state => state.regionCentroids);
-  const borderMidpoints = useSimulationStore(state => state.borderMidpoints);
-  const getRelationship = useSimulationStore(state => state.getRelationship);
-  const selectedRegion = useGameUiStore(state => state.selectedRegion);
-  const selectedUnitRegion = useGameUiStore(state => state.selectedUnitRegion);
-  const selectedTheaterId = useGameUiStore(state => state.selectedTheaterId);
-  const selectedGroupId = useGameUiStore(state => state.selectedGroupId);
-  const mapMode = useGameUiStore(state => state.mapMode);
-  const selectedMovementId = useGameUiStore(state => state.selectedMovementId);
-  const selectedDivisionIds = useGameUiStore(state => state.selectedDivisionIds);
-
-  // Actions
-  const setSelectedRegion = useGameUiStore(state => state.setSelectedRegion);
-  const selectDivisionsInRegion = useGameUiStore(state => state.selectDivisionsInRegion);
-  const addDivisionsInRegion = useGameUiStore(state => state.addDivisionsInRegion);
-  const setSelectedCombatId = useGameUiStore(state => state.setSelectedCombatId);
-  const setSelectedMovementId = useGameUiStore(state => state.setSelectedMovementId);
-
-  // Local refs and state
-  const mapRef = useRef<MapRef>(null);
-  const [mapLoaded, setMapLoaded] = useState(false);
-
-  const { hoveredRegion } = useMapState({
+  const {
     mapRef,
-    mapLoaded,
+    mapStyle,
+    mapContainerStyle,
+    interactiveLayerIds,
+    linePaint,
+    fillPaint,
+    handleMapClick,
+    handleContextMenu,
+    handleMapLoad,
+    handleDivisionSelect,
+    hoveredRegion,
+    movementPathGeoJSON,
+    unitMarkers,
+    movingUnitMarkers,
+    combatMarkers,
+    regions,
+    divisions,
+    movingUnits,
     selectedRegion,
-    selectedUnitRegion,
-    adjacency,
-    theaters,
-    selectedTheaterId,
-    selectedGroupId,
-    armyGroups,
-    onRegionHover: undefined,
-  });
-
-  const { handleMapClick, handleContextMenu } = useMapEventHandlers();
-
-  const handleMapLoad = useCallback(() => {
-    setMapLoaded(true);
-  }, []);
-
-  /**
-   * Handles clicking a unit marker on the map.
-   * - Normal click: select all divisions in that region (replaces current selection).
-   * - Shift+click: add all divisions in that region to the existing selection.
-   */
-  const handleDivisionSelect = useCallback(
-    (regionId: string, shiftHeld: boolean) => {
-      if (shiftHeld && selectedDivisionIds.length > 0) {
-        addDivisionsInRegion(regionId);
-      } else {
-        selectDivisionsInRegion(regionId);
-      }
-    },
-    [selectedDivisionIds, addDivisionsInRegion, selectDivisionsInRegion]
-  );
-
-  // Map style expressions
-  const fillColorExpression = useMemo(() =>
-    playerCountry ? createMapModeFillColorExpression(mapMode, regions, playerCountry, playerCoreRegions, getRelationship) : ['case', ['boolean', ['has', 'countryIso3'], false], '#555', '#000'],
-    [mapMode, regions, playerCountry, playerCoreRegions, getRelationship]
-  );
-  const lineColorExpression = useMemo(() => createLineColorExpression(), []);
-  const lineWidthExpression = useMemo(() => createLineWidthExpression(), []);
-  const fillOpacityExpression = useMemo(() => createFillOpacityExpression(), []);
-
-  // Calculate markers
-  const unitMarkers = useMemo(
-    () => playerCountry ? calculateUnitMarkers(regions, regionCentroids, selectedUnitRegion, playerCountry, selectedDivisionIds, activeCombats, movingUnits, divisions) : [],
-    [regions, regionCentroids, selectedUnitRegion, playerCountry, selectedDivisionIds, activeCombats, movingUnits, divisions]
-  );
-
-  const movingUnitMarkers = useMemo(
-    () => calculateMovingUnitMarkers(movingUnits, regionCentroids, currentDateTime),
-    [movingUnits, regionCentroids, currentDateTime]
-  );
-
-  const combatMarkers = useMemo(
-    () => calculateCombatMarkers(activeCombats, regionCentroids, borderMidpoints),
-    [activeCombats, regionCentroids, borderMidpoints]
-  );
-
-  /**
-   * Build a GeoJSON LineString for the selected movement's planned path.
-   */
-  const movementPathGeoJSON = useMemo(() => {
-    const features: { type: 'Feature'; geometry: { type: 'LineString'; coordinates: [number, number][] }; properties: { movementId: string } }[] = [];
-
-    const movementsToShow: typeof movingUnits = [];
-    if (selectedMovementId) {
-      const m = movingUnits.find(mu => mu.id === selectedMovementId);
-      if (m) movementsToShow.push(m);
-    } else if (selectedUnitRegion) {
-      movementsToShow.push(...movingUnits.filter(mu => mu.fromRegion === selectedUnitRegion));
-    }
-
-    for (const movement of movementsToShow) {
-      const fullPath = [movement.fromRegion, movement.toRegion, ...(movement.remainingPath ?? [])];
-      const coordinates: [number, number][] = [];
-      for (const regionId of fullPath) {
-        const centroid = regionCentroids[regionId];
-        if (centroid) coordinates.push([centroid[0], centroid[1]]);
-      }
-      if (coordinates.length >= 2) {
-        features.push({
-          type: 'Feature',
-          geometry: { type: 'LineString', coordinates },
-          properties: { movementId: movement.id },
-        });
-      }
-    }
-
-    return { type: 'FeatureCollection' as const, features };
-  }, [selectedMovementId, selectedUnitRegion, movingUnits, regionCentroids]);
-
-  // Memoized style objects
-  const mapStyle = useMemo(() => createMapStyle(), []);
-  const mapContainerStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
-  const interactiveLayerIds = useMemo(() => ['regions-fill'], []);
-  const fillPaint = useMemo(
-    () => createFillPaint(fillColorExpression, fillOpacityExpression),
-    [fillColorExpression, fillOpacityExpression]
-  );
-  const linePaint = useMemo(
-    () => createLinePaint(lineColorExpression, lineWidthExpression),
-    [lineColorExpression, lineWidthExpression]
-  );
+    selectedDivisionIds,
+    selectedMovementId,
+    playerCountry,
+    setSelectedRegion,
+    setSelectedCombatId,
+    setSelectedMovementId,
+  } = useGameMapViewModel();
 
   return (
     <div className="relative h-full w-full">
