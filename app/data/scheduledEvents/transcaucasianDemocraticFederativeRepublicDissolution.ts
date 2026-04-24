@@ -18,9 +18,9 @@ export const transcaucasianDemocraticFederativeRepublicDissolutionEvent: Schedul
   ],
   conditionLogic: 'or',
   actions: [
+    { type: 'mergeCountry', newOwner: 'georgia', fromCountry: 'tdfr' },
     { type: 'transferRegion', regionId: 'AZE', newOwner: 'adr' },
-    { type: 'transferCoreRegionsFromCountry', newOwner: 'armenia', fromCountry: 'tdfr' },
-    { type: 'transferAllRegionsFromCountry', newOwner: 'georgia', fromCountry: 'tdfr' },
+    { type: 'transferCoreRegionsFromCountry', newOwner: 'armenia', fromCountry: 'georgia' },
     { type: 'declareWar', fromCountry: 'ottoman', toCountry: 'armenia' },
     { type: 'setRelationship', fromCountry: 'adr', toCountry: 'ottoman', relationshipType: 'military_access' },
     { type: 'setRelationship', fromCountry: 'ottoman', toCountry: 'adr', relationshipType: 'military_access' },

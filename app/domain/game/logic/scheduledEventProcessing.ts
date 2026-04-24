@@ -158,6 +158,25 @@ export function processScheduledEvents(
             updatedRegions[regionId] = { ...region, owner: action.newOwner };
           }
         }
+      } else if (action.type === 'mergeCountry' && action.newOwner && action.fromCountry) {
+        // Transfer all regions owned by fromCountry to newOwner
+        for (const [regionId, region] of Object.entries(updatedRegions)) {
+          if (region.owner === action.fromCountry) {
+            updatedRegions[regionId] = { ...region, owner: action.newOwner };
+          }
+        }
+        // Transfer all divisions owned by fromCountry to newOwner
+        for (const [divisionId, division] of Object.entries(updatedDivisions)) {
+          if (division.owner === action.fromCountry) {
+            updatedDivisions[divisionId] = { ...division, owner: action.newOwner };
+          }
+        }
+        // Transfer army groups owned by fromCountry to newOwner
+        for (let i = 0; i < updatedArmyGroups.length; i++) {
+          if (updatedArmyGroups[i].owner === action.fromCountry) {
+            updatedArmyGroups[i] = { ...updatedArmyGroups[i], owner: action.newOwner };
+          }
+        }
       }
     });
 

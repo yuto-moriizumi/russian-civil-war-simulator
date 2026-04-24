@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { scheduledEvents } from '../data/scheduledEvents';
 import { processScheduledEvents } from '../domain/game/logic/scheduledEventProcessing';
-import type { CountryId, Relationship, ScheduledEvent } from '../types/game';
+import type { ArmyGroup, CountryId, DivisionState, Region, Relationship, ScheduledEvent } from '../types/game';
 
 function relation(fromCountry: CountryId, toCountry: CountryId, type: Relationship['type']): Relationship {
   return { fromCountry, toCountry, type };
@@ -88,5 +88,92 @@ describe('scheduled Treaty of Brest-Litovsk event', () => {
     expect(result.updatedScheduledEvents[0].triggered).toBe(false);
     expect(result.newEvents).toHaveLength(0);
     expect(result.updatedRelationships).toEqual(relationships);
+  });
+});
+
+describe('mergeCountry action', () => {
+  function makeRegion(id: string, owner: CountryId): Record<string, Region> {
+    return {
+      [id]: { id, name: id, countryIso3: 'RUS', owner },
+    };
+  }
+
+  function makeMergedRegions(): Record<string, Region> {
+    return {
+      ...makeRegion('REG-A', 'poland' as CountryId),
+      ...makeRegion('REG-B', 'poland' as CountryId),
+      ...makeRegion('REG-C', 'germany' as CountryId),
+    };
+  }
+
+  function makeDivisions(): DivisionState {
+    return {
+      'div-1': { id: 'div-1', name: '1st Div', owner: 'poland' as CountryId, armyGroupId: 'ag-b', hp: 100, maxHp: 100, attack: 5, defence: 3, regionId: 'REG-A' },
+      'div-2': { id: 'div-2', name: '2nd Div', owner: 'poland' as CountryId, armyGroupId: 'ag-b', hp: 80, maxHp: 100, attack: 4, defence: 2, regionId: 'REG-B' },
+      'div-3': { id: 'div-3', name: '3rd Div', owner: 'germany' as CountryId, armyGroupId: 'ag-a', hp: 90, maxHp: 100, attack: 6, defence: 4, regionId: 'REG-C' },
+    };
+  }
+
+  function makeArmyGroups(): ArmyGroup[] {
+    return [
+      { id: 'ag-b', name: 'Poland Army', regionIds: ['REG-A', 'REG-B'], color: '#FF0000', owner: 'poland' as CountryId, theaterId: null, mode: 'none' },
+      { id: 'ag-a', name: 'German Army', regionIds: ['REG-C'], color: '#00FF00', owner: 'germany' as CountryId, theaterId: null, mode: 'none' },
+    ];
+  }
+
+  const mergeEvent: ScheduledEvent = {
+    id: 'test-merge',
+    date: '1919-01-01',
+    title: 'Test Merge',
+    description: 'Test merge event',
+    actions: [
+      { type: 'mergeCountry', newOwner: 'germany' as CountryId, fromCountry: 'poland' as CountryId },
+    ],
+    triggered: false,
+  };
+
+  it('transfers all regions, divisions, and army groups from merged country to newOwner', () => {
+    const regions = makeMergedRegions();
+    const divisions = makeDivisions();
+    const armyGroups = makeArmyGroups();
+
+    const result = processScheduledEvents(
+      [mergeEvent],
+      new Date(1919, 0, 1),
+      regions,
+      [],
+      armyGroups,
+      divisions
+    );
+
+    // Regions: poland's regions transferred to germany
+    expect(result.updatedRegions['REG-A'].owner).toBe('germany');
+    expect(result.updatedRegions['REG-B'].owner).toBe('germany');
+    expect(result.updatedRegions['REG-C'].owner).toBe('germany'); // unchanged owner
+
+    // Divisions: poland's divisions transferred to germany
+    expect(result.updatedDivisions['div-1'].owner).toBe('germany');
+    expect(result.updatedDivisions['div-2'].owner).toBe('germany');
+    expect(result.updatedDivisions['div-3'].owner).toBe('germany'); // unchanged
+
+    // Army groups: poland's army group transferred to germany
+    const agB = result.updatedArmyGroups.find(g => g.id === 'ag-b')!;
+    expect(agB.owner).toBe('germany');
+    const agA = result.updatedArmyGroups.find(g => g.id === 'ag-a')!;
+    expect(agA.owner).toBe('germany'); // unchanged
+  });
+
+  it('does not fire before the event date', () => {
+    const result = processScheduledEvents(
+      [mergeEvent],
+      new Date(1918, 11, 31),
+      makeMergedRegions(),
+      [],
+      makeArmyGroups(),
+      makeDivisions()
+    );
+
+    expect(result.updatedScheduledEvents[0].triggered).toBe(false);
+    expect(result.newEvents).toHaveLength(0);
   });
 });
