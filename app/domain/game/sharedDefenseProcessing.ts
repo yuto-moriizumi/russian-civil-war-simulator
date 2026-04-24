@@ -133,10 +133,10 @@ export function processCombatRound(
   }
 
   // Apply HP changes to DivisionState
-  let updatedDivisions = { ...divisions };
-  for (const div of [...attackerDivisions, ...defenderDivisions]) {
-    updatedDivisions = { ...updatedDivisions, [div.id]: { ...updatedDivisions[div.id], hp: div.hp } };
-  }
+  const hpPatch: DivisionState = {};
+  for (const div of attackerDivisions) hpPatch[div.id] = { ...divisions[div.id], hp: div.hp };
+  for (const div of defenderDivisions) hpPatch[div.id] = { ...divisions[div.id], hp: div.hp };
+  const updatedDivisions = { ...divisions, ...hpPatch };
 
   return {
     combat: {
@@ -289,10 +289,10 @@ function processSharedDefenseRound(
     const combatEnded = survivingAttackerDivisions.length === 0 || survivingSharedDefenders.length === 0;
 
     // Apply HP changes to DivisionState
-    const allLocal = [...survivingAttackerDivisions, ...survivingSharedDefenders];
-    for (const div of allLocal) {
-      runningDivisions = { ...runningDivisions, [div.id]: { ...runningDivisions[div.id], hp: div.hp } };
-    }
+    const hpPatch: DivisionState = {};
+    for (const div of survivingAttackerDivisions) hpPatch[div.id] = { ...runningDivisions[div.id], hp: div.hp };
+    for (const div of survivingSharedDefenders) hpPatch[div.id] = { ...runningDivisions[div.id], hp: div.hp };
+    runningDivisions = { ...runningDivisions, ...hpPatch };
 
     results.push({
       combat: {
