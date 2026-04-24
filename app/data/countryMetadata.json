@@ -1212,6 +1212,7 @@
     "selectable": false,
     "coreRegions": [
       "RU-AD",
+      "RU-KC",
       "RU-KDA",
       "RU-STA"
     ]
