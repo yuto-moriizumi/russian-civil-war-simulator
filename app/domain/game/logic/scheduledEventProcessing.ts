@@ -38,28 +38,18 @@ export function processScheduledEvents(
   const updatedScheduledEvents = scheduledEvents.map(event => {
     if (event.triggered) return event;
 
-    // Events with conditions trigger based on conditionLogic:
-    // - 'and' (default): trigger on first date >= event.date where all conditions pass
-    // - 'or': trigger when date >= event.date OR conditions pass (whichever comes first)
-    // Events without conditions trigger exactly on event.date
+    // Events with conditions encode all timing/branching rules in conditions.
+    // Unconditional events still trigger exactly on event.date.
     if (event.conditions) {
-      const conditionLogic = event.conditionLogic ?? 'and';
-      const dateReached = dateString >= event.date;
       const conditionsMet = checkConditions(
         event.conditions,
         dateString,
         updatedRegions,
         relationships,
-        allScheduledEvents,
-        conditionLogic
+        allScheduledEvents
       );
 
-      if (conditionLogic === 'or') {
-        if (!dateReached && !conditionsMet) return event;
-      } else {
-        // 'and' logic
-        if (!dateReached || !conditionsMet) return event;
-      }
+      if (!conditionsMet) return event;
     } else {
       if (event.date !== dateString) return event;
     }
@@ -236,7 +226,7 @@ function checkConditions(
   regions: Record<string, Region>,
   relationships: Relationship[],
   scheduledEvents: ScheduledEvent[] = [],
-  conditionLogic: 'and' | 'or' = 'and'
+  mode: 'every' | 'some' = 'every'
 ): boolean {
   const evaluateCondition = (condition: ScheduledEventCondition): boolean => {
     if (condition.type === 'and' || condition.type === 'or') {
@@ -246,7 +236,7 @@ function checkConditions(
         regions,
         relationships,
         scheduledEvents,
-        condition.type
+        condition.type === 'or' ? 'some' : 'every'
       );
     }
     if (condition.type === 'atLeastOneRegionOwnedByOrPuppetOf') {
@@ -267,10 +257,13 @@ function checkConditions(
     if (condition.type === 'date') {
       return currentDateString === condition.date;
     }
+    if (condition.type === 'dateReached') {
+      return currentDateString >= condition.date;
+    }
     return true;
   };
 
-  return conditionLogic === 'or'
+  return mode === 'some'
     ? conditions.some(evaluateCondition)
     : conditions.every(evaluateCondition);
 }

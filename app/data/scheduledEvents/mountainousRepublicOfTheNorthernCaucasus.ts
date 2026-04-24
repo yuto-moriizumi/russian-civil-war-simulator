@@ -51,6 +51,10 @@ export const mountainousRepublicOfTheNorthernCaucasusEvents: ScheduledEvent[] = 
     description: 'As Soviet-aligned forces hold parts of the North Caucasus, the Mountainous Republic of the Northern Caucasus enters the war against Soviet Russia.',
     conditions: [
       {
+        type: 'dateReached',
+        date: '1918-05-11',
+      },
+      {
         type: 'atLeastOneRegionOwnedByOrPuppetOf',
         regions: ['RU-CE', 'RU-IN', 'RU-KB', 'RU-SE'],
         country: 'soviet',
