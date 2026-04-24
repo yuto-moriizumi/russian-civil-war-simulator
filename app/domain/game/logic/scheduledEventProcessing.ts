@@ -117,19 +117,32 @@ export function processScheduledEvents(
           };
           updatedArmyGroups = [...updatedArmyGroups, armyGroup];
         }
-        const division: Division = {
-          id: `${action.owner}-spawned-${dateString}`,
-          name: `1st ${groupName}`,
-          owner: action.owner,
-          armyGroupId: armyGroup.id,
-          hp: BASE_DIVISION_STATS.hp,
-          maxHp: BASE_DIVISION_STATS.maxHp,
-          attack: BASE_DIVISION_STATS.attack,
-          defence: BASE_DIVISION_STATS.defence,
-          regionId: action.regionId,
-        };
+        const spawnCount = Math.max(1, action.count ?? 1);
+        const existingDivisionCount = Object.values(updatedDivisions).filter(
+          division => division.armyGroupId === armyGroup.id
+        ).length;
+
         if (updatedRegions[action.regionId]) {
-          updatedDivisions = { ...updatedDivisions, [division.id]: division };
+          for (let i = 0; i < spawnCount; i++) {
+            const divisionNumber = existingDivisionCount + i + 1;
+            const defaultId = `${action.owner}-spawned-${dateString}`;
+            const divisionId =
+              spawnCount === 1 && !updatedDivisions[defaultId]
+                ? defaultId
+                : `${defaultId}-${divisionNumber}`;
+            const division: Division = {
+              id: divisionId,
+              name: `${formatOrdinal(divisionNumber)} ${groupName}`,
+              owner: action.owner,
+              armyGroupId: armyGroup.id,
+              hp: BASE_DIVISION_STATS.hp,
+              maxHp: BASE_DIVISION_STATS.maxHp,
+              attack: BASE_DIVISION_STATS.attack,
+              defence: BASE_DIVISION_STATS.defence,
+              regionId: action.regionId,
+            };
+            updatedDivisions = { ...updatedDivisions, [division.id]: division };
+          }
         }
       } else if (action.type === 'transferCoreRegionsFromCountry' && action.newOwner && action.fromCountry) {
         const countryData = COUNTRY_METADATA[action.newOwner];
@@ -289,4 +302,22 @@ function formatDateToYYYYMMDD(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+function formatOrdinal(value: number): string {
+  const remainder100 = value % 100;
+  if (remainder100 >= 11 && remainder100 <= 13) {
+    return `${value}th`;
+  }
+
+  switch (value % 10) {
+    case 1:
+      return `${value}st`;
+    case 2:
+      return `${value}nd`;
+    case 3:
+      return `${value}rd`;
+    default:
+      return `${value}th`;
+  }
 }

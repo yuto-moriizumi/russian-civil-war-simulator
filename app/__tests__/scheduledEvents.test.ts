@@ -208,6 +208,13 @@ describe('scheduled events', () => {
     expect(result.updatedRegions.GEO.owner).toBe('georgia');
     expect(result.updatedRegions['TR-08'].owner).toBe('georgia');
     expect(result.updatedRegions['RU-MOW'].owner).toBe('georgia');
+    const armenianDivisionsInArm = Object.values(result.updatedDivisions).filter(
+      division => division.owner === 'armenia' && division.regionId === 'ARM'
+    );
+    expect(armenianDivisionsInArm).toHaveLength(5);
+    expect(armenianDivisionsInArm.map(division => division.armyGroupId)).toEqual(
+      Array(5).fill('armenia-ag-spawned')
+    );
     expect(result.updatedScheduledEvents[0].triggered).toBe(true);
   });
 });

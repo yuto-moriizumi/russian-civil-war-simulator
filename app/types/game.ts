@@ -221,6 +221,7 @@ export interface ScheduledEventAction {
   // For spawnDivision
   owner?: CountryId;
   armyGroupName?: string;
+  count?: number;
 }
 
 export interface ScheduledEventCondition {
