@@ -1,5 +1,34 @@
 import type { CountryId, Relationship, RelationshipType } from '../../types/game';
 
+/**
+ * Returns the overlord (suzerain) of a country, or null if none.
+ */
+export function getOverlord(
+  countryId: CountryId,
+  relationships: Relationship[],
+): CountryId | null {
+  for (const r of relationships) {
+    if (r.type === 'autonomy' && r.toCountry === countryId) {
+      return r.fromCountry;
+    }
+  }
+  return null;
+}
+
+/**
+ * Returns true if two countries share the same overlord (suzerain).
+ * Used to grant automatic military access between co-vassals.
+ */
+export function shareSameOverlord(
+  countryA: CountryId,
+  countryB: CountryId,
+  relationships: Relationship[],
+): boolean {
+  const overlordA = getOverlord(countryA, relationships);
+  const overlordB = getOverlord(countryB, relationships);
+  return overlordA !== null && overlordA === overlordB;
+}
+
 export function getRelationshipStatus(
   relationships: Relationship[],
   fromCountry: CountryId,

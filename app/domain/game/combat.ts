@@ -1,6 +1,7 @@
 import { Division, CombatResult, CountryId, ActiveCombat, ArmyGroup, CountryBonuses, RegionState, Adjacency, Relationship } from '../../types/game';
 import { getDivisionStats } from './bonusCalculator';
 import { GAME_CONFIG } from '../../constants/gameConfig';
+import { shareSameOverlord } from './relationshipUtils';
 
 export function generateDivisionId(): string {
   return `div_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -264,7 +265,8 @@ export function canRetreatToRegion(
   return (
     theyGrantUs === 'military_access' ||
     theyGrantUs === 'autonomy' ||
-    weDeclared === 'autonomy'
+    weDeclared === 'autonomy' ||
+    shareSameOverlord(divisionOwner, regionOwner, relationships)
   );
 }
 

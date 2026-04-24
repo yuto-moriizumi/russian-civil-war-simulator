@@ -10,6 +10,7 @@ import { calculateDistance, calculateTravelTime } from '../../../utils/distance'
 import { getDivisionsInRegion, getMovementDivisions, getCombatDefenders } from '../divisionState';
 import { SimulationLogger, noOpLogger } from '../engine/types';
 import { applyCompletedRetreatMovement } from './movementRetreats';
+import { shareSameOverlord } from '../relationshipUtils';
 
 interface MovementApplicationContext {
   regions: Record<string, Region>;
@@ -112,9 +113,10 @@ export function applyCompletedMovements(
       const weDeclared = ourRelationship ? ourRelationship.type : 'neutral';
 
       const hasAutonomy = theyGrantUs === 'autonomy' || weDeclared === 'autonomy';
+      const isSameOverlord = shareSameOverlord(owner, dest.owner, context.relationships);
 
       let effectiveRelationship = weDeclared === 'war' ? 'war' : theyGrantUs;
-      if (hasAutonomy) {
+      if (hasAutonomy || isSameOverlord) {
         effectiveRelationship = 'military_access';
       }
 
