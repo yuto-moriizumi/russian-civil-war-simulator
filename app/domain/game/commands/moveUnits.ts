@@ -237,8 +237,11 @@ export function applyMoveUnitsCommand(
       combat =>
         combat.defenderRegionId === actualToRegion && !combat.isComplete,
     );
+    const hasEnemyInTransitToDest = movingUnits.some(
+      m => m.toRegion === actualToRegion && m.owner === to.owner && !m.pendingCombatId,
+    );
 
-    if (defenderDivisions.length > 0 || hasActiveCombatAtDest) {
+    if (defenderDivisions.length > 0 || hasActiveCombatAtDest || hasEnemyInTransitToDest) {
       const { combatDefenderDivisions } =
         resolveMultiFrontDefenders(
           actualToRegion,

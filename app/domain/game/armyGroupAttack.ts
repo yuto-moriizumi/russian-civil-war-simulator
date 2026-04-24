@@ -294,7 +294,10 @@ export function attackArmyGroup(
         // Divisions at the target region (including those currently moving away — regionId stays as source until arrival)
         const defenderDivisions = getDivsInRegion(attackTargetId).filter(d => d.owner === destRegion.owner);
         const hasActiveCombatAtDest = allKnownCombats.some(c => c.defenderRegionId === attackTargetId && !c.isComplete);
-        if (defenderDivisions.length > 0 || hasActiveCombatAtDest) {
+        const hasEnemyInTransitToDest = movingUnits.some(
+          m => m.toRegion === attackTargetId && m.owner === destRegion.owner && !m.pendingCombatId,
+        );
+        if (defenderDivisions.length > 0 || hasActiveCombatAtDest || hasEnemyInTransitToDest) {
           const otherCombatsOnRegion = allKnownCombats.filter(
             c => c.defenderRegionId === attackTargetId && !c.isComplete
           );
