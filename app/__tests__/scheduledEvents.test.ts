@@ -148,4 +148,67 @@ describe('scheduled events', () => {
     ]));
     expect(result.updatedScheduledEvents[0].triggered).toBe(true);
   });
+
+  it('dissolves the TDFR on May 26, 1918 by splitting its held regions between Azerbaijan, Armenia, and Georgia', () => {
+    const event = scheduledEvents.find(
+      scheduledEvent => scheduledEvent.id === 'dissolution-of-the-transcaucasian-democratic-federative-republic'
+    );
+    const regions: RegionState = {
+      AZE: {
+        id: 'AZE',
+        name: 'Azerbaijan',
+        countryIso3: 'AZE',
+        owner: 'tdfr',
+      },
+      ARM: {
+        id: 'ARM',
+        name: 'Armenia',
+        countryIso3: 'ARM',
+        owner: 'tdfr',
+      },
+      'AM-01': {
+        id: 'AM-01',
+        name: 'Yerevan',
+        countryIso3: 'ARM',
+        owner: 'tdfr',
+      },
+      GEO: {
+        id: 'GEO',
+        name: 'Georgia',
+        countryIso3: 'GEO',
+        owner: 'tdfr',
+      },
+      'TR-08': {
+        id: 'TR-08',
+        name: 'Artvin',
+        countryIso3: 'TUR',
+        owner: 'tdfr',
+      },
+      'RU-MOW': {
+        id: 'RU-MOW',
+        name: 'Moscow',
+        countryIso3: 'RUS',
+        owner: 'tdfr',
+      },
+    };
+
+    expect(event).toBeDefined();
+    expect(event?.date).toBe('1918-05-26');
+
+    const result = processScheduledEvents(
+      [event!],
+      new Date(1918, 4, 26),
+      regions,
+      [],
+      []
+    );
+
+    expect(result.updatedRegions.AZE.owner).toBe('adr');
+    expect(result.updatedRegions.ARM.owner).toBe('armenia');
+    expect(result.updatedRegions['AM-01'].owner).toBe('armenia');
+    expect(result.updatedRegions.GEO.owner).toBe('georgia');
+    expect(result.updatedRegions['TR-08'].owner).toBe('georgia');
+    expect(result.updatedRegions['RU-MOW'].owner).toBe('georgia');
+    expect(result.updatedScheduledEvents[0].triggered).toBe(true);
+  });
 });

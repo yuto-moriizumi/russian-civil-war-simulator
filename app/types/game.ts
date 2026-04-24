@@ -194,12 +194,15 @@ export interface ScheduledEventAction {
     | 'setRelationship'
     | 'removeRelationship'
     | 'endWarWithCountryAndPuppets'
-    | 'transferCoreRegionsFromCountry';
+    | 'transferCoreRegionsFromCountry'
+    | 'transferAllRegionsFromCountry';
   // For transferRegion / transferRegionIfOwnedByOrPuppetOf / transferCoreRegionsFromCountry
+  // / transferAllRegionsFromCountry
   regionId?: string;
   newOwner?: CountryId;
   // For transferRegionIfOwnedByOrPuppetOf: only transfer if current owner is this country or its puppet
   // For transferCoreRegionsFromCountry: transfer all core regions of newOwner owned by fromCountry
+  // For transferAllRegionsFromCountry: transfer all regions currently owned by fromCountry to newOwner
   overlordCountry?: CountryId;
   // For declareWar / setRelationship
   fromCountry?: CountryId;

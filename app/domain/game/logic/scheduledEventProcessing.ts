@@ -133,6 +133,12 @@ export function processScheduledEvents(
             }
           }
         }
+      } else if (action.type === 'transferAllRegionsFromCountry' && action.newOwner && action.fromCountry) {
+        for (const [regionId, region] of Object.entries(updatedRegions)) {
+          if (region.owner === action.fromCountry) {
+            updatedRegions[regionId] = { ...region, owner: action.newOwner };
+          }
+        }
       }
     });
 
