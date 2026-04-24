@@ -14,7 +14,8 @@ export function processScheduledEvents(
   regions: Record<string, Region>,
   relationships: Relationship[],
   armyGroups: ArmyGroup[],
-  divisions: DivisionState = {}
+  divisions: DivisionState = {},
+  allScheduledEvents: ScheduledEvent[] = scheduledEvents
 ): {
   updatedScheduledEvents: ScheduledEvent[];
   updatedRegions: Record<string, Region>;
@@ -44,7 +45,7 @@ export function processScheduledEvents(
     if (event.conditions) {
       const conditionLogic = event.conditionLogic ?? 'and';
       const dateReached = dateString >= event.date;
-      const conditionsMet = checkConditions(event.conditions, updatedRegions, relationships);
+      const conditionsMet = checkConditions(event.conditions, updatedRegions, relationships, allScheduledEvents);
 
       if (conditionLogic === 'or') {
         if (!dateReached && !conditionsMet) return event;
@@ -193,20 +194,24 @@ function isOwnedByOrPuppetOf(owner: CountryId, overlord: CountryId, relationship
 function checkConditions(
   conditions: ScheduledEventCondition[],
   regions: Record<string, Region>,
-  relationships: Relationship[]
+  relationships: Relationship[],
+  scheduledEvents: ScheduledEvent[] = []
 ): boolean {
   return conditions.every(condition => {
     if (condition.type === 'atLeastOneRegionOwnedByOrPuppetOf') {
-      return condition.regions.some(regionId => {
+      return condition.regions!.some(regionId => {
         const region = regions[regionId];
-        return region && isOwnedByOrPuppetOf(region.owner, condition.country, relationships);
+        return region && isOwnedByOrPuppetOf(region.owner, condition.country!, relationships);
       });
     }
     if (condition.type === 'atLeastOneRegionNotOwnedByOrPuppetOf') {
-      return condition.regions.some(regionId => {
+      return condition.regions!.some(regionId => {
         const region = regions[regionId];
-        return region && !isOwnedByOrPuppetOf(region.owner, condition.country, relationships);
+        return region && !isOwnedByOrPuppetOf(region.owner, condition.country!, relationships);
       });
+    }
+    if (condition.type === 'eventTriggered') {
+      return scheduledEvents.some(e => e.id === condition.eventId && e.triggered);
     }
     return true;
   });

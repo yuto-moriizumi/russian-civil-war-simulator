@@ -220,9 +220,10 @@ export interface ScheduledEventAction {
 }
 
 export interface ScheduledEventCondition {
-  type: 'atLeastOneRegionOwnedByOrPuppetOf' | 'atLeastOneRegionNotOwnedByOrPuppetOf';
-  regions: string[];    // region IDs to check
-  country: CountryId;  // overlord country
+  type: 'atLeastOneRegionOwnedByOrPuppetOf' | 'atLeastOneRegionNotOwnedByOrPuppetOf' | 'eventTriggered';
+  regions?: string[];    // region IDs to check
+  country?: CountryId;  // overlord country
+  eventId?: string;     // event ID to check (for eventTriggered type)
 }
 
 export interface ScheduledEvent {

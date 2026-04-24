@@ -7,6 +7,10 @@ export const transcaucasianDemocraticFederativeRepublicDissolutionEvent: Schedul
   description: 'The Transcaucasian federation collapses. Azerbaijan secures AZE, Armenian core territories break away to the First Republic of Armenia, and the remaining TDFR-held lands pass to Democratic Republic of Georgia.',
   conditions: [
     {
+      type: 'eventTriggered',
+      eventId: 'transcaucasian-democratic-federative-republic-established',
+    },
+    {
       type: 'atLeastOneRegionNotOwnedByOrPuppetOf',
       regions: ['TR-08', 'TR-25', 'TR-04'],
       country: 'tdfr',
