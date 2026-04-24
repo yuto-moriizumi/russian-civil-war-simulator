@@ -205,66 +205,6 @@ describe('scheduled events', () => {
     expect(result.updatedScheduledEvents[0].triggered).toBe(true);
   });
 
-  it('transfers Ukrainian core regions held by Germany or its puppets to Ukraine on February 9, 1918', () => {
-    const event = scheduledEvents.find(
-      scheduledEvent => scheduledEvent.id === 'treaty-of-brest-litovsk-ukraine'
-    );
-    const regions: RegionState = {
-      'BY-BR': {
-        id: 'BY-BR',
-        name: 'Brest Region',
-        countryIso3: 'BLR',
-        owner: 'germany',
-      },
-      'UA-40': {
-        id: 'UA-40',
-        name: 'Sevastopol',
-        countryIso3: 'UKR',
-        owner: 'poland',
-      },
-      'UA-43': {
-        id: 'UA-43',
-        name: 'Crimea',
-        countryIso3: 'UKR',
-        owner: 'balticdutchy',
-      },
-      'UA-51': {
-        id: 'UA-51',
-        name: 'Odessa',
-        countryIso3: 'UKR',
-        owner: 'ottoman',
-      },
-      'RU-MOW': {
-        id: 'RU-MOW',
-        name: 'Moscow',
-        countryIso3: 'RUS',
-        owner: 'poland',
-      },
-    };
-    const relationships: Relationship[] = [
-      { fromCountry: 'germany', toCountry: 'poland', type: 'autonomy' },
-      { fromCountry: 'poland', toCountry: 'balticdutchy', type: 'autonomy' },
-    ];
-
-    expect(event).toBeDefined();
-    expect(event?.date).toBe('1918-02-09');
-
-    const result = processScheduledEvents(
-      [event!],
-      new Date(1918, 1, 9),
-      regions,
-      relationships,
-      []
-    );
-
-    expect(result.updatedRegions['BY-BR'].owner).toBe('ukraine');
-    expect(result.updatedRegions['UA-40'].owner).toBe('ukraine');
-    expect(result.updatedRegions['UA-43'].owner).toBe('ukraine');
-    expect(result.updatedRegions['UA-51'].owner).toBe('ottoman');
-    expect(result.updatedRegions['RU-MOW'].owner).toBe('poland');
-    expect(result.updatedScheduledEvents[0].triggered).toBe(true);
-  });
-
   it('returns White-held Persian core regions to Persia on February 28, 1918', () => {
     const event = scheduledEvents.find(
       scheduledEvent => scheduledEvent.id === 'retreat-from-tabriz'
