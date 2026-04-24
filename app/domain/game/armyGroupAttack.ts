@@ -297,7 +297,10 @@ export function attackArmyGroup(
         const hasEnemyInTransitToDest = movingUnits.some(
           m => m.toRegion === attackTargetId && m.owner === destRegion.owner && !m.pendingCombatId,
         );
-        if (defenderDivisions.length > 0 || hasActiveCombatAtDest || hasEnemyInTransitToDest) {
+        const hasEnemyInTransitFromDest = movingUnits.some(
+          m => m.fromRegion === attackTargetId && m.owner === destRegion.owner && !m.pendingCombatId,
+        );
+        if (defenderDivisions.length > 0 || hasActiveCombatAtDest || hasEnemyInTransitToDest || hasEnemyInTransitFromDest) {
           const otherCombatsOnRegion = allKnownCombats.filter(
             c => c.defenderRegionId === attackTargetId && !c.isComplete
           );
