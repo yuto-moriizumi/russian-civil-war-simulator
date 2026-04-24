@@ -85,7 +85,14 @@ export function processCombats(
 
     roundResults.forEach(result => {
       const updatedCombat = result.combat;
-      runningDivisions = result.updatedDivisions;
+      // Apply HP updates from this combat result without restoring already-destroyed divisions.
+      // In shared-defense scenarios, a later combat's updatedDivisions may still contain divisions
+      // that a prior combat's retreat processing already removed from runningDivisions.
+      for (const [id, div] of Object.entries(result.updatedDivisions)) {
+        if (id in runningDivisions) {
+          runningDivisions = { ...runningDivisions, [id]: div };
+        }
+      }
 
       result.retreatingDivisions.forEach(({ divisionId, toRegionId, fromRegionId }) => {
         const division = runningDivisions[divisionId];
