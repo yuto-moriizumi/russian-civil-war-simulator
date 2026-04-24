@@ -1,4 +1,5 @@
 import { ScheduledEvent } from '../types/game';
+import { transcaucasianDemocraticFederativeRepublicEstablishedEvent } from './scheduledEvents/transcaucasianDemocraticFederativeRepublic';
 
 /**
  * List of all scheduled historical events
@@ -308,6 +309,7 @@ export const scheduledEvents: ScheduledEvent[] = [
     ],
     triggered: false,
   },
+  transcaucasianDemocraticFederativeRepublicEstablishedEvent,
   {
     id: 'dissolution-of-the-transcaucasian-democratic-federative-republic',
     date: '1918-05-26',
