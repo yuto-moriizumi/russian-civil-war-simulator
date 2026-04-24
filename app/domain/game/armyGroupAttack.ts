@@ -133,7 +133,8 @@ export function attackArmyGroup(
         d.armyGroupId === groupId &&
         d.owner === countryId &&
         !inTransitDivisionIds.has(d.id) &&
-        !engagedDivisionIds.has(d.id)
+        !engagedDivisionIds.has(d.id) &&
+        d.hp >= d.maxHp * 0.5
     );
     if (groupDivs.length === 0) return;
     if (borderSet.has(regionId)) {
@@ -245,7 +246,8 @@ export function attackArmyGroup(
         d.armyGroupId === groupId &&
         d.owner === countryId &&
         !inTransitDivisionIds.has(d.id) &&
-        !engagedDivisionIds.has(d.id)
+        !engagedDivisionIds.has(d.id) &&
+        d.hp >= d.maxHp * 0.5
     );
 
     const attackTargets = (adjacency[borderRegionId] || []).filter(
