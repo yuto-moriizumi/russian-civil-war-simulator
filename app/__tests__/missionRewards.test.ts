@@ -81,6 +81,48 @@ describe('Soviet Don Army preparation mission', () => {
   });
 });
 
+describe('Soviet Kherson mission', () => {
+  it('sits between Kharkiv and Taurida and requires Soviet or puppet control of UA-65', () => {
+    const mission = sovietMissions.find(m => m.id === 'soviet_secure_kherson');
+    const tauridaMission = sovietMissions.find(m => m.id === 'soviet_taurida');
+
+    expect(mission).toMatchObject({
+      country: 'soviet',
+      name: 'ヘルソンの確保',
+      prerequisites: ['soviet_capture_kharkiv'],
+      rewards: { declareWar: { target: 'crimea' } },
+      available: [
+        { type: 'controlRegionByOverlord', regionId: 'UA-65' },
+      ],
+    });
+    expect(tauridaMission?.prerequisites).toEqual(['soviet_secure_kherson']);
+  });
+
+  it('accepts UA-65 control by a Soviet puppet', () => {
+    const mission = sovietMissions.find(m => m.id === 'soviet_secure_kherson')!;
+    const regions: RegionState = {
+      'UA-65': {
+        id: 'UA-65',
+        name: 'Kherson',
+        countryIso3: 'UKR',
+        owner: 'ukrainesoviet',
+      },
+    };
+
+    expect(areMissionConditionsMet(mission, {
+      regions,
+      dateTime: new Date('1918-01-01T00:00:00Z'),
+      gameEvents: [],
+      countryId: 'soviet',
+      theaters: [],
+      armyGroups: [],
+      relationships: [
+        { fromCountry: 'soviet', toCountry: 'ukrainesoviet', type: 'autonomy' },
+      ],
+    })).toBe(true);
+  });
+});
+
 describe('Soviet Don Army subjugation mission', () => {
   it('unlocks after securing Voronezh and requires Soviet or puppet control of Don regions', () => {
     const mission = sovietMissions.find(m => m.id === 'soviet_subjugate_don_army');
