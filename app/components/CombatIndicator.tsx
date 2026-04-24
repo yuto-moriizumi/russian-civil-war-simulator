@@ -17,14 +17,10 @@ interface CombatIndicatorProps {
 export default function CombatIndicator({ combat, divisions, onClick, isSelected }: CombatIndicatorProps) {
   const attackerHp = combat.attackerDivisionIds.reduce((sum, id) => sum + (divisions[id]?.hp ?? 0), 0);
   const defenderHp = combat.defenderDivisionIds.reduce((sum, id) => sum + (divisions[id]?.hp ?? 0), 0);
-  
-  // Calculate progress bars based on HP relative to initial
-  const attackerProgress = Math.min(100, combat.initialAttackerHp > 0 
-    ? (attackerHp / combat.initialAttackerHp) * 100 
-    : 0);
-  const defenderProgress = Math.min(100, combat.initialDefenderHp > 0 
-    ? (defenderHp / combat.initialDefenderHp) * 100 
-    : 0);
+  const attackerMaxHp = combat.attackerDivisionIds.reduce((sum, id) => sum + (divisions[id]?.maxHp ?? 0), 0);
+  const defenderMaxHp = combat.defenderDivisionIds.reduce((sum, id) => sum + (divisions[id]?.maxHp ?? 0), 0);
+  const attackerProgress = attackerMaxHp > 0 ? Math.min(100, (attackerHp / attackerMaxHp) * 100) : 0;
+  const defenderProgress = defenderMaxHp > 0 ? Math.min(100, (defenderHp / defenderMaxHp) * 100) : 0;
 
   const attackerColor = COUNTRY_COLORS[combat.attackerCountry];
   const defenderColor = COUNTRY_COLORS[combat.defenderCountry];

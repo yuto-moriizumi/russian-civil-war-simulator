@@ -24,14 +24,12 @@ export default function CombatPopup() {
   const defenderDivisions = combat.defenderDivisionIds.map(id => divisions[id]).filter(Boolean) as Division[];
   const attackerHp = attackerDivisions.reduce((sum, d) => sum + d.hp, 0);
   const defenderHp = defenderDivisions.reduce((sum, d) => sum + d.hp, 0);
-  
-  // Calculate progress bars
-  const attackerHpProgress = Math.min(100, combat.initialAttackerHp > 0 
-    ? (attackerHp / combat.initialAttackerHp) * 100 
-    : 0);
-  const defenderHpProgress = Math.min(100, combat.initialDefenderHp > 0 
-    ? (defenderHp / combat.initialDefenderHp) * 100 
-    : 0);
+  const attackerMaxHp = attackerDivisions.reduce((sum, d) => sum + d.maxHp, 0);
+  const defenderMaxHp = defenderDivisions.reduce((sum, d) => sum + d.maxHp, 0);
+
+  // Calculate progress bars relative to participating divisions' max HP
+  const attackerHpProgress = attackerMaxHp > 0 ? Math.min(100, (attackerHp / attackerMaxHp) * 100) : 0;
+  const defenderHpProgress = defenderMaxHp > 0 ? Math.min(100, (defenderHp / defenderMaxHp) * 100) : 0;
 
   const getCountryFlag = (country: CountryId) => {
     switch (country) {
