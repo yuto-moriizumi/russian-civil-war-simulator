@@ -1,4 +1,5 @@
 import { ScheduledEvent } from '../types/game';
+import { retreatFromTabrizEvent } from './scheduledEvents/retreatFromTabriz';
 import { transcaucasianDemocraticFederativeRepublicEstablishedEvent } from './scheduledEvents/transcaucasianDemocraticFederativeRepublic';
 
 /**
@@ -309,6 +310,7 @@ export const scheduledEvents: ScheduledEvent[] = [
     ],
     triggered: false,
   },
+  retreatFromTabrizEvent,
   transcaucasianDemocraticFederativeRepublicEstablishedEvent,
   {
     id: 'odessa-soviet-republic-proclaimed',
