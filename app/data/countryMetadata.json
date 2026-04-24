@@ -1562,5 +1562,18 @@
       "SI03",
       "SI04"
     ]
+  },
+  "france": {
+    "id": "france",
+    "comment": "French Third Republic / French Republic. This off-map country exists to support diplomacy, events, and future Entente-related content without requiring a French land presence on the current map.",
+    "name": "French Republic",
+    "combatName": "French Army",
+    "flag": "/images/flags/france.svg",
+    "color": "#0055A4",
+    "adjective": "French",
+    "firstArmyGroupName": "French Army Group",
+    "divisionPrefix": "French Division",
+    "selectable": false,
+    "coreRegions": []
   }
 }
