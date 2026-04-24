@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { scheduledEvents } from '../data/scheduledEvents';
 import { processScheduledEvents } from '../domain/game/logic/scheduledEventProcessing';
-import type { CountryId, Region, RegionState, Relationship } from '../types/game';
+import type { ArmyGroup, CountryId, DivisionState, Region, RegionState, Relationship } from '../types/game';
 
 const r = (id: string, owner: CountryId): Region =>
   ({ id, name: id, countryIso3: id, owner }) as Region;
@@ -77,11 +77,11 @@ describe('scheduled events', () => {
       MDA: r('MDA', 'moldavia'),
       'RO-IS': r('RO-IS', 'romania'),
     };
-    const armyGroups = [
+    const armyGroups: ArmyGroup[] = [
       { id: 'mda-ag', name: 'Moldavian Army', regionIds: ['MDA'], color: '#0033A0', owner: 'moldavia', theaterId: null, mode: 'none' as const },
       { id: 'ro-ag', name: 'Romanian Army', regionIds: ['RO-IS'], color: '#FCD116', owner: 'romania', theaterId: null, mode: 'none' as const },
     ];
-    const divisions = {
+    const divisions: DivisionState = {
       'mda-div': { id: 'mda-div', name: 'Moldavian Division', owner: 'moldavia', armyGroupId: 'mda-ag', hp: 100, maxHp: 100, attack: 5, defence: 3, regionId: 'MDA' },
       'ro-div': { id: 'ro-div', name: 'Romanian Division', owner: 'romania', armyGroupId: 'ro-ag', hp: 100, maxHp: 100, attack: 5, defence: 3, regionId: 'RO-IS' },
     };
