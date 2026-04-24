@@ -33,6 +33,7 @@ export interface SimulationStore extends SimulationState {
   lastSaveTime: Date | null;
   /** Army groups derived from the map tool's unit placement editor; merged into armyGroups at game start */
   placementArmyGroups: import('../../types/game').ArmyGroup[];
+  modifiers: Record<import('../../types/game').CountryId, import('../../types/game').Modifier[]>;
 
   // Actions
   setRegions: (regions: RegionState) => void;

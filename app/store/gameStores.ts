@@ -59,6 +59,7 @@ const initialSimulationStoreState: Omit<SimulationStore, keyof SimulationActions
   relationships: initialGameState.relationships,
   scheduledEvents: initialGameState.scheduledEvents,
   countryBonuses: initialGameState.countryBonuses,
+  modifiers: initialGameState.modifiers,
   aiStates: [],
   lastSaveTime: null,
   placementArmyGroups: [],

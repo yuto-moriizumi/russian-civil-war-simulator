@@ -9,6 +9,7 @@ import {
   DivisionState,
   GameEvent,
   Mission,
+  Modifier,
   Movement,
   NotificationItem,
   ProductionQueueItem,
@@ -42,6 +43,7 @@ export interface EngineSimulationState {
   relationships: Relationship[];
   scheduledEvents: ScheduledEvent[];
   countryBonuses: Record<CountryId, CountryBonuses>;
+  modifiers: Record<CountryId, Modifier[]>;
   aiStates: AIState[];
   missions: Mission[];
   gameEvents: GameEvent[];

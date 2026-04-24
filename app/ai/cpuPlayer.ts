@@ -1,4 +1,4 @@
-import { AIState, CountryId, RegionState, Region, ActiveCombat, Movement, ArmyGroup, ProductionQueueItem, CountryBonuses, DivisionState } from '../types/game';
+import { AIState, CountryId, RegionState, Region, ActiveCombat, Movement, ArmyGroup, ProductionQueueItem, CountryBonuses, DivisionState, Modifier } from '../types/game';
 import { canProduceDivision } from '../utils/commandPower';
 import { getFirstArmyGroupName, getDivisionPrefix } from '../data/countries';
 
@@ -139,7 +139,8 @@ export function runAITick(
   productionQueue: ProductionQueueItem[] = [],
   productionQueues: Record<CountryId, ProductionQueueItem[]> = {} as Record<CountryId, ProductionQueueItem[]>,
   countryBonuses: CountryBonuses,
-  coreRegions?: string[]
+  coreRegions?: string[],
+  modifiers?: Modifier[]
 ): AIActions {
   const { countryId } = aiState;
   
@@ -212,7 +213,7 @@ export function runAITick(
 
   while (divisionsCreated < 2) {
     // Check command power before producing (use the locally-updated queues)
-    if (!canProduceDivision(countryId, divisions, regions, movingUnits, localQueues, countryBonuses, coreRegions)) {
+    if (!canProduceDivision(countryId, divisions, regions, movingUnits, localQueues, countryBonuses, coreRegions, modifiers)) {
       break;
     }
     

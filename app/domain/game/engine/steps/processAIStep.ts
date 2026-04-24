@@ -102,6 +102,7 @@ export function processAIStep(
       nextMovingUnits,
       nextActiveCombats,
       countryBonuses: state.countryBonuses,
+      modifiers: state.modifiers,
       newDate: context.newDate,
       selectedCountryId: selectedCountry?.id,
     });

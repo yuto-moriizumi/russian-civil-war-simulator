@@ -68,6 +68,7 @@ function createEngineState(overrides: Partial<EngineSimulationState> = {}): Engi
     relationships: [],
     scheduledEvents: [],
     countryBonuses: initialGameState.countryBonuses,
+    modifiers: initialGameState.modifiers,
     aiStates: [],
     missions: [makeMission()],
     gameEvents: [],

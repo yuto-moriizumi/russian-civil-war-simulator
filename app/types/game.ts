@@ -245,6 +245,20 @@ export interface CountryBonuses {
   productionSpeedMultiplier: number; // Production speed multiplier (1.0 = normal, 0.8 = 20% faster)
 }
 
+// Modifier item types — each item within a modifier
+export type ModifierItemType = 'cp_modify';
+
+export interface ModifierItem {
+  kind: ModifierItemType;
+  factor: number; // Multiplier applied to the relevant calculation
+}
+
+// A modifier groups one or more modifier items under a display title
+export interface Modifier {
+  title: string;
+  items: ModifierItem[];
+}
+
 export interface GameState {
   currentScreen: Screen;
   selectedCountry: Country | null;
@@ -268,6 +282,7 @@ export interface GameState {
   borderMidpoints: Record<string, [number, number]>; // Pre-computed midpoints of shared borders between adjacent regions [longitude, latitude]
   scheduledEvents: ScheduledEvent[]; // Scheduled historical events
   countryBonuses: Record<CountryId, CountryBonuses>; // Per-country bonuses from claimed missions
+  modifiers: Record<CountryId, Modifier[]>; // Per-country modifiers (like HOI4 ideas)
 }
 
 // AI State for CPU-controlled countries

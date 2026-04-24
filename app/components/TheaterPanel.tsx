@@ -19,6 +19,7 @@ export default function TheaterPanel() {
   const activeCombats = useSimulationStore(state => state.activeCombats);
   const productionQueue = useSimulationStore(state => state.productionQueues);
   const countryBonuses = useSimulationStore(state => state.countryBonuses);
+  const modifiers = useSimulationStore(state => state.modifiers);
   const coreRegions = useSimulationStore(state => state.selectedCountry?.coreRegions);
   const selectedGroupId = useGameUiStore(state => state.selectedGroupId);
   const selectedDivisionIds = useGameUiStore(state => state.selectedDivisionIds);
@@ -89,7 +90,7 @@ export default function TheaterPanel() {
         const unitCount = getArmyGroupUnitCount(group.regionIds, regions, playerCountry, group.id, movingUnits, activeCombats, divisions);
         const queueCount = (productionQueue[playerCountry] || []).filter(p => p.armyGroupId === group.id).length;
         const isGroupSelected = selectedGroupId === group.id;
-        const canProduce = canProduceDivision(playerCountry, divisions, regions, movingUnits, productionQueue, countryBonuses[playerCountry], coreRegions);
+        const canProduce = canProduceDivision(playerCountry, divisions, regions, movingUnits, productionQueue, countryBonuses[playerCountry], coreRegions, modifiers[playerCountry]);
         const assignedTheater = group.theaterId ? theaters.find(theater => theater.id === group.theaterId) : null;
         const theaterFlag = assignedTheater ? getCountryFlag(assignedTheater.enemyCountry) : '';
 

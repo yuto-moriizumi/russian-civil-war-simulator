@@ -35,7 +35,8 @@ export const createProductionActions = (
       state.movingUnits,
       state.productionQueues,
       state.countryBonuses[state.selectedCountry.id],
-      state.selectedCountry.coreRegions
+      state.selectedCountry.coreRegions,
+      state.modifiers[state.selectedCountry.id]
     );
     
     // Convert available slots to available divisions (each division costs COMMAND_POWER_PER_UNIT slots)

@@ -33,6 +33,7 @@ export default function CountrySidebar() {
   const countryId = useGameUiStore(state => state.selectedCountryId);
   const playerCountry = useSimulationStore(state => state.selectedCountry?.id);
   const relationships = useSimulationStore(state => state.relationships);
+  const modifiers = useSimulationStore(state => state.modifiers);
   
   // Actions
   const setIsCountrySidebarOpen = useGameUiStore(state => state.setIsCountrySidebarOpen);
@@ -92,6 +93,38 @@ export default function CountrySidebar() {
             <div className="text-sm text-stone-400 capitalize">{countryId} Country</div>
           </div>
         </div>
+
+        {/* Modifiers Section */}
+        {(() => {
+          const countryModifiers = countryId ? modifiers[countryId as keyof typeof modifiers] ?? [] : [];
+          if (countryModifiers.length === 0) return null;
+          return (
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-stone-500 px-1">
+                Modifiers
+              </h3>
+              <div className="bg-stone-900 rounded-lg border border-stone-700 divide-y divide-stone-800">
+                {countryModifiers.map((modifier, idx) => (
+                  <div key={idx} className="p-3">
+                    <div className="font-semibold text-stone-200 mb-1">{modifier.title}</div>
+                    <div className="flex flex-col text-xs space-y-1">
+                      {modifier.items.map((item, i) => (
+                        <div key={i} className="flex justify-between">
+                          <span className="text-stone-500 font-medium">
+                            {item.kind === 'cp_modify' ? 'CP Modifier' : item.kind}:
+                          </span>
+                          <span className="text-amber-400 font-bold">
+                            {item.factor >= 1 ? `+${Math.round((item.factor - 1) * 100)}%` : `-${Math.round((1 - item.factor) * 100)}%`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Diplomacy Section for non-player playable countries */}
         {countryId !== playerCountry && isPlayable && (

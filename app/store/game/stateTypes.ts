@@ -10,6 +10,7 @@ import {
   GameSpeed,
   MapMode,
   Mission,
+  Modifier,
   Movement,
   NotificationItem,
   ProductionQueueItem,
@@ -41,6 +42,7 @@ export interface SimulationState {
   relationships: Relationship[];
   scheduledEvents: ScheduledEvent[];
   countryBonuses: Record<CountryId, CountryBonuses>;
+  modifiers: Record<CountryId, Modifier[]>;
   aiStates: AIState[];
 }
 
