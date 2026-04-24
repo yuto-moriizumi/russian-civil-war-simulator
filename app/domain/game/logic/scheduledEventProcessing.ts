@@ -37,16 +37,23 @@ export function processScheduledEvents(
   const updatedScheduledEvents = scheduledEvents.map(event => {
     if (event.triggered) return event;
 
-    // Events with conditions trigger on first date >= event.date where all conditions pass
+    // Events with conditions trigger based on conditionLogic:
+    // - 'and' (default): trigger on first date >= event.date where all conditions pass
+    // - 'or': trigger when date >= event.date OR conditions pass (whichever comes first)
     // Events without conditions trigger exactly on event.date
-    const dateMatches = event.conditions
-      ? dateString >= event.date
-      : event.date === dateString;
+    if (event.conditions) {
+      const conditionLogic = event.conditionLogic ?? 'and';
+      const dateReached = dateString >= event.date;
+      const conditionsMet = checkConditions(event.conditions, updatedRegions, relationships);
 
-    if (!dateMatches) return event;
-
-    if (event.conditions && !checkConditions(event.conditions, updatedRegions, relationships)) {
-      return event;
+      if (conditionLogic === 'or') {
+        if (!dateReached && !conditionsMet) return event;
+      } else {
+        // 'and' logic
+        if (!dateReached || !conditionsMet) return event;
+      }
+    } else {
+      if (event.date !== dateString) return event;
     }
 
     // Process each action in the event
