@@ -1,4 +1,4 @@
-import { AIState, ArmyGroup, CountryId, CountryBonuses, ProductionQueueItem, RegionState, ActiveCombat, Movement } from '../../../types/game';
+import { AIState, ArmyGroup, CountryId, CountryBonuses, ProductionQueueItem, RegionState, ActiveCombat, Movement, Modifier } from '../../../types/game';
 import { createInitialAIState, runAITick } from '../../../ai/cpuPlayer';
 import { clampProductionQueueToCommandPower } from '../../../utils/commandPower';
 import { getBaseProductionTime } from '../bonusCalculator';
@@ -57,6 +57,7 @@ interface ProcessAITickArgs {
   nextMovingUnits: Movement[];
   nextActiveCombats: ActiveCombat[];
   countryBonuses: Record<CountryId, CountryBonuses>;
+  modifiers: Record<CountryId, Modifier[]>;
   newDate: Date;
   selectedCountryId: CountryId | undefined;
 }
@@ -76,6 +77,7 @@ export function processAITick({
   nextMovingUnits,
   nextActiveCombats,
   countryBonuses,
+  modifiers,
   newDate,
   selectedCountryId,
 }: ProcessAITickArgs): ProcessAITickResult {
@@ -92,7 +94,8 @@ export function processAITick({
       nextRegions,
       nextMovingUnits,
       bonuses,
-      country?.coreRegions
+      country?.coreRegions,
+      modifiers?.[aiState.countryId]
     );
     if (trimmedQueue !== nextProductionQueues[aiState.countryId]) {
       nextProductionQueues = { ...nextProductionQueues, [aiState.countryId]: trimmedQueue };

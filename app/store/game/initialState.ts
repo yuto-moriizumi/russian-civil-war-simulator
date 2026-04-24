@@ -1,4 +1,4 @@
-import { GameState, CountryId, ProductionQueueItem, CountryBonuses } from '../../types/game';
+import { GameState, CountryId, ProductionQueueItem, CountryBonuses, Modifier } from '../../types/game';
 import { initialMissions, GAME_START_DATE } from '../../data/gameData';
 import { scheduledEvents } from '../../data/scheduledEvents';
 import { getInitialCountryBonuses } from '../../domain/game/bonusCalculator';
@@ -40,6 +40,24 @@ function createInitialCountryBonuses(): Record<CountryId, CountryBonuses> {
   return bonuses;
 }
 
+/**
+ * Create initial country modifiers for all countries
+ */
+function createInitialModifiers(): Record<CountryId, Modifier[]> {
+  const modifiers = {} as Record<CountryId, Modifier[]>;
+  for (const countryId of getAllCountryIds()) {
+    modifiers[countryId] = [];
+  }
+  // Kingdom of Poland starts with "Lower Legitimacy" modifier
+  modifiers['poland'] = [
+    {
+      title: '低い正当性',
+      items: [{ kind: 'cp_modify', factor: 0.5 }],
+    },
+  ];
+  return modifiers;
+}
+
 export const initialGameState: GameState = {
   currentScreen: 'title',
   selectedCountry: null,
@@ -78,4 +96,5 @@ export const initialGameState: GameState = {
   borderMidpoints: {}, // Will be loaded asynchronously
   scheduledEvents: scheduledEvents, // Historical events
   countryBonuses: createInitialCountryBonuses(),
+  modifiers: createInitialModifiers(),
 };

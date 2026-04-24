@@ -1,4 +1,4 @@
-import { CountryId, RegionState, ProductionQueueItem, Movement, CountryBonuses, DivisionState } from '../types/game';
+import { CountryId, RegionState, ProductionQueueItem, Movement, CountryBonuses, DivisionState, Modifier } from '../types/game';
 import { regionValues } from '../data/map/regionValues';
 
 /**
@@ -18,18 +18,36 @@ export const COMMAND_POWER_PER_UNIT = 4;
 export const BASE_COMMAND_POWER = 2;
 
 /**
+ * Calculate CP multiplier from a country's modifiers.
+ * Each cp_modify item's factors are multiplied together.
+ */
+function getCpModifierMultiplier(modifiers: Modifier[]): number {
+  let multiplier = 1;
+  for (const modifier of modifiers) {
+    for (const item of modifier.items) {
+      if (item.kind === 'cp_modify') {
+        multiplier *= item.factor;
+      }
+    }
+  }
+  return multiplier;
+}
+
+/**
  * Calculate the maximum divisions a country can have based on controlled states
  * @param countryId - The country to calculate command power for
  * @param regions - Current region state
  * @param countryBonuses - Country bonuses from completed missions
  * @param coreRegions - Optional list of core region IDs for this country (controlling these doubles their CP contribution)
+ * @param modifiers - Country's active modifiers
  * @returns Maximum command power allowed
  */
 export function calculateCommandPower(
   countryId: CountryId,
   regions: RegionState,
   countryBonuses: CountryBonuses,
-  coreRegions?: string[]
+  coreRegions?: string[],
+  modifiers?: Modifier[]
 ): number {
   let totalCap = BASE_COMMAND_POWER;
 
@@ -50,6 +68,11 @@ export function calculateCommandPower(
 
   // Add bonus from completed missions
   totalCap += countryBonuses.commandPowerBonus;
+
+  // Apply modifier multiplier
+  if (modifiers && modifiers.length > 0) {
+    totalCap = Math.floor(totalCap * getCpModifierMultiplier(modifiers));
+  }
 
   return totalCap;
 }
@@ -104,12 +127,13 @@ export function canProduceDivision(
   movements: Movement[],
   productionQueues: Record<CountryId, ProductionQueueItem[]>,
   countryBonuses: CountryBonuses,
-  coreRegions?: string[]
+  coreRegions?: string[],
+  modifiers?: Modifier[]
 ): boolean {
-  const cap = calculateCommandPower(countryId, regions, countryBonuses, coreRegions);
+  const cap = calculateCommandPower(countryId, regions, countryBonuses, coreRegions, modifiers);
   const current = countCurrentDivisions(countryId, divisions, movements);
   const inProduction = countDivisionsInProduction(countryId, productionQueues);
-  
+
   // The next division must fully fit within the remaining CP budget.
   return (current + inProduction + COMMAND_POWER_PER_UNIT) <= cap;
 }
@@ -125,9 +149,10 @@ export function clampProductionQueueToCommandPower(
   regions: RegionState,
   movements: Movement[],
   countryBonuses: CountryBonuses,
-  coreRegions?: string[]
+  coreRegions?: string[],
+  modifiers?: Modifier[]
 ): ProductionQueueItem[] {
-  const cap = calculateCommandPower(countryId, regions, countryBonuses, coreRegions);
+  const cap = calculateCommandPower(countryId, regions, countryBonuses, coreRegions, modifiers);
   const current = countCurrentDivisions(countryId, divisions, movements);
   const maxQueuedDivisions = Math.max(0, Math.floor((cap - current) / COMMAND_POWER_PER_UNIT));
 
@@ -146,6 +171,7 @@ export function clampProductionQueueToCommandPower(
  * @param productionQueues - Per-country production queues
  * @param countryBonuses - Country bonuses from completed missions
  * @param coreRegions - Optional list of core region IDs for this country
+ * @param modifiers - Optional country modifiers
  * @returns Object with cap, current, inProduction, and available counts
  */
 export function getCommandPowerInfo(
@@ -155,7 +181,8 @@ export function getCommandPowerInfo(
   movements: Movement[],
   productionQueues: Record<CountryId, ProductionQueueItem[]>,
   countryBonuses: CountryBonuses,
-  coreRegions?: string[]
+  coreRegions?: string[],
+  modifiers?: Modifier[]
 ): {
   cap: number;
   current: number;
@@ -164,7 +191,7 @@ export function getCommandPowerInfo(
   available: number;
   controlledStates: number;
 } {
-  const cap = calculateCommandPower(countryId, regions, countryBonuses, coreRegions);
+  const cap = calculateCommandPower(countryId, regions, countryBonuses, coreRegions, modifiers);
   const current = countCurrentDivisions(countryId, divisions, movements);
   const inProduction = countDivisionsInProduction(countryId, productionQueues);
   const total = current + inProduction;
