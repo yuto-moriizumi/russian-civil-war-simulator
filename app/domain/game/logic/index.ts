@@ -1,4 +1,4 @@
-export { detectDivisionDuplicates, logDivisionDuplicates } from './duplicateDetection';
+export { detectDivisionDuplicates } from './duplicateDetection';
 export type { DuplicationCheckResult } from './duplicateDetection';
 export { validateDivisions } from './divisionValidation';
 export { processMovements } from './movementProcessing';

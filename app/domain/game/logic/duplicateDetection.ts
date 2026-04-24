@@ -1,5 +1,4 @@
 import { DivisionState, Movement, ActiveCombat } from '../../../types/game';
-import { SimulationLogger } from '../engine/types';
 
 interface DuplicateReport {
   divisionId: string;
@@ -46,19 +45,4 @@ export function detectDivisionDuplicates(
   // Only check for duplicate movement assignments.
 
   return { hasDuplicates: reports.length > 0, reports };
-}
-
-export function logDivisionDuplicates(reports: DuplicateReport[], tickNumber: number, logger: SimulationLogger): void {
-  if (reports.length === 0) return;
-
-  logger.error(`\n[DIVISION DUPLICATE DETECTED] Tick #${tickNumber} — ${reports.length} duplicate(s) found:`);
-  for (const report of reports) {
-    logger.error(`  Division: ${report.divisionId}  [pattern: ${report.pattern}]`);
-    for (const loc of report.locations) {
-      const locStr = loc.type === 'combat' ? `[combat] ${loc.locationId} (${loc.side})`
-        : `[movement] ${loc.locationId}`;
-      logger.error(`    ${locStr}`);
-    }
-    logger.error('');
-  }
 }
