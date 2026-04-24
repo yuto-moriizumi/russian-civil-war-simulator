@@ -11,6 +11,7 @@ import {
   Relationship,
   DivisionState,
 } from '../../types/game';
+import { COUNTRY_METADATA } from '../../data/countryMetadata';
 import { detectTheaters } from './theaterDetection';
 import { getDivisionsInRegion } from './divisionState';
 import { SimulationLogger, noOpLogger } from './engine/types';
@@ -32,6 +33,18 @@ function getMissionCountryId(state: MissionEvaluationState): CountryId | null {
   return state.countryId ?? state.selectedCountry?.id ?? null;
 }
 
+function getMissionCountryAndPuppets(
+  missionCountry: CountryId,
+  relationships: Relationship[] = [],
+): Set<CountryId> {
+  return new Set([
+    missionCountry,
+    ...relationships
+      .filter(r => r.fromCountry === missionCountry && r.type === 'autonomy')
+      .map(r => r.toCountry),
+  ]);
+}
+
 /**
  * Evaluates a single mission condition against the current game state
  * @returns true if the condition is met, false otherwise
@@ -44,6 +57,7 @@ export function evaluateMissionCondition(
   const { regions, dateTime, gameEvents, theaters, armyGroups } = state;
   const missionCountry = getMissionCountryId(state);
   if (!missionCountry) return false;
+  const missionCountryAndPuppets = getMissionCountryAndPuppets(missionCountry, state.relationships);
 
   switch (condition.type) {
     case 'controlRegion': {
@@ -63,6 +77,15 @@ export function evaluateMissionCondition(
         region => region.owner === missionCountry
       ).length;
       return controlledCount >= condition.count;
+    }
+
+    case 'controlCoreRegionCountByOverlord': {
+      const coreRegions = COUNTRY_METADATA[condition.country]?.coreRegions ?? [];
+      const controlledCoreCount = coreRegions.filter(regionId => {
+        const region = regions[regionId];
+        return region && missionCountryAndPuppets.has(region.owner);
+      }).length;
+      return controlledCoreCount >= condition.count;
     }
     
     case 'hasUnits': {
@@ -126,11 +149,7 @@ export function evaluateMissionCondition(
     case 'controlRegionByOverlord': {
       const region = regions[condition.regionId];
       if (!region) return false;
-      if (region.owner === missionCountry) return true;
-      const puppets = (state.relationships ?? [])
-        .filter(r => r.fromCountry === missionCountry && r.type === 'autonomy')
-        .map(r => r.toCountry);
-      return puppets.includes(region.owner);
+      return missionCountryAndPuppets.has(region.owner);
     }
 
     default:

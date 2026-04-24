@@ -17,8 +17,8 @@ describe('MissionNode', () => {
     const mission: Mission = {
       id: 'soviet_capture_kharkiv',
       country: 'soviet',
-      name: 'ハリコフの占領',
-      description: 'ハリコフ（UA-63）を支配下に置け',
+      name: 'ウクライナへの革命の輸出',
+      description: "Ukrainian People's Republic of Sovietsの中核州を2つ以上、ソビエトまたはその傀儡国の支配下に置け",
       completed: false,
       claimed: false,
       rewards: {
@@ -29,7 +29,7 @@ describe('MissionNode', () => {
         },
       },
       prerequisites: ['soviet_mobilize'],
-      available: [{ type: 'controlRegion', regionId: 'UA-63' }],
+      available: [{ type: 'controlCoreRegionCountByOverlord', country: 'ukrainesoviet', count: 2 }],
     };
 
     const markup = renderToStaticMarkup(

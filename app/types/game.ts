@@ -59,6 +59,7 @@ export type MissionCondition =
   | { type: 'controlRegion'; regionId: string }                    // Control a specific region
   | { type: 'controlRegions'; regionIds: string[] }                // Control all listed regions
   | { type: 'controlRegionCount'; count: number }                  // Control at least N regions
+  | { type: 'controlCoreRegionCountByOverlord'; country: CountryId; count: number } // Control at least N core regions of a country directly or via puppets
   | { type: 'hasUnits'; count: number }                            // Have at least N divisions
   | { type: 'dateAfter'; date: string }                            // Date is after specified (YYYY-MM-DD)
   | { type: 'combatVictories'; count: number }                     // Win at least N combats
