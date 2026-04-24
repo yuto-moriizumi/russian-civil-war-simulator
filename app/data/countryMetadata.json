@@ -427,6 +427,19 @@
     "selectable": false,
     "coreRegions": []
   },
+  "britain": {
+    "id": "britain",
+    "comment": "British Empire. An off-map Entente great power that intervenes diplomatically and militarily in the Russian Civil War without being represented by controllable homeland regions on this map. This entry exists so Britain can participate in diplomacy, events, and future expeditionary mechanics.",
+    "name": "British Empire",
+    "combatName": "British Expeditionary Forces",
+    "flag": "/images/flags/britain.svg",
+    "color": "#1F3C88",
+    "adjective": "British",
+    "firstArmyGroupName": "British Expeditionary Force",
+    "divisionPrefix": "British Expeditionary",
+    "selectable": false,
+    "coreRegions": []
+  },
   "germany": {
     "id": "germany",
     "name": "German Empire",
