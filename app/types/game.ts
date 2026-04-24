@@ -227,10 +227,11 @@ export interface ScheduledEventCondition {
 
 export interface ScheduledEvent {
   id: string;
-  date: string; // YYYY-MM-DD format; if conditions present, treated as earliest possible trigger date
+  date: string; // YYYY-MM-DD format; if conditions present, treated as earliest possible trigger date (AND) or fallback date (OR)
   title: string;
   description: string;
-  conditions?: ScheduledEventCondition[]; // all conditions must be met (AND); if present, triggers on first matching date >= date
+  conditions?: ScheduledEventCondition[]; // Conditions to check; AND = all must pass, OR = any one passing triggers
+  conditionLogic?: 'and' | 'or'; // How to evaluate conditions with date. Default: 'and'
   actions: ScheduledEventAction[];
   triggered: boolean; // Track if event has already been triggered
 }
