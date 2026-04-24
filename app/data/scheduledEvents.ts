@@ -1,4 +1,5 @@
 import { ScheduledEvent } from '../types/game';
+import { transcaucasianDemocraticFederativeRepublicEstablishedEvent } from './scheduledEvents/transcaucasianDemocraticFederativeRepublic';
 
 /**
  * List of all scheduled historical events
@@ -308,31 +309,7 @@ export const scheduledEvents: ScheduledEvent[] = [
     ],
     triggered: false,
   },
-  {
-    id: 'transcaucasian-democratic-federative-republic-established',
-    date: '1918-04-22',
-    title: 'Transcaucasian Democratic Federative Republic Established',
-    description: 'The Transcaucasian Sejm declares the Transcaucasian Democratic Federative Republic. White-held Transcaucasian core regions pass to the new federation, which raises an initial defense force as the Ottoman Empire opens hostilities.',
-    actions: [
-      {
-        type: 'transferCoreRegionsFromCountry',
-        newOwner: 'tdfr',
-        fromCountry: 'white',
-      },
-      {
-        type: 'spawnDivision',
-        owner: 'tdfr',
-        regionId: 'GEO',
-        armyGroupName: 'Transcaucasian Defense Force',
-      },
-      {
-        type: 'declareWar',
-        fromCountry: 'ottoman',
-        toCountry: 'tdfr',
-      },
-    ],
-    triggered: false,
-  },
+  transcaucasianDemocraticFederativeRepublicEstablishedEvent,
   {
     id: 'odessa-soviet-republic-proclaimed',
     date: '1918-02-01',
