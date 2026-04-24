@@ -1,60 +1,35 @@
 import { describe, expect, it } from 'vitest';
 import { scheduledEvents } from '../data/scheduledEvents';
 import { processScheduledEvents } from '../domain/game/logic/scheduledEventProcessing';
-import type { Relationship, RegionState } from '../types/game';
+import type { CountryId, Region, RegionState, Relationship } from '../types/game';
+
+const r = (id: string, owner: CountryId): Region =>
+  ({ id, name: id, countryIso3: id, owner }) as Region;
 
 describe('scheduled events', () => {
   it('establishes Moldavia as a White Army puppet on December 16, 1917', () => {
     const event = scheduledEvents.find(
-      scheduledEvent => scheduledEvent.id === 'moldavian-democratic-republic-established'
+      e => e.id === 'moldavian-democratic-republic-established'
     );
-    const regions: RegionState = {
-      MDA: {
-        id: 'MDA',
-        name: 'Bessarabia',
-        countryIso3: 'MDA',
-        owner: 'white',
-      },
-    };
+    const regions: RegionState = { MDA: r('MDA', 'white') };
 
     expect(event).toBeDefined();
     expect(event?.date).toBe('1917-12-16');
 
-    const result = processScheduledEvents(
-      [event!],
-      new Date(1917, 11, 16),
-      regions,
-      [],
-      []
-    );
+    const result = processScheduledEvents([event!], new Date(1917, 11, 16), regions, [], []);
 
     expect(result.updatedRegions.MDA.owner).toBe('moldavia');
     expect(result.updatedRelationships).toContainEqual({
-      fromCountry: 'white',
-      toCountry: 'moldavia',
-      type: 'autonomy',
+      fromCountry: 'white', toCountry: 'moldavia', type: 'autonomy',
     });
     expect(result.updatedScheduledEvents[0].triggered).toBe(true);
   });
 
   it('makes Kuban join the White Army wars when the Kuban People\'s Republic is established', () => {
     const event = scheduledEvents.find(
-      scheduledEvent => scheduledEvent.id === 'kuban-peoples-republic-established'
+      e => e.id === 'kuban-peoples-republic-established'
     );
-    const regions: RegionState = {
-      'RU-KDA': {
-        id: 'RU-KDA',
-        name: 'Krasnodar Krai',
-        countryIso3: 'RUS',
-        owner: 'white',
-      },
-      'RU-AD': {
-        id: 'RU-AD',
-        name: 'Adygea',
-        countryIso3: 'RUS',
-        owner: 'white',
-      },
-    };
+    const regions: RegionState = { 'RU-KDA': r('RU-KDA', 'white'), 'RU-AD': r('RU-AD', 'white') };
     const relationships: Relationship[] = [
       { fromCountry: 'white', toCountry: 'soviet', type: 'war' },
       { fromCountry: 'soviet', toCountry: 'white', type: 'war' },
@@ -63,13 +38,7 @@ describe('scheduled events', () => {
     expect(event).toBeDefined();
     expect(event?.date).toBe('1918-01-28');
 
-    const result = processScheduledEvents(
-      [event!],
-      new Date(1918, 0, 28),
-      regions,
-      relationships,
-      []
-    );
+    const result = processScheduledEvents([event!], new Date(1918, 0, 28), regions, relationships, []);
 
     expect(result.updatedRegions['RU-KDA'].owner).toBe('kuban');
     expect(result.updatedRegions['RU-AD'].owner).toBe('kuban');
@@ -82,9 +51,7 @@ describe('scheduled events', () => {
   });
 
   it('ends Moldavia puppet relationship with the White Army on February 6, 1918', () => {
-    const event = scheduledEvents.find(
-      scheduledEvent => scheduledEvent.id === 'moldavian-independence'
-    );
+    const event = scheduledEvents.find(e => e.id === 'moldavian-independence');
     const relationships: Relationship[] = [
       { fromCountry: 'white', toCountry: 'moldavia', type: 'autonomy' },
       { fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy' },
@@ -93,31 +60,19 @@ describe('scheduled events', () => {
     expect(event).toBeDefined();
     expect(event?.date).toBe('1918-02-06');
 
-    const result = processScheduledEvents(
-      [event!],
-      new Date(1918, 1, 6),
-      {},
-      relationships,
-      []
-    );
+    const result = processScheduledEvents([event!], new Date(1918, 1, 6), {}, relationships, []);
 
     expect(result.updatedRelationships).not.toContainEqual({
-      fromCountry: 'white',
-      toCountry: 'moldavia',
-      type: 'autonomy',
+      fromCountry: 'white', toCountry: 'moldavia', type: 'autonomy',
     });
     expect(result.updatedRelationships).toContainEqual({
-      fromCountry: 'white',
-      toCountry: 'ukraine',
-      type: 'autonomy',
+      fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy',
     });
     expect(result.updatedScheduledEvents[0].triggered).toBe(true);
   });
 
   it('ends Ukraine puppet relationship with the White Army on January 22, 1918', () => {
-    const event = scheduledEvents.find(
-      scheduledEvent => scheduledEvent.id === 'ukrainian-independence'
-    );
+    const event = scheduledEvents.find(e => e.id === 'ukrainian-independence');
     const relationships: Relationship[] = [
       { fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy' },
       { fromCountry: 'white', toCountry: 'moldavia', type: 'autonomy' },
@@ -126,42 +81,24 @@ describe('scheduled events', () => {
     expect(event).toBeDefined();
     expect(event?.date).toBe('1918-01-22');
 
-    const result = processScheduledEvents(
-      [event!],
-      new Date(1918, 0, 22),
-      {},
-      relationships,
-      []
-    );
+    const result = processScheduledEvents([event!], new Date(1918, 0, 22), {}, relationships, []);
 
     expect(result.updatedRelationships).not.toContainEqual({
-      fromCountry: 'white',
-      toCountry: 'ukraine',
-      type: 'autonomy',
+      fromCountry: 'white', toCountry: 'ukraine', type: 'autonomy',
     });
     expect(result.updatedRelationships).toContainEqual({
-      fromCountry: 'white',
-      toCountry: 'moldavia',
-      type: 'autonomy',
+      fromCountry: 'white', toCountry: 'moldavia', type: 'autonomy',
     });
     expect(result.updatedScheduledEvents[0].triggered).toBe(true);
   });
 
   it('has the Ottoman Empire declare war on the White Army on February 5, 1918', () => {
-    const event = scheduledEvents.find(
-      scheduledEvent => scheduledEvent.id === 'caucasus-front-escalation'
-    );
+    const event = scheduledEvents.find(e => e.id === 'caucasus-front-escalation');
 
     expect(event).toBeDefined();
     expect(event?.date).toBe('1918-02-05');
 
-    const result = processScheduledEvents(
-      [event!],
-      new Date(1918, 1, 5),
-      {},
-      [],
-      []
-    );
+    const result = processScheduledEvents([event!], new Date(1918, 1, 5), {}, [], []);
 
     expect(result.updatedRelationships).toEqual(expect.arrayContaining([
       { fromCountry: 'ottoman', toCountry: 'white', type: 'war' },
@@ -171,9 +108,7 @@ describe('scheduled events', () => {
   });
 
   it('makes every attacker and defender puppet join scheduled war declarations', () => {
-    const event = scheduledEvents.find(
-      scheduledEvent => scheduledEvent.id === 'treaty-of-brest-litovsk-ukraine'
-    );
+    const event = scheduledEvents.find(e => e.id === 'treaty-of-brest-litovsk-ukraine');
     const relationships: Relationship[] = [
       { fromCountry: 'germany', toCountry: 'poland', type: 'autonomy' },
       { fromCountry: 'poland', toCountry: 'balticdutchy', type: 'autonomy' },
@@ -184,13 +119,7 @@ describe('scheduled events', () => {
     expect(event).toBeDefined();
     expect(event?.date).toBe('1918-02-09');
 
-    const result = processScheduledEvents(
-      [event!],
-      new Date(1918, 1, 9),
-      {},
-      relationships,
-      []
-    );
+    const result = processScheduledEvents([event!], new Date(1918, 1, 9), {}, relationships, []);
 
     expect(result.updatedRelationships).toEqual(expect.arrayContaining([
       { fromCountry: 'germany', toCountry: 'soviet', type: 'war' },
@@ -206,46 +135,16 @@ describe('scheduled events', () => {
   });
 
   it('returns White-held Persian core regions to Persia on February 28, 1918', () => {
-    const event = scheduledEvents.find(
-      scheduledEvent => scheduledEvent.id === 'retreat-from-tabriz'
-    );
+    const event = scheduledEvents.find(e => e.id === 'retreat-from-tabriz');
     const regions: RegionState = {
-      'IR-01': {
-        id: 'IR-01',
-        name: 'East Azerbaijan',
-        countryIso3: 'IRN',
-        owner: 'white',
-      },
-      'IR-02': {
-        id: 'IR-02',
-        name: 'West Azerbaijan',
-        countryIso3: 'IRN',
-        owner: 'white',
-      },
-      'IR-03': {
-        id: 'IR-03',
-        name: 'Ardabil',
-        countryIso3: 'IRN',
-        owner: 'soviet',
-      },
-      GEO: {
-        id: 'GEO',
-        name: 'Georgia',
-        countryIso3: 'GEO',
-        owner: 'white',
-      },
+      'IR-01': r('IR-01', 'white'), 'IR-02': r('IR-02', 'white'),
+      'IR-03': r('IR-03', 'soviet'), GEO: r('GEO', 'white'),
     };
 
     expect(event).toBeDefined();
     expect(event?.date).toBe('1918-02-28');
 
-    const result = processScheduledEvents(
-      [event!],
-      new Date(1918, 1, 28),
-      regions,
-      [],
-      []
-    );
+    const result = processScheduledEvents([event!], new Date(1918, 1, 28), regions, [], []);
 
     expect(result.updatedRegions['IR-01'].owner).toBe('persia');
     expect(result.updatedRegions['IR-02'].owner).toBe('persia');
@@ -255,64 +154,26 @@ describe('scheduled events', () => {
   });
 
   it('establishes the Transcaucasian Democratic Federative Republic on April 22, 1918', () => {
-    const event = scheduledEvents.find(
-      scheduledEvent => scheduledEvent.id === 'transcaucasian-democratic-federative-republic-established'
-    );
+    const event = scheduledEvents.find(e => e.id === 'transcaucasian-democratic-federative-republic-established');
     const regions: RegionState = {
-      GEO: {
-        id: 'GEO',
-        name: 'Georgia',
-        countryIso3: 'GEO',
-        owner: 'white',
-      },
-      ARM: {
-        id: 'ARM',
-        name: 'Armenia',
-        countryIso3: 'ARM',
-        owner: 'white',
-      },
-      AZE: {
-        id: 'AZE',
-        name: 'Azerbaijan',
-        countryIso3: 'AZE',
-        owner: 'white',
-      },
-      'GE-01': {
-        id: 'GE-01',
-        name: 'Abkhazia',
-        countryIso3: 'GEO',
-        owner: 'soviet',
-      },
+      GEO: r('GEO', 'white'), ARM: r('ARM', 'white'),
+      AZE: r('AZE', 'white'), 'GE-01': r('GE-01', 'soviet'),
     };
 
     expect(event).toBeDefined();
     expect(event?.date).toBe('1918-04-22');
 
-    const result = processScheduledEvents(
-      [event!],
-      new Date(1918, 3, 22),
-      regions,
-      [],
-      []
-    );
+    const result = processScheduledEvents([event!], new Date(1918, 3, 22), regions, [], []);
 
     expect(result.updatedRegions.GEO.owner).toBe('tdfr');
     expect(result.updatedRegions.ARM.owner).toBe('tdfr');
     expect(result.updatedRegions.AZE.owner).toBe('tdfr');
     expect(result.updatedRegions['GE-01'].owner).toBe('soviet');
     expect(Object.values(result.updatedDivisions)).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        owner: 'tdfr',
-        regionId: 'GEO',
-        armyGroupId: 'tdfr-ag-spawned',
-      }),
+      expect.objectContaining({ owner: 'tdfr', regionId: 'GEO', armyGroupId: 'tdfr-ag-spawned' }),
     ]));
     expect(result.updatedArmyGroups).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        id: 'tdfr-ag-spawned',
-        owner: 'tdfr',
-        name: 'Transcaucasian Defense Force',
-      }),
+      expect.objectContaining({ id: 'tdfr-ag-spawned', owner: 'tdfr', name: 'Transcaucasian Defense Force' }),
     ]));
     expect(result.updatedRelationships).toEqual(expect.arrayContaining([
       { fromCountry: 'ottoman', toCountry: 'tdfr', type: 'war' },
@@ -323,56 +184,22 @@ describe('scheduled events', () => {
 
   it('dissolves the TDFR on May 26, 1918 by splitting its held regions between Azerbaijan, Armenia, and Georgia', () => {
     const event = scheduledEvents.find(
-      scheduledEvent => scheduledEvent.id === 'dissolution-of-the-transcaucasian-democratic-federative-republic'
+      e => e.id === 'dissolution-of-the-transcaucasian-democratic-federative-republic'
     );
     const regions: RegionState = {
-      AZE: {
-        id: 'AZE',
-        name: 'Azerbaijan',
-        countryIso3: 'AZE',
-        owner: 'tdfr',
-      },
-      ARM: {
-        id: 'ARM',
-        name: 'Armenia',
-        countryIso3: 'ARM',
-        owner: 'tdfr',
-      },
-      'AM-01': {
-        id: 'AM-01',
-        name: 'Yerevan',
-        countryIso3: 'ARM',
-        owner: 'tdfr',
-      },
-      GEO: {
-        id: 'GEO',
-        name: 'Georgia',
-        countryIso3: 'GEO',
-        owner: 'tdfr',
-      },
-      'TR-08': {
-        id: 'TR-08',
-        name: 'Artvin',
-        countryIso3: 'TUR',
-        owner: 'tdfr',
-      },
-      'RU-MOW': {
-        id: 'RU-MOW',
-        name: 'Moscow',
-        countryIso3: 'RUS',
-        owner: 'tdfr',
-      },
+      AZE: r('AZE', 'tdfr'), ARM: r('ARM', 'tdfr'), 'AM-01': r('AM-01', 'tdfr'),
+      GEO: r('GEO', 'tdfr'), 'TR-08': r('TR-08', 'tdfr'), 'RU-MOW': r('RU-MOW', 'tdfr'),
     };
+    const establishedEvent = scheduledEvents.find(
+      e => e.id === 'transcaucasian-democratic-federative-republic-established'
+    );
 
     expect(event).toBeDefined();
     expect(event?.date).toBe('1918-05-26');
 
     const result = processScheduledEvents(
-      [event!],
-      new Date(1918, 4, 26),
-      regions,
-      [],
-      []
+      [event!], new Date(1918, 4, 26), regions, [], [], {},
+      [{ ...establishedEvent!, triggered: true }]
     );
 
     expect(result.updatedRegions.AZE.owner).toBe('adr');
