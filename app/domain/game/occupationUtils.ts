@@ -1,5 +1,11 @@
 import { CountryId, Country, Relationship } from '../../types/game';
 
+function getOverlord(countryId: CountryId, relationships: Relationship[]): CountryId | null {
+  return relationships.find(
+    relationship => relationship.toCountry === countryId && relationship.type === 'autonomy'
+  )?.fromCountry ?? null;
+}
+
 export function determineNewOwner(
   attackerCountry: CountryId,
   regionId: string,
@@ -19,6 +25,14 @@ export function determineNewOwner(
     const puppetData = countries.find(c => c.id === puppetId);
     if (puppetData?.coreRegions?.includes(regionId)) {
       return puppetId;
+    }
+  }
+
+  const overlordId = getOverlord(attackerCountry, relationships);
+  if (overlordId) {
+    const overlordData = countries.find(c => c.id === overlordId);
+    if (overlordData?.coreRegions?.includes(regionId)) {
+      return overlordId;
     }
   }
 
