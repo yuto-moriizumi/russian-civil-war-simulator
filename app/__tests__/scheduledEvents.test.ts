@@ -292,7 +292,7 @@ describe('scheduled events', () => {
     expect(result.updatedScheduledEvents[0].triggered).toBe(true);
   });
 
-  it('does not dissolve the TDFR on date alone after establishment if all monitored frontier regions remain under TDFR control', () => {
+  it('dissolves the TDFR on date alone after establishment even if all monitored frontier regions remain under TDFR control', () => {
     const event = scheduledEvents.find(
       e => e.id === 'dissolution-of-the-transcaucasian-democratic-federative-republic'
     );
@@ -316,10 +316,9 @@ describe('scheduled events', () => {
       [{ ...establishedEvent!, triggered: true }]
     );
 
-    expect(result.updatedScheduledEvents[0].triggered).toBe(false);
-    expect(result.updatedRegions.AZE.owner).toBe('tdfr');
-    expect(result.updatedRegions.ARM.owner).toBe('tdfr');
-    expect(result.updatedRegions.GEO.owner).toBe('tdfr');
+    expect(result.updatedScheduledEvents[0].triggered).toBe(true);
+    expect(result.updatedRegions.AZE.owner).toBe('adr');
+    expect(result.updatedRegions.GEO.owner).toBe('georgia');
   });
 
   it('does not dissolve the TDFR before the establishment event even if a monitored frontier region is lost', () => {
