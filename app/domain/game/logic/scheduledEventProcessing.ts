@@ -40,19 +40,17 @@ export function processScheduledEvents(
 
     // Events with conditions encode all timing/branching rules in conditions.
     // Unconditional events still trigger exactly on event.date.
-    if (event.conditions) {
-      const conditionsMet = checkConditions(
-        event.conditions,
-        dateString,
-        updatedRegions,
-        relationships,
-        allScheduledEvents
-      );
+    if (!event.conditions) return event;
 
-      if (!conditionsMet) return event;
-    } else {
-      if (event.date !== dateString) return event;
-    }
+    const conditionsMet = checkConditions(
+      event.conditions,
+      dateString,
+      updatedRegions,
+      relationships,
+      allScheduledEvents
+    );
+
+    if (!conditionsMet) return event;
 
     // Process each action in the event
     event.actions.forEach((action: ScheduledEventAction) => {

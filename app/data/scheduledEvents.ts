@@ -11,9 +11,9 @@ import { ukrainianIndependenceEvent } from './scheduledEvents/ukrainianIndepende
 export const scheduledEvents: ScheduledEvent[] = [
   {
     id: 'finnish-civil-war',
-    date: '1918-01-26',
     title: 'Finnish Civil War Begins',
     description: 'The Finnish Civil War erupts as the Finnish Socialist Workers\' Republic (Red Guards) seizes control of southern Finland.',
+    conditions: [{ type: 'date', date: '1918-01-26' }],
     actions: [
       {
         type: 'transferRegion',
@@ -65,9 +65,9 @@ export const scheduledEvents: ScheduledEvent[] = [
   },
   {
     id: 'crimean-peoples-republic',
-    date: '1917-12-13',
     title: 'Crimean People\'s Republic Declared',
     description: 'The Crimean Tatar National Assembly (Kurultay) proclaims the Crimean People\'s Republic, the first democratic republic in the Muslim world.',
+    conditions: [{ type: 'date', date: '1917-12-13' }],
     actions: [
       {
         type: 'transferRegion',
@@ -90,9 +90,9 @@ export const scheduledEvents: ScheduledEvent[] = [
   },
   {
     id: 'moldavian-democratic-republic-established',
-    date: '1917-12-16',
     title: 'Moldavian Democratic Republic Established',
     description: 'The Sfatul Tarii proclaims the Moldavian Democratic Republic in Bessarabia, aligned under White Army protection.',
+    conditions: [{ type: 'date', date: '1917-12-16' }],
     actions: [
       {
         type: 'transferRegion',
@@ -112,9 +112,9 @@ export const scheduledEvents: ScheduledEvent[] = [
   caucasusFrontEscalationEvent,
   {
     id: 'moldavian-independence',
-    date: '1918-02-06',
     title: 'Moldavia Declares Independence',
     description: 'The Moldavian Democratic Republic declares independence, ending its protectorate relationship with the White Army.',
+    conditions: [{ type: 'date', date: '1918-02-06' }],
     actions: [
       {
         type: 'removeRelationship',
@@ -127,9 +127,9 @@ export const scheduledEvents: ScheduledEvent[] = [
   },
   {
     id: 'union-of-bessarabia-with-romania',
-    date: '1918-04-09',
     title: 'Union of Bessarabia with Romania',
     description: 'Sfatul Tarii votes for union with Romania, and the Moldavian Democratic Republic is absorbed into the Romanian state.',
+    conditions: [{ type: 'date', date: '1918-04-09' }],
     actions: [
       {
         type: 'mergeCountry',
@@ -141,7 +141,6 @@ export const scheduledEvents: ScheduledEvent[] = [
   },
   {
     id: 'donetsk-krivoy-rog-soviet-republic-independence',
-    date: '1918-02-12',
     title: 'Donetsk–Krivoy Rog Soviet Republic Declared',
     description: 'The Donetsk–Krivoy Rog Soviet Republic is proclaimed as an independent Soviet republic, encompassing the industrial Donbass and Krivoy Rog regions under Bolshevik control.',
     conditions: [
@@ -215,9 +214,9 @@ export const scheduledEvents: ScheduledEvent[] = [
   },
   {
     id: 'stavropol-soviet-republic-uprising',
-    date: '1918-01-14',
     title: 'Stavropol Soviet Republic Proclaimed',
     description: 'Bolshevik forces seize control of Stavropol, proclaiming the Stavropol Soviet Republic as a revolutionary government under Soviet Russian patronage.',
+    conditions: [{ type: 'date', date: '1918-01-14' }],
     actions: [
       {
         type: 'transferRegion',
@@ -242,9 +241,9 @@ export const scheduledEvents: ScheduledEvent[] = [
   kubanPeoplesRepublicEvent,
   {
     id: 'treaty-of-brest-litovsk-ukraine',
-    date: '1918-02-09',
     title: 'Treaty of Brest-Litovsk (Ukraine)',
     description: 'The Central Powers sign a separate peace treaty with the Ukrainian People\'s Republic. Germany and Ukraine grant each other military access, and Germany declares war on Soviet Russia to enforce the treaty.',
+    conditions: [{ type: 'date', date: '1918-02-09' }],
     actions: [
       {
         type: 'setRelationship',
@@ -273,9 +272,9 @@ export const scheduledEvents: ScheduledEvent[] = [
   },
   {
     id: 'treaty-of-brest-litovsk-soviet',
-    date: '1918-03-03',
     title: 'Treaty of Brest-Litovsk',
     description: 'Soviet Russia signs the Treaty of Brest-Litovsk with the Central Powers, renouncing its revolutionary client ties in Ukraine and ending the war with Germany and its puppet states.',
+    conditions: [{ type: 'date', date: '1918-03-03' }],
     actions: [
       {
         type: 'removeRelationship',
@@ -309,9 +308,9 @@ export const scheduledEvents: ScheduledEvent[] = [
   transcaucasianDemocraticFederativeRepublicDissolutionEvent,
   {
     id: 'odessa-soviet-republic-proclaimed',
-    date: '1918-02-01',
     title: 'Odessa Soviet Republic Proclaimed',
     description: 'Bolshevik forces establish control over Odessa and the surrounding region, proclaiming the Odessa Soviet Republic as a revolutionary Soviet state.',
+    conditions: [{ type: 'date', date: '1918-02-01' }],
     actions: [
       {
         type: 'transferRegion',
