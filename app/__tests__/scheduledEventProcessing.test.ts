@@ -182,7 +182,7 @@ describe('date scheduled event condition', () => {
   const dateConditionEvent: ScheduledEvent = {
     id: 'test-date-condition',
     title: 'Date Condition Event',
-    description: 'Triggers only on the condition date',
+    description: 'Triggers on or after the condition date',
     conditions: [
       { type: 'date', date: '1918-02-10' },
     ],
@@ -192,7 +192,7 @@ describe('date scheduled event condition', () => {
     triggered: false,
   };
 
-  it('fires only on the matching condition date', () => {
+  it('fires on or after the matching condition date', () => {
     const regions: Record<string, Region> = {
       'REG-A': { id: 'REG-A', name: 'Region A', countryIso3: 'RUS', owner: 'poland' as CountryId },
     };
@@ -227,8 +227,8 @@ describe('date scheduled event condition', () => {
       []
     );
 
-    expect(afterResult.updatedScheduledEvents[0].triggered).toBe(false);
-    expect(afterResult.updatedRegions['REG-A'].owner).toBe('poland');
+    expect(afterResult.updatedScheduledEvents[0].triggered).toBe(true);
+    expect(afterResult.updatedRegions['REG-A'].owner).toBe('germany');
   });
 });
 
@@ -238,7 +238,7 @@ describe('dateReached scheduled event condition', () => {
     title: 'Date Reached Condition Event',
     description: 'Triggers on or after the condition date when other conditions pass',
     conditions: [
-      { type: 'dateReached', date: '1918-02-10' },
+      { type: 'date', date: '1918-02-10' },
       { type: 'atLeastOneRegionOwnedByOrPuppetOf', regions: ['REG-A'], country: 'poland' as CountryId },
     ],
     actions: [
@@ -296,7 +296,7 @@ describe('or scheduled event condition', () => {
       {
         type: 'or',
         conditions: [
-          { type: 'dateReached', date: '1918-04-22' },
+          { type: 'date', date: '1918-04-22' },
           { type: 'atLeastOneRegionOwnedByOrPuppetOf', regions: ['REG-A'], country: 'soviet' as CountryId },
         ],
       },

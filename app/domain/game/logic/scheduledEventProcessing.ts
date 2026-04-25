@@ -253,9 +253,6 @@ function checkConditions(
       return scheduledEvents.some(e => e.id === condition.eventId && e.triggered);
     }
     if (condition.type === 'date') {
-      return currentDateString === condition.date;
-    }
-    if (condition.type === 'dateReached') {
       return currentDateString >= condition.date;
     }
     return true;

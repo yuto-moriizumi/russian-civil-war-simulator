@@ -145,7 +145,7 @@ export const scheduledEvents: ScheduledEvent[] = [
     description: 'The Donetsk–Krivoy Rog Soviet Republic is proclaimed as an independent Soviet republic, encompassing the industrial Donbass and Krivoy Rog regions under Bolshevik control.',
     conditions: [
       {
-        type: 'dateReached',
+        type: 'date',
         date: '1918-02-12',
       },
       {

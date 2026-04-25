@@ -234,10 +234,6 @@ export type ScheduledEventCondition =
   }
   | {
     type: 'date';
-    date: string;         // Trigger only on this date (YYYY-MM-DD)
-  }
-  | {
-    type: 'dateReached';
     date: string;         // Trigger on or after this date (YYYY-MM-DD)
   }
   | {
