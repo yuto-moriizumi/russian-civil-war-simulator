@@ -1,5 +1,6 @@
 import { ScheduledEvent } from '../types/game';
 import { caucasusFrontEscalationEvent } from './scheduledEvents/caucasusFrontEscalation';
+import { vardarOffensiveEvent } from './scheduledEvents/vardarOffensive';
 import { kubanPeoplesRepublicEvent } from './scheduledEvents/kubanPeoplesRepublic';
 import { mountainousRepublicOfTheNorthernCaucasusEvents } from './scheduledEvents/mountainousRepublicOfTheNorthernCaucasus';
 import { retreatFromTabrizEvent } from './scheduledEvents/retreatFromTabriz';
@@ -337,4 +338,5 @@ export const scheduledEvents: ScheduledEvent[] = [
     ],
     triggered: false,
   },
+  vardarOffensiveEvent,
 ];
