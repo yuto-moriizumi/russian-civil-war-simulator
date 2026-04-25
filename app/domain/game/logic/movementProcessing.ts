@@ -30,6 +30,16 @@ export function processMovements(
   const newMidTransitCombats: ActiveCombat[] = [];
   let runningDivisions = divisions;
 
+  // Build a set of division IDs that are currently participating in active combats
+  // (as attacker or defender) to prevent HP regeneration while in combat.
+  const combatDivisionIds = new Set<string>();
+  for (const combat of activeCombats) {
+    if (!combat.isComplete) {
+      for (const id of combat.attackerDivisionIds) combatDivisionIds.add(id);
+      for (const id of combat.defenderDivisionIds) combatDivisionIds.add(id);
+    }
+  }
+
   movingUnits.forEach(movement => {
     let currentMovement = movement;
 
@@ -48,8 +58,11 @@ export function processMovements(
       }
     }
 
-    // Regenerate HP for units in transit (not in combat) directly in DivisionState
+    // Regenerate HP for units in transit (not in combat) directly in DivisionState.
+    // Skip divisions that are participating in an active combat as defender —
+    // those divisions take combat damage each tick and must not be healed simultaneously.
     for (const divId of movement.divisionIds) {
+      if (combatDivisionIds.has(divId)) continue;
       const div = runningDivisions[divId];
       if (div) {
         const newHp = Math.min(div.hp + GAME_CONFIG.HP.REGEN_PER_TICK, div.maxHp);
