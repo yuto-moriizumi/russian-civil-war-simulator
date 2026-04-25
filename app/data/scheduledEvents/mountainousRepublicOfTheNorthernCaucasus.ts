@@ -3,9 +3,9 @@ import type { ScheduledEvent } from '../../types/game';
 export const mountainousRepublicOfTheNorthernCaucasusEvents: ScheduledEvent[] = [
   {
     id: 'mountainous-republic-of-the-northern-caucasus-independence',
-    date: '1918-05-11',
     title: 'Mountainous Republic of the Northern Caucasus Declares Independence',
     description: 'The Mountainous Republic of the Northern Caucasus asserts its independence, taking control of Ingushetia and Chechnya while securing mutual military access with the White Army and the Ottoman Empire.',
+    conditions: [{ type: 'date', date: '1918-05-11' }],
     actions: [
       {
         type: 'transferRegion',
@@ -46,7 +46,6 @@ export const mountainousRepublicOfTheNorthernCaucasusEvents: ScheduledEvent[] = 
   },
   {
     id: 'mrnc-war-with-soviet-russia',
-    date: '1918-05-11',
     title: 'Mountainous Republic Enters War with Soviet Russia',
     description: 'As Soviet-aligned forces hold parts of the North Caucasus, the Mountainous Republic of the Northern Caucasus enters the war against Soviet Russia.',
     conditions: [

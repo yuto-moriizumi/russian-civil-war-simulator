@@ -123,9 +123,9 @@ describe('mergeCountry action', () => {
 
   const mergeEvent: ScheduledEvent = {
     id: 'test-merge',
-    date: '1919-01-01',
     title: 'Test Merge',
     description: 'Test merge event',
+    conditions: [{ type: 'date', date: '1919-01-01' }],
     actions: [
       { type: 'mergeCountry', newOwner: 'germany' as CountryId, fromCountry: 'poland' as CountryId },
     ],
@@ -181,7 +181,6 @@ describe('mergeCountry action', () => {
 describe('date scheduled event condition', () => {
   const dateConditionEvent: ScheduledEvent = {
     id: 'test-date-condition',
-    date: '1918-01-01',
     title: 'Date Condition Event',
     description: 'Triggers only on the condition date',
     conditions: [
@@ -236,7 +235,6 @@ describe('date scheduled event condition', () => {
 describe('dateReached scheduled event condition', () => {
   const dateReachedConditionEvent: ScheduledEvent = {
     id: 'test-date-reached-condition',
-    date: '1918-01-01',
     title: 'Date Reached Condition Event',
     description: 'Triggers on or after the condition date when other conditions pass',
     conditions: [
@@ -292,7 +290,6 @@ describe('dateReached scheduled event condition', () => {
 describe('or scheduled event condition', () => {
   const orConditionEvent: ScheduledEvent = {
     id: 'test-or-condition',
-    date: '1918-04-22',
     title: 'OR Condition Event',
     description: 'Triggers when either the fallback date is reached or an early condition is met',
     conditions: [

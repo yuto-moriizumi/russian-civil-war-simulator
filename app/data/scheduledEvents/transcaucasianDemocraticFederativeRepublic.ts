@@ -2,7 +2,6 @@ import type { ScheduledEvent } from '../../types/game';
 
 export const transcaucasianDemocraticFederativeRepublicEstablishedEvent: ScheduledEvent = {
   id: 'transcaucasian-democratic-federative-republic-established',
-  date: '1918-04-22',
   title: 'Transcaucasian Democratic Federative Republic Established',
   description: 'The Transcaucasian Sejm declares the Transcaucasian Democratic Federative Republic. White-held Transcaucasian core regions pass to the new federation, which raises an initial defense force as the Ottoman Empire opens hostilities.',
   conditions: [

@@ -14,7 +14,6 @@ describe('scheduled events', () => {
     const regions: RegionState = { MDA: r('MDA', 'white') };
 
     expect(event).toBeDefined();
-    expect(event?.date).toBe('1917-12-16');
 
     const result = processScheduledEvents([event!], new Date(1917, 11, 16), regions, [], []);
 
@@ -36,7 +35,6 @@ describe('scheduled events', () => {
     ];
 
     expect(event).toBeDefined();
-    expect(event?.date).toBe('1918-01-28');
 
     const result = processScheduledEvents([event!], new Date(1918, 0, 28), regions, relationships, []);
 
@@ -58,7 +56,6 @@ describe('scheduled events', () => {
     ];
 
     expect(event).toBeDefined();
-    expect(event?.date).toBe('1918-02-06');
 
     const result = processScheduledEvents([event!], new Date(1918, 1, 6), {}, relationships, []);
 
@@ -87,7 +84,6 @@ describe('scheduled events', () => {
     };
 
     expect(event).toBeDefined();
-    expect(event?.date).toBe('1918-04-09');
 
     const result = processScheduledEvents(
       [event!],
@@ -116,7 +112,6 @@ describe('scheduled events', () => {
     ];
 
     expect(event).toBeDefined();
-    expect(event?.date).toBe('1918-01-22');
 
     const result = processScheduledEvents([event!], new Date(1918, 0, 22), {}, relationships, []);
 
@@ -133,7 +128,6 @@ describe('scheduled events', () => {
     const event = scheduledEvents.find(e => e.id === 'caucasus-front-escalation');
 
     expect(event).toBeDefined();
-    expect(event?.date).toBe('1918-02-05');
 
     const result = processScheduledEvents([event!], new Date(1918, 1, 5), {}, [], []);
 
@@ -154,7 +148,6 @@ describe('scheduled events', () => {
     ];
 
     expect(event).toBeDefined();
-    expect(event?.date).toBe('1918-02-09');
 
     const result = processScheduledEvents([event!], new Date(1918, 1, 9), {}, relationships, []);
 
@@ -179,7 +172,6 @@ describe('scheduled events', () => {
     };
 
     expect(event).toBeDefined();
-    expect(event?.date).toBe('1918-02-28');
 
     const result = processScheduledEvents([event!], new Date(1918, 1, 28), regions, [], []);
 
@@ -198,7 +190,6 @@ describe('scheduled events', () => {
     };
 
     expect(event).toBeDefined();
-    expect(event?.date).toBe('1918-04-22');
 
     const result = processScheduledEvents([event!], new Date(1918, 3, 22), regions, [], []);
 
@@ -278,7 +269,6 @@ describe('scheduled events', () => {
     );
 
     expect(event).toBeDefined();
-    expect(event?.date).toBe('1918-05-26');
 
     const result = processScheduledEvents(
       [event!], new Date(1918, 4, 26), regions, [], [], {},

@@ -46,7 +46,6 @@ describe('scheduled Ukraine events', () => {
     ];
 
     expect(event).toBeDefined();
-    expect(event?.date).toBe('1918-02-09');
 
     const result = processScheduledEvents(
       [event!],

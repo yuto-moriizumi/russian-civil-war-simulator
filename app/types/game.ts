@@ -247,7 +247,6 @@ export type ScheduledEventCondition =
 
 export interface ScheduledEvent {
   id: string;
-  date: string; // YYYY-MM-DD format; used directly by unconditional events and as canonical metadata for conditioned events
   title: string;
   description: string;
   conditions?: ScheduledEventCondition[]; // Conditions to check; supports nested AND/OR groups

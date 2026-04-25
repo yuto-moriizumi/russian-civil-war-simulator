@@ -2,7 +2,6 @@ import type { ScheduledEvent } from '../../types/game';
 
 export const kubanPeoplesRepublicEvent: ScheduledEvent = {
   id: 'kuban-peoples-republic-established',
-  date: '1918-01-28',
   title: 'Kuban People\'s Republic Established',
   description: 'The Kuban Rada proclaims the Kuban People\'s Republic, establishing an independent Cossack state under the protection of the Volunteer Army (White Army).',
   conditions: [

@@ -24,7 +24,6 @@ describe('scheduled MRNC events', () => {
     };
 
     expect(event).toBeDefined();
-    expect(event?.date).toBe('1918-05-11');
 
     const result = processScheduledEvents(
       [event!],

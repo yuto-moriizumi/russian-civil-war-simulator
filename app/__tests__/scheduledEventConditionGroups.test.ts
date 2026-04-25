@@ -9,7 +9,7 @@ describe('scheduled event condition groups', () => {
   it('supports nested and condition groups inside scheduled event conditions', () => {
     const event: ScheduledEvent = {
       id: 'nested-and-condition-test',
-      date: '1918-04-10',
+
       title: 'Nested AND Condition Test',
       description: 'Tests nested AND condition evaluation for scheduled events.',
       conditions: [
@@ -64,7 +64,7 @@ describe('scheduled event condition groups', () => {
   it('does not trigger nested and groups when one child condition fails', () => {
     const event: ScheduledEvent = {
       id: 'nested-and-condition-failure-test',
-      date: '1918-04-10',
+
       title: 'Nested AND Condition Failure Test',
       description: 'Tests that nested AND groups require every child condition.',
       conditions: [
