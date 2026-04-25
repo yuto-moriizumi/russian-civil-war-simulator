@@ -6,12 +6,20 @@
   "armyGroupDefs": {
     "austriahungary": [
       {
-        "name": "k.u.k. Armee",
+        "name": "Austro-Hungarian Group",
         "color": "#3B82F6"
-      },
+      }
+    ],
+    "britain": [
       {
-        "name": "Austro-Hungarian Group 2",
-        "color": "#10B981"
+        "name": "British Expeditionary Force",
+        "color": "#3B82F6"
+      }
+    ],
+    "bulgaria": [
+      {
+        "name": "Bulgarian Army",
+        "color": "#3B82F6"
       }
     ],
     "don": [
@@ -20,9 +28,21 @@
         "color": "#3B82F6"
       }
     ],
+    "france": [
+      {
+        "name": "French Army Group",
+        "color": "#3B82F6"
+      }
+    ],
     "germany": [
       {
         "name": "10. Armee",
+        "color": "#3B82F6"
+      }
+    ],
+    "greece": [
+      {
+        "name": "Hellenic Army",
         "color": "#3B82F6"
       }
     ],
@@ -66,11 +86,77 @@
     ]
   },
   "placement": {
-    "BA-SRP*": [
+    "19869673B24262378327284": [
+      {
+        "owner": "bulgaria",
+        "armyGroupName": "Bulgarian Army",
+        "count": 2
+      }
+    ],
+    "19869673B93268339583324": [
+      {
+        "owner": "bulgaria",
+        "armyGroupName": "Bulgarian Army",
+        "count": 2
+      }
+    ],
+    "AL-01": [
       {
         "owner": "austriahungary",
-        "armyGroupName": "k.u.k. Armee",
+        "armyGroupName": "Austro-Hungarian Group",
         "count": 1
+      }
+    ],
+    "AL-03": [
+      {
+        "owner": "austriahungary",
+        "armyGroupName": "Austro-Hungarian Group",
+        "count": 1
+      }
+    ],
+    "AL-04": [
+      {
+        "owner": "austriahungary",
+        "armyGroupName": "Austro-Hungarian Group",
+        "count": 1
+      }
+    ],
+    "AL-05": [
+      {
+        "owner": "greece",
+        "armyGroupName": "Hellenic Army",
+        "count": 2
+      }
+    ],
+    "AL-06": [
+      {
+        "owner": "greece",
+        "armyGroupName": "Hellenic Army",
+        "count": 2
+      },
+      {
+        "owner": "serbia",
+        "armyGroupName": "Serbian Army Group",
+        "count": 2
+      },
+      {
+        "owner": "france",
+        "armyGroupName": "French Army Group",
+        "count": 2
+      }
+    ],
+    "AL-11": [
+      {
+        "owner": "austriahungary",
+        "armyGroupName": "Austro-Hungarian Group",
+        "count": 1
+      }
+    ],
+    "AL-12": [
+      {
+        "owner": "greece",
+        "armyGroupName": "Hellenic Army",
+        "count": 2
       }
     ],
     "BY-BR": [
@@ -108,10 +194,54 @@
         "count": 1
       }
     ],
-    "HR-16": [
+    "GR-EM": [
       {
-        "owner": "austriahungary",
-        "armyGroupName": "k.u.k. Armee",
+        "owner": "greece",
+        "armyGroupName": "Hellenic Army",
+        "count": 2
+      },
+      {
+        "owner": "serbia",
+        "armyGroupName": "Serbian Army Group",
+        "count": 2
+      },
+      {
+        "owner": "france",
+        "armyGroupName": "French Army Group",
+        "count": 2
+      },
+      {
+        "owner": "britain",
+        "armyGroupName": "British Expeditionary Force",
+        "count": 1
+      }
+    ],
+    "GR-MH": [
+      {
+        "owner": "bulgaria",
+        "armyGroupName": "Bulgarian Army",
+        "count": 1
+      }
+    ],
+    "GR-TC": [
+      {
+        "owner": "greece",
+        "armyGroupName": "Hellenic Army",
+        "count": 2
+      },
+      {
+        "owner": "serbia",
+        "armyGroupName": "Serbian Army Group",
+        "count": 2
+      },
+      {
+        "owner": "france",
+        "armyGroupName": "French Army Group",
+        "count": 2
+      },
+      {
+        "owner": "britain",
+        "armyGroupName": "British Expeditionary Force",
         "count": 1
       }
     ],
@@ -168,111 +298,6 @@
       {
         "owner": "white",
         "armyGroupName": "8th Army",
-        "count": 1
-      }
-    ],
-    "MNE": [
-      {
-        "owner": "austriahungary",
-        "armyGroupName": "k.u.k. Armee",
-        "count": 1
-      }
-    ],
-    "RO-BR": [
-      {
-        "owner": "austriahungary",
-        "armyGroupName": "Austro-Hungarian Group 2",
-        "count": 1
-      }
-    ],
-    "RO-BZ": [
-      {
-        "owner": "austriahungary",
-        "armyGroupName": "Austro-Hungarian Group 2",
-        "count": 1
-      }
-    ],
-    "RO-CS": [
-      {
-        "owner": "austriahungary",
-        "armyGroupName": "k.u.k. Armee",
-        "count": 1
-      }
-    ],
-    "RO-HR": [
-      {
-        "owner": "austriahungary",
-        "armyGroupName": "Austro-Hungarian Group 2",
-        "count": 1
-      }
-    ],
-    "RO-SV": [
-      {
-        "owner": "austriahungary",
-        "armyGroupName": "Austro-Hungarian Group 2",
-        "count": 1
-      }
-    ],
-    "RO-TM": [
-      {
-        "owner": "austriahungary",
-        "armyGroupName": "k.u.k. Armee",
-        "count": 1
-      }
-    ],
-    "RS-00": [
-      {
-        "owner": "serbia",
-        "armyGroupName": "Serbian Army Group",
-        "count": 1
-      }
-    ],
-    "RS-02": [
-      {
-        "owner": "austriahungary",
-        "armyGroupName": "k.u.k. Armee",
-        "count": 1
-      }
-    ],
-    "RS-04": [
-      {
-        "owner": "serbia",
-        "armyGroupName": "Serbian Army Group",
-        "count": 1
-      }
-    ],
-    "RS-06": [
-      {
-        "owner": "austriahungary",
-        "armyGroupName": "k.u.k. Armee",
-        "count": 1
-      }
-    ],
-    "RS-07": [
-      {
-        "owner": "serbia",
-        "armyGroupName": "Serbian Army Group",
-        "count": 1
-      }
-    ],
-    "RS-08": [
-      {
-        "owner": "serbia",
-        "armyGroupName": "Serbian Army Group",
-        "count": 1
-      }
-    ],
-    "RS-16": [
-      {
-        "owner": "serbia",
-        "armyGroupName": "Serbian Army Group",
-        "count": 1
-      }
-    ],
-    "RS-18": [
-      {
-        "owner": "serbia",
-        "armyGroupName": "Serbian Army Group",
         "count": 1
       }
     ],
@@ -476,13 +501,6 @@
       {
         "owner": "germany",
         "armyGroupName": "10. Armee",
-        "count": 1
-      }
-    ],
-    "XKX": [
-      {
-        "owner": "serbia",
-        "armyGroupName": "Serbian Army Group",
         "count": 1
       }
     ]
