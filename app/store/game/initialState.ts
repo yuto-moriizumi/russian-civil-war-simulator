@@ -89,7 +89,20 @@ export const initialGameState: GameState = {
     { fromCountry: 'ottoman', toCountry: 'austriahungary', type: 'military_access' },
     // Serbia relationships
     { fromCountry: 'serbia', toCountry: 'austriahungary', type: 'war' },
-    { fromCountry: 'serbia', toCountry: 'germany', type: 'war' }
+    { fromCountry: 'serbia', toCountry: 'germany', type: 'war' },
+    // Entente mutual military access (Britain, France, Greece, Serbia)
+    { fromCountry: 'britain', toCountry: 'france', type: 'military_access' },
+    { fromCountry: 'france', toCountry: 'britain', type: 'military_access' },
+    { fromCountry: 'britain', toCountry: 'greece', type: 'military_access' },
+    { fromCountry: 'greece', toCountry: 'britain', type: 'military_access' },
+    { fromCountry: 'britain', toCountry: 'serbia', type: 'military_access' },
+    { fromCountry: 'serbia', toCountry: 'britain', type: 'military_access' },
+    { fromCountry: 'france', toCountry: 'greece', type: 'military_access' },
+    { fromCountry: 'greece', toCountry: 'france', type: 'military_access' },
+    { fromCountry: 'france', toCountry: 'serbia', type: 'military_access' },
+    { fromCountry: 'serbia', toCountry: 'france', type: 'military_access' },
+    { fromCountry: 'greece', toCountry: 'serbia', type: 'military_access' },
+    { fromCountry: 'serbia', toCountry: 'greece', type: 'military_access' }
   ], // Initial relationships (autonomy = puppet state)
   mapMode: 'country', // Default map mode
   regionCentroids: {}, // Will be loaded asynchronously
