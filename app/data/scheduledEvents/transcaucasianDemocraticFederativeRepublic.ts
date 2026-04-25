@@ -9,7 +9,7 @@ export const transcaucasianDemocraticFederativeRepublicEstablishedEvent: Schedul
       type: 'or',
       conditions: [
         {
-          type: 'dateReached',
+          type: 'date',
           date: '1918-04-22',
         },
         {

@@ -9,7 +9,7 @@ export const kubanPeoplesRepublicEvent: ScheduledEvent = {
       type: 'or',
       conditions: [
         {
-          type: 'dateReached',
+          type: 'date',
           date: '1918-01-28',
         },
         {
