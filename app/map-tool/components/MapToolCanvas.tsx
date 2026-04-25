@@ -99,26 +99,17 @@ export default function MapToolCanvas({
 
   // ── Unit placement helpers ─────────────────────────────────────────────────
 
-  /** Total divisions in a region (across all countries) */
-  const regionUnitTotals = useMemo(() => {
-    const totals: Record<string, number> = {};
-    for (const [regionId, entries] of Object.entries(unitPlacement)) {
-      totals[regionId] = entries.reduce((s, e) => s + e.count, 0);
-    }
-    return totals;
-  }, [unitPlacement]);
-
-  /** Dominant owner per region (country with most divisions placed there) */
-  const regionDominantOwner = useMemo(() => {
-    const result: Record<string, CountryId> = {};
+  /** Per-region owner entries sorted by count descending (for stacked display) */
+  const regionOwnerEntries = useMemo(() => {
+    const result: Record<string, [CountryId, number][]> = {};
     for (const [regionId, entries] of Object.entries(unitPlacement)) {
       const countsByOwner: Partial<Record<CountryId, number>> = {};
       for (const e of entries) {
         countsByOwner[e.owner] = (countsByOwner[e.owner] ?? 0) + e.count;
       }
-      const dominant = (Object.entries(countsByOwner) as [CountryId, number][])
-        .sort(([, a], [, b]) => b - a)[0]?.[0];
-      if (dominant) result[regionId] = dominant;
+      const sorted = (Object.entries(countsByOwner) as [CountryId, number][])
+        .sort(([, a], [, b]) => b - a);
+      if (sorted.length > 0) result[regionId] = sorted;
     }
     return result;
   }, [unitPlacement]);
@@ -545,42 +536,48 @@ export default function MapToolCanvas({
         <NavigationControl position="bottom-right" />
 
         {/* Unit markers (units mode only) */}
-        {editMode === 'units' && Object.entries(regionUnitTotals).map(([regionId, total]) => {
+        {editMode === 'units' && Object.entries(regionOwnerEntries).map(([regionId, ownerRows]) => {
           const coords = regionCentroids[regionId];
           if (!coords) return null;
-          const owner = regionDominantOwner[regionId] ?? ownership[regionId];
-          const bgColor = owner ? getCountryColor(owner) : '#888888';
-          const textColor = owner === 'white' ? '#000000' : '#ffffff';
-          const textShadow = owner === 'white' ? 'none' : '1px 1px 1px rgba(0,0,0,0.5)';
-          const flagUrl = owner ? COUNTRY_FLAGS[owner] : undefined;
           return (
-            <Marker key={regionId} longitude={coords[0]} latitude={coords[1]} anchor="center">
-              <div
-                style={{
-                  backgroundColor: bgColor,
-                  border: '1px solid rgba(0,0,0,0.5)',
-                  borderRadius: '4px',
-                  padding: '2px 6px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                  cursor: 'default',
-                  pointerEvents: 'none',
-                }}
-              >
-                {flagUrl ? (
-                  <img
-                    src={flagUrl}
-                    alt={owner}
-                    style={{ width: '16px', height: '11px', objectFit: 'cover', border: '1px solid rgba(0,0,0,0.3)', flexShrink: 0 }}
-                  />
-                ) : (
-                  <span style={{ fontSize: '10px', lineHeight: '11px' }}>■</span>
-                )}
-                <span style={{ fontSize: '12px', fontWeight: 'bold', color: textColor, textShadow }}>
-                  {total}
-                </span>
+            <Marker key={regionId} longitude={coords[0]} latitude={coords[1]} anchor="bottom" offset={[0, -4]}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', pointerEvents: 'none' }}>
+                {ownerRows.map(([owner, count], index) => {
+                  const bgColor = getCountryColor(owner);
+                  const textColor = owner === 'white' ? '#000000' : '#ffffff';
+                  const textShadow = owner === 'white' ? 'none' : '1px 1px 1px rgba(0,0,0,0.5)';
+                  const flagUrl = COUNTRY_FLAGS[owner];
+                  return (
+                    <div
+                      key={owner}
+                      style={{
+                        backgroundColor: bgColor,
+                        border: '1px solid rgba(0,0,0,0.5)',
+                        borderRadius: '4px',
+                        padding: '2px 6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                        marginTop: index === 0 ? 0 : '-4px',
+                        zIndex: ownerRows.length - index,
+                      }}
+                    >
+                      {flagUrl ? (
+                        <img
+                          src={flagUrl}
+                          alt={owner}
+                          style={{ width: '16px', height: '11px', objectFit: 'cover', border: '1px solid rgba(0,0,0,0.3)', flexShrink: 0 }}
+                        />
+                      ) : (
+                        <span style={{ fontSize: '10px', lineHeight: '11px' }}>■</span>
+                      )}
+                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: textColor, textShadow }}>
+                        {count}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </Marker>
           );
