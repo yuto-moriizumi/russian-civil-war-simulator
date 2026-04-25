@@ -203,12 +203,25 @@ export function CombatMarker({
   const attackerProgress = attackerMaxHp > 0 ? Math.min(100, (attackerHp / attackerMaxHp) * 100) : 0;
   const defenderProgress = defenderMaxHp > 0 ? Math.min(100, (defenderHp / defenderMaxHp) * 100) : 0;
 
-  const attackerColor = COUNTRY_COLORS[combat.attackerCountry];
-  const defenderColor = COUNTRY_COLORS[combat.defenderCountry];
-  const attackerTextColor = combat.attackerCountry === 'white' ? '#000' : '#fff';
-  const defenderTextColor = combat.defenderCountry === 'white' ? '#000' : '#fff';
-  const attackerFlagUrl = COUNTRY_FLAGS[combat.attackerCountry as keyof typeof COUNTRY_FLAGS];
-  const defenderFlagUrl = COUNTRY_FLAGS[combat.defenderCountry as keyof typeof COUNTRY_FLAGS];
+  const resolveLeadCountry = (divisionIds: string[]): CountryId => {
+    const counts = divisionIds.reduce<Record<string, number>>((acc, id) => {
+      const owner = divisions[id]?.owner;
+      if (owner) acc[owner] = (acc[owner] ?? 0) + 1;
+      return acc;
+    }, {});
+    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    return (entries[0]?.[0] ?? combat.attackerCountry) as CountryId;
+  };
+
+  const attackerLeadCountry = resolveLeadCountry(combat.attackerDivisionIds);
+  const defenderLeadCountry = resolveLeadCountry(combat.defenderDivisionIds);
+
+  const attackerColor = COUNTRY_COLORS[attackerLeadCountry];
+  const defenderColor = COUNTRY_COLORS[defenderLeadCountry];
+  const attackerTextColor = attackerLeadCountry === 'white' ? '#000' : '#fff';
+  const defenderTextColor = defenderLeadCountry === 'white' ? '#000' : '#fff';
+  const attackerFlagUrl = COUNTRY_FLAGS[attackerLeadCountry as keyof typeof COUNTRY_FLAGS];
+  const defenderFlagUrl = COUNTRY_FLAGS[defenderLeadCountry as keyof typeof COUNTRY_FLAGS];
 
   return (
     <Marker
@@ -247,7 +260,7 @@ export function CombatMarker({
             {attackerFlagUrl ? (
               <img
                 src={attackerFlagUrl}
-                alt={combat.attackerCountry}
+                alt={attackerLeadCountry}
                 style={{
                   width: '16px',
                   height: '11px',
@@ -312,7 +325,7 @@ export function CombatMarker({
             {defenderFlagUrl ? (
               <img
                 src={defenderFlagUrl}
-                alt={combat.defenderCountry}
+                alt={defenderLeadCountry}
                 style={{
                   width: '16px',
                   height: '11px',
