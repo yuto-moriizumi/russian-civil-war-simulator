@@ -95,8 +95,10 @@ export function processAITick({
   let nextProductionQueues = initialQueues;
   let nextDivisions = initialDivisions;
 
+  const countryMap = new Map(countries.map(c => [c.id, c]));
+
   const nextAIStates = effectiveAIStates.map(aiState => {
-    const country = countries.find(c => c.id === aiState.countryId);
+    const country = countryMap.get(aiState.countryId);
     const bonuses = countryBonuses[aiState.countryId];
     const trimmedQueue = clampProductionQueueToCommandPower(
       aiState.countryId,
