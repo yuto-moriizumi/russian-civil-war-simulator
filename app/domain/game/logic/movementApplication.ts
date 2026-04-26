@@ -156,13 +156,24 @@ export function applyCompletedMovements(
           toRegion,
         );
 
-        if (ongoingCombat && (effectiveRelationship === 'war' || ongoingCombat.attackerCountry === owner || ongoingCombat.defenderCountry === owner)) {
+        const isAlliedDefender = ongoingCombat &&
+          owner !== ongoingCombat.attackerCountry &&
+          owner !== ongoingCombat.defenderCountry &&
+          context.relationships.some(
+            r => r.type === 'war' && (
+              (r.fromCountry === owner && r.toCountry === ongoingCombat.attackerCountry) ||
+              (r.fromCountry === ongoingCombat.attackerCountry && r.toCountry === owner)
+            )
+          );
+
+        if (ongoingCombat && (effectiveRelationship === 'war' || ongoingCombat.attackerCountry === owner || ongoingCombat.defenderCountry === owner || isAlliedDefender)) {
           // Reinforce existing combat — works for both war and neutral (de facto combat participants)
           const combatIndex = nextCombats.findIndex(c => c.id === ongoingCombat.id);
           let updatedCombat = addCombatReinforcements(
             ongoingCombat,
             owner,
             arrivingDivisions,
+            context.relationships,
           );
 
           if (owner === ongoingCombat.attackerCountry && interceptingDivisions.length > 0) {

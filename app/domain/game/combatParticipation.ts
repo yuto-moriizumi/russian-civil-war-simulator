@@ -1,4 +1,4 @@
-import type { ActiveCombat, CountryId, Division, Movement } from '../../types/game';
+import type { ActiveCombat, CountryId, Division, Movement, Relationship } from '../../types/game';
 
 export function getCommittedDivisionIds(
   movingUnits: Movement[] = [],
@@ -41,10 +41,20 @@ export function findActiveCombatOnBorder(
   );
 }
 
+function isAtWarWith(countryA: CountryId, countryB: CountryId, relationships: Relationship[]): boolean {
+  return relationships.some(
+    r => r.type === 'war' && (
+      (r.fromCountry === countryA && r.toCountry === countryB) ||
+      (r.fromCountry === countryB && r.toCountry === countryA)
+    )
+  );
+}
+
 export function addCombatReinforcements(
   combat: ActiveCombat,
   countryId: CountryId,
   divisions: Division[],
+  relationships: Relationship[] = [],
 ): ActiveCombat {
   if (divisions.length === 0) return combat;
 
@@ -61,7 +71,8 @@ export function addCombatReinforcements(
     };
   }
 
-  if (countryId === combat.defenderCountry) {
+  // Add as defender if country is the declared defender OR is at war with the attacker (allied defense).
+  if (countryId === combat.defenderCountry || isAtWarWith(countryId, combat.attackerCountry, relationships)) {
     const existingIds = new Set(combat.defenderDivisionIds);
     const newDivisions = divisions.filter(division => !existingIds.has(division.id));
     if (newDivisions.length === 0) return combat;
