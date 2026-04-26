@@ -47,23 +47,27 @@ function pickRandomRegion(regionList: Region[]): Region | null {
   return regionList[index];
 }
 
-function countAssignedDivisions(
-  groupId: string,
+// Returns a base count map for divisions on map + in transit, excluding production queue.
+// This part is stable within a runAITick call and can be reused across the while loop.
+function buildBaseGroupDivisionCountMap(
   divisions: DivisionState,
   movingUnits: Movement[],
-  productionQueue: ProductionQueueItem[]
-): number {
-  const transitIds = new Set<string>(
-    movingUnits.flatMap(m => m.divisionIds)
-  );
-  const onMap = Object.values(divisions).filter(d => d.armyGroupId === groupId && !transitIds.has(d.id)).length;
-  const inTransit = movingUnits.reduce(
-    (count, movement) => count + movement.divisionIds.filter(id => divisions[id]?.armyGroupId === groupId).length,
-    0
-  );
-  const queued = productionQueue.filter(item => item.armyGroupId === groupId).length;
+): Map<string, number> {
+  const transitIds = new Set<string>(movingUnits.flatMap(m => m.divisionIds));
+  const counts = new Map<string, number>();
 
-  return onMap + inTransit + queued;
+  for (const div of Object.values(divisions)) {
+    if (!transitIds.has(div.id)) {
+      counts.set(div.armyGroupId, (counts.get(div.armyGroupId) ?? 0) + 1);
+    }
+  }
+  for (const movement of movingUnits) {
+    for (const divId of movement.divisionIds) {
+      const gId = divisions[divId]?.armyGroupId;
+      if (gId) counts.set(gId, (counts.get(gId) ?? 0) + 1);
+    }
+  }
+  return counts;
 }
 
 function selectProductionArmyGroup(
@@ -72,14 +76,18 @@ function selectProductionArmyGroup(
   regions: RegionState,
   armyGroups: ArmyGroup[],
   movingUnits: Movement[],
-  productionQueue: ProductionQueueItem[]
+  productionQueue: ProductionQueueItem[],
+  baseCountMap?: Map<string, number>
 ): ArmyGroup | undefined {
+  const counts = baseCountMap
+    ? new Map(baseCountMap)
+    : buildBaseGroupDivisionCountMap(divisions, movingUnits);
+  for (const item of productionQueue) {
+    counts.set(item.armyGroupId, (counts.get(item.armyGroupId) ?? 0) + 1);
+  }
   return armyGroups
     .filter(group => group.owner === countryId)
-    .sort((a, b) =>
-      countAssignedDivisions(a.id, divisions, movingUnits, productionQueue) -
-      countAssignedDivisions(b.id, divisions, movingUnits, productionQueue)
-    )[0];
+    .sort((a, b) => (counts.get(a.id) ?? 0) - (counts.get(b.id) ?? 0))[0];
 }
 
 /**
@@ -140,18 +148,22 @@ export function runAITick(
   productionQueues: Record<CountryId, ProductionQueueItem[]> = {} as Record<CountryId, ProductionQueueItem[]>,
   countryBonuses: CountryBonuses,
   coreRegions?: string[],
-  modifiers?: Modifier[]
+  modifiers?: Modifier[],
+  precomputedOwnedRegionIds?: string[],
+  precomputedRegionsWithActiveCombat?: Set<string>
 ): AIActions {
   const { countryId } = aiState;
-  
+
+  // Build once — divisions/movingUnits don't change within this tick
+  const baseCountMap = buildBaseGroupDivisionCountMap(divisions, movingUnits);
+
   // 1. Find or create an army group for the AI
-  let aiArmyGroup = selectProductionArmyGroup(countryId, divisions, regions, armyGroups, movingUnits, productionQueue);
+  let aiArmyGroup = selectProductionArmyGroup(countryId, divisions, regions, armyGroups, movingUnits, productionQueue, baseCountMap);
   let newArmyGroup: ArmyGroup | undefined = undefined;
-  
+
   if (!aiArmyGroup) {
     // Create a default AI army group
-    const ownedRegions = getOwnedRegions(regions, countryId);
-    const ownedRegionIds = ownedRegions.map(r => r.id);
+    const ownedRegionIds = precomputedOwnedRegionIds ?? getOwnedRegions(regions, countryId).map(r => r.id);
     
     const nameMap: Record<string, string> = {
       soviet: 'Soviet Army Group',
@@ -181,13 +193,14 @@ export function runAITick(
 
   // 2. Create production requests
   const productionRequests: AIProductionRequest[] = [];
-  const ownedRegions = getOwnedRegions(regions, countryId);
-  
-  // Filter out regions with active combat
-  const regionsWithActiveCombat = new Set(
+  const ownedRegionIds = precomputedOwnedRegionIds ?? getOwnedRegions(regions, countryId).map(r => r.id);
+  const ownedRegions = ownedRegionIds.map(id => regions[id]).filter(Boolean) as Region[];
+
+  // Use precomputed set when available to avoid re-scanning activeCombats per country
+  const activeCombatRegions = precomputedRegionsWithActiveCombat ?? new Set(
     activeCombats.filter(c => !c.isComplete).map(c => c.defenderRegionId)
   );
-  const availableRegions = ownedRegions.filter(r => !regionsWithActiveCombat.has(r.id));
+  const availableRegions = ownedRegions.filter(r => !activeCombatRegions.has(r.id));
   
   let divisionsCreated = 0;
   
@@ -217,7 +230,7 @@ export function runAITick(
       break;
     }
     
-    aiArmyGroup = selectProductionArmyGroup(countryId, divisions, regions, availableArmyGroups, movingUnits, localQueues[countryId] ?? []);
+    aiArmyGroup = selectProductionArmyGroup(countryId, divisions, regions, availableArmyGroups, movingUnits, localQueues[countryId] ?? [], baseCountMap);
     if (!aiArmyGroup) break;
 
     const groupRegionIds = new Set(aiArmyGroup.regionIds);

@@ -5,6 +5,9 @@ import { getBaseProductionTime } from '../bonusCalculator';
 import { countries } from '../../../data/gameData';
 import { reallocateDivisionsAcrossArmyGroups } from './divisionReallocation';
 
+// countries is static data — build the map once at module level
+const COUNTRY_MAP = new Map(countries.map(c => [c.id, c]));
+
 export function hasOwnershipChangedForCountries(
   countryIds: Set<CountryId>,
   prevRegions: RegionState,
@@ -95,10 +98,24 @@ export function processAITick({
   let nextProductionQueues = initialQueues;
   let nextDivisions = initialDivisions;
 
-  const countryMap = new Map(countries.map(c => [c.id, c]));
+  // Pre-compute regionsWithActiveCombat once — shared across all AI countries
+  const regionsWithActiveCombat = new Set(
+    nextActiveCombats.filter(c => !c.isComplete).map(c => c.defenderRegionId)
+  );
+
+  // Pre-compute owned regions per country once — avoids O(regions) scan per country
+  const ownedRegionsByCountry = new Map<CountryId, string[]>();
+  for (const region of Object.values(nextRegions)) {
+    const list = ownedRegionsByCountry.get(region.owner);
+    if (list) {
+      list.push(region.id);
+    } else {
+      ownedRegionsByCountry.set(region.owner, [region.id]);
+    }
+  }
 
   const nextAIStates = effectiveAIStates.map(aiState => {
-    const country = countryMap.get(aiState.countryId);
+    const country = COUNTRY_MAP.get(aiState.countryId);
     const bonuses = countryBonuses[aiState.countryId];
     const trimmedQueue = clampProductionQueueToCommandPower(
       aiState.countryId,
@@ -125,7 +142,9 @@ export function processAITick({
       nextProductionQueues,
       bonuses,
       country?.coreRegions,
-      modifiers?.[aiState.countryId]
+      modifiers?.[aiState.countryId],
+      ownedRegionsByCountry.get(aiState.countryId),
+      regionsWithActiveCombat,
     );
 
     if (aiActions.newArmyGroup) {
