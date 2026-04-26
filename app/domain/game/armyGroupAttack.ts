@@ -325,13 +325,14 @@ export function attackArmyGroup(
         }
       } else {
         // Divisions at the target region (including those currently moving away — regionId stays as source until arrival)
-        const defenderDivisions = getDivsInRegion(attackTargetId).filter(d => d.owner === destRegion.owner);
+        // Include all divisions from countries at war with the attacker, not just the region owner's.
+        const defenderDivisions = getDivsInRegion(attackTargetId).filter(d => areCountriesAtWar(countryId, d.owner, relationships));
         const hasActiveCombatAtDest = allKnownCombats.some(c => c.defenderRegionId === attackTargetId && !c.isComplete);
         const hasEnemyInTransitToDest = movingUnits.some(
-          m => m.toRegion === attackTargetId && m.owner === destRegion.owner && !m.pendingCombatId,
+          m => m.toRegion === attackTargetId && areCountriesAtWar(countryId, m.owner, relationships) && !m.pendingCombatId,
         );
         const hasEnemyInTransitFromDest = movingUnits.some(
-          m => m.fromRegion === attackTargetId && m.owner === destRegion.owner && !m.pendingCombatId,
+          m => m.fromRegion === attackTargetId && areCountriesAtWar(countryId, m.owner, relationships) && !m.pendingCombatId,
         );
         if (defenderDivisions.length > 0 || hasActiveCombatAtDest || hasEnemyInTransitToDest || hasEnemyInTransitFromDest) {
           const otherCombatsOnRegion = allKnownCombats.filter(
