@@ -14,7 +14,7 @@ export const transcaucasianDemocraticFederativeRepublicEstablishedEvent: Schedul
         },
         {
           type: 'atLeastOneRegionNotOwnedByOrPuppetOf',
-          regions: ['RU-DA'],
+          regions: ['RU-DA', 'TR-53', 'TR-25', 'TR-04', 'IR-02'],
           country: 'white',
         },
         {
