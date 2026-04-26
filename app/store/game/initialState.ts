@@ -105,7 +105,10 @@ export const initialGameState: GameState = {
     { fromCountry: 'serbia', toCountry: 'greece', type: 'military_access' },
     // Central Powers mutual military access (Austria-Hungary, Bulgaria)
     { fromCountry: 'austriahungary', toCountry: 'bulgaria', type: 'military_access' },
-    { fromCountry: 'bulgaria', toCountry: 'austriahungary', type: 'military_access' }
+    { fromCountry: 'bulgaria', toCountry: 'austriahungary', type: 'military_access' },
+    // Central Powers mutual military access (Bulgaria, Ottoman Empire)
+    { fromCountry: 'bulgaria', toCountry: 'ottoman', type: 'military_access' },
+    { fromCountry: 'ottoman', toCountry: 'bulgaria', type: 'military_access' }
   ], // Initial relationships (autonomy = puppet state)
   mapMode: 'country', // Default map mode
   regionCentroids: {}, // Will be loaded asynchronously
