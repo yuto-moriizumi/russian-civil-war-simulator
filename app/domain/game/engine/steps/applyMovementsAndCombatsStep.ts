@@ -1,5 +1,6 @@
 import { applyCompletedMovements, applyFinishedCombats } from '../../logic';
 import type { SimulationContext, SimulationDeps, SimulationLogger, EngineSimulationState } from '../types';
+import type { CountryId } from '../../../types/game';
 
 export function applyMovementsAndCombatsStep(
   context: SimulationContext,
@@ -64,6 +65,15 @@ export function applyMovementsAndCombatsStep(
       !(m.pendingCombatId && finishedCombatIds.has(m.pendingCombatId)),
   );
 
+  const changedOwnershipCountryIds = new Set<CountryId>();
+  for (const [regionId, nextRegion] of Object.entries(combatResult.nextRegions)) {
+    const prevOwner = state.regions[regionId]?.owner;
+    if (prevOwner !== nextRegion.owner) {
+      if (prevOwner) changedOwnershipCountryIds.add(prevOwner as CountryId);
+      changedOwnershipCountryIds.add(nextRegion.owner as CountryId);
+    }
+  }
+
   const nextState: EngineSimulationState = {
     ...state,
     regions: combatResult.nextRegions,
@@ -77,6 +87,7 @@ export function applyMovementsAndCombatsStep(
   return {
     ...context,
     state: nextState,
+    changedOwnershipCountryIds,
     interceptedMovementIds: movementResult.interceptedMovementIds,
     newHopMovements: movementResult.newHopMovements,
   };

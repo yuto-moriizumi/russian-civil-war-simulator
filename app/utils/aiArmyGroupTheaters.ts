@@ -168,11 +168,15 @@ export function syncAIArmyGroupsToTheaters({
   const replaceGroupId = (fromGroupId: string, toGroupId: string) => {
     if (fromGroupId === toGroupId) return;
 
-    // Update divisions in DivisionState
+    // Update divisions in DivisionState (batch to avoid repeated spreads)
+    const divUpdates: Record<string, typeof nextDivisions[string]> = {};
     for (const [divId, div] of Object.entries(nextDivisions)) {
       if (div.armyGroupId === fromGroupId) {
-        nextDivisions = { ...nextDivisions, [divId]: { ...div, armyGroupId: toGroupId } };
+        divUpdates[divId] = { ...div, armyGroupId: toGroupId };
       }
+    }
+    if (Object.keys(divUpdates).length > 0) {
+      nextDivisions = { ...nextDivisions, ...divUpdates };
     }
 
     // Update only affected movements via reverse index
@@ -230,14 +234,19 @@ export function syncAIArmyGroupsToTheaters({
 
     if (regionToGroupId.size === 0) return;
 
-    // Update divisions in DivisionState
+    // Update divisions in DivisionState (batch)
+    const regionDivUpdates: Record<string, typeof nextDivisions[string]> = {};
     for (const [divId, div] of Object.entries(nextDivisions)) {
       if (div.owner === countryId && div.regionId && regionToGroupId.has(div.regionId)) {
-        nextDivisions = { ...nextDivisions, [divId]: { ...div, armyGroupId: regionToGroupId.get(div.regionId)! } };
+        regionDivUpdates[divId] = { ...div, armyGroupId: regionToGroupId.get(div.regionId)! };
       }
     }
+    if (Object.keys(regionDivUpdates).length > 0) {
+      nextDivisions = { ...nextDivisions, ...regionDivUpdates };
+    }
 
-    // Update armyGroupId for divisions in transit based on their destination
+    // Update armyGroupId for divisions in transit based on their destination (batch)
+    const transitDivUpdates: Record<string, typeof nextDivisions[string]> = {};
     for (const movement of nextMovingUnits) {
       if (movement.owner !== countryId) continue;
       const groupId = regionToGroupId.get(movement.toRegion) ?? regionToGroupId.get(movement.fromRegion);
@@ -245,9 +254,12 @@ export function syncAIArmyGroupsToTheaters({
       for (const divId of movement.divisionIds) {
         const div = nextDivisions[divId];
         if (div && div.owner === countryId && div.armyGroupId !== groupId) {
-          nextDivisions = { ...nextDivisions, [divId]: { ...div, armyGroupId: groupId } };
+          transitDivUpdates[divId] = { ...div, armyGroupId: groupId };
         }
       }
+    }
+    if (Object.keys(transitDivUpdates).length > 0) {
+      nextDivisions = { ...nextDivisions, ...transitDivUpdates };
     }
 
     // Combat divisions: armyGroupId is tracked via DivisionState — no need to update combat arrays

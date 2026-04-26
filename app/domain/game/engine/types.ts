@@ -94,6 +94,7 @@ export interface SimulationContext {
   retreatMovements?: Movement[];
   interceptedMovementIds?: string[];
   newHopMovements?: Movement[];
+  changedOwnershipCountryIds?: Set<CountryId>;
   effectiveAICountryIds?: CountryId[];
   theaterInputsChanged?: boolean;
   nextTheaters?: Theater[];

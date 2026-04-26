@@ -3,7 +3,6 @@ import { detectTheatersForCountries, syncAIArmyGroupsToTheaters } from '../../..
 import {
   getEffectiveAIStates,
   processAITick,
-  hasOwnershipChangedForCountries,
   initializeAIStatesForNewCountries,
 } from '../../logic/aiTick';
 import type { SimulationContext, SimulationDeps, SimulationLogger, EngineSimulationState } from '../types';
@@ -57,16 +56,26 @@ export function processAIStep(
     ...effectiveAICountryIds,
     ...(selectedCountry ? [selectedCountry.id] : []),
   ]);
-  const theaterInputsChanged =
-    hasNewAICountries ||
-    relationships !== state.relationships ||
-    hasOwnershipChangedForCountries(theaterCountryIds, regions, nextRegions);
+  const changedOwnershipCountryIds = context.changedOwnershipCountryIds;
+  const relationshipsChanged = relationships !== state.relationships;
+
+  // Determine which countries actually need theater recomputation
+  let countryIdsToRecompute: CountryId[];
+  if (hasNewAICountries || relationshipsChanged) {
+    countryIdsToRecompute = Array.from(theaterCountryIds);
+  } else if (changedOwnershipCountryIds && changedOwnershipCountryIds.size > 0) {
+    countryIdsToRecompute = Array.from(theaterCountryIds).filter(id => changedOwnershipCountryIds.has(id));
+  } else {
+    countryIdsToRecompute = [];
+  }
+
+  const theaterInputsChanged = countryIdsToRecompute.length > 0;
 
   const nextTheaters = theaterInputsChanged
     ? detectTheatersForCountries({
         regions: nextRegions,
         adjacency,
-        countryIds: Array.from(theaterCountryIds),
+        countryIds: countryIdsToRecompute,
         existingTheaters: theaters,
         relationships,
       })
