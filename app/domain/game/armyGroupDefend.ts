@@ -3,6 +3,7 @@ import { getNextStepToward, buildIsHostilePredicate } from '../../utils/pathfind
 import { calculateDistance, calculateTravelTime } from '../../utils/distance';
 import { getCommittedDivisionIds } from './combatParticipation';
 import { EngineSimulationState, SimulationLogger, noOpLogger } from './engine/types';
+import type { ArmyGroupSharedContext } from './armyGroupAttack';
 
 /**
  * Pure version of defendArmyGroup: returns state delta instead of calling setState.
@@ -12,6 +13,7 @@ export function defendArmyGroup(
   groupId: string,
   state: EngineSimulationState,
   logger: SimulationLogger = noOpLogger(),
+  shared?: ArmyGroupSharedContext,
 ): Partial<EngineSimulationState> | null {
   const { armyGroups, regions, adjacency, dateTime, movingUnits, theaters, relationships, divisions, regionCentroids, activeCombats } = state;
 
@@ -19,20 +21,24 @@ export function defendArmyGroup(
   if (!group) return null;
 
   const countryId = group.owner;
-  const isHostile = buildIsHostilePredicate(countryId, regions, relationships);
+  const isHostile = shared?.isHostileByCountry.get(countryId) ?? buildIsHostilePredicate(countryId, regions, relationships);
   const theater = group.theaterId ? theaters.find(t => t.id === group.theaterId) : null;
   const frontlineSet = theater ? new Set(theater.frontlineRegions) : null;
 
-  // Build region→division index once: O(D) instead of O(R×D)
-  const divisionsByRegion = new Map<string, Division[]>();
-  for (const div of Object.values(divisions)) {
-    if (div.regionId) {
-      if (!divisionsByRegion.has(div.regionId)) divisionsByRegion.set(div.regionId, []);
-      divisionsByRegion.get(div.regionId)!.push(div);
+  const sharedDivsByRegion = shared?.divisionsByRegion;
+  const buildLocalDivsByRegion = (): Map<string, Division[]> => {
+    const map = new Map<string, Division[]>();
+    for (const div of Object.values(divisions)) {
+      if (div.regionId) {
+        if (!map.has(div.regionId)) map.set(div.regionId, []);
+        map.get(div.regionId)!.push(div);
+      }
     }
-  }
+    return map;
+  };
+  const divisionsByRegion = sharedDivsByRegion ?? buildLocalDivsByRegion();
   const getDivsInRegion = (regionId: string): Division[] => divisionsByRegion.get(regionId) ?? [];
-  const engagedDivisionIds = getCommittedDivisionIds([], activeCombats);
+  const engagedDivisionIds = shared?.engagedDivisionIds ?? getCommittedDivisionIds([], activeCombats);
 
   // Step 1: Find border regions
   const allBorderRegions: string[] = [];
