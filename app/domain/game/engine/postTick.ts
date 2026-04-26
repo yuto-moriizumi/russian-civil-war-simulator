@@ -1,7 +1,9 @@
-import { CountryId } from '../../../types/game';
+import { CountryId, Division } from '../../../types/game';
 import { checkAndCompleteMissions, checkAndClaimAIMissions } from '../logic';
-import { attackArmyGroup } from '../armyGroupAttack';
+import { attackArmyGroup, ArmyGroupSharedContext } from '../armyGroupAttack';
 import { defendArmyGroup } from '../armyGroupDefend';
+import { buildCanEnterPredicate, buildIsHostilePredicate } from '../../../utils/pathfinding';
+import { getCommittedDivisionIds } from '../combatParticipation';
 import { EngineSimulationState, SimulationLogger, noOpLogger } from './types';
 
 interface PostAICtx {
@@ -11,6 +13,30 @@ interface PostAICtx {
   isPlayerAIEnabled: boolean;
 }
 
+function buildSharedContext(state: EngineSimulationState): ArmyGroupSharedContext {
+  const { divisions, activeCombats, regions, relationships } = state;
+
+  const divisionsByRegion = new Map<string, Division[]>();
+  for (const div of Object.values(divisions)) {
+    if (!div.regionId) continue;
+    let bucket = divisionsByRegion.get(div.regionId);
+    if (!bucket) { bucket = []; divisionsByRegion.set(div.regionId, bucket); }
+    bucket.push(div);
+  }
+
+  const engagedDivisionIds = getCommittedDivisionIds([], activeCombats);
+
+  const countryIds = new Set(state.armyGroups.map(g => g.owner));
+  const canEnterByCountry = new Map<string, (regionId: string) => boolean>();
+  const isHostileByCountry = new Map<string, (regionId: string) => boolean>();
+  for (const countryId of countryIds) {
+    canEnterByCountry.set(countryId, buildCanEnterPredicate(countryId, regions, relationships));
+    isHostileByCountry.set(countryId, buildIsHostilePredicate(countryId, regions, relationships));
+  }
+
+  return { divisionsByRegion, engagedDivisionIds, canEnterByCountry, isHostileByCountry };
+}
+
 export function applyArmyGroupActions(
   state: EngineSimulationState,
   logger: SimulationLogger = noOpLogger(),
@@ -18,13 +44,15 @@ export function applyArmyGroupActions(
   const armyGroupActionsNeeded = state.armyGroups.filter(g => g.mode !== 'none');
   if (armyGroupActionsNeeded.length === 0) return state;
 
+  const shared = buildSharedContext(state);
+
   let current = state;
   for (const group of armyGroupActionsNeeded) {
     let patch: Partial<EngineSimulationState> | null;
     if (group.mode === 'advance') {
-      patch = attackArmyGroup(group.id, current, logger);
+      patch = attackArmyGroup(group.id, current, logger, shared);
     } else if (group.mode === 'defend') {
-      patch = defendArmyGroup(group.id, current, logger);
+      patch = defendArmyGroup(group.id, current, logger, shared);
     } else {
       patch = null;
     }
