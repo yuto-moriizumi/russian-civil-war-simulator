@@ -1,6 +1,6 @@
 import { applyCompletedMovements, applyFinishedCombats } from '../../logic';
 import type { SimulationContext, SimulationDeps, SimulationLogger, EngineSimulationState } from '../types';
-import type { CountryId } from '../../../types/game';
+import type { CountryId } from '../../../../types/game';
 
 export function applyMovementsAndCombatsStep(
   context: SimulationContext,
