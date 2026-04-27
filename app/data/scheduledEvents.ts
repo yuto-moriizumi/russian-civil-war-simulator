@@ -271,38 +271,6 @@ export const scheduledEvents: ScheduledEvent[] = [
     ],
     triggered: false,
   },
-  {
-    id: 'treaty-of-brest-litovsk-soviet',
-    title: 'Treaty of Brest-Litovsk',
-    description: 'Soviet Russia signs the Treaty of Brest-Litovsk with the Central Powers, renouncing its revolutionary client ties in Ukraine and ending the war with Germany and its puppet states.',
-    conditions: [{ type: 'date', date: '1918-03-03' }],
-    actions: [
-      {
-        type: 'removeRelationship',
-        fromCountry: 'soviet',
-        toCountry: 'odessa',
-        relationshipType: 'autonomy',
-      },
-      {
-        type: 'removeRelationship',
-        fromCountry: 'soviet',
-        toCountry: 'ukrainesoviet',
-        relationshipType: 'autonomy',
-      },
-      {
-        type: 'removeRelationship',
-        fromCountry: 'soviet',
-        toCountry: 'dkr',
-        relationshipType: 'autonomy',
-      },
-      {
-        type: 'endWarWithCountryAndPuppets',
-        masterCountry: 'germany',
-        enemyCountry: 'soviet',
-      },
-    ],
-    triggered: false,
-  },
   retreatFromTabrizEvent,
   transcaucasianDemocraticFederativeRepublicEstablishedEvent,
   ...mountainousRepublicOfTheNorthernCaucasusEvents,

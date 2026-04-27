@@ -274,6 +274,26 @@ export interface Modifier {
   items: ModifierItem[];
 }
 
+export interface SituationBranch {
+  threshold: number;
+  label: string;
+  actions: ScheduledEventAction[];
+}
+
+export interface Situation {
+  id: string;
+  title: string;
+  description: string;
+  active: boolean;
+  resolved: boolean;
+  warScore: number;
+  scoreCountry: CountryId;
+  contestedRegions: string[];
+  activationConditions: ScheduledEventCondition[];
+  highBranch: SituationBranch;
+  lowBranch: SituationBranch;
+}
+
 export interface GameState {
   currentScreen: Screen;
   selectedCountry: Country | null;
@@ -296,6 +316,7 @@ export interface GameState {
   regionCentroids: Record<string, [number, number]>; // Region centroids for distance calculations [longitude, latitude]
   borderMidpoints: Record<string, [number, number]>; // Pre-computed midpoints of shared borders between adjacent regions [longitude, latitude]
   scheduledEvents: ScheduledEvent[]; // Scheduled historical events
+  situations: Situation[]; // Ongoing dynamic situations (like HOI4 missions / Stellaris situations)
   countryBonuses: Record<CountryId, CountryBonuses>; // Per-country bonuses from claimed missions
   modifiers: Record<CountryId, Modifier[]>; // Per-country modifiers (like HOI4 ideas)
 }

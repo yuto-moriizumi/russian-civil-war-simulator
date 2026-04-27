@@ -67,6 +67,7 @@ function createEngineState(overrides: Partial<EngineSimulationState> = {}): Engi
     productionQueues: initialGameState.productionQueues,
     relationships: [],
     scheduledEvents: [],
+    situations: [],
     countryBonuses: initialGameState.countryBonuses,
     modifiers: initialGameState.modifiers,
     aiStates: [],

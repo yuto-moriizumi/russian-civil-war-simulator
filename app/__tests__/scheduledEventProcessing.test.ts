@@ -1,16 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { scheduledEvents } from '../data/scheduledEvents';
 import { processScheduledEvents } from '../domain/game/logic/scheduledEventProcessing';
-import type { ArmyGroup, CountryId, DivisionState, Region, Relationship, ScheduledEvent } from '../types/game';
+import { processSituations } from '../domain/game/logic/situationProcessing';
+import { brestLitovskSituation } from '../data/situations/brestLitovsk';
+import type { ArmyGroup, CountryId, DivisionState, Region, Relationship, ScheduledEvent, Situation } from '../types/game';
+import type { EngineSimulationState } from '../domain/game/engine/types';
 
 function relation(fromCountry: CountryId, toCountry: CountryId, type: Relationship['type']): Relationship {
   return { fromCountry, toCountry, type };
-}
-
-function getBrestLitovskSovietEvent(): ScheduledEvent {
-  const event = scheduledEvents.find(e => e.id === 'treaty-of-brest-litovsk-soviet');
-  if (!event) throw new Error('Missing treaty-of-brest-litovsk-soviet event');
-  return event;
 }
 
 function hasRelationship(
@@ -26,68 +22,112 @@ function hasRelationship(
   );
 }
 
-describe('scheduled Treaty of Brest-Litovsk event', () => {
-  it('fires on 1918-03-03, releases Soviet Ukrainian puppets, and ends Germany-puppet wars with Soviet Russia', () => {
+function makeBaseEngineState(overrides: Partial<EngineSimulationState> = {}): EngineSimulationState {
+  return {
+    dateTime: new Date(1918, 1, 9),
+    selectedCountry: null,
+    isPlayerAIEnabled: false,
+    regions: {},
+    regionDefinitions: {},
+    adjacency: {},
+    regionCentroids: {},
+    divisions: {},
+    movingUnits: [],
+    activeCombats: [],
+    armyGroups: [],
+    theaters: [],
+    productionQueues: {} as EngineSimulationState['productionQueues'],
+    relationships: [],
+    scheduledEvents: [],
+    situations: [],
+    countryBonuses: {} as EngineSimulationState['countryBonuses'],
+    modifiers: {} as EngineSimulationState['modifiers'],
+    aiStates: [],
+    missions: [],
+    gameEvents: [],
+    notifications: [],
+    ...overrides,
+  };
+}
+
+const ukraineTriggered: ScheduledEvent = {
+  id: 'treaty-of-brest-litovsk-ukraine',
+  title: 'Treaty of Brest-Litovsk (Ukraine)',
+  description: '',
+  conditions: [{ type: 'date', date: '1918-02-09' }],
+  actions: [],
+  triggered: true,
+};
+
+describe('Brest-Litovsk Situation', () => {
+  it('activates when treaty-of-brest-litovsk-ukraine has fired', () => {
+    const situation: Situation = { ...brestLitovskSituation, active: false, resolved: false };
+    const state = makeBaseEngineState({ situations: [situation], scheduledEvents: [ukraineTriggered] });
+    const patch = processSituations(state, new Date(1918, 1, 9));
+    expect(patch.situations![0].active).toBe(true);
+    expect(patch.situations![0].resolved).toBe(false);
+  });
+
+  it('does not activate before treaty-of-brest-litovsk-ukraine fires', () => {
+    const situation: Situation = { ...brestLitovskSituation, active: false, resolved: false };
+    const notTriggered = { ...ukraineTriggered, triggered: false };
+    const state = makeBaseEngineState({ situations: [situation], scheduledEvents: [notTriggered] });
+    const patch = processSituations(state, new Date(1918, 1, 8));
+    expect(patch.situations![0].active).toBe(false);
+  });
+
+  it('resolves with German victory (historical terms) when Germany controls >= 60% of contested regions', () => {
+    const contested = brestLitovskSituation.contestedRegions;
+    const threshold = Math.ceil(contested.length * 0.6);
+    const regions: Record<string, Region> = {};
+    contested.forEach((id, i) => {
+      regions[id] = { id, name: id, countryIso3: 'UKR', owner: i < threshold ? 'germany' : 'soviet' };
+    });
+
     const relationships: Relationship[] = [
       relation('soviet', 'odessa', 'autonomy'),
       relation('soviet', 'ukrainesoviet', 'autonomy'),
       relation('soviet', 'dkr', 'autonomy'),
       relation('soviet', 'iskolat', 'autonomy'),
-      relation('germany', 'poland', 'autonomy'),
-      relation('poland', 'balticdutchy', 'autonomy'),
       relation('germany', 'soviet', 'war'),
       relation('soviet', 'germany', 'war'),
-      relation('poland', 'soviet', 'war'),
-      relation('soviet', 'poland', 'war'),
-      relation('balticdutchy', 'soviet', 'war'),
-      relation('soviet', 'balticdutchy', 'war'),
-      relation('ottoman', 'soviet', 'war'),
-      relation('soviet', 'ottoman', 'war'),
     ];
 
-    const result = processScheduledEvents(
-      [getBrestLitovskSovietEvent()],
-      new Date(1918, 2, 3),
-      {},
-      relationships,
-      []
-    );
+    const situation: Situation = { ...brestLitovskSituation, active: true, resolved: false };
+    const state = makeBaseEngineState({ situations: [situation], regions, relationships, scheduledEvents: [ukraineTriggered] });
+    const patch = processSituations(state, new Date(1918, 2, 3));
 
-    expect(result.updatedScheduledEvents[0].triggered).toBe(true);
-    expect(result.newEvents[0].title).toBe('Treaty of Brest-Litovsk');
-    expect(hasRelationship(result.updatedRelationships, 'soviet', 'odessa', 'autonomy')).toBe(false);
-    expect(hasRelationship(result.updatedRelationships, 'soviet', 'ukrainesoviet', 'autonomy')).toBe(false);
-    expect(hasRelationship(result.updatedRelationships, 'soviet', 'dkr', 'autonomy')).toBe(false);
-    expect(hasRelationship(result.updatedRelationships, 'soviet', 'iskolat', 'autonomy')).toBe(true);
-
-    expect(hasRelationship(result.updatedRelationships, 'germany', 'soviet', 'war')).toBe(false);
-    expect(hasRelationship(result.updatedRelationships, 'soviet', 'germany', 'war')).toBe(false);
-    expect(hasRelationship(result.updatedRelationships, 'poland', 'soviet', 'war')).toBe(false);
-    expect(hasRelationship(result.updatedRelationships, 'soviet', 'poland', 'war')).toBe(false);
-    expect(hasRelationship(result.updatedRelationships, 'balticdutchy', 'soviet', 'war')).toBe(false);
-    expect(hasRelationship(result.updatedRelationships, 'soviet', 'balticdutchy', 'war')).toBe(false);
-    expect(hasRelationship(result.updatedRelationships, 'ottoman', 'soviet', 'war')).toBe(true);
-    expect(hasRelationship(result.updatedRelationships, 'soviet', 'ottoman', 'war')).toBe(true);
+    expect(patch.situations![0].resolved).toBe(true);
+    expect(hasRelationship(patch.relationships!, 'soviet', 'odessa', 'autonomy')).toBe(false);
+    expect(hasRelationship(patch.relationships!, 'soviet', 'ukrainesoviet', 'autonomy')).toBe(false);
+    expect(hasRelationship(patch.relationships!, 'soviet', 'dkr', 'autonomy')).toBe(false);
+    expect(hasRelationship(patch.relationships!, 'soviet', 'iskolat', 'autonomy')).toBe(true);
+    expect(hasRelationship(patch.relationships!, 'germany', 'soviet', 'war')).toBe(false);
   });
 
-  it('does not fire before 1918-03-03', () => {
+  it('resolves with Soviet victory (favorable armistice) when Germany controls <= 40% of contested regions', () => {
+    const contested = brestLitovskSituation.contestedRegions;
+    const germanControl = Math.floor(contested.length * 0.4);
+    const regions: Record<string, Region> = {};
+    contested.forEach((id, i) => {
+      regions[id] = { id, name: id, countryIso3: 'UKR', owner: i < germanControl ? 'germany' : 'soviet' };
+    });
+
     const relationships: Relationship[] = [
       relation('soviet', 'odessa', 'autonomy'),
+      relation('soviet', 'ukrainesoviet', 'autonomy'),
       relation('germany', 'soviet', 'war'),
       relation('soviet', 'germany', 'war'),
     ];
 
-    const result = processScheduledEvents(
-      [getBrestLitovskSovietEvent()],
-      new Date(1918, 2, 2),
-      {},
-      relationships,
-      []
-    );
+    const situation: Situation = { ...brestLitovskSituation, active: true, resolved: false };
+    const state = makeBaseEngineState({ situations: [situation], regions, relationships, scheduledEvents: [ukraineTriggered] });
+    const patch = processSituations(state, new Date(1918, 2, 3));
 
-    expect(result.updatedScheduledEvents[0].triggered).toBe(false);
-    expect(result.newEvents).toHaveLength(0);
-    expect(result.updatedRelationships).toEqual(relationships);
+    expect(patch.situations![0].resolved).toBe(true);
+    expect(hasRelationship(patch.relationships!, 'soviet', 'odessa', 'autonomy')).toBe(true);
+    expect(hasRelationship(patch.relationships!, 'soviet', 'ukrainesoviet', 'autonomy')).toBe(true);
+    expect(hasRelationship(patch.relationships!, 'germany', 'soviet', 'war')).toBe(false);
   });
 });
 

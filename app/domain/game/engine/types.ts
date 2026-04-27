@@ -17,6 +17,7 @@ import {
   RegionState,
   Relationship,
   ScheduledEvent,
+  Situation,
   Theater,
 } from '../../../types/game';
 import { GAME_CONFIG } from '../../../constants/gameConfig';
@@ -42,6 +43,7 @@ export interface EngineSimulationState {
   productionQueues: Record<CountryId, ProductionQueueItem[]>;
   relationships: Relationship[];
   scheduledEvents: ScheduledEvent[];
+  situations: Situation[];
   countryBonuses: Record<CountryId, CountryBonuses>;
   modifiers: Record<CountryId, Modifier[]>;
   aiStates: AIState[];

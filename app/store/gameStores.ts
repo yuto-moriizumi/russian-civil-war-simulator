@@ -58,6 +58,7 @@ const initialSimulationStoreState: Omit<SimulationStore, keyof SimulationActions
   productionQueues: initialGameState.productionQueues,
   relationships: initialGameState.relationships,
   scheduledEvents: initialGameState.scheduledEvents,
+  situations: initialGameState.situations,
   countryBonuses: initialGameState.countryBonuses,
   modifiers: initialGameState.modifiers,
   aiStates: [],

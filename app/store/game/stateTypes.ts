@@ -18,6 +18,7 @@ import {
   RegionOwnershipState,
   Relationship,
   ScheduledEvent,
+  Situation,
   Screen,
   Theater,
   Adjacency,
@@ -41,6 +42,7 @@ export interface SimulationState {
   productionQueues: Record<CountryId, ProductionQueueItem[]>;
   relationships: Relationship[];
   scheduledEvents: ScheduledEvent[];
+  situations: Situation[];
   countryBonuses: Record<CountryId, CountryBonuses>;
   modifiers: Record<CountryId, Modifier[]>;
   aiStates: AIState[];
