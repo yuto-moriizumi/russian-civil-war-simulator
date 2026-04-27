@@ -1,6 +1,6 @@
 import { AIState, ArmyGroup, CountryId, CountryBonuses, DivisionState, ProductionQueueItem, RegionState, ActiveCombat, Movement, Modifier, Theater, Relationship } from '../../../types/game';
 import { createInitialAIState, runAITick } from '../../../ai/cpuPlayer';
-import { clampProductionQueueToCommandPower } from '../../../utils/commandPower';
+import { clampProductionQueueToCommandPower, calculateCommandPower } from '../../../utils/commandPower';
 import { getBaseProductionTime } from '../bonusCalculator';
 import { countries } from '../../../data/gameData';
 import { reallocateDivisionsAcrossArmyGroups } from './divisionReallocation';
@@ -117,6 +117,7 @@ export function processAITick({
   const nextAIStates = effectiveAIStates.map(aiState => {
     const country = COUNTRY_MAP.get(aiState.countryId);
     const bonuses = countryBonuses[aiState.countryId];
+    const cap = calculateCommandPower(aiState.countryId, nextRegions, bonuses, country?.coreRegions, modifiers?.[aiState.countryId]);
     const trimmedQueue = clampProductionQueueToCommandPower(
       aiState.countryId,
       nextProductionQueues[aiState.countryId] || [],
@@ -125,7 +126,8 @@ export function processAITick({
       nextMovingUnits,
       bonuses,
       country?.coreRegions,
-      modifiers?.[aiState.countryId]
+      modifiers?.[aiState.countryId],
+      cap,
     );
     if (trimmedQueue !== nextProductionQueues[aiState.countryId]) {
       nextProductionQueues = { ...nextProductionQueues, [aiState.countryId]: trimmedQueue };
@@ -145,6 +147,7 @@ export function processAITick({
       modifiers?.[aiState.countryId],
       ownedRegionsByCountry.get(aiState.countryId),
       regionsWithActiveCombat,
+      cap,
     );
 
     if (aiActions.newArmyGroup) {

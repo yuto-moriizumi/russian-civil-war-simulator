@@ -128,9 +128,10 @@ export function canProduceDivision(
   productionQueues: Record<CountryId, ProductionQueueItem[]>,
   countryBonuses: CountryBonuses,
   coreRegions?: string[],
-  modifiers?: Modifier[]
+  modifiers?: Modifier[],
+  precomputedCap?: number
 ): boolean {
-  const cap = calculateCommandPower(countryId, regions, countryBonuses, coreRegions, modifiers);
+  const cap = precomputedCap ?? calculateCommandPower(countryId, regions, countryBonuses, coreRegions, modifiers);
   const current = countCurrentDivisions(countryId, divisions, movements);
   const inProduction = countDivisionsInProduction(countryId, productionQueues);
 
@@ -150,9 +151,10 @@ export function clampProductionQueueToCommandPower(
   movements: Movement[],
   countryBonuses: CountryBonuses,
   coreRegions?: string[],
-  modifiers?: Modifier[]
+  modifiers?: Modifier[],
+  precomputedCap?: number
 ): ProductionQueueItem[] {
-  const cap = calculateCommandPower(countryId, regions, countryBonuses, coreRegions, modifiers);
+  const cap = precomputedCap ?? calculateCommandPower(countryId, regions, countryBonuses, coreRegions, modifiers);
   const current = countCurrentDivisions(countryId, divisions, movements);
   const maxQueuedDivisions = Math.max(0, Math.floor((cap - current) / COMMAND_POWER_PER_UNIT));
 
