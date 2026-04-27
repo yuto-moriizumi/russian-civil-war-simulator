@@ -1,4 +1,4 @@
-import { Situation, ScheduledEventCondition, ScheduledEventAction, Relationship, CountryId } from '../../../types/game';
+import { Situation, ScheduledEventCondition, ScheduledEventAction, Relationship } from '../../../types/game';
 import { RegionState } from '../../../types/game';
 import { EngineSimulationState } from '../engine/types';
 import { getCountryAndPuppets } from '../relationshipUtils';
@@ -65,7 +65,8 @@ function applyActions(
   actions: ScheduledEventAction[],
   state: EngineSimulationState
 ): Pick<EngineSimulationState, 'regions' | 'relationships' | 'armyGroups' | 'divisions'> {
-  let { regions, relationships, armyGroups, divisions } = state;
+  let { regions, relationships } = state;
+  const { armyGroups, divisions } = state;
 
   for (const action of actions) {
     if (action.type === 'removeRelationship' && action.fromCountry && action.toCountry) {
