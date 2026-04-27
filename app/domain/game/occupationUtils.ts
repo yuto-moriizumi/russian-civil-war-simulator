@@ -34,6 +34,16 @@ export function determineNewOwner(
     if (overlordData?.coreRegions?.includes(regionId)) {
       return overlordId;
     }
+
+    const overlordPuppets = relationships
+      .filter(r => r.fromCountry === overlordId && r.type === 'autonomy')
+      .map(r => r.toCountry);
+    for (const puppetId of overlordPuppets) {
+      const puppetData = countries.find(c => c.id === puppetId);
+      if (puppetData?.coreRegions?.includes(regionId)) {
+        return puppetId;
+      }
+    }
   }
 
   // Liberation: if a country grants us military access, is at war with the previous owner,
