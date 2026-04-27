@@ -150,7 +150,8 @@ export function runAITick(
   coreRegions?: string[],
   modifiers?: Modifier[],
   precomputedOwnedRegionIds?: string[],
-  precomputedRegionsWithActiveCombat?: Set<string>
+  precomputedRegionsWithActiveCombat?: Set<string>,
+  precomputedCap?: number
 ): AIActions {
   const { countryId } = aiState;
 
@@ -226,7 +227,7 @@ export function runAITick(
 
   while (divisionsCreated < 2) {
     // Check command power before producing (use the locally-updated queues)
-    if (!canProduceDivision(countryId, divisions, regions, movingUnits, localQueues, countryBonuses, coreRegions, modifiers)) {
+    if (!canProduceDivision(countryId, divisions, regions, movingUnits, localQueues, countryBonuses, coreRegions, modifiers, precomputedCap)) {
       break;
     }
     
