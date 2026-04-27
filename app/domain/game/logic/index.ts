@@ -9,4 +9,5 @@ export { syncArmyGroupTerritories } from './armyGroupSync';
 export { checkAndCompleteMissions, checkAndClaimAIMissions } from './missionCompletion';
 export { processProductionQueue } from './productionProcessing';
 export { processScheduledEvents } from './scheduledEventProcessing';
+export { processSituations } from './situationProcessing';
 export { noOpLogger } from '../engine/types';

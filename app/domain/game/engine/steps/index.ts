@@ -11,3 +11,4 @@ export { syncArmyGroupsStep } from './syncArmyGroupsStep';
 export { applyArmyGroupActionsStep } from './applyArmyGroupActionsStep';
 export { applyMissionsStep } from './applyMissionsStep';
 export { reconcilePlayerArmyGroupsStep } from './reconcilePlayerArmyGroupsStep';
+export { processSituationsStep } from './processSituationsStep';

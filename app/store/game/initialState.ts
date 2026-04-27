@@ -1,6 +1,7 @@
 import { GameState, CountryId, ProductionQueueItem, CountryBonuses, Modifier } from '../../types/game';
 import { initialMissions, GAME_START_DATE } from '../../data/gameData';
 import { scheduledEvents } from '../../data/scheduledEvents';
+import { brestLitovskSituation } from '../../data/situations/brestLitovsk';
 import { getInitialCountryBonuses } from '../../domain/game/bonusCalculator';
 import { getAllCountryIds } from '../../data/countryMetadata';
 
@@ -114,6 +115,7 @@ export const initialGameState: GameState = {
   regionCentroids: {}, // Will be loaded asynchronously
   borderMidpoints: {}, // Will be loaded asynchronously
   scheduledEvents: scheduledEvents, // Historical events
+  situations: [brestLitovskSituation],
   countryBonuses: createInitialCountryBonuses(),
   modifiers: createInitialModifiers(),
 };
